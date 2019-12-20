@@ -1,0 +1,89 @@
+MOST BASIC LEVEL - Expressions
+E	-> DOR DORT ET
+
+ET	-> ? E : E
+	->
+
+
+DOR -> DAND DANT
+
+DORT-> || DOR DORT
+
+DAND-> OR ORT
+
+DANT-> && DAND DANT
+	->
+
+OR	-> NOT NOTT
+
+ORT -> | OR ORT
+	->
+
+NOT -> AND ANDT
+
+NOTT-> ^ NOT NOTT
+	->
+
+AND -> EQ EQT
+
+ANDT-> & AND ANDT
+	->
+
+EQ	-> C CT
+
+EQT -> == EQ EQT
+	-> != EQ EQT
+	->
+
+C	-> G GT
+
+CT	-> < C CT
+	-> <= C CT
+	-> > C CT
+	-> >= C CT
+	->
+
+G	-> T TT
+
+GT	-> << G GT
+	-> >> G GT
+	->
+
+TT	-> + T TT
+	-> - T TT
+	->
+
+T	-> F FT
+
+FT	-> * F FT
+	-> / F FT
+	-> % F FT
+	->
+
+F	-> - F
+	-> ~ F
+	-> ! F
+	-> * F
+	-> & F
+	-> + F
+	-> ++ F
+	-> -- F
+	-> literal
+	-> string
+	-> A AT
+
+A	-> (E)
+	-> id AT
+
+AT	-> . id FC AT
+	-> [ E ] AT
+	-> ++
+	-> --
+
+FC	-> ( L )
+
+L	-> E LT
+	->
+
+LT	-> , E L
+	->

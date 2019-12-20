@@ -1,0 +1,80 @@
+struct class_name_vtable {
+	super virtual function ponters
+	.
+	.
+	.
+	virtual function pointers
+	.
+	.
+	.
+}
+
+struct class_name {
+	class_name_vtable* vtable;
+	recursive super fields/pointers
+	.
+	.
+	.
+	fields
+	.
+	.
+	.
+	function pointers
+	.
+	.
+	.
+}
+
+example:
+class P {
+	private int f1;
+	private double f2;
+
+	virtual int m1() {
+		return 1;
+	}
+
+	int m2() {
+		return 1;
+	}
+}
+
+class D : P {
+	private int f3;
+
+
+	int m2() {
+		return 2;
+	}
+
+	virtual double m3(int input) {
+		return 2.0 * input;
+	}
+}
+
+results in
+struct P_vtable {
+	int (*m1)() = P::m1;
+}
+
+struct D_vtable {
+	int (*m1)() = P::m1;
+	double (*m3)(int) = D::m3;
+}
+
+struct P {
+	P_vtable* vtable = &P_vtable;
+	int f1;
+	double f2;
+	int (*P::m2)();
+}
+
+struct D {
+	D_vtable* vtable = &D_vtable;
+	int f1;
+    double f2;
+    int (*P::m2)();
+    int f3;
+    int (*D::m2)();
+    double (*m3)(int);
+}
