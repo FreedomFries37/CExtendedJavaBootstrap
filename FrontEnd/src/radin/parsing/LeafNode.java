@@ -1,9 +1,17 @@
 package radin.parsing;
 
+import radin.lexing.Token;
+
 public class LeafNode extends ParseNode {
     
-    public LeafNode(String data) {
-        super(data);
+    private Token token;
+    
+    public LeafNode(Token data) {
+        super(data.toString());
+    }
+    
+    public Token getToken() {
+        return token;
     }
     
     @Override

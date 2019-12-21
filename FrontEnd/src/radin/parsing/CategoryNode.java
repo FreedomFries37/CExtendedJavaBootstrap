@@ -1,11 +1,14 @@
 package radin.parsing;
 
+import radin.lexing.TokenType;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryNode extends ParseNode {
     
     private List<ParseNode> allChildren;
+    private List<LeafNode> leafChildren;
     private List<CategoryNode> categoryChildren;
     
     public CategoryNode(String data) {
@@ -16,6 +19,7 @@ public class CategoryNode extends ParseNode {
     
     public void addChild(LeafNode leaf) {
         allChildren.add(leaf);
+        leafChildren.add(leaf);
     }
     
     public void addChild(CategoryNode categoryNode) {
@@ -27,17 +31,35 @@ public class CategoryNode extends ParseNode {
         return allChildren.get(index);
     }
     
-    public CategoryNode getChildCategory(String category) {
-        return getChildCategory(category, 1);
+    public CategoryNode getCategoryNode(String category) {
+        return getCategoryNode(category, 1);
     }
     
-    public CategoryNode getChildCategory(String category, int count) {
+    public CategoryNode getCategoryNode(String category, int count) {
         int found = 0;
+        if(this.getData().equals(category)) {
+            if(++found == count) return this;
+        }
         for (CategoryNode categoryChild : categoryChildren) {
             if(categoryChild.getCategory().equals(category)) {
                 if(++found == count) return categoryChild;
             }
         }
+        return null;
+    }
+    
+    public LeafNode getLeafNode(TokenType type) {
+        return getLeafNode(type, 1);
+    }
+    
+    public LeafNode getLeafNode(TokenType type, int count) {
+        int found = 0;
+        for (LeafNode leafChild : leafChildren) {
+            if(leafChild.getToken().getType().equals(type)) {
+                if(++found == count) return leafChild;
+            }
+        }
+        
         return null;
     }
     
@@ -51,5 +73,15 @@ public class CategoryNode extends ParseNode {
     @Override
     public boolean hasChildren() {
         return allChildren.size() > 0;
+    }
+    
+    @Override
+    protected String toTreeForm(int indent) {
+        StringBuilder output = new StringBuilder(super.toTreeForm(indent));
+        for (ParseNode child : allChildren) {
+            output.append("\n");
+            output.append(child.toTreeForm(indent + 1));
+        }
+        return output.toString();
     }
 }

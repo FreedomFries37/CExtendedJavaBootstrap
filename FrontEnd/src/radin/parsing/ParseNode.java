@@ -2,8 +2,6 @@ package radin.parsing;
 
 import radin.interphase.semantics.AbstractSyntaxNode;
 
-import java.util.List;
-
 public abstract class ParseNode {
 
     private String data;
@@ -36,4 +34,19 @@ public abstract class ParseNode {
     }
     
     public abstract boolean hasChildren();
+    
+    public String toString() { return getData(); }
+    
+    public String toTreeForm() {
+        return toTreeForm(0);
+    }
+    
+    protected String toTreeForm(int indent) {
+        return "  ".repeat(indent) + toString();
+    }
+    
+    public void printTreeForm() {
+        System.out.println(toTreeForm());
+    }
+    
 }

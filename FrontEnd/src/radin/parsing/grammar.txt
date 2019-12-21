@@ -49,11 +49,13 @@ GT	-> << G GT
 	-> >> G GT
 	->
 
+
+
+T	-> F FT
+
 TT	-> + T TT
 	-> - T TT
 	->
-
-T	-> F FT
 
 FT	-> * F FT
 	-> / F FT
@@ -73,14 +75,17 @@ F	-> - F
 	-> A AT
 
 A	-> (E)
-	-> id AT
+	-> id
 
 AT	-> . id FC AT
+	-> -> id FC AT
 	-> [ E ] AT
 	-> ++
 	-> --
+	->
 
 FC	-> ( L )
+	->
 
 L	-> E LT
 	->

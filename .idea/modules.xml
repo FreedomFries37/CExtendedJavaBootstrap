@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/BackEnd/BackEnd.iml" filepath="$PROJECT_DIR$/BackEnd/BackEnd.iml" />
       <module fileurl="file://$PROJECT_DIR$/CExtendedJavaBootstrap.iml" filepath="$PROJECT_DIR$/CExtendedJavaBootstrap.iml" />
       <module fileurl="file://$PROJECT_DIR$/FrontEnd/FrontEnd.iml" filepath="$PROJECT_DIR$/FrontEnd/FrontEnd.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Intermediate/Intermediate.iml" filepath="$PROJECT_DIR$/Intermediate/Intermediate.iml" />
     </modules>
   </component>
 </project>
