@@ -1,11 +1,13 @@
 package radin.lexing;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import radin.interphase.lexical.Token;
+import radin.interphase.lexical.TokenType;
+
+import java.io.EOFException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 public class Lexer implements Iterable<Token> {
     
@@ -33,20 +35,47 @@ public class Lexer implements Iterable<Token> {
     }
     
     private String inputString;
+    private final int maxIndex;
     private int currentIndex;
+    private int prevColumn;
+    private int prevLineNumber;
+    private int column;
+    private int lineNumber;
     private List<Token> createdTokens;
+    private int tokenIndex;
     
+    public int getTokenIndex() {
+        return tokenIndex;
+    }
+    
+    public void setTokenIndex(int tokenIndex) {
+        if(tokenIndex < 0 || tokenIndex >= createdTokens.size()) return;
+        this.tokenIndex = tokenIndex;
+    }
     
     public Lexer(String inputString) {
         this.inputString = inputString.trim();
         createdTokens = new LinkedList<>();
+        tokenIndex = -1;
+        column = 0;
+        lineNumber = 1;
+        prevColumn = 0;
+        prevLineNumber = 1;
+        maxIndex = this.inputString.length();
     }
     
     private char getChar() {
+        if(currentIndex == inputString.length()) return '\0';
         return inputString.charAt(currentIndex);
     }
     
     private char consumeChar() {
+        if(getChar() == '\n') {
+            ++lineNumber;
+            column = 0;
+        } else {
+            column++;
+        }
         return inputString.charAt(currentIndex++);
     }
     
@@ -58,7 +87,9 @@ public class Lexer implements Iterable<Token> {
     private String consumeNextChars(int count) {
         int min = Math.min(inputString.length(), currentIndex + count);
         String substring = inputString.substring(currentIndex, min);
-        currentIndex += count;
+        for (int i = currentIndex; i < min; i++) {
+            consumeChar();
+        }
         return substring;
     }
     
@@ -89,6 +120,8 @@ public class Lexer implements Iterable<Token> {
     private Token singleLex() {
         String image = "";
         
+       
+        
         while(getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
             consumeChar();
         }
@@ -103,58 +136,12 @@ public class Lexer implements Iterable<Token> {
         while(getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
             consumeChar();
         }
-        
-        if(consume("char ")) {
-            return new Token(TokenType.t_char);
-        }else if(consume("const ")) {
-            return new Token(TokenType.t_const);
-        }else if(consume("do ")) {
-            return new Token(TokenType.t_do);
-        }else if(consume("double ")) {
-            return new Token(TokenType.t_double);
-        }else if(consume("else ")) {
-            return new Token(TokenType.t_else);
-        }else if(consume("float ")) {
-            return new Token(TokenType.t_float);
-        }else if(consume("for ")) {
-            return new Token(TokenType.t_for);
-        }else if(consume("if ")) {
-            return new Token(TokenType.t_if);
-        }else if(consume("int ")) {
-            return new Token(TokenType.t_int);
-        }else if(consume("long ")) {
-            return new Token(TokenType.t_long);
-        }else if(consume("return ")) {
-            return new Token(TokenType.t_return);
-        }else if(consume("short ")) {
-            return new Token(TokenType.t_short);
-        }else if(consume("static ")) {
-            return new Token(TokenType.t_static);
-        }else if(consume("typedef ")) {
-            return new Token(TokenType.t_typedef);
-        }else if(consume("union ")) {
-            return new Token(TokenType.t_union);
-        }else if(consume("unsigned ")) {
-            return new Token(TokenType.t_unsigned);
-        }else if(consume("struct ")) {
-            return new Token(TokenType.t_struct);
-        }else if(consume("void ")) {
-            return new Token(TokenType.t_void);
-        }else if(consume("while ")) {
-            return new Token(TokenType.t_while);
-        }else if(consume("class ")) {
-            return new Token(TokenType.t_class);
-        }else if(consume("public ")) {
-            return new Token(TokenType.t_public);
-        }else if(consume("private ")) {
-            return new Token(TokenType.t_private);
-        }else if(consume("new ")) {
-            return new Token(TokenType.t_new);
-        }else if(consume("super ")) {
-            return new Token(TokenType.t_super);
-        }else if(consume("virtual ")) {
-            return new Token(TokenType.t_virtual);
+    
+        if(getChar() == '\0') {
+            return new Token(TokenType.t_eof);
         }
+        
+       
         
         if(getChar() == '"') {
             consumeChar();
@@ -197,11 +184,64 @@ public class Lexer implements Iterable<Token> {
             }
             
             return new Token(TokenType.t_literal, image);
-        }else if(Character.isAlphabetic(getChar()) || getChar() == '_') {
+        }else if(Character.isLetter(getChar()) || getChar() == '_') {
             image += consumeChar();
-            while(Character.isAlphabetic(getChar()) || getChar() == '_' || Character.isDigit(getChar())) {
+            while(Character.isLetter(getChar()) || getChar() == '_' || Character.isDigit(getChar())) {
                 image += consumeChar();
             }
+    
+            if(image.equals("char")) {
+                return new Token(TokenType.t_char);
+            }else if(image.equals("const")) {
+                return new Token(TokenType.t_const);
+            }else if(image.equals("do")) {
+                return new Token(TokenType.t_do);
+            }else if(image.equals("double")) {
+                return new Token(TokenType.t_double);
+            }else if(image.equals("else")) {
+                return new Token(TokenType.t_else);
+            }else if(image.equals("float")) {
+                return new Token(TokenType.t_float);
+            }else if(image.equals("for")) {
+                return new Token(TokenType.t_for);
+            }else if(image.equals("if")) {
+                return new Token(TokenType.t_if);
+            }else if(image.equals("int")) {
+                return new Token(TokenType.t_int);
+            }else if(image.equals("long")) {
+                return new Token(TokenType.t_long);
+            }else if(image.equals("return")) {
+                return new Token(TokenType.t_return);
+            }else if(image.equals("short")) {
+                return new Token(TokenType.t_short);
+            }else if(image.equals("static")) {
+                return new Token(TokenType.t_static);
+            }else if(image.equals("typedef")) {
+                return new Token(TokenType.t_typedef);
+            }else if(image.equals("union")) {
+                return new Token(TokenType.t_union);
+            }else if(image.equals("unsigned")) {
+                return new Token(TokenType.t_unsigned);
+            }else if(image.equals("struct")) {
+                return new Token(TokenType.t_struct);
+            }else if(image.equals("void")) {
+                return new Token(TokenType.t_void);
+            }else if(image.equals("while")) {
+                return new Token(TokenType.t_while);
+            }else if(image.equals("class")) {
+                return new Token(TokenType.t_class);
+            }else if(image.equals("public")) {
+                return new Token(TokenType.t_public);
+            }else if(image.equals("private")) {
+                return new Token(TokenType.t_private);
+            }else if(image.equals("new")) {
+                return new Token(TokenType.t_new);
+            }else if(image.equals("super")) {
+                return new Token(TokenType.t_super);
+            }else if(image.equals("virtual")) {
+                return new Token(TokenType.t_virtual);
+            }
+            
             return new Token(TokenType.t_id, image);
         }
         
@@ -366,14 +406,24 @@ public class Lexer implements Iterable<Token> {
     
     public Token getCurrent() {
         if(createdTokens.size() == 0) return getNext();
-        return createdTokens.get(createdTokens.size() - 1);
+        return createdTokens.get(tokenIndex);
     }
     
     public Token getNext() {
-        Token t = singleLex();
-        createdTokens.add(t);
-        return t;
+        if(++tokenIndex == createdTokens.size()) {
+            Token t = Objects.requireNonNull(singleLex()).addColumnAndLineNumber(prevColumn, prevLineNumber);
+            prevLineNumber = lineNumber;
+            prevColumn = column;
+            createdTokens.add(t);
+            return t;
+        }
+        return createdTokens.get(tokenIndex);
     }
+    
+    public void reset() {
+        tokenIndex = 0;
+    }
+    
     
     @Override
     public Iterator<Token> iterator() {

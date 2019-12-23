@@ -1,6 +1,9 @@
 package radin.parsing;
 
-import radin.lexing.Token;
+import radin.interphase.lexical.Token;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class LeafNode extends ParseNode {
     
@@ -8,6 +11,7 @@ public class LeafNode extends ParseNode {
     
     public LeafNode(Token data) {
         super(data.toString());
+        this.token = data;
     }
     
     public Token getToken() {
@@ -17,5 +21,12 @@ public class LeafNode extends ParseNode {
     @Override
     public boolean hasChildren() {
         return false;
+    }
+    
+    @Override
+    public List<ParseNode> postfix() {
+        LinkedList<ParseNode> parseNodes = new LinkedList<>();
+        parseNodes.add(this);
+        return parseNodes;
     }
 }

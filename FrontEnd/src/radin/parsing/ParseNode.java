@@ -1,23 +1,31 @@
 package radin.parsing;
 
+import radin.interphase.AbstractTree;
 import radin.interphase.semantics.AbstractSyntaxNode;
+import radin.semantics.InheritMissingError;
+import radin.semantics.SynthesizedMissingException;
 
-public abstract class ParseNode {
+import java.util.LinkedList;
+import java.util.List;
+
+public abstract class ParseNode extends AbstractTree<ParseNode> {
 
     private String data;
     private AbstractSyntaxNode synthesized;
-    private AbstractSyntaxNode inherit;
+    private List<AbstractSyntaxNode> inherit;
     
     
     public ParseNode(String data) {
         this.data = data;
+        inherit = new LinkedList<>();
     }
     
     public String getData() {
         return data;
     }
     
-    public AbstractSyntaxNode getSynthesized() {
+    public AbstractSyntaxNode getSynthesized() throws SynthesizedMissingException {
+        if(synthesized == null) throw new SynthesizedMissingException(this);
         return synthesized;
     }
     
@@ -26,27 +34,37 @@ public abstract class ParseNode {
     }
     
     public AbstractSyntaxNode getInherit() {
-        return inherit;
+        if (inherit.isEmpty()) {
+            throw new InheritMissingError(this);
+        }
+        return inherit.get(0);
+    }
+    public AbstractSyntaxNode getInherit(int index) {
+        if(index >= inherit.size()) throw new InheritMissingError(this);
+        return inherit.get(index);
     }
     
     public void setInherit(AbstractSyntaxNode inherit) {
-        this.inherit = inherit;
+        this.inherit.add(0, inherit);
     }
+    public void setInherit(AbstractSyntaxNode inherit, int index) {
+        if(index == this.inherit.size()) {
+            this.inherit.add(inherit);
+        } else {
+            this.inherit.add(index, inherit);
+        }
+    }
+    
     
     public abstract boolean hasChildren();
     
     public String toString() { return getData(); }
     
-    public String toTreeForm() {
-        return toTreeForm(0);
-    }
-    
+   
     protected String toTreeForm(int indent) {
         return "  ".repeat(indent) + toString();
     }
     
-    public void printTreeForm() {
-        System.out.println(toTreeForm());
-    }
+    public abstract List<ParseNode> postfix();
     
 }

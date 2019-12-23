@@ -1,4 +1,4 @@
-package radin.lexing;
+package radin.interphase.lexical;
 
 public enum TokenType {
     t_char("char"),
@@ -62,9 +62,11 @@ public enum TokenType {
     t_crt("^"),
     t_bar("|"),
     t_qmark("?"),
+    t_ellipsis("..."),
     t_new("new"),
     t_super("super"),
-    t_virtual("virtual");
+    t_virtual("virtual"),
+    t_eof("EOF");
     
     private String str;
     

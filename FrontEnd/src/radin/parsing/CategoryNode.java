@@ -1,8 +1,11 @@
 package radin.parsing;
 
-import radin.lexing.TokenType;
+import radin.interphase.lexical.TokenType;
+import radin.semantics.MissingCategoryNodeError;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class CategoryNode extends ParseNode {
@@ -14,6 +17,7 @@ public class CategoryNode extends ParseNode {
     public CategoryNode(String data) {
         super(data);
         allChildren = new ArrayList<>();
+        leafChildren = new ArrayList<>();
         categoryChildren = new ArrayList<>();
     }
     
@@ -45,11 +49,46 @@ public class CategoryNode extends ParseNode {
                 if(++found == count) return categoryChild;
             }
         }
-        return null;
+        if(found > 0)
+            throw new MissingCategoryNodeError(this, category, count);
+        else throw new MissingCategoryNodeError(this, category);
     }
     
     public LeafNode getLeafNode(TokenType type) {
         return getLeafNode(type, 1);
+    }
+    
+    public boolean firstIs(TokenType type) {
+        if(categoryChildren.size() > 0 && allChildren.get(0).equals(categoryChildren.get(0))) return false;
+        return leafChildren.get(0).getToken().getType().equals(type);
+    }
+    
+    public boolean firstIs(TokenType type1, TokenType type2, TokenType... rest) {
+        if(categoryChildren.size() > 0 && allChildren.get(0).equals(categoryChildren.get(0))) return false;
+        List<TokenType> all = new ArrayList<>(2 + rest.length);
+        all.add(type1);
+        all.add(type2);
+        all.addAll(Arrays.asList(rest));
+        for (TokenType tokenType : all) {
+            if(leafChildren.get(0).getToken().getType().equals(tokenType)) return true;
+        }
+        return false;
+    }
+    
+    public boolean firstIs(String category) {
+        if(leafChildren.size() > 0 && allChildren.get(0).equals(leafChildren.get(0))) return false;
+        return categoryChildren.get(0).getCategory().equals(category);
+    }
+    
+    public boolean hasChildCategory(String cat) {
+        try {
+            if(this.getCategory().equals(cat)) {
+                getCategoryNode(cat, 2);
+            } else getCategoryNode(cat);
+            return true;
+        } catch (MissingCategoryNodeError e){
+            return false;
+        }
     }
     
     public LeafNode getLeafNode(TokenType type, int count) {
@@ -63,8 +102,14 @@ public class CategoryNode extends ParseNode {
         return null;
     }
     
+    @Override
+    public String toString() {
+        return "<" + super.toString() + ">";
+    }
     
-    
+    public List<ParseNode> getAllChildren() {
+        return allChildren;
+    }
     
     public String getCategory() {
         return getData();
@@ -83,5 +128,15 @@ public class CategoryNode extends ParseNode {
             output.append(child.toTreeForm(indent + 1));
         }
         return output.toString();
+    }
+    
+    public List<ParseNode> postfix() {
+       
+        List<ParseNode> output = new LinkedList<>();
+        for (ParseNode child : allChildren) {
+            output.addAll(child.postfix());
+        }
+        output.add(this);
+        return output;
     }
 }

@@ -1,23 +1,67 @@
 package radin.interphase.semantics;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import radin.interphase.AbstractTree;
+import radin.interphase.lexical.Token;
 
-public class AbstractSyntaxNode implements Iterable<AbstractSyntaxNode>{
+import java.util.*;
+
+public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
     
     private ASTNodeType type;
-    private String image;
+    private Token token;
     private List<AbstractSyntaxNode> childList;
+    private List<String> hints;
     
-    public AbstractSyntaxNode(ASTNodeType type) {
-        this.type = type;
-        childList = new ArrayList<>();
+    public static final AbstractSyntaxNode EMPTY;
+    
+    
+    private static HashMap<ASTNodeType, List<String>> typeToHints;
+    
+    static {
+        typeToHints = new HashMap<>();
+        typeToHints.put(ASTNodeType.method_call, Arrays.asList("Object", "Method Name"));
+        EMPTY = new AbstractSyntaxNode(ASTNodeType.empty);
     }
     
-    public AbstractSyntaxNode(ASTNodeType type, String image) {
+    public AbstractSyntaxNode(ASTNodeType type, AbstractSyntaxNode... children) {
+        this.type = type;
+        childList = new ArrayList<>();
+        childList.addAll(Arrays.asList(children));
+        hints = typeToHints.getOrDefault(type, new LinkedList<>());
+    }
+    
+    public static AbstractSyntaxNode unroll(ASTNodeType type, AbstractSyntaxNode first, AbstractSyntaxNode unrolled) {
+        AbstractSyntaxNode[] arr = new AbstractSyntaxNode[1 + unrolled.childList.size()];
+        arr[0] = first;
+        for (int i = 1; i < arr.length; i++) {
+            arr[i] = unrolled.childList.get(i-1);
+        }
+        return new AbstractSyntaxNode(type, arr);
+    }
+    
+    public AbstractSyntaxNode(AbstractSyntaxNode other,
+                              AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
+        this(other, false, add, additionalChildren);
+    }
+    
+    public AbstractSyntaxNode(AbstractSyntaxNode other,
+                              boolean addFirst, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
+        this(other.type);
+        if(!addFirst) {
+            childList.addAll(other.getChildList());
+            if(add != EMPTY) childList.add(add);
+            childList.addAll(Arrays.asList(additionalChildren));
+        }else {
+            if(add != EMPTY) childList.add(add);
+            childList.addAll(Arrays.asList(additionalChildren));
+            childList.addAll(other.getChildList());
+        }
+    }
+    
+    public AbstractSyntaxNode(ASTNodeType type, Token token) {
         this(type);
-        this.image = image;
+        this.token = token;
+        childList = new ArrayList<>();
     }
     
     public List<AbstractSyntaxNode> getChildList() {
@@ -30,8 +74,79 @@ public class AbstractSyntaxNode implements Iterable<AbstractSyntaxNode>{
         return type;
     }
     
+    public Token getToken() {
+        return token;
+    }
+    
+    public boolean hasToken() {
+        return token != null;
+    }
+    
+    @Override
+    protected String toTreeForm(int indent) {
+        StringBuilder output = new StringBuilder(super.toTreeForm(indent));
+        return treeFormHelper(indent, output);
+    }
+    
+    
+    protected String toTreeForm(int indent, String hint) {
+        StringBuilder output = new StringBuilder(String.format("%s%15s", super.toTreeForm(indent),  "(" + hint + ")"));
+        
+        return treeFormHelper(indent, output);
+    }
+    
+    private String treeFormHelper(int indent, StringBuilder output) {
+        Iterator<String> hints = this.hints.iterator();
+        for (AbstractSyntaxNode child : childList) {
+            output.append("\n");
+            if(hints.hasNext()) {
+                output.append(child.toTreeForm(indent + 1, hints.next()));
+            } else {
+                output.append(child.toTreeForm(indent + 1));
+            }
+        }
+        return output.toString();
+    }
+    
+    @Override
+    public String toString() {
+        if(token == null) return type.toString();
+        if(token.getImage() != null) return type.toString() + "::" + token.getImage();
+        return type.toString() + "::" + token.toString();
+    }
+    
+    @Override
+    public List<AbstractSyntaxNode> postfix() {
+        List<AbstractSyntaxNode> output = new LinkedList<>();
+        for (AbstractSyntaxNode child : childList) {
+            output.addAll(child.postfix());
+        }
+        output.add(this);
+        return output;
+    }
+    
     @Override
     public Iterator<AbstractSyntaxNode> iterator() {
         return childList.iterator();
     }
+    
+    public String getRepresentation() {
+        if(token != null)  return token.toString();
+        StringBuilder output = new StringBuilder();
+        output.append(type.toString());
+        if(!getChildList().isEmpty()) {
+            output.append(" (");
+            boolean first = true;
+            for (AbstractSyntaxNode abstractSyntaxNode : childList) {
+                if(first) {
+                    first = false;
+                }else output.append(", ");
+                output.append(abstractSyntaxNode.getRepresentation());
+            }
+            output.append(")");
+        }
+        return output.toString();
+    }
+    
+    
 }
