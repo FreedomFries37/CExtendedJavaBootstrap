@@ -1,21 +1,22 @@
-package radin.interphase.semantics.types;
+package radin.interphase.semantics.types.primitives;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
+import radin.interphase.semantics.types.CXType;
 
-public class ShortPrimitive implements IPrimitiveCXType {
+public class ShortPrimitive extends AbstractCXPrimitiveType {
     
-    private IPrimitiveCXType primitiveCXType;
+    private AbstractCXPrimitiveType primitiveCXType;
     
-    public ShortPrimitive(PrimitiveCXType cPrimitiveType) throws InvalidPrimitiveException {
-        if(!(cPrimitiveType.equals(PrimitiveCXType.INTEGER))) {
+    public ShortPrimitive(CXPrimitiveType cPrimitiveType) throws InvalidPrimitiveException {
+        if(!(cPrimitiveType.equals(CXPrimitiveType.INTEGER))) {
             throw new InvalidPrimitiveException();
         }
         this.primitiveCXType = cPrimitiveType;
     }
     
     public ShortPrimitive() throws InvalidPrimitiveException {
-        this(PrimitiveCXType.INTEGER);
+        this(CXPrimitiveType.INTEGER);
     }
     
     @Override
@@ -31,5 +32,10 @@ public class ShortPrimitive implements IPrimitiveCXType {
     @Override
     public long getDataSize(TypeEnvironment e) {
         return e.getShortIntSize();
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        return primitiveCXType.is(other, e);
     }
 }

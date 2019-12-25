@@ -6,11 +6,13 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.*;
 import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.compound.CXFunctionPointer;
+import radin.interphase.semantics.types.compound.FunctionPointer;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CXMethod implements CXEquivalent {
     
@@ -37,7 +39,7 @@ public class CXMethod implements CXEquivalent {
         this.parameters = parameters;
         this.parameters.add(
                 new CXParameter(
-                        new PointerType(PrimitiveCXType.VOID),
+                        new PointerType(CXPrimitiveType.VOID),
                         "__this"
                 )
         );
@@ -84,8 +86,8 @@ public class CXMethod implements CXEquivalent {
         return methodBody;
     }
     
-    public CXFunctionPointer getFunctionPointer() {
-        return new CXFunctionPointer(returnType, getParameterTypes());
+    public FunctionPointer getFunctionPointer() {
+        return new FunctionPointer(returnType, getParameterTypes());
     }
     
     public PointerType getThisType() {
@@ -134,7 +136,18 @@ public class CXMethod implements CXEquivalent {
         return output.toString();
     }
     
-    private void fixMethodBody() {
+    public static String getParameterMangle(List<CXParameter> parameters) {
+        return parameters.stream().map(
+                (CXParameter c) -> c.getType().generateCDefinition()
+                        .replace(" ", "")
+                        .replace("(", "L")
+                        .replace(")", "")
+                        .replace("[","R")
+                        .replace("]", "")
+                        .replace("*", "p")).collect(Collectors.joining());
+    }
+    
+    protected void fixMethodBody() {
         AbstractSyntaxNode define = new AbstractSyntaxNode(
                 ASTNodeType.declaration,
                 new AbstractSyntaxNode(

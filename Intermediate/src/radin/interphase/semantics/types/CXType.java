@@ -4,18 +4,25 @@ import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 import radin.interphase.semantics.TypeEnvironment;
 
-public interface CXType extends CXEquivalent{
+public abstract class CXType implements CXEquivalent {
     
     
-    String generateCDefinition(String identifier);
+    abstract public String generateCDefinition(String identifier);
     
-    default Token getTokenEquivalent() {
+    public Token getTokenEquivalent() {
         return new Token(TokenType.t_typename, generateCDefinition());
     }
     
-    boolean isValid(TypeEnvironment e);
+    abstract public boolean isValid(TypeEnvironment e);
     
-    boolean isPrimitive();
+    abstract public boolean isPrimitive();
     
-    long getDataSize(TypeEnvironment e);
+    abstract public long getDataSize(TypeEnvironment e);
+    
+    abstract public boolean is(CXType other, TypeEnvironment e);
+    
+    @Override
+    public String toString() {
+        return generateCDefinition();
+    }
 }

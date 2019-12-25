@@ -1,19 +1,20 @@
 package radin.interphase.semantics.types;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 
-public class CXArrayType implements IPrimitiveCXType {
+public class ArrayType extends AbstractCXPrimitiveType {
 
     private CXType baseType;
     private boolean constSize;
     private long size;
     
-    public CXArrayType(CXType baseType) {
+    public ArrayType(CXType baseType) {
         this.baseType = baseType;
         constSize = false;
     }
     
-    public CXArrayType(CXType baseType, long size) {
+    public ArrayType(CXType baseType, long size) {
         this.baseType = baseType;
         this.size = size;
         constSize = true;
@@ -55,5 +56,19 @@ public class CXArrayType implements IPrimitiveCXType {
     @Override
     public long getDataSize(TypeEnvironment e) {
         return 0;
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        if(!(other instanceof ArrayType || other instanceof PointerType)) {
+            return false;
+        }
+        CXType baseType;
+        if(other instanceof ArrayType) {
+            baseType = ((ArrayType) other).baseType;
+        }else {
+            baseType = ((PointerType) other).getSubType();
+        }
+        return this.baseType.is(other, e);
     }
 }

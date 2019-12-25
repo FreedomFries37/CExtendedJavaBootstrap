@@ -30,7 +30,8 @@ public class Main {
         }
         
         //Lexer lex2 = new Lexer("typedef const int[][] pid; typedef pid* pid_ptr;");
-        Lexer lex2 = new Lexer("typedef int * intp; '0' == (intp[]) 58;");
+        Lexer lex2 = new Lexer("typedef struct name { int val1; long** val2, *val3; } name;\ntypedef struct name* " +
+                "name_ptr;");
         for (Token token : lex2) {
             System.out.println(token);
         }

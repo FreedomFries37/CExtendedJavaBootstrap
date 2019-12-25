@@ -23,8 +23,8 @@ public abstract class BasicParser {
     }
     
     protected Token getNext() {
-       lexer.getNext();
-       return getCurrent();
+        lexer.getNext();
+        return getCurrent();
     }
     
     protected void next() { lexer.getNext(); }
@@ -71,6 +71,8 @@ public abstract class BasicParser {
                 getCurrent().getLineNumber(),
                 getCurrent().getColumn(),
                 msg));
+        new Exception("Parser error stack trace").printStackTrace();
+        
         return false;
     }
     

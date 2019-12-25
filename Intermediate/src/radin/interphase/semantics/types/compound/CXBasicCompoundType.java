@@ -1,5 +1,8 @@
 package radin.interphase.semantics.types.compound;
 
+import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.CXType;
+
 import java.util.List;
 
 public abstract class CXBasicCompoundType extends CXCompoundType {
@@ -18,6 +21,14 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
     
     public CXBasicCompoundType(String name, FieldDeclaration f1, FieldDeclaration... fields) {
         super(name, f1, fields);
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        if(!(other instanceof CXCompoundType)) return false;
+        if(this.isAnonymous() || ((CXCompoundType) other).isAnonymous()) return false;
+        
+        return this.getTypeName().equals(((CXCompoundType) other).getTypeName());
     }
     
     @Override

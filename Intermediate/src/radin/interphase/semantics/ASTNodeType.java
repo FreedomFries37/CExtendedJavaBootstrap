@@ -40,7 +40,9 @@ public enum ASTNodeType {
     class_level_decs("class_level_declaration"),
     class_type_dec("class_dec"),
     class_type_name("class_type_name"),
-    typedef_dec("typedef"),
+    basic_compound_type_reference("compound_type_reference"),
+    class_type_reference("class_type_reference"),
+    typedef("typedef"),
     top_level_decs("top_level_decs"),
     interactable("interactable"),
     indirection("indirection"),
@@ -50,7 +52,12 @@ public enum ASTNodeType {
     array_type("[]"),
     pointer_type("*"),
     abstract_declarator("abstract_declarator"),
-    declarator("declarator")
+    declarator("declarator"),
+    struct("struct"),
+    union("union"),
+    _class("class"),
+    basic_compound_type_fields("struct/union_field_declarations"),
+    basic_compound_type_field("struct/union_field_declaration")
     ;
     
     

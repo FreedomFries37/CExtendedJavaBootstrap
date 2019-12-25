@@ -1,9 +1,10 @@
 package radin.interphase.semantics.types;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.exceptions.TypeDoesNotExist;
 import radin.interphase.semantics.types.compound.CXCompoundType;
 
-public class CompoundTypeReference implements CXType {
+public class CompoundTypeReference extends CXType {
     
     public enum CompoundType {
         struct("struct"),
@@ -37,6 +38,17 @@ public class CompoundTypeReference implements CXType {
     @Override
     public String generateCDefinition(String identifier) {
         return compoundType.cequiv + " " + typename + " " + identifier;
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        if(!(other instanceof ICXCompoundType || other instanceof CompoundTypeReference)) return false;
+        if(other instanceof ICXCompoundType) {
+            return e.getNamedCompoundType(typename).is(other, e);
+        } else {
+            if(!e.namedCompoundTypeExists(((CompoundTypeReference) other).typename)) throw new TypeDoesNotExist(((CompoundTypeReference) other).typename);
+            return e.getNamedCompoundType(typename).is(e.getNamedCompoundType(((CompoundTypeReference) other).typename), e);
+        }
     }
     
     @Override

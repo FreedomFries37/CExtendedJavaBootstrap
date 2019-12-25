@@ -1,8 +1,9 @@
-package radin.interphase.semantics.types;
+package radin.interphase.semantics.types.primitives;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.CXType;
 
-public class PrimitiveCXType implements IPrimitiveCXType {
+public class CXPrimitiveType extends AbstractCXPrimitiveType {
     enum Primitives {
         _char("char"),
         _int("int"),
@@ -11,22 +12,22 @@ public class PrimitiveCXType implements IPrimitiveCXType {
         _void("void");
         
         String cEquivalent;
-        int size;
-    
+        
+        
         Primitives(String cEquivalent) {
             this.cEquivalent = cEquivalent;
         }
     }
     
-    public static PrimitiveCXType INTEGER = new PrimitiveCXType(Primitives._int);
-    public static PrimitiveCXType CHAR = new PrimitiveCXType(Primitives._char);
-    public static PrimitiveCXType FLOAT = new PrimitiveCXType(Primitives._float);
-    public static PrimitiveCXType DOUBLE = new PrimitiveCXType(Primitives._double);
-    public static PrimitiveCXType VOID = new PrimitiveCXType(Primitives._void);
+    public static CXPrimitiveType INTEGER = new CXPrimitiveType(Primitives._int);
+    public static CXPrimitiveType CHAR = new CXPrimitiveType(Primitives._char);
+    public static CXPrimitiveType FLOAT = new CXPrimitiveType(Primitives._float);
+    public static CXPrimitiveType DOUBLE = new CXPrimitiveType(Primitives._double);
+    public static CXPrimitiveType VOID = new CXPrimitiveType(Primitives._void);
     
     private Primitives myPrimitive;
     
-    protected PrimitiveCXType(Primitives myPrimitive) {
+    protected CXPrimitiveType(Primitives myPrimitive) {
         this.myPrimitive = myPrimitive;
     }
     
@@ -39,18 +40,20 @@ public class PrimitiveCXType implements IPrimitiveCXType {
         return myPrimitive.cEquivalent;
     }
     
-    @Override
+    
     public boolean isValid(TypeEnvironment e) {
         return myPrimitive != Primitives._void;
     }
+    
+    
     
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         
-        PrimitiveCXType that = (PrimitiveCXType) o;
-    
+        CXPrimitiveType that = (CXPrimitiveType) o;
+        
         return myPrimitive == that.myPrimitive;
     }
     
@@ -59,7 +62,6 @@ public class PrimitiveCXType implements IPrimitiveCXType {
         return myPrimitive.hashCode();
     }
     
-    @Override
     public long getDataSize(TypeEnvironment e) {
         switch (myPrimitive) {
             case _int: return e.getIntSize();
@@ -69,5 +71,21 @@ public class PrimitiveCXType implements IPrimitiveCXType {
             case _void: return e.getVoidSize();
             default: return 0;
         }
+    }
+    
+    public static CXPrimitiveType get(String primitive) {
+        switch (primitive) {
+            case "char": return CHAR;
+            case "int": return INTEGER;
+            case "float": return FLOAT;
+            case "double": return DOUBLE;
+            case "void": return VOID;
+            default: return null;
+        }
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        return other instanceof CXPrimitiveType;
     }
 }

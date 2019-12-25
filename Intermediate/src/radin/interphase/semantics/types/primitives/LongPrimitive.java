@@ -1,27 +1,28 @@
-package radin.interphase.semantics.types;
+package radin.interphase.semantics.types.primitives;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
+import radin.interphase.semantics.types.CXType;
 
-public class LongPrimitive implements IPrimitiveCXType {
+public class LongPrimitive extends AbstractCXPrimitiveType {
     
-    private IPrimitiveCXType primitiveCXType;
+    private AbstractCXPrimitiveType primitiveCXType;
     
-    public LongPrimitive(PrimitiveCXType cPrimitiveType) throws InvalidPrimitiveException {
-        if(!(cPrimitiveType.equals(PrimitiveCXType.INTEGER) || cPrimitiveType.equals(PrimitiveCXType.DOUBLE)))
+    public LongPrimitive(CXPrimitiveType cPrimitiveType) throws InvalidPrimitiveException {
+        if(!(cPrimitiveType.equals(CXPrimitiveType.INTEGER) || cPrimitiveType.equals(CXPrimitiveType.DOUBLE)))
             throw new InvalidPrimitiveException();
         this.primitiveCXType = cPrimitiveType;
     }
     
     public LongPrimitive(LongPrimitive type) throws InvalidPrimitiveException {
-        if(!type.primitiveCXType.equals(PrimitiveCXType.INTEGER)) {
+        if(!type.primitiveCXType.equals(CXPrimitiveType.INTEGER)) {
             throw new InvalidPrimitiveException();
         }
         this.primitiveCXType = type;
     }
     
     public LongPrimitive() throws InvalidPrimitiveException {
-        this(PrimitiveCXType.INTEGER);
+        this(CXPrimitiveType.INTEGER);
     }
     
     @Override
@@ -36,8 +37,13 @@ public class LongPrimitive implements IPrimitiveCXType {
     
     @Override
     public long getDataSize(TypeEnvironment e) {
-        if(primitiveCXType.equals(PrimitiveCXType.INTEGER)) return e.getLongIntSize();
-        if(primitiveCXType.equals(PrimitiveCXType.DOUBLE)) return e.getLongDoubleSize();
+        if(primitiveCXType.equals(CXPrimitiveType.INTEGER)) return e.getLongIntSize();
+        if(primitiveCXType.equals(CXPrimitiveType.DOUBLE)) return e.getLongDoubleSize();
         return e.getLongLongSize();
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        return primitiveCXType.is(other, e);
     }
 }

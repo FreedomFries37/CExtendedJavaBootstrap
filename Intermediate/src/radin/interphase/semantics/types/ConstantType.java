@@ -4,7 +4,7 @@ import radin.interphase.semantics.TypeEnvironment;
 
 import javax.print.attribute.standard.Fidelity;
 
-public class ConstantType implements CXType {
+public class ConstantType extends CXType {
     
     private CXType subtype;
     
@@ -35,5 +35,10 @@ public class ConstantType implements CXType {
     @Override
     public long getDataSize(TypeEnvironment e) {
         return subtype.getDataSize(e);
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        return subtype.is(other, e);
     }
 }

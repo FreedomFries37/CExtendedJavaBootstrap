@@ -1,9 +1,9 @@
 package radin.interphase.semantics.types;
 
-public interface ComplexType extends CXType{
+public abstract class ICXCompoundType extends CXType{
     
     @Override
-    default boolean isPrimitive() {
+    public boolean isPrimitive() {
         return false;
     }
 }

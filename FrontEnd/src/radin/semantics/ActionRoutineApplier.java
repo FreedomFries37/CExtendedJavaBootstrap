@@ -4,6 +4,10 @@ import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
+import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.parsing.CategoryNode;
 import radin.parsing.LeafNode;
 import radin.parsing.ParseNode;
@@ -26,10 +30,13 @@ public class ActionRoutineApplier {
     private Stack<String> errors;
     private List<AbstractSyntaxNode> successOrder;
     
+    private TypeEnvironment environment;
+    
     public ActionRoutineApplier() {
         catNodeStack = new Stack<>();
         successOrder = new LinkedList<>();
         errors = new Stack<>();
+        environment = new TypeEnvironment();
     }
     
     public List<AbstractSyntaxNode> getSuccessOrder() {
@@ -124,7 +131,17 @@ public class ActionRoutineApplier {
             case t_inc:
             case t_dec: {
                 node.setInherit(new AbstractSyntaxNode(ASTNodeType.operator, node.getToken()));
+                break;
             }
+            case t_struct:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.struct, node.getToken()));
+                break;
+            case t_union:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.union, node.getToken()));
+                break;
+            case t_class:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType._class, node.getToken()));
+                break;
         }
         
         node.setSynthesized(node.getInherit());
@@ -152,7 +169,8 @@ public class ActionRoutineApplier {
                         node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.top_level_decs, array));
                         return true;
                     }
-                    case "TopLevelDeclaration": {
+                    case "TopLevelDeclaration":
+                    case "StructOrUnion": {
                         node.setSynthesized(node.getChild(0).getSynthesized());
                         return true;
                     }
@@ -555,7 +573,114 @@ public class ActionRoutineApplier {
                         return true;
                     }
                     case "TypeDef": {
-                    
+                        AbstractSyntaxNode typeAST = getCatNode("TypeName").getSynthesized();
+                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        
+                        
+                        CXType type = environment.addTypeDefinition(typeAST, id.getToken().getImage());
+                        
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(ASTNodeType.typedef, type, id)
+                        );
+                        return true;
+                    }
+                    case "StructOrUnionSpecifier": {
+                        AbstractSyntaxNode structOrUnion = node.getCategoryNode("StructOrUnion").getSynthesized();
+                        LeafNode nameNode = node.getLeafNode(TokenType.t_id);
+                        if(nameNode == null) nameNode = node.getLeafNode(TokenType.t_typename);
+                        AbstractSyntaxNode nameAST = nameNode != null? nameNode.getSynthesized() : null;
+                        AbstractSyntaxNode mid;
+                        if(node.hasChildCategory("StructDeclarationList")) {
+                            AbstractSyntaxNode declarations = getCatNode("StructDeclarationList").getSynthesized();
+                            if(nameAST == null) {
+                                mid = new AbstractSyntaxNode(ASTNodeType.basic_compound_type_dec, structOrUnion,
+                                        declarations);
+                            } else
+                                mid = new AbstractSyntaxNode(ASTNodeType.basic_compound_type_dec, structOrUnion,
+                                        nameAST,
+                                        declarations);
+                        } else {
+                            mid = new AbstractSyntaxNode(ASTNodeType.basic_compound_type_reference,
+                                    structOrUnion, nameAST);
+                        }
+                        
+                        mid = new AbstractSyntaxNode(ASTNodeType.specifier, mid);
+                        
+                        CXType type = environment.getType(mid);
+                        
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(mid.getType(), type, mid)
+                        );
+                        
+                        return true;
+                    }
+                    case "StructDeclarationList": {
+                        
+                        String EntryCategory = "StructDeclaration";
+                        String HeadCatName = "StructDeclarationList";
+                        String TailCatName = "StructDeclarationListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName);
+                        
+                        
+                        node.setSynthesized(AbstractSyntaxNode.bringUpChildren(
+                                new AbstractSyntaxNode(ASTNodeType.basic_compound_type_fields, array)
+                        ));
+                        return true;
+                        
+                    }
+                    case "StructDeclaration": {
+                        AbstractSyntaxNode specsAndQuals = getCatNode("SpecsAndQuals").getSynthesized();
+                        CategoryNode declaratorList = getCatNode("StructDeclaratorList");
+                        declaratorList.setInherit(specsAndQuals);
+                        
+                        
+                        node.setSynthesized(
+                                declaratorList.getSynthesized()
+                        );
+                        
+                        return true;
+                    }
+                    case "StructDeclaratorList": {
+                        String EntryCategory = "StructDeclarator";
+                        String HeadCatName = "StructDeclaratorList";
+                        String TailCatName = "StructDeclaratorListTail";
+    
+                        AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName, node.getInherit());
+    
+    
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.basic_compound_type_fields, array));
+                        return true;
+                    }
+                    case "StructDeclarator": {
+                        getCatNode("Declarator").setInherit(node.getInherit());
+                        node.setSynthesized(getCatNode("Declarator").getSynthesized());
+                        return true;
+                    }
+                    case "Declarator": {
+                        AbstractSyntaxNode mid = node.getInherit();
+                        if(node.hasChildCategory("Pointer")) {
+                            getCatNode("Pointer").setInherit(mid);
+                            mid = getCatNode("Pointer").getSynthesized();
+                        }
+                        
+                        getCatNode("DirectDeclarator").setInherit(mid);
+                        node.setSynthesized(
+                                getCatNode("DirectDeclarator").getSynthesized()
+                        );
+                        return true;
+                    }
+                    case "DirectDeclarator": {
+                        AbstractSyntaxNode mid = node.getInherit();
+                        if(node.firstIs(TokenType.t_lbrac)) {
+                            //TODO: direct declarators
+                        }
+                        AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        CXType type = environment.getType(mid);
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(ASTNodeType.basic_compound_type_field, type, name)
+                        );
+                        return true;
                     }
                     default:
                         error("No Action Routine for " + node.getCategory());
@@ -564,7 +689,7 @@ public class ActionRoutineApplier {
                 
             } catch (SynthesizedMissingException e) {
                 if(!enactActionRoutine(e.node)) return false;
-            } catch (InheritMissingError | MissingCategoryNodeError e) {
+            } catch (InheritMissingError | MissingCategoryNodeError | InvalidPrimitiveException e) {
                 e.printStackTrace();
                 cont = false;
             }
@@ -577,6 +702,27 @@ public class ActionRoutineApplier {
         while (listNode.hasChildren()) {
             
             childExpressions.add(listNode.getCategoryNode(entryCategory).getSynthesized());
+            
+            CategoryNode listNodeTail = listNode.getCategoryNode(tailCatName);
+            if(!listNodeTail.hasChildren()) break;
+            
+            CategoryNode next = listNodeTail.getCategoryNode(headCatName);
+            listNode = next;
+        }
+        return childExpressions.toArray(new AbstractSyntaxNode[childExpressions.size()]);
+    }
+    
+    private AbstractSyntaxNode[] foldList(CategoryNode listNode, String entryCategory, String headCatName,
+                                          String tailCatName,
+                                          AbstractSyntaxNode... entryInherits) throws SynthesizedMissingException {
+        List<AbstractSyntaxNode> childExpressions = new ArrayList<>();
+        while (listNode.hasChildren()) {
+    
+            CategoryNode entryNode = listNode.getCategoryNode(entryCategory);
+            for (int i = 0; i < entryInherits.length; i++) {
+                entryNode.setInherit(entryInherits[i], i);
+            }
+            childExpressions.add(entryNode.getSynthesized());
             
             CategoryNode listNodeTail = listNode.getCategoryNode(tailCatName);
             if(!listNodeTail.hasChildren()) break;

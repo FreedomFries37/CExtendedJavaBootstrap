@@ -1,8 +1,9 @@
 package radin.interphase.semantics.types;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 
-public class PointerType implements IPrimitiveCXType {
+public class PointerType extends AbstractCXPrimitiveType {
     
     private CXType subType;
     
@@ -27,5 +28,12 @@ public class PointerType implements IPrimitiveCXType {
     @Override
     public long getDataSize(TypeEnvironment e) {
         return e.getPointerSize();
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        if(!(other instanceof PointerType)) return false;
+        
+        return subType.is(((PointerType) other).subType, e);
     }
 }

@@ -30,6 +30,12 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
         hints = typeToHints.getOrDefault(type, new LinkedList<>());
     }
     
+    public AbstractSyntaxNode(ASTNodeType type, List<AbstractSyntaxNode> childList) {
+        this.type = type;
+        this.childList = childList;
+        hints = typeToHints.getOrDefault(type, new LinkedList<>());
+    }
+    
     public static AbstractSyntaxNode unroll(ASTNodeType type, AbstractSyntaxNode first, AbstractSyntaxNode unrolled) {
         AbstractSyntaxNode[] arr = new AbstractSyntaxNode[1 + unrolled.childList.size()];
         arr[0] = first;
@@ -37,6 +43,14 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
             arr[i] = unrolled.childList.get(i-1);
         }
         return new AbstractSyntaxNode(type, arr);
+    }
+    
+    public static AbstractSyntaxNode bringUpChildren(AbstractSyntaxNode node) {
+        List<AbstractSyntaxNode> childrensChildren = new LinkedList<>();
+        for (AbstractSyntaxNode abstractSyntaxNode : node.getChildList()) {
+            childrensChildren.addAll(abstractSyntaxNode.getChildList());
+        }
+        return new AbstractSyntaxNode(node.getType(), childrensChildren);
     }
     
     public AbstractSyntaxNode(AbstractSyntaxNode other,
@@ -80,6 +94,29 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
     
     public boolean hasToken() {
         return token != null;
+    }
+    
+    public AbstractSyntaxNode getChild(int index) {
+        return childList.get(index);
+    }
+    
+    public boolean hasChild(ASTNodeType type) {
+        return getChild(type) != null;
+    }
+    
+    public AbstractSyntaxNode getChild(ASTNodeType type) {
+        for (AbstractSyntaxNode abstractSyntaxNode : childList) {
+            if(abstractSyntaxNode.getType().equals(type)) return abstractSyntaxNode;
+        }
+        return null;
+    }
+    
+    public List<AbstractSyntaxNode> getChildren(ASTNodeType type){
+        List<AbstractSyntaxNode> output = new LinkedList<>();
+        for (AbstractSyntaxNode abstractSyntaxNode : childList) {
+            if(abstractSyntaxNode.getType().equals(type)) output.add(abstractSyntaxNode);
+        }
+        return output;
     }
     
     @Override

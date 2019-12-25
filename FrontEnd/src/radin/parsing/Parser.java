@@ -6,17 +6,21 @@ import radin.interphase.lexical.TokenType;
 
 import java.awt.desktop.OpenURIEvent;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Parser extends BasicParser {
     
     private HashSet<String> typedefed;
+    private HashSet<String> compoundTypeNames;
     
     public Parser(Lexer lexer, String... types) {
         super(lexer);
         typedefed = new HashSet<>();
         typedefed.addAll(Arrays.asList(types));
+        compoundTypeNames = new HashSet<>();
     }
+    
     
     public HashSet<String> getTypedefed() {
         return typedefed;
@@ -25,13 +29,18 @@ public class Parser extends BasicParser {
     private boolean isTypeName(String image) {
         return typedefed.contains(image);
     }
-    
+    private boolean isCompoundTypeName(String image) {
+        return compoundTypeNames.contains(image);
+    }
     
     @Override
     protected Token getCurrent() {
         Token output = super.getCurrent();
-        if(output.getType().equals(TokenType.t_id) && isTypeName(output.getImage())) {
-            output = new Token(TokenType.t_typename, output.getImage());
+        if(output.getType().equals(TokenType.t_id) && (isTypeName(output.getImage()))) {
+            
+            
+            output = new Token(TokenType.t_typename, output.getImage())
+                    .addColumnAndLineNumber(output.getColumn(), output.getLineNumber());
         }
         return output;
     }
@@ -47,7 +56,7 @@ public class Parser extends BasicParser {
     
     private boolean parseTopLevelDecsList(CategoryNode parent) {
         CategoryNode output = new CategoryNode("TopLevelDecsList");
-    
+        
         if(!getCurrentType().equals(TokenType.t_eof)) {
             if (!parseTopLevelDeclaration(output)) return false;
             if (!parseTopLevelDecsTail(output)) return false;
@@ -59,7 +68,7 @@ public class Parser extends BasicParser {
     
     private boolean parseTopLevelDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("TopLevelDeclaration");
-    
+        
         switch (getCurrentType()) {
             case t_typedef: {
                 if(!parseTypeDef(child)) return false;
@@ -736,7 +745,7 @@ public class Parser extends BasicParser {
         return true;
     }
     
-   
+    
     
     // TYPES
     
@@ -764,7 +773,7 @@ public class Parser extends BasicParser {
                 if(!parseSpecsAndQualsTail(output)) return false;
                 break;
         }
-       
+        
         
         parent.addChild(output);
         return true;
@@ -802,7 +811,7 @@ public class Parser extends BasicParser {
         return true;
     }
     
-   
+    
     
     private boolean parseQualifier(CategoryNode parent) {
         CategoryNode output = new CategoryNode("Qualifier");
@@ -838,7 +847,7 @@ public class Parser extends BasicParser {
     
     private boolean parseSpecifier(CategoryNode parent) {
         CategoryNode output = new CategoryNode("Specifier");
-    
+        
         switch (getCurrentType()) {
             
             case t_id: {
@@ -877,12 +886,21 @@ public class Parser extends BasicParser {
     
     private boolean parseStructOrUnionSpecifier(CategoryNode parent) {
         CategoryNode output = new CategoryNode("StructOrUnionSpecifier");
-    
+        
         if(!parseStructOrUnion(output)) return false;
+        TokenType type = TokenType.t_id;
         switch (getCurrentType()) {
+            case t_typename: {
+                if(!isCompoundTypeName(getCurrent().getImage())) {
+                    return error("Can't use typename in struct/union declaration");
+                }
+                type = TokenType.t_typename;
+            }
             case t_id: {
-                if(!consumeAndAddAsLeaf(TokenType.t_id, output)) return false;
+                if(!consumeAndAddAsLeaf(type, output)) return false;
                 if(consume(TokenType.t_lcurl)) {
+                    String name = output.getLeafNode(type).getToken().getImage();
+                    compoundTypeNames.add(name);
                     
                     if(!parseStructDeclarationList(output)) return false;
                     if(!consume(TokenType.t_rcurl)) return false;
@@ -894,12 +912,10 @@ public class Parser extends BasicParser {
                 if(!parseStructDeclarationList(output)) return false;
                 if(!consume(TokenType.t_rcurl)) return false;
             }
-            case t_typename: {
-                return error("Can't use typename in struct/union declaration");
-            }
+            
         }
         
-    
+        
         parent.addChild(output);
         return true;
     }
@@ -927,7 +943,7 @@ public class Parser extends BasicParser {
     
     private boolean parseAbstractDeclarator(CategoryNode parent) {
         CategoryNode output = new CategoryNode("AbstractDeclarator");
-    
+        
         switch (getCurrentType()) {
             case t_star: {
                 if(!parsePointer(output)) return false;
@@ -941,7 +957,7 @@ public class Parser extends BasicParser {
             default:
                 break;
         }
-    
+        
         parent.addChild(output);
         return true;
     }
@@ -991,7 +1007,7 @@ public class Parser extends BasicParser {
         
         if(!consume(TokenType.t_typedef)) return false;
         if(!parseTypeName(child)) return false;
-        if(!match(TokenType.t_id)) return false;
+        if(!match(TokenType.t_id)) return error("ID already exists as a type");
         String typename = getCurrent().getImage();
         consumeAndAddAsLeaf(child);
         
@@ -1042,7 +1058,7 @@ public class Parser extends BasicParser {
     
     private boolean parseDirectDeclaratorTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("DirectDeclaratorTail");
-    
+        
         switch (getCurrentType()) {
             case t_lpar: {
                 // TODO: implement this after paramter type list implemented
@@ -1105,7 +1121,7 @@ public class Parser extends BasicParser {
     private boolean parseStructDeclaratorListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("StructDeclaratorListTail");
         
-        if(consume(TokenType.t_colon)) {
+        if(consume(TokenType.t_comma)) {
             if(!parseStructDeclaratorList(child)) return false;
         }
         
@@ -1116,7 +1132,7 @@ public class Parser extends BasicParser {
     
     private boolean parseStructDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("StructDeclaration");
-     
+        
         if(!parseSpecsAndQuals(child)) return false;
         if(!parseStructDeclaratorList(child)) return false;
         if(!consume(TokenType.t_semic)) return error("Missing ;");
@@ -1129,6 +1145,7 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("StructDeclarationList");
         
         if(!parseStructDeclaration(child)) return false;
+        if(!parseStructDeclarationListTail(child)) return false;
         
         parent.addChild(child);
         return true;
@@ -1138,7 +1155,7 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("StructDeclarationListTail");
         
         if(!match(TokenType.t_rcurl)) {
-            if(!parseStructDeclaratorList(child)) return false;
+            if(!parseStructDeclarationList(child)) return false;
         }
         
         parent.addChild(child);

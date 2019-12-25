@@ -2,27 +2,26 @@ package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.IPrimitiveCXType;
-import radin.interphase.semantics.types.PointerType;
-import radin.interphase.semantics.types.PrimitiveCXType;
+import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class CXFunctionPointer implements IPrimitiveCXType {
+public class FunctionPointer extends AbstractCXPrimitiveType {
     
     private CXType returnType;
     private List<CXType> parameterTypes;
     
     
-    public CXFunctionPointer(CXType returnType, List<CXType> parameterTypes) {
+    public FunctionPointer(CXType returnType, List<CXType> parameterTypes) {
         this.returnType = returnType;
         this.parameterTypes = parameterTypes;
     }
     
-    public CXFunctionPointer(CXType returnType) {
+    public FunctionPointer(CXType returnType) {
         this.returnType = returnType;
-        parameterTypes = Arrays.asList(PrimitiveCXType.VOID);
+        parameterTypes = Arrays.asList(CXPrimitiveType.VOID);
     }
     
     @Override
@@ -50,6 +49,11 @@ public class CXFunctionPointer implements IPrimitiveCXType {
             parameters.append(parameterType.generateCDefinition());
         }
         return returnType.generateCDefinition() + " (*) (" + parameters.toString() + ")";
+    }
+    
+    @Override
+    public boolean is(CXType other, TypeEnvironment e) {
+        return false;
     }
     
     @Override

@@ -1,15 +1,15 @@
 package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.types.CXArrayType;
+import radin.interphase.semantics.types.ArrayType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.ComplexType;
+import radin.interphase.semantics.types.ICXCompoundType;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class CXCompoundType implements ComplexType {
+public abstract class CXCompoundType extends ICXCompoundType {
 
     public static class FieldDeclaration {
         private CXType type;
@@ -97,8 +97,8 @@ public abstract class CXCompoundType implements ComplexType {
             if(!field.getType().isValid(e)) return false;
         }
         CXType lastType = fields.get(fields.size() - 1).type;
-        if (lastType instanceof CXArrayType) {
-            return ((CXArrayType) lastType).isConstSize();
+        if (lastType instanceof ArrayType) {
+            return ((ArrayType) lastType).isConstSize();
         }
         return true;
     }
