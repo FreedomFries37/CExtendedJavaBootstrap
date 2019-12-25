@@ -66,7 +66,8 @@ public enum TokenType {
     t_new("new"),
     t_super("super"),
     t_virtual("virtual"),
-    t_eof("EOF");
+    t_eof("EOF"),
+    t_typename("typename");
     
     private String str;
     

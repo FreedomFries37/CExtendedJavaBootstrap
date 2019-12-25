@@ -1,8 +1,10 @@
 package radin.parsing;
 
+import radin.interphase.lexical.Token;
 import radin.lexing.Lexer;
 import radin.interphase.lexical.TokenType;
 
+import java.awt.desktop.OpenURIEvent;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -16,10 +18,23 @@ public class Parser extends BasicParser {
         typedefed.addAll(Arrays.asList(types));
     }
     
+    public HashSet<String> getTypedefed() {
+        return typedefed;
+    }
+    
     private boolean isTypeName(String image) {
         return typedefed.contains(image);
     }
     
+    
+    @Override
+    protected Token getCurrent() {
+        Token output = super.getCurrent();
+        if(output.getType().equals(TokenType.t_id) && isTypeName(output.getImage())) {
+            output = new Token(TokenType.t_typename, output.getImage());
+        }
+        return output;
+    }
     
     public CategoryNode parse() {
         CategoryNode output = new CategoryNode("Program");
@@ -765,6 +780,7 @@ public class Parser extends BasicParser {
             case t_id: {
                 if(!isTypeName(getCurrent().getImage())) break;
             }
+            case t_typename:
             case t_void:
             case t_char:
             case t_int:
@@ -830,6 +846,7 @@ public class Parser extends BasicParser {
                 consumeAndAddAsLeaf(output);
                 break;
             }
+            case t_typename:
             case t_void:
             case t_char:
             case t_int:
@@ -876,6 +893,9 @@ public class Parser extends BasicParser {
                 getNext();
                 if(!parseStructDeclarationList(output)) return false;
                 if(!consume(TokenType.t_rcurl)) return false;
+            }
+            case t_typename: {
+                return error("Can't use typename in struct/union declaration");
             }
         }
         

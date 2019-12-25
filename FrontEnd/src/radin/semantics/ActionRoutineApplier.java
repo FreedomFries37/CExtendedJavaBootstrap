@@ -554,7 +554,9 @@ public class ActionRoutineApplier {
                         }
                         return true;
                     }
+                    case "TypeDef": {
                     
+                    }
                     default:
                         error("No Action Routine for " + node.getCategory());
                         cont = false;

@@ -23,7 +23,8 @@ public abstract class BasicParser {
     }
     
     protected Token getNext() {
-        return lexer.getNext();
+       lexer.getNext();
+       return getCurrent();
     }
     
     protected void next() { lexer.getNext(); }

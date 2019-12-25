@@ -30,7 +30,7 @@ public class Main {
         }
         
         //Lexer lex2 = new Lexer("typedef const int[][] pid; typedef pid* pid_ptr;");
-        Lexer lex2 = new Lexer("'0' == (int *[]) 58;");
+        Lexer lex2 = new Lexer("typedef int * intp; '0' == (intp[]) 58;");
         for (Token token : lex2) {
             System.out.println(token);
         }
