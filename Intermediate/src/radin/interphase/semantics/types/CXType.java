@@ -23,6 +23,14 @@ public abstract class CXType implements CXEquivalent {
     
     @Override
     public String toString() {
-        return generateCDefinition();
+        return generateCDefinition().replaceAll("\\s+", " ");
+    }
+    
+    public CXType getTypeIndirection() {
+        return this;
+    }
+    
+    public CXType getCTypeIndirection() {
+        return this;
     }
 }

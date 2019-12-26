@@ -1,0 +1,36 @@
+
+struct str;
+
+class node {
+	void* value;
+	private node* next;
+
+	public node(void* value) {
+		this->value = value;
+		next = NULL;
+	}
+
+	node* getNext() {
+		return this->next;
+	}
+
+	virtual public unsigned long* getHashCode() {
+		return NULL;
+	}
+};
+
+class child_node : node {
+
+	public child_node(char* v) : super(v) {
+
+	}
+
+	public char* getValue() {
+		return (char*) this->value;
+	}
+
+	virtual char getHardValue() {
+		return *this->getValue();
+	}
+};
+

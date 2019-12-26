@@ -4,23 +4,50 @@ import radin.interphase.lexical.Token;
 import radin.lexing.Lexer;
 import radin.interphase.lexical.TokenType;
 
-import java.awt.desktop.OpenURIEvent;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 public class Parser extends BasicParser {
     
     private HashSet<String> typedefed;
     private HashSet<String> compoundTypeNames;
+    private Stack<HashSet<String>> typedefStack;
+    private Stack<HashSet<String>> compoundTypesStack;
     
     public Parser(Lexer lexer, String... types) {
         super(lexer);
         typedefed = new HashSet<>();
         typedefed.addAll(Arrays.asList(types));
         compoundTypeNames = new HashSet<>();
+        typedefStack = new Stack<>();
+        compoundTypesStack = new Stack<>();
     }
     
+    @Override
+    protected void pushState() {
+        super.pushState();
+        typedefStack.push(new HashSet<>(typedefed));
+        compoundTypesStack.push(new HashSet<>(compoundTypeNames));
+    }
+    
+    @Override
+    protected boolean popState() {
+        boolean b = super.popState();
+        if(b) {
+            typedefStack.pop();
+            compoundTypesStack.pop();
+        }
+        return b;
+    }
+    
+    @Override
+    protected boolean applyState() {
+        boolean b = super.applyState();
+        if(b) {
+            typedefed = typedefStack.pop();
+            compoundTypeNames = compoundTypesStack.pop();
+        }
+        return b;
+    }
     
     public HashSet<String> getTypedefed() {
         return typedefed;
@@ -43,6 +70,11 @@ public class Parser extends BasicParser {
                     .addColumnAndLineNumber(output.getColumn(), output.getLineNumber());
         }
         return output;
+    }
+    
+    protected Token undoTypeName(Token other) {
+        if(other.getType() != TokenType.t_typename) return other;
+        return new Token(TokenType.t_id, other.getImage()).addColumnAndLineNumber(other.getColumn(), other.getColumn());
     }
     
     public CategoryNode parse() {
@@ -75,11 +107,36 @@ public class Parser extends BasicParser {
                 if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
                 break;
             }
-            default: {
-                if (!parseExpression(child)) return false;
-                if (!consume(TokenType.t_semic)) return false;
+            case t_class:
+                if(attemptParse(this::parseClassDeclaration, child)) {
+                    break;
+                }
+            case t_typename:
+            case t_void:
+            case t_char:
+            case t_int:
+            case t_long:
+            case t_float:
+            case t_double:
+            case t_unsigned:
+            case t_struct:
+            case t_union:
+            case t_lpar:
+            case t_const:
+            {
+                if(!attemptParse(this::parseDeclaration, child)) {
+                    if(!parseFunctionDefinition(child)) return error("Could not parse declaration");
+                }
+                /*
+                if(!attemptParse(this::parseFunctionDefinition, child)) {
+                    if(!parseDeclaration(child)) return error("Could not parse declaration");
+                    
+                }
+                
+                 */
                 break;
             }
+            
         }
         
         parent.addChild(child);
@@ -98,10 +155,251 @@ public class Parser extends BasicParser {
     }
     
     
+    private boolean parseFunctionDefinition(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("FunctionDefinition");
+        
+        
+        attemptParse(this::parseDeclarationSpecifiers, child);
+        if(!parseDeclarator(child)) return false;
+        if(!match(TokenType.t_lcurl)) {
+            if(!parseDeclarationList(child)) return false;
+        }
+        if(!parseCompoundStatement(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseStatement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Statement");
+        
+        switch (getCurrentType()) {
+            case t_lcurl: {
+                if(!parseCompoundStatement(child)) return false;
+                break;
+            }
+            case t_if: {
+                if(!parseSelectionStatement(child)) return false;
+                break;
+            }
+            case t_while:
+            case t_for:
+            case t_do: {
+                if(!parseIterationStatement(child)) return false;
+                break;
+            }
+            case t_return: {
+                if (!parseJumpStatement(child)) return false;
+                break;
+            }
+            case t_typename:
+            case t_void:
+            case t_char:
+            case t_int:
+            case t_long:
+            case t_float:
+            case t_double:
+            case t_unsigned:
+            case t_struct:
+            case t_union:
+            case t_class:
+            case t_lpar:
+            case t_const: {
+                if(!parseDeclaration(child)) return false;
+                break;
+            }
+            default:
+                if(!parseExpressionStatement(child)) return false;
+                break;
+            
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseTopExpression(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("TopExpression");
+        
+        if(!parseAssignmentExpression(child)) return false;
+        if(consume(TokenType.t_comma)) {
+            if(!parseTopExpression(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    
+    private boolean parseExpressionStatement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ExpressionStatement");
+        
+        attemptParse(this::parseTopExpression, child);
+        if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    
+    private boolean parseCompoundStatement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("CompoundStatement");
+        
+        
+        if(!consume(TokenType.t_lcurl)) return error("missing { for compound statement");
+        //attemptParse(this::parseDeclarationList, child);
+        attemptParse(this::parseStatementList, child);
+        if(!consume(TokenType.t_rcurl)) return error("missing matching } for compound statement");
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseIterationStatement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("IterationStatement");
+        
+        switch (getCurrentType()) {
+            case t_while: {
+                consumeAndAddAsLeaf(child);
+                if(!consume(TokenType.t_lpar)) return false;
+                if(!parseAssignmentExpression(child)) return false;
+                if(!consume(TokenType.t_rpar)) return false;
+                if(!parseStatement(child)) return false;
+                break;
+            }
+            case t_do: {
+                consumeAndAddAsLeaf(child);
+                if(!parseStatement(child)) return false;
+                if(!consume(TokenType.t_while)) return false;
+                if(!consume(TokenType.t_lpar)) return false;
+                if(!parseTopExpression(child)) return false;
+                if(!consume(TokenType.t_rpar)) return false;
+                if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+                break;
+            }
+            case t_for: {
+                consumeAndAddAsLeaf(child);
+                if(!consume(TokenType.t_lpar)) return false;
+                if(!attemptParse(this::parseDeclaration, child)) {
+                    if (!parseExpressionStatement(child)) return false;
+                }
+                if(!parseExpressionStatement(child)) return false;
+                if(!match(TokenType.t_rpar)) {
+                    if(!parseTopExpression(child)) return false;
+                }
+                if(!consume(TokenType.t_rpar)) return false;
+                if(!parseStatement(child)) return false;
+                break;
+            }
+            default:
+                return false;
+        }
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseSelectionStatement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("SelectionStatement");
+        
+        if(!consumeAndAddAsLeaf(TokenType.t_if, child)) return false;
+        if(!consume(TokenType.t_lpar)) return false;
+        if(!parseTopExpression(child)) return false;
+        if(!consume(TokenType.t_rpar)) return false;
+        if(!parseStatement(child)) return false;
+        if(consumeAndAddAsLeaf(TokenType.t_else, child)) {
+            if(!parseStatement(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseJumpStatement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("JumpStatement");
+        
+        switch (getCurrentType()) {
+            case t_return: {
+                consumeAndAddAsLeaf(child);
+                if(!match(TokenType.t_semic)) {
+                    if(!parseTopExpression(child)) return false;
+                }
+                break;
+            }
+            default:
+                return false;
+        }
+        
+        if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseStatementList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("StatementList");
+        
+        if(!parseStatement(child)) return false;
+        if(!parseStatementListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseStatementListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("StatementListTail");
+        
+        attemptParse(this::parseStatementList, child);
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseDeclarationList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("DeclarationList");
+        
+        if(!parseDeclaration(child)) return false;
+        if(!parseDeclarationListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseDeclarationListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("DeclarationListTail");
+        
+        attemptParse(this::parseDeclarationList, child);
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    
     
     private boolean parseAssignment(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Assignment");
         
+        if(!parseFactor(child)) return false;
+        if(!parseAssignOperator(child)) return false;
+        if(!parseAssignmentExpression(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseAssignOperator(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("AssignOperator");
+        
+        switch (getCurrentType()) {
+            case t_operator_assign:
+            case t_assign: {
+                consumeAndAddAsLeaf(child);
+                break;
+            }
+            default:
+                return false;
+        }
         
         parent.addChild(child);
         return true;
@@ -122,7 +420,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseDoubleOr(child)) return false;
                 if(!parseDoubleOrTail(child)) return false;
                 if(!parseExpressionTail(child)) return false;
@@ -166,7 +466,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseDoubleAnd(child)) return false;
                 if(!parseDoubleAndTail(child)) return false;
                 break;
@@ -209,7 +511,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseOr(child)) return false;
                 if(!parseOrTail(child)) return false;
                 break;
@@ -252,7 +556,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseNot(child)) return false;
                 if(!parseNotTail(child)) return false;
                 break;
@@ -295,7 +601,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseAnd(child)) return false;
                 if(!parseAndTail(child)) return false;
                 break;
@@ -338,7 +646,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseEquation(child)) return false;
                 if(!parseEquationTail(child)) return false;
                 break;
@@ -381,7 +691,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseC(child)) return false;
                 if(!parseCTail(child)) return false;
                 break;
@@ -428,7 +740,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseG(child)) return false;
                 if(!parseGTail(child)) return false;
                 break;
@@ -477,7 +791,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseT(child)) return false;
                 if(!parseTTail(child)) return false;
                 break;
@@ -524,7 +840,9 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:
+            case t_new:{
                 if(!parseFactor(child)) return false;
                 if(!parseFactorTail(child)) return false;
                 break;
@@ -585,9 +903,17 @@ public class Parser extends BasicParser {
                 }
                 break;
             }
-            case t_id: {
+            case t_id:
+            case t_new:{
                 if(!parseAtom(child)) return false;
                 if(!parseAtomTail(child)) return false;
+                break;
+            }
+            case t_sizeof: {
+                consumeAndAddAsLeaf(child);
+                if(!consume(TokenType.t_lpar)) return false;
+                if(!parseTypeName(child)) return false;
+                if(!consume(TokenType.t_rpar)) return false;
                 break;
             }
             default:
@@ -643,6 +969,14 @@ public class Parser extends BasicParser {
             case t_id: {
                 consumeAndAddAsLeaf(child);
                 if(!parseFunctionCall(child)) return false;
+                break;
+            }
+            case t_new: {
+                consumeAndAddAsLeaf(child);
+                if(!parseTypeName(child)) return false;
+                if(!consume(TokenType.t_lpar)) return false;
+                if(!parseArgsList(child)) return false;
+                if(!consume(TokenType.t_rpar)) return false;
                 break;
             }
             default:
@@ -715,7 +1049,8 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
-            case t_string: {
+            case t_string:
+            case t_sizeof:{
                 if(!parseExpression(output)) return false;
                 if(!parseArgsListTail(output)) return false;
                 break;
@@ -768,10 +1103,23 @@ public class Parser extends BasicParser {
                 if(!parseSpecsAndQualsTail(output)) return false;
                 break;
             }
-            default:
+            case t_typename:
+            case t_void:
+            case t_char:
+            case t_int:
+            case t_long:
+            case t_float:
+            case t_double:
+            case t_unsigned:
+            case t_struct:
+            case t_union:
+            case t_class:
+            case t_lpar:
                 if(!parseSpecifier(output)) return false;
                 if(!parseSpecsAndQualsTail(output)) return false;
                 break;
+            default:
+                return false;
         }
         
         
@@ -889,15 +1237,21 @@ public class Parser extends BasicParser {
         
         if(!parseStructOrUnion(output)) return false;
         TokenType type = TokenType.t_id;
-        switch (getCurrentType()) {
+        Token current = getCurrent();
+        switch (current.getType()) {
             case t_typename: {
+                /*
                 if(!isCompoundTypeName(getCurrent().getImage())) {
                     return error("Can't use typename in struct/union declaration");
                 }
-                type = TokenType.t_typename;
+                */
+                //type = TokenType.t_typename;
+                current = undoTypeName(current);
             }
             case t_id: {
-                if(!consumeAndAddAsLeaf(type, output)) return false;
+                addAsLeaf(output, current);
+                getNext();
+                
                 if(consume(TokenType.t_lcurl)) {
                     String name = output.getLeafNode(type).getToken().getImage();
                     compoundTypeNames.add(name);
@@ -1061,7 +1415,11 @@ public class Parser extends BasicParser {
         
         switch (getCurrentType()) {
             case t_lpar: {
-                // TODO: implement this after paramter type list implemented
+                getNext();
+                if(!attemptParse(this::parseParameterTypeList, child)) {
+                    attemptParse(this::parseIdentifierList, child);
+                }
+                if(!consume(TokenType.t_rpar)) return false;
                 break;
             }
             case t_rbrac: {
@@ -1151,6 +1509,93 @@ public class Parser extends BasicParser {
         return true;
     }
     
+    private boolean parseDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Declaration");
+        
+        if(!parseDeclarationSpecifiers(child)) return false;
+        if(!match(TokenType.t_semic)) {
+            if(!parseInitDeclaratorList(child)) return false;
+        }
+        if(!consume(TokenType.t_semic)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseDeclarationSpecifiers(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("DeclarationSpecifiers");
+        
+        if(!parseSpecsAndQuals(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseInitDeclaratorList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("InitDeclaratorList");
+        
+        if(!match(TokenType.t_semic)) {
+            if(!parseInitDeclarator(child)) return false;
+            if(!parseInitDeclaratorListTail(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseInitDeclaratorListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("InitDeclaratorListTail");
+        
+        if(consume(TokenType.t_comma)) {
+            if(!parseInitDeclaratorList(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseInitDeclarator(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("InitDeclarator");
+        
+        if(!parseDeclarator(child)) return false;
+        if(consume(TokenType.t_assign)) {
+            if(!parseInitializer(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseInitializer(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Initializer");
+        
+        switch (getCurrentType()) {
+            case t_lcurl:
+                getNext();
+                // TODO implement initializer lists
+                break;
+            default:
+                if(!parseAssignmentExpression(child)) return false;
+                break;
+        }
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseAssignmentExpression(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("AssignmentExpression");
+        
+        if(!attemptParse(this::parseAssignment, child)) {
+            if(!parseExpression(child)) return false;
+        }
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
     private boolean parseStructDeclarationListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("StructDeclarationListTail");
         
@@ -1175,6 +1620,20 @@ public class Parser extends BasicParser {
     private boolean parseParameterList(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ParameterList");
         
+        if(!parseParameterDeclaration(child)) return false;
+        if(!parseParameterListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseParameterDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ParameterDeclaration");
+        
+        if(!parseDeclarationSpecifiers(child)) return false;
+        if(!attemptParse(this::parseDeclarator, child)) {
+            attemptParse(this::parseAbstractDeclarator, child);
+        }
         
         parent.addChild(child);
         return true;
@@ -1183,10 +1642,148 @@ public class Parser extends BasicParser {
     private boolean parseParameterListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ParameterListTail");
         
-        if(consume(TokenType.t_colon)) {
+        if(consume(TokenType.t_comma)) {
             if(!parseParameterList(child)) return false;
         }
         
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseIdentifierList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("IdentifierList");
+        
+        if(!consumeAndAddAsLeaf(TokenType.t_id, child)) return false;
+        if(!parseIdentifierListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseIdentifierListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("IdentifierListTail");
+        
+        if(consume(TokenType.t_comma)) {
+            if(!parseIdentifierList(child)) return false;
+        }
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseClassDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ClassDeclaration");
+        
+        if(!consumeAndAddAsLeaf(TokenType.t_class, child)) return false;
+        if(!consumeAndAddAsLeaf(TokenType.t_id, child)) return false;
+        
+        String name = child.getLeafNode(TokenType.t_id).getToken().getImage();
+        typedefed.add(name);
+        
+        if(match(TokenType.t_colon)) {
+            if(!parseInherit(child)) return false;
+        }
+        if(!consume(TokenType.t_lcurl)) return false;
+        
+        if(!parseClassDeclarationList(child)) return false;
+        
+        if(!consume(TokenType.t_rcurl)) return error("Missing matching }");
+        if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    
+    private boolean parseInherit(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Inherit");
+        
+        if(!consume(TokenType.t_colon)) return false;
+        if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) return error("Not a proper typename for inherit");
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseClassDeclarationList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ClassDeclarationList");
+        
+        if(!parseClassTopLevelDeclaration(child)) return false;
+        if(!parseClassDeclarationListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseClassDeclarationListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ClassDeclarationListTail");
+        
+        if(!match(TokenType.t_rcurl)) {
+            if(!parseClassDeclarationList(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseClassTopLevelDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ClassTopLevelDeclaration");
+    
+        consumeAndAddAsLeaf(TokenType.t_virtual, child);
+        attemptParse(this::parseVisibility, child);
+        
+        if(!attemptParse(this::parseConstructorDefinition, child)) {
+            if(!attemptParse(this::parseDeclaration, child)) {
+                
+                if(!attemptParse(this::parseFunctionDefinition, child)) {
+                    return false;
+                }
+            }
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseVisibility(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Visibility");
+        
+        switch (getCurrentType()) {
+            case t_public:
+            case t_private:
+                consumeAndAddAsLeaf(child);
+                break;
+            default:
+                return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseConstructorDefinition(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ConstructorDefinition");
+        
+        if(!parseTypeName(child)) return false;
+        if(!consume(TokenType.t_lpar)) return false;
+        if(!parseParameterList(child)) return false;
+        if(!consume(TokenType.t_rpar)) return error("Missing matching )");
+        if(consume(TokenType.t_colon)) {
+            if(match(TokenType.t_id)) {
+                if(!getCurrent().getImage().equals("this")) return error("prior constructor must be either this or " +
+                        "super");
+                
+            } else if (!match(TokenType.t_super)) {
+                return false;
+            }
+            consumeAndAddAsLeaf(child);
+            if(!consume(TokenType.t_lpar)) return false;
+            if(!parseArgsList(child)) return false;
+            if(!consume(TokenType.t_rpar)) return error("Missing matching )");
+        }
+        if(!parseCompoundStatement(child)) return false;
         
         parent.addChild(child);
         return true;

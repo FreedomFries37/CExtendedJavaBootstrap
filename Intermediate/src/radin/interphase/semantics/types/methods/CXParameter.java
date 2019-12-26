@@ -3,7 +3,7 @@ package radin.interphase.semantics.types.methods;
 import radin.interphase.semantics.types.CXEquivalent;
 import radin.interphase.semantics.types.CXType;
 
-class CXParameter {
+public class CXParameter {
     private CXType type;
     private String name;
 

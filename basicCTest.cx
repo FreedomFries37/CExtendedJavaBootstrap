@@ -1,0 +1,40 @@
+struct node;
+typedef struct node* node;
+struct node {
+	void* val_ptr;
+	node next;
+};
+
+node head = ((void*) 0);
+
+int pow2(int n) {
+	return n*n;
+}
+
+
+int main(int argc, char** argv) {
+	node ptr = head;
+
+	for(int i = 0; i < 5; i++) {
+		node next = (node) malloc(sizeof(struct node));
+		ptr->setNext(next);
+		ptr = ptr->next;
+	}
+	printf("%p\n", ptr);
+
+	node bean = new struct node();
+
+	long spin = 0;
+	for(; spin >= 0;) {
+		spin++;
+	}
+
+	if(0) {
+
+	} else if(0) {
+
+	} else {
+	}
+
+	return 0;
+}

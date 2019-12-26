@@ -10,10 +10,12 @@ public abstract class BasicParser {
     
     protected Lexer lexer;
     protected Stack<Integer> states;
+    private Stack<Void> suppressErrors;
     
     public BasicParser(Lexer lexer) {
         this.lexer = lexer;
         states = new Stack<>();
+        suppressErrors = new Stack<>();
     }
     
     
@@ -59,6 +61,11 @@ public abstract class BasicParser {
         parent.addChild(leafNode);
     }
     
+    final protected void addAsLeaf(CategoryNode parent, Token t) {
+        LeafNode leafNode = new LeafNode(t);
+        parent.addChild(leafNode);
+    }
+    
     final protected boolean consumeAndAddAsLeaf(TokenType t_id, CategoryNode parent) {
         if(!match(t_id)) return false;
         consumeAndAddAsLeaf(parent);
@@ -66,13 +73,14 @@ public abstract class BasicParser {
     }
     
     protected boolean error(String msg) {
-        System.err.println(String.format("At token %s at line %d column %d: %s",
-                getCurrent(),
-                getCurrent().getLineNumber(),
-                getCurrent().getColumn(),
-                msg));
-        new Exception("Parser error stack trace").printStackTrace();
-        
+        if(suppressErrors.empty()) {
+            System.err.println(String.format("At token %s at line %d column %d: %s",
+                    getCurrent(),
+                    getCurrent().getLineNumber(),
+                    getCurrent().getColumn(),
+                    msg));
+            new Exception("Parser error stack trace").printStackTrace();
+        }
         return false;
     }
     
@@ -85,10 +93,13 @@ public abstract class BasicParser {
     
     final protected boolean attemptParse(ParseFunction function, CategoryNode parent) {
         pushState();
+        suppressErrors.push(null);
         if(!function.parse(parent)) {
             applyState();
+            suppressErrors.pop();
             return false;
         }
+        suppressErrors.pop();
         popState();
         return true;
     }

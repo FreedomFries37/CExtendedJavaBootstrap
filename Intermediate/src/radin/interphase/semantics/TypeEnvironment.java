@@ -1,19 +1,16 @@
 package radin.interphase.semantics;
 
-import jdk.jshell.spi.ExecutionControl;
-import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
-import radin.interphase.semantics.exceptions.PrimitiveTypeDefinitionError;
-import radin.interphase.semantics.exceptions.TypeDefinitionAlreadyExistsError;
-import radin.interphase.semantics.exceptions.VoidTypeError;
-import radin.interphase.semantics.types.ConstantType;
-import radin.interphase.semantics.types.PointerType;
-import radin.interphase.semantics.types.compound.CXCompoundType;
-import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.exceptions.*;
+import radin.interphase.semantics.types.*;
+import radin.interphase.semantics.types.compound.*;
+import radin.interphase.semantics.types.methods.CXConstructor;
+import radin.interphase.semantics.types.methods.CXMethod;
+import radin.interphase.semantics.types.methods.CXParameter;
+import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.interphase.semantics.types.primitives.LongPrimitive;
 import radin.interphase.semantics.types.primitives.UnsignedPrimitive;
 
-import javax.lang.model.type.PrimitiveType;
 import java.util.*;
 
 public class TypeEnvironment {
@@ -21,6 +18,10 @@ public class TypeEnvironment {
     private HashMap<String, CXType> typeDefinitions;
     private HashSet<CXCompoundType> namedCompoundTypes;
     private HashMap<String, CXCompoundType> namedCompoundTypesMap;
+    
+    private HashSet<CXClassType> createdClasses;
+    
+    private HashSet<CompoundTypeReference> lateBoundReferences;
     
     private final static HashSet<String> primitives;
     private int pointerSize = 8;
@@ -80,6 +81,8 @@ public class TypeEnvironment {
         typeDefinitions = new HashMap<>();
         namedCompoundTypes = new HashSet<>();
         namedCompoundTypesMap = new HashMap<>();
+        lateBoundReferences = new HashSet<>();
+        createdClasses = new HashSet<>();
     }
     
     public int getPointerSize() {
@@ -130,17 +133,32 @@ public class TypeEnvironment {
         if(primitives.contains(name)) throw new PrimitiveTypeDefinitionError(name);
         if(name.equals("void")) throw new VoidTypeError();
         if(typeDefinitions.containsKey(name)) throw new TypeDefinitionAlreadyExistsError(name);
-    
+        
         CXType type = getType(typeAST);
+        typeDefinitions.put(name, type);
+        return type;
+    }
+    
+    public CXType addTypeDefinition(CXType type, String name) {
+        
         typeDefinitions.put(name, type);
         return type;
     }
     
     public CXType getType(AbstractSyntaxNode ast) throws InvalidPrimitiveException {
         System.out.println("Getting type for:");
+        
+        
         ast.printTreeForm();
+        if(ast instanceof TypeAbstractSyntaxNode) {
+            return ((TypeAbstractSyntaxNode) ast).getCxType();
+        }
+        
         if(ast.getType().equals(ASTNodeType.typename)) {
-            return typeDefinitions.get(ast.getToken().getImage());
+            if(!typedefExists(ast.getToken().getImage())) {
+                throw new TypeDoesNotExist(ast.getToken().getImage());
+            }
+            return typeDefinitions.get(ast.getToken().getImage()).getTypeIndirection();
         }
         
         if(ast.getType().equals(ASTNodeType.pointer_type)) {
@@ -157,13 +175,13 @@ public class TypeEnvironment {
                 }else if(isModifier(getSpecifier(specifier))) {
                     switch (getSpecifier(specifier)) {
                         case "unsigned": {
-                            assert type instanceof CXPrimitiveType;
-                            type = new UnsignedPrimitive((CXPrimitiveType) type);
+                            assert type instanceof AbstractCXPrimitiveType;
+                            type = new UnsignedPrimitive((AbstractCXPrimitiveType) type);
                             break;
                         }
                         case "long": {
-                            assert type instanceof CXPrimitiveType;
-                            type = new LongPrimitive((CXPrimitiveType) type);
+                            assert type instanceof AbstractCXPrimitiveType;
+                            type = LongPrimitive.create(((AbstractCXPrimitiveType) type));
                             break;
                         }
                         default:
@@ -190,10 +208,39 @@ public class TypeEnvironment {
         if(ast.getType().equals(ASTNodeType.specifier)) {
             
             if(ast.hasChild(ASTNodeType.basic_compound_type_dec)) {
-                // TODO: implement compound type creation
-            } else if(ast.hasChild(ASTNodeType.basic_compound_type_reference)) {
-                AbstractSyntaxNode name = ast.getChild(ASTNodeType.basic_compound_type_reference).getChild(ASTNodeType.id);
-                return getNamedCompoundType(name.getToken().getImage());
+                return createType(ast.getChild(ASTNodeType.basic_compound_type_dec));
+            } else if(ast.hasChild(ASTNodeType.compound_type_reference)) {
+                AbstractSyntaxNode name = ast.getChild(ASTNodeType.compound_type_reference).getChild(ASTNodeType.id);
+                String image = name.getToken().getImage();
+                if(namedCompoundTypeExists(image)) {
+                    return getNamedCompoundType(image);
+                } else {
+                    CompoundTypeReference.CompoundType type;
+                    boolean addTypeDef = false;
+                    switch (ast.getChild(ASTNodeType.compound_type_reference).getChild(0).getType()) {
+                        case struct: {
+                            type = CompoundTypeReference.CompoundType.struct;
+                            break;
+                        }
+                        case union: {
+                            type = CompoundTypeReference.CompoundType.union;
+                            break;
+                        }
+                        case _class: {
+                            type = CompoundTypeReference.CompoundType._class;
+                            addTypeDef = true;
+                            break;
+                        }
+                        default:
+                            throw new UnsupportedOperationException();
+                    }
+                    CompoundTypeReference compoundTypeReference = new CompoundTypeReference(type, image);
+                    lateBoundReferences.add(compoundTypeReference);
+                    if(addTypeDef) {
+                        addTypeDefinition(compoundTypeReference, image);
+                    }
+                    return compoundTypeReference;
+                }
             } else switch (getSpecifier(ast)) {
                 case "unsigned": {
                     return new UnsignedPrimitive();
@@ -206,10 +253,19 @@ public class TypeEnvironment {
                 }
                 
             }
+            
+            
         }
         
-        throw new UnsupportedOperationException();
+        if(ast.getType().equals(ASTNodeType.class_type_definition)) {
+            return createType(ast);
+        }
+        
+        throw new UnsupportedOperationException(ast.getType().toString());
     }
+    
+    
+    
     
     private String getSpecifier(AbstractSyntaxNode node) {
         String o1Specifier = node.getToken().getImage();
@@ -219,7 +275,234 @@ public class TypeEnvironment {
     
     private CXCompoundType createType(AbstractSyntaxNode ast) {
         
-        throw new UnsupportedOperationException();
+        AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
+        String name = nameAST != null? nameAST.getToken().getImage() : null;
+        boolean isAnonymous = name == null;
+        CXCompoundType output;
+        if(ast.getType().equals(ASTNodeType.basic_compound_type_dec)) {
+            boolean isUnion = ast.hasChild(ASTNodeType.union);
+            AbstractSyntaxNode fields = ast.getChild(ASTNodeType.basic_compound_type_fields);
+            List<CXCompoundType.FieldDeclaration> fieldDeclarations = createFieldDeclarations(fields);
+            
+            CXCompoundType type;
+            if(isUnion) {
+                if(isAnonymous)
+                    type = new CXUnionType(fieldDeclarations);
+                else
+                    type = new CXUnionType(name, fieldDeclarations);
+            } else {
+                if(isAnonymous)
+                    type = new CXStructType(fieldDeclarations);
+                else
+                    type = new CXStructType(name, fieldDeclarations);
+            }
+            
+            if(!isAnonymous) {
+                addNamedCompoundType(type);
+            }
+            
+            output = type;
+        } else {
+            List<CXMethod> methods = new LinkedList<>();
+            List<CXConstructor> constructors = new LinkedList<>();
+            List<CXClassType.ClassFieldDeclaration> fieldDeclarations = new LinkedList<>();
+            
+            List<AbstractSyntaxNode> constructorDefinitions = new LinkedList<>();
+            List<Visibility> constructorVisibilities = new LinkedList<>();
+            
+            for (AbstractSyntaxNode abstractSyntaxNode : ast.getChild(ASTNodeType.class_level_decs)) {
+                Visibility visibility = getVisibility(abstractSyntaxNode.getChild(ASTNodeType.visibility));
+                
+                AbstractSyntaxNode dec = abstractSyntaxNode.getChild(1);
+                switch (dec.getType()) {
+                    case declarations: {
+                        fieldDeclarations.addAll(
+                                createClassFieldDeclarations(visibility, dec)
+                        );
+                        break;
+                    }
+                    case function_definition: {
+                        boolean isVirtual = dec.hasChild(ASTNodeType._virtual);
+                        methods.add(
+                                createMethod(visibility, isVirtual, dec)
+                        );
+                        break;
+                    }
+                    case constructor_definition: {
+                        constructorDefinitions.add(dec);
+                        constructorVisibilities.add(visibility);
+                        break;
+                    }
+                    default:
+                        throw new UnsupportedOperationException(dec.getType().toString());
+                }
+                
+            }
+            
+            
+            
+            CXClassType cxClassType;
+            if(ast.hasChild(ASTNodeType.inherit)) {
+                
+                String image = ast.getChild(ASTNodeType.inherit)
+                        .getChild(ASTNodeType.typename).getToken().getImage();
+                CXClassType parent = ((CXClassType) getNamedCompoundType(image));
+                cxClassType = new CXClassType(name, parent, fieldDeclarations, methods, new LinkedList<>());
+                
+                
+            }
+            else cxClassType = new CXClassType(name, fieldDeclarations, methods, new LinkedList<>());
+            
+            Iterator<Visibility> visibilityIterator = constructorVisibilities.iterator();
+            for (AbstractSyntaxNode dec: constructorDefinitions) {
+                AbstractSyntaxNode params = dec.getChild(ASTNodeType.parameter_list);
+                AbstractSyntaxNode compound = dec.getChild(ASTNodeType.compound_statement);
+                if(dec.hasChild(ASTNodeType.args_list)) {
+                    
+                    AbstractSyntaxNode priorAST = dec.getChild(2);
+                    CXConstructor prior;
+                    if(priorAST.getType().equals(ASTNodeType._super)) {
+                        
+                        prior = cxClassType.getParent().getConstructor(params.getChildList().size());
+                    } else if(priorAST.getType().equals(ASTNodeType.id)) {
+                        prior = cxClassType.getConstructor(params.getChildList().size());
+                    } else throw new UnsupportedOperationException();
+                    
+                    constructors.add(
+                            createConstructor(visibilityIterator.next(), cxClassType, params, compound, prior)
+                    );
+                } else {
+                    constructors.add(
+                            createConstructor(visibilityIterator.next(), cxClassType, params, compound, null)
+                    );
+                }
+            }
+            
+            for (CXConstructor constructor : constructors) {
+                constructor.setParent(cxClassType);
+            }
+            cxClassType.addConstructors(constructors);
+            createdClasses.add(cxClassType);
+            addNamedCompoundType(cxClassType);
+            return cxClassType;
+            
+        }
+        
+        lateBoundReferences.removeIf(
+                compoundTypeReference ->
+                        compoundTypeReference.is(output, this)
+        
+        );
+        
+        return output;
+    }
+    
+    private Visibility getVisibility(AbstractSyntaxNode ast) {
+        if(ast.getType() != ASTNodeType.visibility) return null;
+        switch (ast.getToken().getType()) {
+            case t_public: return Visibility._public;
+            case t_private: return Visibility._private;
+            case t_internal: return Visibility.internal;
+            default: return null;
+        }
+    }
+    
+    public boolean noTypeErrors() {
+        return lateBoundReferences.isEmpty();
+    }
+    
+    /**
+     * Creates all of the field declarations
+     * @param ast must be type {@link ASTNodeType#basic_compound_type_fields}
+     * @return a list of field declarations
+     */
+    private List<CXCompoundType.FieldDeclaration> createFieldDeclarations(AbstractSyntaxNode ast) {
+        List<CXCompoundType.FieldDeclaration> output = new LinkedList<>();
+        for (AbstractSyntaxNode abstractSyntaxNode : ast.getChildList()) {
+            output.add(
+                    createFieldDeclaration(abstractSyntaxNode)
+            );
+        }
+        return output;
+    }
+    
+    /**
+     * Creates a field declaration
+     * @param ast must be type {@link ASTNodeType#basic_compound_type_field}
+     * @return a field declaration object
+     */
+    private CXCompoundType.FieldDeclaration createFieldDeclaration(AbstractSyntaxNode ast) {
+        CXType type;
+        if(ast instanceof TypeAbstractSyntaxNode) {
+            type = ((TypeAbstractSyntaxNode) ast).getCxType();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+        
+        AbstractSyntaxNode idAST = ast.getChild(ASTNodeType.id);
+        String name = idAST.getToken().getImage();
+        return new CXCompoundType.FieldDeclaration(type, name);
+    }
+    
+    private List<CXClassType.ClassFieldDeclaration> createClassFieldDeclarations(Visibility visibility,
+                                                                                 AbstractSyntaxNode ast) {
+        
+        List<CXClassType.ClassFieldDeclaration> output = new LinkedList<>();
+        for (AbstractSyntaxNode abstractSyntaxNode : ast.getChildList()) {
+            output.add(
+                    createClassFieldDeclaration(visibility, abstractSyntaxNode)
+            );
+        }
+        return output;
+        
+    }
+    
+    private CXClassType.ClassFieldDeclaration createClassFieldDeclaration(Visibility visibility,
+                                                                          AbstractSyntaxNode ast) {
+        CXType type;
+        if(ast instanceof TypeAbstractSyntaxNode) {
+            type = ((TypeAbstractSyntaxNode) ast).getCxType();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+        
+        AbstractSyntaxNode idAST = ast.getChild(ASTNodeType.id);
+        String name = idAST.getToken().getImage();
+        return new CXClassType.ClassFieldDeclaration(type, name, visibility);
+    }
+    
+    private CXMethod createMethod(Visibility visibility, boolean isVirtual, AbstractSyntaxNode ast) {
+        if(!ast.getType().equals(ASTNodeType.function_definition)) {
+            throw new UnsupportedOperationException();
+        }
+        
+        assert ast instanceof TypeAbstractSyntaxNode;
+        TypeAbstractSyntaxNode typedAST = (TypeAbstractSyntaxNode) ast;
+        
+        CXType returnType = typedAST.getCxType();
+        String name = ast.getChild(ASTNodeType.id).getToken().getImage();
+        AbstractSyntaxNode after = ast.getChild(ASTNodeType.compound_statement);
+        
+        List<CXParameter> parameters = createParameters(ast.getChild(ASTNodeType.parameter_list));
+        
+        return new CXMethod(null, visibility, name, isVirtual, returnType, parameters, after);
+    }
+    
+    private CXConstructor createConstructor(Visibility visibility, CXClassType parent, AbstractSyntaxNode params,
+                                            AbstractSyntaxNode compound, CXConstructor prior) {
+        List<CXParameter> parameters = createParameters(params);
+        
+        return new CXConstructor(parent, visibility, prior, parameters, compound);
+    }
+    
+    private List<CXParameter> createParameters(AbstractSyntaxNode ast) {
+        List<CXParameter> output = new LinkedList<>();
+        for (AbstractSyntaxNode abstractSyntaxNode : ast.getChildList()) {
+            CXType type = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType();
+            String name = abstractSyntaxNode.getChild(ASTNodeType.id).getToken().getImage();
+            output.add(new CXParameter(type, name));
+        }
+        return output;
     }
     
     private class SpecifierComparator implements Comparator<AbstractSyntaxNode> {
@@ -234,11 +517,21 @@ public class TypeEnvironment {
         
         private int value(String name) {
             if(isPrimitive(name)) return 1;
-            if(isModifier(name)) return 2;
+            if(isModifier(name)) return modifierValue(name);
             return 0;
         }
+        private int modifierValue(String name) {
+            switch (name) {
+                case "long": return 2;
+                case "unsigned": return 3;
+                default: return 4;
+            }
+        }
         
-        
+    }
+    
+    public HashSet<CXClassType> getCreatedClasses() {
+        return createdClasses;
     }
     
     private boolean isPrimitive(String name) {
@@ -248,6 +541,8 @@ public class TypeEnvironment {
     private boolean isModifier(String name) {
         return name.equals("unsigned") || name.equals("long");
     }
+    
+    
     
     public boolean typedefExists(String name) {
         return typeDefinitions.containsKey(name);
@@ -265,6 +560,6 @@ public class TypeEnvironment {
     }
     
     public CXCompoundType getNamedCompoundType(String name) {
-        return namedCompoundTypesMap.get(name);
+        return namedCompoundTypesMap.getOrDefault(name, null);
     }
 }

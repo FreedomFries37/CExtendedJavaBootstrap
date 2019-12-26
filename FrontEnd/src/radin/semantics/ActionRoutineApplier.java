@@ -7,6 +7,7 @@ import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.CompoundTypeReference;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.parsing.CategoryNode;
 import radin.parsing.LeafNode;
@@ -39,6 +40,13 @@ public class ActionRoutineApplier {
         environment = new TypeEnvironment();
     }
     
+    public ActionRoutineApplier(TypeEnvironment environment) {
+        catNodeStack = new Stack<>();
+        successOrder = new LinkedList<>();
+        errors = new Stack<>();
+        this.environment = environment;
+    }
+    
     public List<AbstractSyntaxNode> getSuccessOrder() {
         return successOrder;
     }
@@ -49,6 +57,10 @@ public class ActionRoutineApplier {
     
     private CategoryNode getCatNode(String category) {
         return getCatNode(category, 1);
+    }
+    
+    public boolean noTypeErrors() {
+        return environment.noTypeErrors();
     }
     
     private boolean error(String message) {
@@ -95,17 +107,18 @@ public class ActionRoutineApplier {
     }
     
     private boolean enactActionRoutine(LeafNode node) {
-        switch (node.getToken().getType()) {
+        Token token = node.getToken();
+        switch (token.getType()) {
             case t_id: {
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.id, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.id, token));
                 break;
             }
             case t_literal: {
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.literal, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.literal, token));
                 break;
             }
             case t_string: {
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.string, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.string, token));
                 break;
             }
             case t_qmark:
@@ -130,17 +143,34 @@ public class ActionRoutineApplier {
             case t_bang:
             case t_inc:
             case t_dec: {
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.operator, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.operator, token));
                 break;
             }
             case t_struct:
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.struct, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.struct));
                 break;
             case t_union:
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.union, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.union));
                 break;
             case t_class:
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType._class, node.getToken()));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType._class));
+                break;
+            case t_typename:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.typename, token));
+                break;
+            case t_assign:
+            case t_operator_assign:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.assignment, token));
+                break;
+            case t_private:
+            case t_public:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.visibility, token));
+                break;
+            case t_virtual:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType._virtual));
+                break;
+            case t_super:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType._super));
                 break;
         }
         
@@ -157,6 +187,17 @@ public class ActionRoutineApplier {
         while(cont) {
             try {
                 switch (node.getCategory()) {
+                    case "AssignOperator":
+                    case "TopExpression":
+                    case "Statement":
+                    case "TopLevelDeclaration":
+                    case "StructOrUnion":
+                    case "AssignmentExpression":
+                    case "ParameterTypeList":
+                    case "Visibility": {
+                        node.setSynthesized(node.getChild(0).getSynthesized());
+                        return true;
+                    }
                     case "Program": {
                         node.setSynthesized(getCatNode("TopLevelDecsList").getSynthesized());
                         return true;
@@ -169,11 +210,17 @@ public class ActionRoutineApplier {
                         node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.top_level_decs, array));
                         return true;
                     }
-                    case "TopLevelDeclaration":
-                    case "StructOrUnion": {
-                        node.setSynthesized(node.getChild(0).getSynthesized());
+                    case "ExpressionStatement": {
+                        if(!node.hasChildren()) {
+                            node.setSynthesized(
+                                    AbstractSyntaxNode.EMPTY
+                            );
+                        } else {
+                            node.setSynthesized(node.getChild(0).getSynthesized());
+                        }
                         return true;
                     }
+                    
                     case "Expression": {
                         AbstractSyntaxNode doubleOrS = node.getCategoryNode("DoubleOr").getSynthesized();
                         CategoryNode doubleOrTail = node.getCategoryNode("DoubleOrTail");
@@ -294,6 +341,14 @@ public class ActionRoutineApplier {
                         } else if(node.firstIs("CastExpression")) {
                             node.setSynthesized(getCatNode("CastExpression").getSynthesized());
                             return true;
+                        } else if(node.firstIs(TokenType.t_sizeof)) {
+                            AbstractSyntaxNode typeName = getCatNode("TypeName").getSynthesized();
+                            CXType type = environment.getType(typeName);
+                            
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.sizeof, type)
+                            );
+                            return true;
                         }
                         
                         
@@ -342,6 +397,18 @@ public class ActionRoutineApplier {
                             return true;
                         } else if (node.hasChildCategory("Expression")) {
                             node.setSynthesized(node.getCategoryNode("Expression").getSynthesized());
+                            return true;
+                        } else if(node.firstIs(TokenType.t_new)) {
+                            
+                            AbstractSyntaxNode typename = getCatNode("TypeName").getSynthesized();
+                            
+                            CXType type = environment.getType(typename);
+                            AbstractSyntaxNode args = getCatNode("ArgsList").getSynthesized();
+                            
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.constructor_call, type, args)
+                            );
+                            
                             return true;
                         }
                         return false;
@@ -495,13 +562,24 @@ public class ActionRoutineApplier {
                     case "Specifier": {
                         
                         if(node.firstIs(TokenType.t_id, TokenType.t_char, TokenType.t_int, TokenType.t_long,
-                                TokenType.t_float, TokenType.t_double, TokenType.t_unsigned)) {
+                                TokenType.t_float, TokenType.t_double, TokenType.t_unsigned, TokenType.t_void)) {
                             node.setSynthesized(
                                     new AbstractSyntaxNode(ASTNodeType.specifier, ((LeafNode) node.getChild(0)).getToken())
                             );
                             return true;
                         } else if(node.firstIs("StructOrUnionSpecifier")) {
                             node.setSynthesized(getCatNode("StructOrUnionSpecifier").getSynthesized());
+                            return true;
+                        } else if(node.firstIs(TokenType.t_typename)) {
+                            CXType type = environment.getType(node.getLeafNode(TokenType.t_typename).getSynthesized());
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.specifier, type)
+                            );
+                            return true;
+                        } else if(node.firstIs("ClassSpecifier")) {
+                            node.setSynthesized(
+                                    getCatNode("ClassSpecifier").getSynthesized()
+                            );
                             return true;
                         }
                         
@@ -600,7 +678,7 @@ public class ActionRoutineApplier {
                                         nameAST,
                                         declarations);
                         } else {
-                            mid = new AbstractSyntaxNode(ASTNodeType.basic_compound_type_reference,
+                            mid = new AbstractSyntaxNode(ASTNodeType.compound_type_reference,
                                     structOrUnion, nameAST);
                         }
                         
@@ -609,9 +687,25 @@ public class ActionRoutineApplier {
                         CXType type = environment.getType(mid);
                         
                         node.setSynthesized(
-                                new TypeAbstractSyntaxNode(mid.getType(), type, mid)
+                                new TypeAbstractSyntaxNode(mid.getType(), type, mid.getChild(0))
                         );
                         
+                        return true;
+                    }
+                    case "ClassSpecifier": {
+                        LeafNode nameNode = node.getLeafNode(TokenType.t_id);
+                        if(nameNode == null) nameNode = node.getLeafNode(TokenType.t_typename);
+                        AbstractSyntaxNode nameAST = nameNode != null? nameNode.getSynthesized() : null;
+                        AbstractSyntaxNode specifierInner = new AbstractSyntaxNode(
+                                ASTNodeType.compound_type_reference,
+                                new AbstractSyntaxNode(ASTNodeType._class),
+                                nameAST
+                        );
+                        AbstractSyntaxNode outer = new AbstractSyntaxNode(ASTNodeType.specifier, specifierInner);
+                        CXType type = environment.getType(outer);
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(ASTNodeType.specifier, type, specifierInner)
+                        );
                         return true;
                     }
                     case "StructDeclarationList": {
@@ -629,6 +723,24 @@ public class ActionRoutineApplier {
                         return true;
                         
                     }
+                    case "Declaration": {
+                        AbstractSyntaxNode declarationSpecifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        if(node.hasChildCategory("InitDeclaratorList")) {
+                            getCatNode("InitDeclaratorList").setInherit(declarationSpecifiers);
+                            node.setSynthesized(
+                                    getCatNode("InitDeclaratorList").getSynthesized()
+                            );
+                        } else {
+                            node.setSynthesized(
+                                    declarationSpecifiers
+                            );
+                        }
+                        return true;
+                    }
+                    case "DeclarationSpecifiers": {
+                        node.setSynthesized(getCatNode("SpecsAndQuals").getSynthesized());
+                        return true;
+                    }
                     case "StructDeclaration": {
                         AbstractSyntaxNode specsAndQuals = getCatNode("SpecsAndQuals").getSynthesized();
                         CategoryNode declaratorList = getCatNode("StructDeclaratorList");
@@ -645,16 +757,48 @@ public class ActionRoutineApplier {
                         String EntryCategory = "StructDeclarator";
                         String HeadCatName = "StructDeclaratorList";
                         String TailCatName = "StructDeclaratorListTail";
-    
+                        
                         AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName, node.getInherit());
-    
-    
+                        
+                        
                         node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.basic_compound_type_fields, array));
                         return true;
                     }
                     case "StructDeclarator": {
                         getCatNode("Declarator").setInherit(node.getInherit());
-                        node.setSynthesized(getCatNode("Declarator").getSynthesized());
+                        TypeAbstractSyntaxNode declarator = ((TypeAbstractSyntaxNode) getCatNode("Declarator").getSynthesized());
+                        
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(ASTNodeType.basic_compound_type_field,
+                                        declarator.getCxType(), declarator.getChildList())
+                        );
+                        return true;
+                    }
+                    case "InitDeclaratorList": {
+                        String EntryCategory = "InitDeclarator";
+                        String HeadCatName = "InitDeclaratorList";
+                        String TailCatName = "InitDeclaratorListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName, node.getInherit());
+                        
+                        
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.declarations, array));
+                        return true;
+                    }
+                    case "InitDeclarator": {
+                        getCatNode("Declarator").setInherit(node.getInherit());
+                        
+                        if(node.hasChildCategory("Initializer")) {
+                            getCatNode("Initializer").setInherit(getCatNode("Declarator").getSynthesized());
+                            node.setSynthesized(
+                                    getCatNode("Initializer").getSynthesized()
+                            );
+                        } else {
+                            node.setSynthesized(
+                                    getCatNode("Declarator").getSynthesized()
+                            );
+                        }
+                        
                         return true;
                     }
                     case "Declarator": {
@@ -672,14 +816,318 @@ public class ActionRoutineApplier {
                     }
                     case "DirectDeclarator": {
                         AbstractSyntaxNode mid = node.getInherit();
-                        if(node.firstIs(TokenType.t_lbrac)) {
-                            //TODO: direct declarators
-                        }
                         AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
-                        CXType type = environment.getType(mid);
+                        
+                        getCatNode("DirectDeclaratorTail").setInherit(mid, 0);
+                        getCatNode("DirectDeclaratorTail").setInherit(name, 1);
+                        
+                        TypeAbstractSyntaxNode directDeclaratorTail = (TypeAbstractSyntaxNode) getCatNode("DirectDeclaratorTail").getSynthesized();
+                        CXType type = directDeclaratorTail.getCxType();
                         node.setSynthesized(
-                                new TypeAbstractSyntaxNode(ASTNodeType.basic_compound_type_field, type, name)
+                                directDeclaratorTail
                         );
+                        return true;
+                    }
+                    case "DirectDeclaratorTail": {
+                        System.out.println(node.getAllChildren());
+                        CXType type = environment.getType(node.getInherit(0));
+                        if(node.hasChildren()) {
+                            //node.printTreeForm();
+                            if(node.firstIs("ParameterTypeList")) {
+                                AbstractSyntaxNode parameterTypeList = getCatNode("ParameterTypeList").getSynthesized();
+                                
+                                node.setSynthesized(
+                                        new TypeAbstractSyntaxNode(
+                                                ASTNodeType.function_description,
+                                                type,
+                                                node.getInherit(1),
+                                                parameterTypeList
+                                        )
+                                );
+                                
+                            } else if(node.firstIs(TokenType.t_lbrac)) {
+                            
+                            } else
+                                return false;
+                        } else {
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(
+                                            ASTNodeType.declaration,
+                                            type,
+                                            node.getInherit(1)
+                                    )
+                            );
+                        }
+                        
+                        return true;
+                    }
+                    case "Initializer": {
+                        AbstractSyntaxNode assignmentExpression = getCatNode("AssignmentExpression").getSynthesized();
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(ASTNodeType.initialized_declaration,
+                                        ((TypeAbstractSyntaxNode) node.getInherit()).getCxType(),
+                                        node.getInherit(),
+                                        assignmentExpression)
+                        );
+                        return true;
+                    }
+                    case "FunctionDefinition": {
+                        AbstractSyntaxNode declarationSpecifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        CategoryNode declarator = getCatNode("Declarator");
+                        declarator.setInherit(
+                                declarationSpecifiers
+                        );
+                        TypeAbstractSyntaxNode declaratorAST = ((TypeAbstractSyntaxNode) declarator.getSynthesized());
+                        AbstractSyntaxNode compound = getCatNode("CompoundStatement").getSynthesized();
+                        
+                        AbstractSyntaxNode parameters;
+                        if(declaratorAST.hasChild(ASTNodeType.parameter_list)) {
+                            parameters = declaratorAST.getChild(ASTNodeType.parameter_list);
+                        } else {
+                            parameters = new AbstractSyntaxNode(ASTNodeType.parameter_list);
+                        }
+                        
+                        node.setSynthesized(
+                                new TypeAbstractSyntaxNode(
+                                        ASTNodeType.function_definition,
+                                        declaratorAST.getCxType(),
+                                        node.getInherit(),
+                                        declaratorAST.getChild(ASTNodeType.id),
+                                        parameters,
+                                        compound)
+                        );
+                        return true;
+                    }
+                    case "CompoundStatement": {
+                        if(node.hasChildren()) {
+                            node.setSynthesized(
+                                    getCatNode("StatementList").getSynthesized()
+                            );
+                        } else {
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.compound_statement));
+                        }
+                        return true;
+                    }
+                    case "StatementList": {
+                        String EntryCategory = "Statement";
+                        String HeadCatName = "StatementList";
+                        String TailCatName = "StatementListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName);
+                        
+                        
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.compound_statement, array));
+                        return true;
+                    }
+                    
+                    case "IterationStatement": {
+                        AbstractSyntaxNode statement = getCatNode("Statement").getSynthesized();
+                        
+                        System.out.println(node.getAllChildren());
+                        if(node.firstIs(TokenType.t_for)) {
+                            AbstractSyntaxNode first, second, third = AbstractSyntaxNode.EMPTY;
+                            if(node.hasChildCategory("Declaration")) {
+                                first = node.getCategoryNode("Declaration").getSynthesized();
+                                second = node.getCategoryNode("ExpressionStatement").getSynthesized();
+                            } else {
+                                first = node.getCategoryNode("ExpressionStatement", 1).getSynthesized();
+                                second = node.getCategoryNode("ExpressionStatement", 2).getSynthesized();
+                            }
+                            if(node.hasChildCategory("TopExpression")) {
+                                third = node.getCategoryNode("TopExpression").getSynthesized();
+                            }
+                            
+                            
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.for_cond, first, second, third, statement)
+                            );
+                            
+                            return true;
+                        }
+                        if(node.firstIs(TokenType.t_while)) {
+                            
+                            AbstractSyntaxNode expression = getCatNode("TopExpression").getSynthesized();
+                            
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.while_cond, expression, statement)
+                            );
+                            
+                            return true;
+                        }
+                        if(node.firstIs(TokenType.t_do)) {
+                            
+                            AbstractSyntaxNode expression = getCatNode("TopExpression").getSynthesized();
+                            
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.do_while_cond, statement, expression)
+                            );
+                            
+                            
+                            return true;
+                        }
+                        
+                        return false;
+                    }
+                    case "JumpStatement": {
+                        if(node.firstIs(TokenType.t_return)) {
+                            AbstractSyntaxNode retValue;
+                            if(node.hasChildCategory("TopExpression")) {
+                                retValue = node.getCategoryNode("TopExpression").getSynthesized();
+                            } else {
+                                retValue = AbstractSyntaxNode.EMPTY;
+                            }
+                            
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType._return, retValue)
+                            );
+                            return true;
+                        }
+                        
+                        return false;
+                    }
+                    case "SelectionStatement": {
+                        if(node.firstIs(TokenType.t_if)) {
+                            System.out.println(node.getAllChildren());
+                            
+                            AbstractSyntaxNode topExpression = getCatNode("TopExpression").getSynthesized();
+                            AbstractSyntaxNode ifYes = getCatNode("Statement", 1).getSynthesized();
+                            AbstractSyntaxNode ifNo = AbstractSyntaxNode.EMPTY;
+                            if(node.hasChildToken(TokenType.t_else)) {
+                                ifNo = getCatNode("Statement", 2).getSynthesized();
+                            }
+                            
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.if_cond, topExpression, ifYes, ifNo)
+                            );
+                            return true;
+                        }
+                        
+                        return false;
+                    }
+                    case "Assignment": {
+                        AbstractSyntaxNode factor = getCatNode("Factor").getSynthesized();
+                        AbstractSyntaxNode assignment = getCatNode("AssignOperator").getSynthesized();
+                        AbstractSyntaxNode next = getCatNode("AssignmentExpression").getSynthesized();
+                        
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.assignment, factor, assignment, next)
+                        );
+                        return true;
+                    }
+                    case "ParameterList": {
+                        String EntryCategory = "ParameterDeclaration";
+                        String HeadCatName = "ParameterList";
+                        String TailCatName = "ParameterListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName);
+                        
+                        
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.parameter_list, array));
+                        return true;
+                    }
+                    case "ParameterDeclaration": {
+                        
+                        AbstractSyntaxNode specifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        CategoryNode declarator = getCatNode("Declarator");
+                        declarator.setInherit(specifiers);
+                        
+                        node.setSynthesized(
+                                declarator.getSynthesized()
+                        );
+                        
+                        return true;
+                    }
+                    case "ClassDeclaration": {
+                        
+                        AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
+    
+                        environment.addTypeDefinition(new CompoundTypeReference(CompoundTypeReference.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
+    
+                        AbstractSyntaxNode declarations = getCatNode("ClassDeclarationList").getSynthesized();
+                        
+                        
+                        AbstractSyntaxNode classDefinition;
+                        if(node.hasChildCategory("Inherit")) {
+                            AbstractSyntaxNode inherit = new AbstractSyntaxNode(ASTNodeType.inherit,
+                                    getCatNode("Inherit").getLeafNode(TokenType.t_typename).getSynthesized());
+                            classDefinition =
+                                    new AbstractSyntaxNode(ASTNodeType.class_type_definition, name, inherit, declarations);
+                        } else {
+                            classDefinition =
+                                    new AbstractSyntaxNode(ASTNodeType.class_type_definition, name, declarations);
+                        }
+                        
+                        CXType cxClass = environment.getType(classDefinition);
+                        environment.addTypeDefinition(cxClass ,name.getToken().getImage());
+                        node.setSynthesized(classDefinition);
+                        return true;
+                    }
+                    case "ClassDeclarationList": {
+                        String EntryCategory = "ClassTopLevelDeclaration";
+                        String HeadCatName = "ClassDeclarationList";
+                        String TailCatName = "ClassDeclarationListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName);
+                        
+                        
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.class_level_decs, array));
+                        return true;
+                    }
+                    case "ClassTopLevelDeclaration": {
+                        AbstractSyntaxNode visibility;
+                        if(node.hasChildCategory("Visibility")) {
+                            visibility = getCatNode("Visibility").getSynthesized();
+                        } else {
+                            visibility = new AbstractSyntaxNode(ASTNodeType.visibility, new Token(TokenType.t_internal));
+                        }
+    
+                        System.out.println(node.getAllChildren());
+                        AbstractSyntaxNode inner;
+                        if(node.hasChildCategory("Declaration")) {
+                            inner = getCatNode("Declaration").getSynthesized();
+                        } else if(node.hasChildCategory("ConstructorDefinition")) {
+                            inner = getCatNode("ConstructorDefinition").getSynthesized();
+                        } else if(node.hasChildCategory("FunctionDefinition")) {
+                            if(node.hasChildToken(TokenType.t_virtual)) {
+                                getCatNode("FunctionDefinition").setInherit(
+                                        node.getLeafNode(TokenType.t_virtual).getSynthesized()
+                                );
+                            } else {
+                                getCatNode("FunctionDefinition").setInherit(
+                                        AbstractSyntaxNode.EMPTY
+                                );
+                            }
+                            inner = getCatNode("FunctionDefinition").getSynthesized();
+                        }
+                        else return error("Improper class level declaration");
+                        
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.class_level_declaration, visibility, inner)
+                        );
+    
+                        return true;
+                    }
+                    case "ConstructorDefinition": {
+                        AbstractSyntaxNode typename = getCatNode("TypeName").getSynthesized();
+                        AbstractSyntaxNode parameterList = getCatNode("ParameterList").getSynthesized();
+                        AbstractSyntaxNode compoundStatement = getCatNode("CompoundStatement").getSynthesized();
+                        
+                        
+                        CXType type = environment.getType(typename);
+                        if(node.hasChildCategory("ArgsList")) {
+                            AbstractSyntaxNode priorAST = node.getChild(2).getSynthesized();
+                            AbstractSyntaxNode argsAST = node.getCategoryNode("ArgsList").getSynthesized();
+    
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.constructor_definition, type, typename,
+                                            parameterList, priorAST, argsAST, compoundStatement)
+                            );
+                        } else {
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.constructor_definition, type, typename,
+                                            parameterList, compoundStatement)
+                            );
+                        }
                         return true;
                     }
                     default:
@@ -717,7 +1165,7 @@ public class ActionRoutineApplier {
                                           AbstractSyntaxNode... entryInherits) throws SynthesizedMissingException {
         List<AbstractSyntaxNode> childExpressions = new ArrayList<>();
         while (listNode.hasChildren()) {
-    
+            
             CategoryNode entryNode = listNode.getCategoryNode(entryCategory);
             for (int i = 0; i < entryInherits.length; i++) {
                 entryNode.setInherit(entryInherits[i], i);

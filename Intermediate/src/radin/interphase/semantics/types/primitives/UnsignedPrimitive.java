@@ -8,7 +8,7 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
     
     private AbstractCXPrimitiveType primitiveCXType;
     
-    public UnsignedPrimitive(CXPrimitiveType cPrimitiveType) throws InvalidPrimitiveException {
+    public UnsignedPrimitive(AbstractCXPrimitiveType cPrimitiveType) throws InvalidPrimitiveException {
         if(cPrimitiveType.equals(CXPrimitiveType.VOID) ||
                 cPrimitiveType.equals(CXPrimitiveType.FLOAT) ||
                 cPrimitiveType.equals(CXPrimitiveType.DOUBLE)){

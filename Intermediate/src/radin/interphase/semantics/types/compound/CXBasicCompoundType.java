@@ -43,13 +43,13 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
             builder.append(" ");
             builder.append(getTypeName());
         }
-        builder.append('{');
+        builder.append(" {\n");
         for (FieldDeclaration field : getFields()) {
             builder.append("\t");
             builder.append(field.getType().generateCDefinition(field.getName()));
             builder.append(";\n");
         }
-        builder.append("};");
+        builder.append("};\n");
         return builder.toString();
     }
 }

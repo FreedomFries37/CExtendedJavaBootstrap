@@ -67,7 +67,9 @@ public enum TokenType {
     t_super("super"),
     t_virtual("virtual"),
     t_eof("EOF"),
-    t_typename("typename");
+    t_typename("typename"),
+    t_sizeof("sizeof"),
+    t_internal("internal");
     
     private String str;
     

@@ -8,8 +8,8 @@ public class CompoundTypeReference extends CXType {
     
     public enum CompoundType {
         struct("struct"),
-        union("struct"),
-        _class("class")
+        union("union"),
+        _class("struct")
         ;
         String cequiv;
         
@@ -43,11 +43,15 @@ public class CompoundTypeReference extends CXType {
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
         if(!(other instanceof ICXCompoundType || other instanceof CompoundTypeReference)) return false;
+        CXCompoundType namedCompoundType = e.getNamedCompoundType(typename);
         if(other instanceof ICXCompoundType) {
-            return e.getNamedCompoundType(typename).is(other, e);
+            if(namedCompoundType == null){
+                return false;
+            }
+            return namedCompoundType.is(other, e);
         } else {
             if(!e.namedCompoundTypeExists(((CompoundTypeReference) other).typename)) throw new TypeDoesNotExist(((CompoundTypeReference) other).typename);
-            return e.getNamedCompoundType(typename).is(e.getNamedCompoundType(((CompoundTypeReference) other).typename), e);
+            return namedCompoundType.is(e.getNamedCompoundType(((CompoundTypeReference) other).typename), e);
         }
     }
     
@@ -64,5 +68,12 @@ public class CompoundTypeReference extends CXType {
     @Override
     public long getDataSize(TypeEnvironment e) {
         return e.getNamedCompoundType(typename).getDataSize(e);
+    }
+    
+    @Override
+    public CXType getCTypeIndirection() {
+        if(compoundType.equals(CompoundType._class)) return new CompoundTypeReference(CompoundType.struct,
+            typename);
+        return new CompoundTypeReference(compoundType, typename);
     }
 }

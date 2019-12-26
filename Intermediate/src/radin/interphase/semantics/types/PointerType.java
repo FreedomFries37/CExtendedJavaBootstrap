@@ -36,4 +36,10 @@ public class PointerType extends AbstractCXPrimitiveType {
         
         return subType.is(((PointerType) other).subType, e);
     }
+    
+    
+    @Override
+    public CXType getCTypeIndirection() {
+        return new PointerType(subType.getCTypeIndirection());
+    }
 }

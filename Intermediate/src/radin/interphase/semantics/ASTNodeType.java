@@ -24,12 +24,13 @@ public enum ASTNodeType {
     if_cond("if"),
     while_cond("while"),
     do_while_cond("do_while"),
+    for_cond("for"),
     conditional("conditional"),
     _return("return"),
     block("block"),
     statement("statement"),
     parameters_dec("params_dec"),
-    function_dec("func_dec"),
+    function_definition("func_dec"),
     basic_compound_type_dec("struct/union_dec"),
     inheritence("inheritence"),
     specifiers("specifiers"),
@@ -37,10 +38,11 @@ public enum ASTNodeType {
     qualifier("qualifier"),
     qualifiers("qualifiers"),
     qualifiers_and_specifiers("qualifiers_and_specifiers"),
-    class_level_decs("class_level_declaration"),
-    class_type_dec("class_dec"),
+    class_level_decs("class_level_declarations"),
+    class_type_definition("class_definition"),
+    class_type_declaration("class_declaration"),
     class_type_name("class_type_name"),
-    basic_compound_type_reference("compound_type_reference"),
+    compound_type_reference("compound_type_reference"),
     class_type_reference("class_type_reference"),
     typedef("typedef"),
     top_level_decs("top_level_decs"),
@@ -57,7 +59,20 @@ public enum ASTNodeType {
     union("union"),
     _class("class"),
     basic_compound_type_fields("struct/union_field_declarations"),
-    basic_compound_type_field("struct/union_field_declaration")
+    basic_compound_type_field("struct/union_field_declaration"),
+    declarations("declarations"),
+    initialized_declaration("initialized_declaration"),
+    compound_statement("compound_statement"),
+    sizeof("sizeof"),
+    _new("new"),
+    constructor_call("constructor_call"),
+    function_description("function_description"),
+    visibility("visibility"),
+    class_level_declaration("class_level_declaration"),
+    constructor_definition("constructor_definition"),
+    _virtual("virtual"),
+    _super("super"),
+    inherit("inherit")
     ;
     
     
@@ -68,6 +83,11 @@ public enum ASTNodeType {
     }
     
     public String getName() {
+        return name;
+    }
+    
+    @Override
+    public String toString() {
         return name;
     }
 }

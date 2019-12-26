@@ -78,3 +78,9 @@ struct D {
     int (*D::m2)();
     double (*m3)(int);
 }
+
+struct class_child_node* new_class_child_node() {
+	struct class_child_node* output = malloc(sizeof(struct class_child_node));
+	
+	return output;
+}

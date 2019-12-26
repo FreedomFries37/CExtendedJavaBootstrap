@@ -44,7 +44,7 @@ public class FunctionPointer extends AbstractCXPrimitiveType {
         boolean first = true;
         for (CXType parameterType : parameterTypes) {
             if(first) first = false;
-            parameters.append(", ");
+            else parameters.append(", ");
             
             parameters.append(parameterType.generateCDefinition());
         }
@@ -62,7 +62,7 @@ public class FunctionPointer extends AbstractCXPrimitiveType {
         boolean first = true;
         for (CXType parameterType : parameterTypes) {
             if(first) first = false;
-            parameters.append(", ");
+            else parameters.append(", ");
         
             parameters.append(parameterType.generateCDefinition());
         }

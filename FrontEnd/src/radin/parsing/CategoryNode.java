@@ -91,6 +91,10 @@ public class CategoryNode extends ParseNode {
         }
     }
     
+    public boolean hasChildToken(TokenType t) {
+        return getLeafNode(t) != null;
+    }
+    
     public LeafNode getLeafNode(TokenType type, int count) {
         int found = 0;
         for (LeafNode leafChild : leafChildren) {

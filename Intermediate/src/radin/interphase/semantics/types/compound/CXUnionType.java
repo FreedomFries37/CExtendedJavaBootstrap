@@ -1,5 +1,8 @@
 package radin.interphase.semantics.types.compound;
 
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.CompoundTypeReference;
+
 import java.util.List;
 
 public class CXUnionType extends CXBasicCompoundType {
@@ -22,7 +25,12 @@ public class CXUnionType extends CXBasicCompoundType {
     
     @Override
     public String generateCDefinition() {
-        return "struct" + super.generateCDefinition();
+        return "union" + super.generateCDefinition();
         
+    }
+    
+    @Override
+    public CXType getTypeIndirection() {
+        return new CompoundTypeReference(CompoundTypeReference.CompoundType.union, this);
     }
 }

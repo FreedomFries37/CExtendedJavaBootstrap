@@ -40,6 +40,11 @@ public abstract class CXCompoundType extends ICXCompoundType {
         }
     
         @Override
+        public String toString() {
+            return getType().generateCDefinition(name);
+        }
+    
+        @Override
         public int hashCode() {
             int result = type.hashCode();
             result = 31 * result + name.hashCode();
@@ -110,6 +115,11 @@ public abstract class CXCompoundType extends ICXCompoundType {
             sum += field.getType().getDataSize(e);
         }
         return sum;
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString().replaceAll("\\s+", " ");
     }
     
     @Override

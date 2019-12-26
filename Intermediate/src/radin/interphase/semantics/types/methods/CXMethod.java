@@ -47,6 +47,10 @@ public class CXMethod implements CXEquivalent {
         fixedMethodBody = false;
     }
     
+    public void setParent(CXClassType parent) {
+        this.parent = parent;
+    }
+    
     public CXClassType getParent() {
         return parent;
     }
@@ -99,7 +103,7 @@ public class CXMethod implements CXEquivalent {
     @Override
     public String generateCDeclaration() {
         StringBuilder output = new StringBuilder();
-        output.append(returnType.generateCDefinition(name));
+        output.append(returnType.generateCDefinition(getCFunctionName()));
         output.append('(');
         if(parameters.size() > 0) {
             boolean first = true;
@@ -117,10 +121,22 @@ public class CXMethod implements CXEquivalent {
         return output.toString();
     }
     
+    public String getCFunctionName() {
+        return parent.getCTypeName() + "_" + name;
+    }
+    
+    public String methodCall(String thisValue, String sequence) {
+        return getCFunctionName() + "(" + thisValue + "," + sequence + ")";
+    }
+    
+    public String methodCall(String thisValue) {
+        return getCFunctionName() + "(" + thisValue + ")";
+    }
+    
     @Override
     public String generateCDefinition() {
         StringBuilder output = new StringBuilder();
-        output.append(returnType.generateCDefinition(name));
+        output.append(returnType.generateCDefinition(getCFunctionName()));
         output.append('(');
         boolean first = true;
         for (CXParameter parameter : parameters) {

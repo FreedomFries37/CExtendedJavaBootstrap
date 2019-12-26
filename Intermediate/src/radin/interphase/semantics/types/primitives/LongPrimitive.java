@@ -14,11 +14,18 @@ public class LongPrimitive extends AbstractCXPrimitiveType {
         this.primitiveCXType = cPrimitiveType;
     }
     
+    
     public LongPrimitive(LongPrimitive type) throws InvalidPrimitiveException {
         if(!type.primitiveCXType.equals(CXPrimitiveType.INTEGER)) {
             throw new InvalidPrimitiveException();
         }
         this.primitiveCXType = type;
+    }
+    
+    public static LongPrimitive create(AbstractCXPrimitiveType prim) throws InvalidPrimitiveException{
+        if(prim instanceof CXPrimitiveType) return new LongPrimitive(((CXPrimitiveType) prim));
+        else if(prim instanceof LongPrimitive) return new LongPrimitive(((LongPrimitive) prim));
+        throw new InvalidPrimitiveException(prim);
     }
     
     public LongPrimitive() throws InvalidPrimitiveException {
