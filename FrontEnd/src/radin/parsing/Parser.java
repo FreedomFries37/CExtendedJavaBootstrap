@@ -204,7 +204,6 @@ public class Parser extends BasicParser {
             case t_struct:
             case t_union:
             case t_class:
-            case t_lpar:
             case t_const: {
                 if(!parseDeclaration(child)) return false;
                 break;
@@ -972,9 +971,16 @@ public class Parser extends BasicParser {
                 if(!parseFunctionCall(child)) return false;
                 break;
             }
+            case t_typename: {
+                consumeAndAddAsLeaf(child);
+                if(!consume(TokenType.t_lpar)) return false;
+                if(!parseArgsList(child)) return false;
+                if(!consume(TokenType.t_rpar)) return false;
+                break;
+            }
             case t_new: {
                 consumeAndAddAsLeaf(child);
-                if(!parseTypeName(child)) return false;
+                if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) return false;
                 if(!consume(TokenType.t_lpar)) return false;
                 if(!parseArgsList(child)) return false;
                 if(!consume(TokenType.t_rpar)) return false;
@@ -987,6 +993,8 @@ public class Parser extends BasicParser {
         parent.addChild(child);
         return true;
     }
+    
+    
     
     private boolean parseAtomTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("AtomTail");
@@ -1429,6 +1437,7 @@ public class Parser extends BasicParser {
             }
             case t_lbrac: {
                 consumeAndAddAsLeaf(child);
+                attemptParse(this::parseExpression, parent);
                 if(!consume(TokenType.t_rbrac)) return false;
                 if(!parseDirectDeclaratorTail(child)) return false;
                 break;

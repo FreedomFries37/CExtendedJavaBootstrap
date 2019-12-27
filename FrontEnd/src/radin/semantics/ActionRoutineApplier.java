@@ -407,7 +407,7 @@ public class ActionRoutineApplier {
                             return true;
                         } else if(node.firstIs(TokenType.t_new)) {
                             
-                            AbstractSyntaxNode typename = getCatNode("TypeName").getSynthesized();
+                            AbstractSyntaxNode typename = node.getLeafNode(TokenType.t_typename).getSynthesized();
                             
                             CXType type = environment.getType(typename);
                             AbstractSyntaxNode args = getCatNode("ArgsList").getSynthesized();

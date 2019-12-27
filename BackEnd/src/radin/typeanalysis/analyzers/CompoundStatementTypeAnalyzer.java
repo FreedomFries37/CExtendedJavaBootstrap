@@ -28,6 +28,11 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
                 if(!determineTypes(declarationTypeAnalyzer)) return false;
             }
             
+            if(child.getASTType() == ASTNodeType.assignment) {
+                AssignmentTypeAnalyzer assignmentTypeAnalyzer = new AssignmentTypeAnalyzer(child);
+                
+                if(!determineTypes(assignmentTypeAnalyzer)) return false;
+            }
             
             
         }

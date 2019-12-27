@@ -78,7 +78,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(isComparison(opToken.getType())) {
                 node.setType(CXPrimitiveType.INTEGER);
             } else {
-                node.setType(lhs.getCXType());
+                if(rhs.getCXType() instanceof PointerType) {
+                    node.setType(rhs.getCXType());
+                } else node.setType(lhs.getCXType());
             }
             node.setLValue(lhs.isLValue() || rhs.isLValue());
             return true;
@@ -87,7 +89,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.getASTNode().getType() == ASTNodeType.indirection) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)) return false;
-            if(!canDereference(child.getCXType())) throw new IllegalTypesForOperationError(node.getToken(),
+            if(!canDereference(child.getCXType())) throw new IllegalTypesForOperationError(new Token(TokenType.t_star),
                     child.getCXType());
             assert child.getCXType() instanceof PointerType;
             CXType subType = ((PointerType) child.getCXType()).getSubType();
@@ -156,7 +158,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(lhs)) return false;
             if(!determineTypes(rhs)) return false;
     
-            if(!canBinaryOp(lhs.getCXType(), rhs.getCXType()) || !canDereference(lhs.getCXType())) {
+            if(!(canBinaryOp(lhs.getCXType(), rhs.getCXType()) || canDereference(lhs.getCXType()))) {
                 throw new IllegalTypesForOperationError(node.getASTNode().getToken(), lhs.getCXType(), rhs.getCXType());
             }
             
@@ -184,7 +186,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) return false;
             assert objectInteraction.getCXType() instanceof CXCompoundType;
-            String name =node.getASTChild(ASTNodeType.id).getToken().getImage();
+            String name =node.getChild(1).getToken().getImage();
             CXType nextType;
             
             if(objectInteraction.getCXType() instanceof CXClassType) {
@@ -238,6 +240,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             node.setType(outputType);
             node.setLValue(lhs.isLValue() && rhs.isLValue());
+            return true;
+        }
+        
+        if(node.getASTType() == ASTNodeType.constructor_call) {
+            assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
+            node.setType(new PointerType(((TypeAbstractSyntaxNode) node.getASTNode()).getCxType()));
             return true;
         }
         

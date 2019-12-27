@@ -47,6 +47,8 @@ class node {
 
 class child_node : node {
 
+	public int seeMe;
+
 	public child_node(char* v) : super(v) {
 
 	}
@@ -90,7 +92,7 @@ void throwaway() {
 	char_list meep;
 	char_list other = meep->tester("hello", 2)->getNextChildNode();
 
-	node n;
+	child_node n;
 	node d;
 
 	double bruh = (double) 5 / 3;
@@ -101,5 +103,22 @@ void throwaway() {
 	str = &c;
 
 	child_node* ptr = (child_node*) &(1 ? n : d);
+	int arr[5];
+	arr[0] = arr[1] = 5;
+	double veep = 5;
+	arr[2] = *(int *) &veep;
 
+
+	n.seeMe = 5;
+
+	child_node* nodes[4];
+	child_node* created = new child_node(str);
+	nodes[0] = &n;
+
+	char* hhh = "hello world";
+	hhh[3] = 'b';
+	*(hhh + 3) = 'c';
+	char** ptr2 = &hhh;
+	char* beep = "bonjour la monde";
+	*ptr2 = beep;
 }
