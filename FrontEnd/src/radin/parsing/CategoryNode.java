@@ -1,5 +1,6 @@
 package radin.parsing;
 
+import radin.interphase.AbstractTree;
 import radin.interphase.lexical.TokenType;
 import radin.semantics.MissingCategoryNodeError;
 
@@ -113,6 +114,11 @@ public class CategoryNode extends ParseNode {
     
     public List<ParseNode> getAllChildren() {
         return allChildren;
+    }
+    
+    @Override
+    public List<? extends AbstractTree<ParseNode>> getDirectChildren() {
+        return getAllChildren();
     }
     
     public String getCategory() {

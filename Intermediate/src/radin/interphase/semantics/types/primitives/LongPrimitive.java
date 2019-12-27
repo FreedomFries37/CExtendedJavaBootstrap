@@ -32,6 +32,15 @@ public class LongPrimitive extends AbstractCXPrimitiveType {
         this(CXPrimitiveType.INTEGER);
     }
     
+    public static LongPrimitive create() {
+        try {
+            return new LongPrimitive();
+        } catch (InvalidPrimitiveException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
     @Override
     public String generateCDefinition() {
         return "long " + primitiveCXType.generateCDefinition();
@@ -53,4 +62,6 @@ public class LongPrimitive extends AbstractCXPrimitiveType {
     public boolean is(CXType other, TypeEnvironment e) {
         return primitiveCXType.is(other, e);
     }
+    
+    
 }

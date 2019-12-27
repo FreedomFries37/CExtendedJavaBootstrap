@@ -14,6 +14,9 @@ import radin.parsing.CategoryNode;
 import radin.parsing.Parser;
 import radin.semantics.ActionRoutineApplier;
 import radin.semantics.SynthesizedMissingException;
+import radin.typeanalysis.TypeAnalyzer;
+import radin.typeanalysis.TypeAugmentedSemanticTree;
+import radin.typeanalysis.analyzers.ProgramTypeAnalyzer;
 
 public class Main {
     
@@ -30,20 +33,7 @@ public class Main {
         for (Token token : lex) {
             System.out.println(token);
         }
-        /*
-        //Lexer lex2 = new Lexer("typedef const int[][] pid; typedef pid* pid_ptr;");
-        Lexer lex2 =
-                new Lexer(
-                        "typedef unsigned long int* llpt;\n" +
-                        "typedef struct node { int val; struct node* next; } name;\n" +
-                        "typedef name** name_ptr;\n" +
-                        "typedef union { int a; unsigned int b; } either;"
-                );
-        for (Token token : lex2) {
-            System.out.println(token);
-        }
-        
-         */
+       
         Parser parser = new Parser(lex);
         CategoryNode program = parser.parse();
         program.printTreeForm();
@@ -59,10 +49,22 @@ public class Main {
                 //System.out.println(completed.getRepresentation());
                 
                 System.out.println("applier.noTypeErrors() = " + applier.noTypeErrors());
+    
+                TypeAnalyzer.setEnvironment(environment);
+                TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(completed, environment);
+                tasTree.printTreeForm();
+                
+                ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer(tasTree.getHead());
+                System.out.println("analyzer.determineTypes() = " + analyzer.determineTypes());
+                
+                tasTree.printTreeForm();
+                /*
                 for (CXClassType createdClass : environment.getCreatedClasses()) {
                     createdClass.seal(environment);
                     System.out.println(createdClass.generateCDefinition());
                 }
+                
+                 */
                 
             } catch (SynthesizedMissingException e) {
                 e.printStackTrace();

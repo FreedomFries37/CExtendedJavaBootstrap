@@ -150,6 +150,13 @@ public class CXClassType extends CXCompoundType {
         environment.addNamedCompoundType(vtable);
     }
     
+    @Override
+    public String generateCDeclaration() {
+        return "struct " + getCTypeName();
+    }
+    
+    
+    
     public CXConstructor getConstructor(List<CXType> parameters, TypeEnvironment environment) {
         for (CXConstructor constructor : constructors) {
             
@@ -242,6 +249,12 @@ public class CXClassType extends CXCompoundType {
         return output;
     }
     
+    public List<CXClassType> getReverseInheritanceOrder() {
+        List<CXClassType> lineage = getLineage();
+        Collections.reverse(lineage);
+        return lineage;
+    }
+    
     private boolean isExistingVirtualMethod(String name) {
         for (CXMethod cxMethod : virtualMethodOrder) {
             if(cxMethod.getName().equals(name)) return true;
@@ -270,9 +283,19 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
-        if(!(other instanceof CXClassType)) return false;
         
-        return this.getLineage().contains(other);
+        
+        if(other instanceof CXClassType){
+            return this.getLineage().contains(other);
+        } else if(other instanceof CompoundTypeReference) {
+            if(((CompoundTypeReference) other).getCompoundType() != CompoundTypeReference.CompoundType._class) return false;
+            CXCompoundType namedCompoundType = e.getNamedCompoundType(((CompoundTypeReference) other).getTypename());
+            if(!(namedCompoundType instanceof CXClassType)) return false;
+            
+            return is(namedCompoundType, e);
+        }
+        return false;
+        
     }
     
     @Override
@@ -316,7 +339,7 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public String toString() {
-        return "CXClassType{name=" + getTypeName() + "}";
+        return "CXClass " + getTypeName();
     }
     
     private String guard() {

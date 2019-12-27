@@ -17,8 +17,9 @@ public class PointerType extends AbstractCXPrimitiveType {
     
     @Override
     public String generateCDefinition() {
-        return subType.generateCDefinition() + "*";
+        return subType.getTypeIndirection().generateCDefinition() + "*";
     }
+    
     
     @Override
     public boolean isValid(TypeEnvironment e) {
@@ -37,6 +38,15 @@ public class PointerType extends AbstractCXPrimitiveType {
         return subType.is(((PointerType) other).subType, e);
     }
     
+    @Override
+    public String toString() {
+        return subType.toString() + "*";
+    }
+    
+    @Override
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        return new PointerType(subType.getTypeRedirection(e));
+    }
     
     @Override
     public CXType getCTypeIndirection() {

@@ -4,6 +4,10 @@ import radin.lexing.Lexer;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 public abstract class BasicParser {
@@ -11,11 +15,13 @@ public abstract class BasicParser {
     protected Lexer lexer;
     protected Stack<Integer> states;
     private Stack<Void> suppressErrors;
+    private List<String> allErrors;
     
     public BasicParser(Lexer lexer) {
         this.lexer = lexer;
         states = new Stack<>();
         suppressErrors = new Stack<>();
+        allErrors = new LinkedList<>();
     }
     
     
@@ -73,17 +79,36 @@ public abstract class BasicParser {
     }
     
     protected boolean error(String msg) {
+       return error(msg, false);
+    }
+    
+    protected boolean error(String msg, boolean release) {
+        String errorMsg = String.format("At token %s at line %d column %d: %s",
+                getCurrent(),
+                getCurrent().getLineNumber(),
+                getCurrent().getColumn(),
+                msg);
         if(suppressErrors.empty()) {
-            System.err.println(String.format("At token %s at line %d column %d: %s",
-                    getCurrent(),
-                    getCurrent().getLineNumber(),
-                    getCurrent().getColumn(),
-                    msg));
+            System.err.println(errorMsg);
             new Exception("Parser error stack trace").printStackTrace();
+        } else {
+            StringWriter writer = new StringWriter();
+            PrintWriter pw = new PrintWriter(writer);
+            new Exception("Parser error stack trace").printStackTrace(pw);
+            allErrors.add(errorMsg + "\n" + writer.toString());
+        }
+        if(release) {
+            for (String s : allErrors) {
+                System.err.println(s);
+            }
+            allErrors.clear();
         }
         return false;
     }
     
+    protected void clearErrors() {
+        allErrors.clear();
+    }
     
     
     @FunctionalInterface
@@ -103,6 +128,8 @@ public abstract class BasicParser {
         popState();
         return true;
     }
+    
+    
     
     final protected boolean match(TokenType type) {
         return getCurrentType().equals(type);

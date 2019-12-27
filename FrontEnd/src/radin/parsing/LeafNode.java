@@ -1,5 +1,6 @@
 package radin.parsing;
 
+import radin.interphase.AbstractTree;
 import radin.interphase.lexical.Token;
 
 import java.util.LinkedList;
@@ -21,6 +22,11 @@ public class LeafNode extends ParseNode {
     @Override
     public boolean hasChildren() {
         return false;
+    }
+    
+    @Override
+    public List<? extends AbstractTree<ParseNode>> getDirectChildren() {
+        return new LinkedList<>();
     }
     
     @Override

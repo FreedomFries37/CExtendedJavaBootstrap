@@ -2,6 +2,8 @@ package radin.interphase.semantics;
 
 import radin.interphase.AbstractTree;
 import radin.interphase.lexical.Token;
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 
 import java.util.*;
 
@@ -34,6 +36,10 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
         this.type = type;
         this.childList = childList;
         hints = typeToHints.getOrDefault(type, new LinkedList<>());
+    }
+    
+    public TypeAbstractSyntaxNode addType(CXType type) {
+        return new TypeAbstractSyntaxNode(this.getType(), type, childList);
     }
     
     public static AbstractSyntaxNode unroll(ASTNodeType type, AbstractSyntaxNode first, AbstractSyntaxNode unrolled) {
@@ -121,13 +127,13 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
     
     @Override
     protected String toTreeForm(int indent) {
-        StringBuilder output = new StringBuilder(super.toTreeForm(indent));
+        StringBuilder output = new StringBuilder(indentString(indent));
         return treeFormHelper(indent, output);
     }
     
     
     protected String toTreeForm(int indent, String hint) {
-        StringBuilder output = new StringBuilder(String.format("%s%15s", super.toTreeForm(indent),  "(" + hint + ")"));
+        StringBuilder output = new StringBuilder(String.format("%s%15s", indentString(indent),  "(" + hint + ")"));
         
         return treeFormHelper(indent, output);
     }
@@ -148,7 +154,7 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
     @Override
     public String toString() {
         if(token == null) return type.toString();
-        if(token.getImage() != null) return type.toString() + "::" + token.getImage();
+        if(token.getImage() != null) return type.toString() + " \"" + token.getImage() + "\"";
         return type.toString() + "::" + token.toString();
     }
     
@@ -185,5 +191,8 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
         return output.toString();
     }
     
-    
+    @Override
+    public List<? extends AbstractTree<AbstractSyntaxNode>> getDirectChildren() {
+        return childList;
+    }
 }

@@ -9,6 +9,17 @@ public abstract class AbstractTree<T extends AbstractTree<T>> {
     }
     
     protected String toTreeForm(int indent) {
+        StringBuilder output = new StringBuilder();
+        output.append(indentString(indent));
+        for (AbstractTree<T> directChild : getDirectChildren()) {
+            output.append("\n");
+            output.append(directChild.toTreeForm(indent + 1));
+        }
+        
+        return output.toString();
+    }
+    
+    final protected String indentString(int indent) {
         return getIndent(indent) + toString();
     }
     
@@ -21,4 +32,5 @@ public abstract class AbstractTree<T extends AbstractTree<T>> {
     }
     
     public abstract List<T> postfix();
+    public abstract List<? extends AbstractTree<T>> getDirectChildren();
 }

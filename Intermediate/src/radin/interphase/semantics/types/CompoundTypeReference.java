@@ -55,6 +55,14 @@ public class CompoundTypeReference extends CXType {
         }
     }
     
+    public CompoundType getCompoundType() {
+        return compoundType;
+    }
+    
+    public String getTypename() {
+        return typename;
+    }
+    
     @Override
     public boolean isValid(TypeEnvironment e) {
         return e.namedCompoundTypeExists(typename);
@@ -68,6 +76,11 @@ public class CompoundTypeReference extends CXType {
     @Override
     public long getDataSize(TypeEnvironment e) {
         return e.getNamedCompoundType(typename).getDataSize(e);
+    }
+    
+    @Override
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        return e.getNamedCompoundType(typename);
     }
     
     @Override

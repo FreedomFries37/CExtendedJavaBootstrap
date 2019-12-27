@@ -122,7 +122,7 @@ public class CXMethod implements CXEquivalent {
     }
     
     public String getCFunctionName() {
-        return parent.getCTypeName() + "_" + name;
+        return parent.getCTypeName() + "_" + name + "_" + getParameterMangle(parameters);
     }
     
     public String methodCall(String thisValue, String sequence) {

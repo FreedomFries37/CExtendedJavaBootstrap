@@ -6,6 +6,7 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
+import radin.interphase.semantics.types.ArrayType;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.CompoundTypeReference;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
@@ -160,7 +161,7 @@ public class ActionRoutineApplier {
                 break;
             case t_assign:
             case t_operator_assign:
-                node.setInherit(new AbstractSyntaxNode(ASTNodeType.assignment, token));
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.assignment_type, token));
                 break;
             case t_private:
             case t_public:
@@ -187,10 +188,17 @@ public class ActionRoutineApplier {
         while(cont) {
             try {
                 switch (node.getCategory()) {
+                    case "TopLevelDeclaration": {
+                        if(node.hasChildCategory("FunctionDefinition")) {
+                            getCatNode("FunctionDefinition").setInherit(
+                                    AbstractSyntaxNode.EMPTY
+                            );
+                        }
+                        // MUST CONTINUE THROUGH INTO NEXT SECTION
+                    }
                     case "AssignOperator":
                     case "TopExpression":
                     case "Statement":
-                    case "TopLevelDeclaration":
                     case "StructOrUnion":
                     case "AssignmentExpression":
                     case "ParameterTypeList":
@@ -317,8 +325,7 @@ public class ActionRoutineApplier {
                         } if(node.firstIs(TokenType.t_string, TokenType.t_literal)) {
                             node.setSynthesized(node.getChild(0).getSynthesized());
                             return true;
-                        } else if (node.firstIs(TokenType.t_minus, TokenType.t_not, TokenType.t_bang,
-                                TokenType.t_and, TokenType.t_add, TokenType.t_inc, TokenType.t_dec)) {
+                        } else if (node.firstIs(TokenType.t_minus, TokenType.t_not, TokenType.t_bang, TokenType.t_add, TokenType.t_inc, TokenType.t_dec)) {
                             AbstractSyntaxNode operatorNode = node.getChild(0).getSynthesized();
                             AbstractSyntaxNode factorSynth = getCatNode("Factor", 2).getSynthesized();
                             getCatNode("Factor", 1).setSynthesized(
@@ -449,7 +456,8 @@ public class ActionRoutineApplier {
                                 return true;
                             } else if(node.firstIs(TokenType.t_inc, TokenType.t_dec)) {
                                 node.setSynthesized(
-                                        new AbstractSyntaxNode(ASTNodeType.postop, node.getChild(0).getSynthesized())
+                                        new AbstractSyntaxNode(ASTNodeType.postop,
+                                                node.getInherit(), node.getChild(0).getSynthesized())
                                 );
                                 return true;
                             }
@@ -500,9 +508,9 @@ public class ActionRoutineApplier {
                         AbstractSyntaxNode factor = getCatNode("Factor")
                                 .getSynthesized();
                         AbstractSyntaxNode type = getCatNode("TypeName").getSynthesized();
-                        
+                        CXType cxtype = environment.getType(type);
                         node.setSynthesized(
-                                new AbstractSyntaxNode(ASTNodeType.cast, type, factor)
+                                new TypeAbstractSyntaxNode(ASTNodeType.cast, cxtype, factor)
                         );
                         
                         return true;
@@ -846,7 +854,14 @@ public class ActionRoutineApplier {
                                 );
                                 
                             } else if(node.firstIs(TokenType.t_lbrac)) {
-                            
+                                CXType newType = new ArrayType(type);
+                                node.setSynthesized(
+                                        new TypeAbstractSyntaxNode(
+                                                ASTNodeType.declaration,
+                                                newType,
+                                                node.getInherit(1)
+                                        )
+                                );
                             } else
                                 return false;
                         } else {
@@ -864,8 +879,8 @@ public class ActionRoutineApplier {
                     case "Initializer": {
                         AbstractSyntaxNode assignmentExpression = getCatNode("AssignmentExpression").getSynthesized();
                         node.setSynthesized(
-                                new TypeAbstractSyntaxNode(ASTNodeType.initialized_declaration,
-                                        ((TypeAbstractSyntaxNode) node.getInherit()).getCxType(),
+                                new AbstractSyntaxNode(ASTNodeType.initialized_declaration,
+                                        //((TypeAbstractSyntaxNode) node.getInherit()).getCxType(),
                                         node.getInherit(),
                                         assignmentExpression)
                         );
@@ -1059,7 +1074,7 @@ public class ActionRoutineApplier {
                         
                         CXType cxClass = environment.getType(classDefinition);
                         environment.addTypeDefinition(cxClass ,name.getToken().getImage());
-                        node.setSynthesized(classDefinition);
+                        node.setSynthesized(classDefinition.addType(cxClass));
                         return true;
                     }
                     case "ClassDeclarationList": {
@@ -1108,7 +1123,7 @@ public class ActionRoutineApplier {
                         return true;
                     }
                     case "ConstructorDefinition": {
-                        AbstractSyntaxNode typename = getCatNode("TypeName").getSynthesized();
+                        AbstractSyntaxNode typename = node.getLeafNode(TokenType.t_typename).getSynthesized();
                         AbstractSyntaxNode parameterList = getCatNode("ParameterList").getSynthesized();
                         AbstractSyntaxNode compoundStatement = getCatNode("CompoundStatement").getSynthesized();
                         

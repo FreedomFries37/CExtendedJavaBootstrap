@@ -1,0 +1,64 @@
+package radin.typeanalysis;
+
+import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.compound.CXClassType;
+
+import java.util.Stack;
+
+public abstract class TypeAnalyzer implements ITypeAnalyzer{
+
+   
+    private Stack<TypeTracker> trackerStack;
+    private TypeAugmentedSemanticNode tree;
+    
+    private static TypeEnvironment environment;
+    
+    public TypeAnalyzer(TypeAugmentedSemanticNode tree) {
+        this.tree = tree;
+        trackerStack = new Stack<>();
+        trackerStack.push(new TypeTracker());
+    }
+    
+    public static TypeEnvironment getEnvironment() {
+        return environment;
+    }
+    
+    public static void setEnvironment(TypeEnvironment environment) {
+        TypeAnalyzer.environment = environment;
+    }
+    
+    @Override
+    public TypeTracker getCurrentTracker() {
+        return trackerStack.peek();
+    }
+    
+    @Override
+    public void typeTrackingClosure() {
+        TypeTracker next = trackerStack.peek().createInnerTypeTracker();
+        trackerStack.push(next);
+    }
+    
+    @Override
+    public void typeTrackingClosure(CXClassType classType) {
+        TypeTracker next = trackerStack.peek().createInnerTypeTracker(classType);
+        trackerStack.push(next);
+    }
+    
+    @Override
+    public void releaseTrackingClosure() {
+        trackerStack.pop();
+    }
+    
+    @Override
+    public boolean determineTypes() {
+        return determineTypes(tree);
+    }
+    
+    @Override
+    public abstract boolean determineTypes(TypeAugmentedSemanticNode node);
+    
+    public <T extends TypeAnalyzer> boolean determineTypes(T other) {
+        ((TypeAnalyzer) other).trackerStack = trackerStack;
+        return other.determineTypes();
+    }
+}

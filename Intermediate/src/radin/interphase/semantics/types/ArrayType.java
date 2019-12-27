@@ -49,6 +49,11 @@ public class ArrayType extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        return new ArrayType(baseType.getTypeRedirection(e));
+    }
+    
+    @Override
     public boolean isValid(TypeEnvironment e) {
         return false;
     }

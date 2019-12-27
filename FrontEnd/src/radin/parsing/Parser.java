@@ -125,7 +125,7 @@ public class Parser extends BasicParser {
             case t_const:
             {
                 if(!attemptParse(this::parseDeclaration, child)) {
-                    if(!parseFunctionDefinition(child)) return error("Could not parse declaration");
+                    if(!parseFunctionDefinition(child)) return error("Could not parse declaration", true);
                 }
                 /*
                 if(!attemptParse(this::parseFunctionDefinition, child)) {
@@ -138,6 +138,7 @@ public class Parser extends BasicParser {
             }
             
         }
+        clearErrors();
         
         parent.addChild(child);
         return true;
@@ -1327,7 +1328,11 @@ public class Parser extends BasicParser {
                 break;
             }
             case t_lpar: {
-                // TODO add this
+                if(!consumeAndAddAsLeaf(TokenType.t_lpar, child)) return false;
+                if(!match(TokenType.t_rpar)) {
+                    if(!parseParameterTypeList(child)) return false;
+                }
+                if(!consumeAndAddAsLeaf(TokenType.t_rpar, child)) return error("Missing matching )");
                 
                 break;
             }
@@ -1422,8 +1427,8 @@ public class Parser extends BasicParser {
                 if(!consume(TokenType.t_rpar)) return false;
                 break;
             }
-            case t_rbrac: {
-                getNext();
+            case t_lbrac: {
+                consumeAndAddAsLeaf(child);
                 if(!consume(TokenType.t_rbrac)) return false;
                 if(!parseDirectDeclaratorTail(child)) return false;
                 break;
@@ -1738,7 +1743,7 @@ public class Parser extends BasicParser {
             if(!attemptParse(this::parseDeclaration, child)) {
                 
                 if(!attemptParse(this::parseFunctionDefinition, child)) {
-                    return false;
+                    return error("Could not parse class declaration", true);
                 }
             }
         }
@@ -1766,7 +1771,7 @@ public class Parser extends BasicParser {
     private boolean parseConstructorDefinition(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ConstructorDefinition");
         
-        if(!parseTypeName(child)) return false;
+        if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) return false;
         if(!consume(TokenType.t_lpar)) return false;
         if(!parseParameterList(child)) return false;
         if(!consume(TokenType.t_rpar)) return error("Missing matching )");

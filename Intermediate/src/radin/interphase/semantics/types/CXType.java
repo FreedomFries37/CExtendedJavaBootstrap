@@ -30,6 +30,10 @@ public abstract class CXType implements CXEquivalent {
         return this;
     }
     
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        return this;
+    }
+    
     public CXType getCTypeIndirection() {
         return this;
     }

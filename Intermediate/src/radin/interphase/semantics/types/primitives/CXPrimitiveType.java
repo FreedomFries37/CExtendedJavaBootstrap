@@ -86,6 +86,7 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
-        return other instanceof CXPrimitiveType;
+        
+        return other instanceof CXPrimitiveType || other instanceof LongPrimitive || other instanceof ShortPrimitive || other instanceof UnsignedPrimitive;
     }
 }
