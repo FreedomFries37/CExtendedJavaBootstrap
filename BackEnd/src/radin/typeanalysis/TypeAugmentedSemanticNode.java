@@ -135,6 +135,18 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         return null;
     }
     
+    public TypeAugmentedSemanticNode getASTChild(ASTNodeType type, int count) {
+        AbstractSyntaxNode child = astNode.getChild(type);
+        int found = 0;
+        for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
+            if(typeAugmentedSemanticNode.astNode == child) {
+                if(++found == count)
+                    return typeAugmentedSemanticNode;
+            }
+        }
+        return null;
+    }
+    
     public AbstractSyntaxNode getASTNode() {
         return astNode;
     }

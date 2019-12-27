@@ -34,6 +34,11 @@ public class FunctionPointer extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public boolean isIntegral() {
+        return false;
+    }
+    
+    @Override
     public long getDataSize(TypeEnvironment e) {
         return e.getPointerSize();
     }

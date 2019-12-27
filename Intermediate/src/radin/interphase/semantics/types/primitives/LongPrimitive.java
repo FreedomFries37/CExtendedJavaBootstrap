@@ -42,6 +42,11 @@ public class LongPrimitive extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public boolean isIntegral() {
+        return true;
+    }
+    
+    @Override
     public String generateCDefinition() {
         return "long " + primitiveCXType.generateCDefinition();
     }

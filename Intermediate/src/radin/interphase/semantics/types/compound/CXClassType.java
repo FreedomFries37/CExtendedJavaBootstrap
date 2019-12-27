@@ -4,7 +4,7 @@ import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.IncorrectParameterTypesError;
 import radin.interphase.semantics.exceptions.RedeclareError;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CompoundTypeReference;
+import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.PointerType;
 import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.methods.CXConstructor;
@@ -217,7 +217,7 @@ public class CXClassType extends CXCompoundType {
     }
     
     public CXType getCTypeIndirection() {
-        return new CompoundTypeReference(CompoundTypeReference.CompoundType.struct, getCTypeName());
+        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType.struct, getCTypeName());
     }
     
     
@@ -287,9 +287,9 @@ public class CXClassType extends CXCompoundType {
         
         if(other instanceof CXClassType){
             return this.getLineage().contains(other);
-        } else if(other instanceof CompoundTypeReference) {
-            if(((CompoundTypeReference) other).getCompoundType() != CompoundTypeReference.CompoundType._class) return false;
-            CXCompoundType namedCompoundType = e.getNamedCompoundType(((CompoundTypeReference) other).getTypename());
+        } else if(other instanceof CXCompoundTypeNameIndirection) {
+            if(((CXCompoundTypeNameIndirection) other).getCompoundType() != CXCompoundTypeNameIndirection.CompoundType._class) return false;
+            CXCompoundType namedCompoundType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).getTypename());
             if(!(namedCompoundType instanceof CXClassType)) return false;
             
             return is(namedCompoundType, e);
@@ -368,7 +368,7 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public CXType getTypeIndirection() {
-        return new CompoundTypeReference(CompoundTypeReference.CompoundType._class, this);
+        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType._class, this);
     }
     
 }

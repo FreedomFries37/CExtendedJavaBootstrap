@@ -32,6 +32,11 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public boolean isIntegral() {
+        return true;
+    }
+    
+    @Override
     public boolean is(CXType other, TypeEnvironment e) {
         return primitiveCXType.is(other, e);
     }

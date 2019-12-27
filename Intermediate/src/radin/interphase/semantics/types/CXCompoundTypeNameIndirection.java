@@ -4,7 +4,7 @@ import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.TypeDoesNotExist;
 import radin.interphase.semantics.types.compound.CXCompoundType;
 
-public class CompoundTypeReference extends CXType {
+public class CXCompoundTypeNameIndirection extends CXType {
     
     public enum CompoundType {
         struct("struct"),
@@ -20,12 +20,12 @@ public class CompoundTypeReference extends CXType {
     private CompoundType compoundType;
     private String typename;
     
-    public CompoundTypeReference(CompoundType compoundType, String typename) {
+    public CXCompoundTypeNameIndirection(CompoundType compoundType, String typename) {
         this.compoundType = compoundType;
         this.typename = typename;
     }
     
-    public CompoundTypeReference(CompoundType compoundType, CXCompoundType actual) {
+    public CXCompoundTypeNameIndirection(CompoundType compoundType, CXCompoundType actual) {
         this.compoundType = compoundType;
         this.typename = actual.getTypeName();
     }
@@ -42,7 +42,7 @@ public class CompoundTypeReference extends CXType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
-        if(!(other instanceof ICXCompoundType || other instanceof CompoundTypeReference)) return false;
+        if(!(other instanceof ICXCompoundType || other instanceof CXCompoundTypeNameIndirection)) return false;
         CXCompoundType namedCompoundType = e.getNamedCompoundType(typename);
         if(other instanceof ICXCompoundType) {
             if(namedCompoundType == null){
@@ -50,8 +50,8 @@ public class CompoundTypeReference extends CXType {
             }
             return namedCompoundType.is(other, e);
         } else {
-            if(!e.namedCompoundTypeExists(((CompoundTypeReference) other).typename)) throw new TypeDoesNotExist(((CompoundTypeReference) other).typename);
-            return namedCompoundType.is(e.getNamedCompoundType(((CompoundTypeReference) other).typename), e);
+            if(!e.namedCompoundTypeExists(((CXCompoundTypeNameIndirection) other).typename)) throw new TypeDoesNotExist(((CXCompoundTypeNameIndirection) other).typename);
+            return namedCompoundType.is(e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename), e);
         }
     }
     
@@ -85,8 +85,8 @@ public class CompoundTypeReference extends CXType {
     
     @Override
     public CXType getCTypeIndirection() {
-        if(compoundType.equals(CompoundType._class)) return new CompoundTypeReference(CompoundType.struct,
+        if(compoundType.equals(CompoundType._class)) return new CXCompoundTypeNameIndirection(CompoundType.struct,
             typename);
-        return new CompoundTypeReference(compoundType, typename);
+        return new CXCompoundTypeNameIndirection(compoundType, typename);
     }
 }

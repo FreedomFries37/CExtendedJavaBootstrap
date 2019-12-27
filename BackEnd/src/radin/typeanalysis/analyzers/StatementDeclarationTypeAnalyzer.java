@@ -2,7 +2,7 @@ package radin.typeanalysis.analyzers;
 
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CompoundTypeReference;
+import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
@@ -27,9 +27,9 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 declarationType =
                         ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
-                if(declarationType instanceof CompoundTypeReference) {
+                if(declarationType instanceof CXCompoundTypeNameIndirection) {
                     declarationType =
-                            getEnvironment().getNamedCompoundType(((CompoundTypeReference) declarationType).getTypename());
+                            getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
                 }
                 name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
                 
@@ -39,9 +39,9 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 TypeAugmentedSemanticNode subDeclaration = declaration.getASTChild(ASTNodeType.declaration);
                 declarationType =
                         ((TypeAbstractSyntaxNode) subDeclaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
-                if(declarationType instanceof CompoundTypeReference) {
+                if(declarationType instanceof CXCompoundTypeNameIndirection) {
                     declarationType =
-                            getEnvironment().getNamedCompoundType(((CompoundTypeReference) declarationType).getTypename());
+                            getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
                 }
                 name = subDeclaration.getASTChild(ASTNodeType.id).getToken().getImage();
                 
@@ -49,7 +49,9 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
                 if(!determineTypes(analyzer)) return false;
                 
-                if(!expression.getCXType().is(declarationType, getEnvironment())) throw new IncorrectTypeError(declarationType, expression.getCXType());
+                if(!is(expression.getCXType(), declarationType)) throw new IncorrectTypeError(declarationType, expression.getCXType());
+                //if(!expression.getCXType().is(declarationType, getEnvironment())) throw new IncorrectTypeError
+                // (declarationType, expression.getCXType());
                 
                 
                 

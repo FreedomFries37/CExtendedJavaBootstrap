@@ -95,9 +95,9 @@ public class CXMethod implements CXEquivalent {
     }
     
     public PointerType getThisType() {
-        CompoundTypeReference compoundTypeReference =
-                new CompoundTypeReference(CompoundTypeReference.CompoundType._class, parent);
-        return new PointerType(compoundTypeReference);
+        CXCompoundTypeNameIndirection cxCompoundTypeNameIndirection =
+                new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType._class, parent);
+        return new PointerType(cxCompoundTypeNameIndirection);
     }
     
     @Override

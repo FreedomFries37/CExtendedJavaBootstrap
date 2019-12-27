@@ -55,9 +55,15 @@ public class Main {
                 tasTree.printTreeForm();
                 
                 ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer(tasTree.getHead());
-                System.out.println("analyzer.determineTypes() = " + analyzer.determineTypes());
+                try{
+                    System.out.println("analyzer.determineTypes() = " + analyzer.determineTypes());
+                    tasTree.printTreeForm();
+                } catch (Error e) {
+                    tasTree.printTreeForm();
+                    e.printStackTrace();
+                }
                 
-                tasTree.printTreeForm();
+                
                 /*
                 for (CXClassType createdClass : environment.getCreatedClasses()) {
                     createdClass.seal(environment);

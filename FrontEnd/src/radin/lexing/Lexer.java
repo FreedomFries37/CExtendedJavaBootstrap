@@ -124,15 +124,16 @@ public class Lexer implements Iterable<Token> {
         
         while(getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
             consumeChar();
-        }
-        if(getNextChars(2).equals("//")) {
-            consumeNextChars(2);
-            while (!consume(System.lineSeparator())) {
-                consumeChar();
+            if(getNextChars(2).equals("//")) {
+                consumeNextChars(2);
+                while (!consume(System.lineSeparator())) {
+                    consumeChar();
+                }
+            }else if(consume("/*")) {
+                while (!consume("*/")) consumeChar();
             }
-        }else if(consume("/*")) {
-            while (!consume("*/")) consumeChar();
         }
+        
         while(getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
             consumeChar();
         }

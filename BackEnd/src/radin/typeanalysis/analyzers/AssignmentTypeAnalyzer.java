@@ -44,7 +44,9 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
         Token operator = node.getASTChild(ASTNodeType.assignment_type).getToken();
         
         if(operator.getType() == TokenType.t_assign) {
-            if(!rhsType.is(lhs.getCXType(), getEnvironment())) throw new IncorrectTypeError(lhs.getCXType(), rhsType);
+            
+            if(!is(rhsType, lhs.getCXType())) throw new IncorrectTypeError(lhs.getCXType(), rhsType);
+            //if(!rhsType.is(lhs.getCXType(), getEnvironment())) throw new IncorrectTypeError(lhs.getCXType(), rhsType);
             
         } else if(operator.getType() == TokenType.t_operator_assign) {
         

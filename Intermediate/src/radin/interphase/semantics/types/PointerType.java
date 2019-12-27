@@ -2,6 +2,7 @@ package radin.interphase.semantics.types;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
 public class PointerType extends AbstractCXPrimitiveType {
     
@@ -33,9 +34,24 @@ public class PointerType extends AbstractCXPrimitiveType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
+        if(other instanceof AbstractCXPrimitiveType && !(other instanceof PointerType)) {
+            AbstractCXPrimitiveType abstractCXPrimitiveType = (AbstractCXPrimitiveType) other;
+            return abstractCXPrimitiveType.isIntegral();
+        }
         if(!(other instanceof PointerType)) return false;
-        
-        return subType.is(((PointerType) other).subType, e);
+        if(this.subType == CXPrimitiveType.VOID){
+            return true;
+        }
+        CXType subType = ((PointerType) other).subType;
+        if(subType == CXPrimitiveType.VOID){
+            return true;
+        }
+        return this.subType.is(subType, e);
+    }
+    
+    @Override
+    public boolean isIntegral() {
+        return false;
     }
     
     @Override

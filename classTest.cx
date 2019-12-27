@@ -6,10 +6,14 @@ int main(int argc, char *argv[]) {
 
 struct string;
 
+
+
 struct string {
 	char* ptr;
 	unsigned int length;
 };
+
+void* NULL = (void*) 0;
 
 class node {
 	void* value;
@@ -17,7 +21,7 @@ class node {
 
 	public node(void* value) {
 		this->value = value;
-		next = NULL;
+		this->next = NULL;
 	}
 
 	node* getNext() {
@@ -58,7 +62,7 @@ class child_node : node {
 	}
 
 	public child_node* getNextChildNode() {
-		return (child_node*) getNext();
+		return (child_node*) this->getNext();
 	}
 
 	virtual char getHardValue() {
@@ -68,6 +72,10 @@ class child_node : node {
 	public child_node* tester(char* ch, int index) {
 		this->value = &ch[index];
 		return this;
+	}
+	
+	public void mutator() {
+	
 	}
 };
 
@@ -90,7 +98,7 @@ void throwaway() {
 	swap(a_p, b_p);
 
 	char_list meep;
-	char_list other = meep->tester("hello", 2)->getNextChildNode();
+	(*meep->tester("hello", 2)->getNextChildNode()).mutator();
 
 	child_node n;
 	node d;
@@ -110,6 +118,8 @@ void throwaway() {
 
 
 	n.seeMe = 5;
+	
+	
 
 	child_node* nodes[4];
 	child_node* created = new child_node(str);
@@ -118,7 +128,21 @@ void throwaway() {
 	char* hhh = "hello world";
 	hhh[3] = 'b';
 	*(hhh + 3) = 'c';
+	*(hhh + arr[2]) = '5';
 	char** ptr2 = &hhh;
 	char* beep = "bonjour la monde";
 	*ptr2 = beep;
+	
+	n.mutator();
+	// n.seeMe;
+	// 4;
+	
+	child_node const_object;
+	const_object.seeMe = 5;
+	
+	const int const_a = 5;
+	int add = const_a + 3;
+	
+	
+	
 }

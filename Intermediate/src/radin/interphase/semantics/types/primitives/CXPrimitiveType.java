@@ -5,16 +5,18 @@ import radin.interphase.semantics.types.CXType;
 
 public class CXPrimitiveType extends AbstractCXPrimitiveType {
     enum Primitives {
-        _char("char"),
-        _int("int"),
-        _float("float"),
-        _double("double"),
-        _void("void");
+        _char("char", true , false),
+        _int("int", true , false),
+        _float("float", false, true),
+        _double("double", false, true),
+        _void("void", false, false);
         
         String cEquivalent;
+        boolean integral;
+        boolean floatingPoint;
         
         
-        Primitives(String cEquivalent) {
+        Primitives(String cEquivalent, boolean isIntegral, boolean isFloatingPoint) {
             this.cEquivalent = cEquivalent;
         }
     }
@@ -83,6 +85,16 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
             default: return null;
         }
     }
+    
+    public boolean isIntegral() {
+        return myPrimitive.integral;
+    }
+    
+    public boolean isFloatingPoint() {
+        return myPrimitive.floatingPoint;
+    }
+    
+   
     
     @Override
     public boolean is(CXType other, TypeEnvironment e) {

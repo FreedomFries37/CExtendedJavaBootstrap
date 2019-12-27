@@ -4,11 +4,9 @@ import radin.interphase.AbstractTree;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CompoundTypeReference;
+import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 
-import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,8 +28,8 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
         if(head instanceof TypeAbstractSyntaxNode) {
             TypeAbstractSyntaxNode typeAbstractSyntaxNode = (TypeAbstractSyntaxNode) head;
             CXType type = typeAbstractSyntaxNode.getCxType();
-            if(type instanceof CompoundTypeReference) {
-                CXType newType = e.getNamedCompoundType(((CompoundTypeReference) type).getTypename());
+            if(type instanceof CXCompoundTypeNameIndirection) {
+                CXType newType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) type).getTypename());
                 head = new TypeAbstractSyntaxNode(head.getType(), newType, head.getChildList());
             }
         }

@@ -37,6 +37,10 @@ public class ConstantType extends CXType {
         return subtype.getDataSize(e);
     }
     
+    public CXType getSubtype() {
+        return subtype;
+    }
+    
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
         return subtype.is(other, e);

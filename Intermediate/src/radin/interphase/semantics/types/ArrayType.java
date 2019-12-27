@@ -49,6 +49,11 @@ public class ArrayType extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public boolean isIntegral() {
+        return false;
+    }
+    
+    @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
         return new ArrayType(baseType.getTypeRedirection(e));
     }

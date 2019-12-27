@@ -8,7 +8,7 @@ import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
 import radin.interphase.semantics.types.ArrayType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CompoundTypeReference;
+import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.parsing.CategoryNode;
 import radin.parsing.LeafNode;
@@ -1056,7 +1056,7 @@ public class ActionRoutineApplier {
                         
                         AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
     
-                        environment.addTypeDefinition(new CompoundTypeReference(CompoundTypeReference.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
+                        environment.addTypeDefinition(new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
     
                         AbstractSyntaxNode declarations = getCatNode("ClassDeclarationList").getSynthesized();
                         

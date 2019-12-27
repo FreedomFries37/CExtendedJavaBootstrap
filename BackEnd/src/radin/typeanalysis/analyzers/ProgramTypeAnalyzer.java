@@ -2,6 +2,8 @@ package radin.typeanalysis.analyzers;
 
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
@@ -32,7 +34,19 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 
                 FunctionTypeAnalyzer functionTypeAnalyzer = new FunctionTypeAnalyzer(child);
                 if(!determineTypes(functionTypeAnalyzer)) return false;
+    
+                TypeAbstractSyntaxNode astNode =
+                        ((TypeAbstractSyntaxNode) child.getASTNode());
                 
+                String name = child.getASTChild(ASTNodeType.id).getToken().getImage();
+                CXType returnType = astNode.getCxType();
+                getCurrentTracker().addFunction(name, returnType);
+                
+            } else if(child.getASTType() == ASTNodeType.declarations) {
+                StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(child);
+                
+                if(!determineTypes(analyzer)) return false;
+            
             }
             
             

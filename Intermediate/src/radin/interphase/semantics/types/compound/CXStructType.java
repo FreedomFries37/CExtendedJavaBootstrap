@@ -1,7 +1,7 @@
 package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CompoundTypeReference;
+import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 
 import java.util.List;
 
@@ -33,6 +33,6 @@ public class CXStructType extends CXBasicCompoundType {
     
     @Override
     public CXType getTypeIndirection() {
-        return new CompoundTypeReference(CompoundTypeReference.CompoundType.struct, this);
+        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType.struct, this);
     }
 }

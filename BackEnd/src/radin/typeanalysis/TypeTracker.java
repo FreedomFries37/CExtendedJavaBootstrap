@@ -210,12 +210,15 @@ public class TypeTracker {
         return isVisible(type, name, publicMethodEntries, internalMethodEntries, privateMethodEntries);
     }
     
-    public boolean isVisible(CXCompoundType type, String name, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> internalMethodEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> privateMethodEntries) {
+    public boolean isVisible(CXCompoundType type, String name, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> internalEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> privateEntries) {
         CompoundDeclarationKey key = new CompoundDeclarationKey(type, name);
-        if(publicMethodEntries.containsKey(key)) return true;
+        if(publicEntries.containsKey(key)) return true;
         if(type instanceof CXClassType) {
-            if(internalMethodEntries.containsKey(key)) return true;
-            return privateMethodEntries.containsKey(key);
+            CXClassType cxClassType = (CXClassType) type;
+            for (CXClassType inherit : cxClassType.getReverseInheritanceOrder()) {
+                key = new CompoundDeclarationKey(inherit, name);
+                if(internalEntries.containsKey(key) || privateEntries.containsKey(key)) return true;
+            }
         }
         return false;
     }

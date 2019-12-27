@@ -21,7 +21,7 @@ public class TypeEnvironment {
     
     private HashSet<CXClassType> createdClasses;
     
-    private HashSet<CompoundTypeReference> lateBoundReferences;
+    private HashSet<CXCompoundTypeNameIndirection> lateBoundReferences;
     
     private final static HashSet<String> primitives;
     private int pointerSize = 8;
@@ -215,31 +215,31 @@ public class TypeEnvironment {
                 if(namedCompoundTypeExists(image)) {
                     return getNamedCompoundType(image);
                 } else {
-                    CompoundTypeReference.CompoundType type;
+                    CXCompoundTypeNameIndirection.CompoundType type;
                     boolean addTypeDef = false;
                     switch (ast.getChild(ASTNodeType.compound_type_reference).getChild(0).getType()) {
                         case struct: {
-                            type = CompoundTypeReference.CompoundType.struct;
+                            type = CXCompoundTypeNameIndirection.CompoundType.struct;
                             break;
                         }
                         case union: {
-                            type = CompoundTypeReference.CompoundType.union;
+                            type = CXCompoundTypeNameIndirection.CompoundType.union;
                             break;
                         }
                         case _class: {
-                            type = CompoundTypeReference.CompoundType._class;
+                            type = CXCompoundTypeNameIndirection.CompoundType._class;
                             addTypeDef = true;
                             break;
                         }
                         default:
                             throw new UnsupportedOperationException();
                     }
-                    CompoundTypeReference compoundTypeReference = new CompoundTypeReference(type, image);
-                    lateBoundReferences.add(compoundTypeReference);
+                    CXCompoundTypeNameIndirection CXCompoundTypeNameIndirection = new CXCompoundTypeNameIndirection(type, image);
+                    lateBoundReferences.add(CXCompoundTypeNameIndirection);
                     if(addTypeDef) {
-                        addTypeDefinition(compoundTypeReference, image);
+                        addTypeDefinition(CXCompoundTypeNameIndirection, image);
                     }
-                    return compoundTypeReference;
+                    return CXCompoundTypeNameIndirection;
                 }
             } else switch (getSpecifier(ast)) {
                 case "unsigned": {
