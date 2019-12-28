@@ -28,7 +28,10 @@ public class DeclarationsAnalyzer extends TypeAnalyzer {
         for (TypeAugmentedSemanticNode declaration : node.getAllChildren(declarationType)) {
             assert declaration.getASTNode() instanceof TypeAbstractSyntaxNode;
             
-            CXType declarationType = ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType();
+            CXType declarationType =
+                    ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+            declaration.setType(declarationType);
+            declaration.setLValue(true);
             if(declarationType instanceof CXCompoundType) {
                 CXCompoundType cxCompoundType = ((CXCompoundType) declarationType);
                 if(!getCurrentTracker().isTracking(cxCompoundType)) {

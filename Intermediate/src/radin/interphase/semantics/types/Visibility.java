@@ -3,9 +3,15 @@ package radin.interphase.semantics.types;
 import radin.interphase.lexical.Token;
 
 public enum Visibility {
-    _public,
-    _private,
-    internal;
+    _public("public"),
+    _private("private"),
+    internal("internal");
+    
+    String str;
+    
+    Visibility(String str) {
+        this.str = str;
+    }
     
     public static Visibility getVisibility(Token token) {
         switch (token.getType()) {
@@ -15,5 +21,10 @@ public enum Visibility {
             default:
                 return null;
         }
+    }
+    
+    @Override
+    public String toString() {
+        return str;
     }
 }

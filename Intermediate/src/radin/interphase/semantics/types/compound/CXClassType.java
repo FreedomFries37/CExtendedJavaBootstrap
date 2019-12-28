@@ -221,6 +221,29 @@ public class CXClassType extends CXCompoundType {
     }
     
     
+    
+    public String classInfo() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(toString());
+        builder.append(" INFORMATION");
+        for (CXClassType cxClassType : getLineage()) {
+            for (FieldDeclaration field : cxClassType.getFields()) {
+                Visibility visibility = getVisibility(field.getName());
+                builder.append("\n\t");
+                builder.append(visibility.toString());
+                builder.append(" ");
+                builder.append(field);
+            }
+            
+            
+            
+        }
+        return builder.toString();
+    }
+    
+    
+    
+    
     public List<FieldDeclaration> getCFields(TypeEnvironment e) {
         List<FieldDeclaration> output= new LinkedList<>();
         for (FieldDeclaration field : getFields()) {

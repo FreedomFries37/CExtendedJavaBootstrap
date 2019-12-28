@@ -121,6 +121,8 @@ public class CXMethod implements CXEquivalent {
         return output.toString();
     }
     
+    
+    
     public String getCFunctionName() {
         return parent.getCTypeName() + "_" + name + "_" + getParameterMangle(parameters);
     }

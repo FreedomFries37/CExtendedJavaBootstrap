@@ -538,6 +538,22 @@ public class TypeEnvironment {
         
     }
     
+    /**
+     * Checks if two types are equivalent, with const stripping for going from non-const to const
+     * checks if type1 <= type2
+     * @param o1 type1
+     * @param o2 type2
+     * @return whether they can be used
+     */
+    public boolean is(CXType o1, CXType o2) {
+        
+        if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
+            return o1.is(((ConstantType) o2).getSubtype(), this);
+        }
+        return o1.is(o2,this);
+    }
+    
+    
     public HashSet<CXClassType> getCreatedClasses() {
         return createdClasses;
     }

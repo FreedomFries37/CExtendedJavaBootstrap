@@ -7,9 +7,12 @@ import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.compound.CXClassType;
+import radin.interphase.semantics.types.compound.FunctionPointer;
+import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class ClassTypeAnalyzer extends TypeAnalyzer {
@@ -53,22 +56,34 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
     
                 CXType returnType = astNode.getCxType();
                 String name = astNode.getChild(ASTNodeType.id).getToken().getImage();
+                List<CXType> parameterTypes = new LinkedList<>();
+                for (AbstractSyntaxNode abstractSyntaxNode : astNode.getChild(ASTNodeType.parameter_list)) {
+                    assert  abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
+                    CXType paramType = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
+                    parameterTypes.add(paramType);
+                }
+    
+                FunctionPointer type = new FunctionPointer(returnType,
+                        parameterTypes);
+                clsLevelDec.getASTChild(ASTNodeType.function_definition).setType(type);
     
                 assert visibility != null;
                 switch (visibility) {
                     case _public: {
-                        getCurrentTracker().addPublic(cxClassType, false, name, returnType);
+                        getCurrentTracker().addPublicMethod(cxClassType,  name, returnType, type.getParameterTypeList());
                         break;
                     }
                     case internal: {
-                        getCurrentTracker().addInternal(cxClassType, false, name, returnType);
+                        getCurrentTracker().addInternalMethod(cxClassType, name, returnType, type.getParameterTypeList());
                         break;
                     }
                     case _private: {
-                        getCurrentTracker().addPrivate(cxClassType, false, name, returnType);
+                        getCurrentTracker().addPrivateMethod(cxClassType, name, returnType, type.getParameterTypeList());
                         break;
                     }
                 }
+                
+                
             }
         }
         

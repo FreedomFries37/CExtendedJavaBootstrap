@@ -2,6 +2,7 @@ package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
@@ -36,6 +37,10 @@ public class FunctionPointer extends AbstractCXPrimitiveType {
     @Override
     public boolean isIntegral() {
         return false;
+    }
+    
+    public ParameterTypeList getParameterTypeList() {
+        return new ParameterTypeList(parameterTypes);
     }
     
     @Override

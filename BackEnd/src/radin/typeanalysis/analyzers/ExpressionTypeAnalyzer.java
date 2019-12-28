@@ -6,6 +6,7 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.*;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXCompoundType;
+import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.interphase.semantics.types.primitives.LongPrimitive;
@@ -265,13 +266,19 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             assert cxClass instanceof CXClassType;
             String name = node.getChild(1).getToken().getImage();
             
+            TypeAugmentedSemanticNode sequenceNode = node.getASTChild(ASTNodeType.args_list);
+            SequenceTypeAnalyzer analyzer = new SequenceTypeAnalyzer(sequenceNode);
+            
+            if(!determineTypes(analyzer)) return false;
+    
+            ParameterTypeList typeList = new ParameterTypeList(analyzer.getCollectedTypes());
             
             
-            if(!getCurrentTracker().methodVisible(((CXClassType) cxClass), name)) {
+            if(!getCurrentTracker().methodVisible(((CXClassType) cxClass), name, typeList)) {
                 throw new IllegalAccessError(cxClass, name);
             }
             
-            CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name);
+            CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name, typeList);
             if(nextType == null) throw new IllegalAccessError();
             
             

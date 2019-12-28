@@ -1,9 +1,11 @@
 package radin.typeanalysis;
 
+import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.RedeclareError;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXCompoundType;
+import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.errors.ClassNotDefinedError;
 import radin.typeanalysis.errors.IdentifierDoesNotExistError;
 
@@ -90,6 +92,40 @@ public class TypeTracker {
         }
     }
     
+    private class MethodKey extends CompoundDeclarationKey {
+        
+        private ParameterTypeList parameterTypeList;
+        
+        public MethodKey(CXCompoundType type, String name, ParameterTypeList params) {
+            super(type, name);
+            parameterTypeList = params;
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            
+            MethodKey methodKey = (MethodKey) o;
+            
+            return parameterTypeList.equals(methodKey.parameterTypeList, environment);
+        }
+        
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + parameterTypeList.hashCode();
+            return result;
+        }
+    
+        @Override
+        public String toString() {
+            return super.toString() +
+                    " parameterTypeList=" + parameterTypeList;
+        }
+    }
+    
     private HashSet<CXCompoundType> trackingTypes;
     // lexical variables
     // these should be demoted
@@ -113,12 +149,14 @@ public class TypeTracker {
     
     
     private static HashMap<CXClassType, TypeTracker> classTrackers;
+    private TypeEnvironment environment;
     
     static {
         classTrackers = new HashMap<>();
     }
     
-    public TypeTracker() {
+    public TypeTracker(TypeEnvironment environment) {
+        this.environment = environment;
         variableEntries = new HashMap<>();
         functionEntries = new HashMap<>();
         publicMethodEntries = new HashMap<>();
@@ -131,6 +169,7 @@ public class TypeTracker {
     }
     
     private TypeTracker(TypeTracker old) {
+        environment = old.environment;
         trackingTypes = new HashSet<>(old.trackingTypes);
         variableEntries = new HashMap<>();
         demoteEntries(variableEntries, old.variableEntries);
@@ -211,22 +250,35 @@ public class TypeTracker {
     
     public boolean fieldVisible(CXCompoundType type, String name) {
         
-        return isVisible(type, name, publicFieldEntries, internalFieldEntries, privateFieldEntries);
+        return isVisible(type, name, publicFieldEntries, internalFieldEntries, privateFieldEntries, null);
     }
     
-    public boolean methodVisible(CXCompoundType type, String name) {
-        return isVisible(type, name, publicMethodEntries, internalMethodEntries, privateMethodEntries);
+    public boolean methodVisible(CXCompoundType type, String name, ParameterTypeList typeList) {
+        return isVisible(type, name, publicMethodEntries, internalMethodEntries, privateMethodEntries, typeList);
     }
     
-    public boolean isVisible(CXCompoundType type, String name, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> internalEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> privateEntries) {
-        CompoundDeclarationKey key = new CompoundDeclarationKey(type, name);
-        if(publicEntries.containsKey(key)) return true;
+    public boolean isVisible(CXCompoundType type, String name, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> internalEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> privateEntries, ParameterTypeList params) {
+        CompoundDeclarationKey key;
+        
+        
         if(type instanceof CXClassType) {
             CXClassType cxClassType = (CXClassType) type;
             for (CXClassType inherit : cxClassType.getReverseInheritanceOrder()) {
-                key = new CompoundDeclarationKey(inherit, name);
-                if(internalEntries.containsKey(key) || privateEntries.containsKey(key)) return true;
+                if(params == null) {
+                    key =new CompoundDeclarationKey(inherit, name);
+                } else {
+                    key = new MethodKey(inherit, name, params);
+                }
+                if(publicEntries.containsKey(key) || internalEntries.containsKey(key) || privateEntries.containsKey(key)) return true;
             }
+        } else {
+            if(params == null) {
+                key =new CompoundDeclarationKey(type, name);
+            } else {
+                key = new MethodKey(type, name, params);
+            }
+            if(publicEntries.containsKey(key)) return true;
+            
         }
         return false;
     }
@@ -278,20 +330,15 @@ public class TypeTracker {
         variableEntries.put(name, typeTrackerEntry);
     }
     
-    public void addCompoundTypeEntry(CXCompoundType parent, boolean isField, String name, CXType type, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicFieldEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {
+    public void addCompoundTypeField(CXCompoundType parent, String name, CXType type, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicFieldEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {
         CompoundDeclarationKey key = new CompoundDeclarationKey(parent, name);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
-        if(isField) {
-            if(fieldVisible(parent, name)) {
-                throw new RedeclareError(name);
-            }
-            publicFieldEntries.put(key, typeTrackerEntry);
-        } else {
-            if(methodVisible(parent, name)) {
-                throw new RedeclareError(name);
-            }
-            publicMethodEntries.put(key, typeTrackerEntry);
+        
+        if(fieldVisible(parent, name)) {
+            throw new RedeclareError(name);
         }
+        publicFieldEntries.put(key, typeTrackerEntry);
+        
     }
     
     public void addIsTracking(CXCompoundType type) {
@@ -329,15 +376,41 @@ public class TypeTracker {
     }
     
     public void addPublic(CXCompoundType parent, boolean isField, String name, CXType type) {
-        addCompoundTypeEntry(parent, isField, name, type, publicFieldEntries, publicMethodEntries);
+        addCompoundTypeField(parent, name, type, publicFieldEntries, publicMethodEntries);
     }
     
     public void addInternal(CXClassType parent, boolean isField, String name, CXType type) {
-        addCompoundTypeEntry(parent, isField, name, type, internalFieldEntries, internalMethodEntries);
+        addCompoundTypeField(parent, name, type, internalFieldEntries, internalMethodEntries);
     }
     
     public void addPrivate(CXClassType parent, boolean isField, String name, CXType type) {
-        addCompoundTypeEntry(parent, isField, name, type, privateFieldEntries, privateMethodEntries);
+        addCompoundTypeField(parent, name, type, privateFieldEntries, privateMethodEntries);
+    }
+    
+    public void addPublicMethod(CXCompoundType parent, String name, CXType type, ParameterTypeList typeList) {
+        addCompoundTypeMethodEntry(parent, name, type, typeList, publicMethodEntries);
+    }
+    
+    public void addInternalMethod(CXClassType parent, String name, CXType type, ParameterTypeList typeList) {
+        addCompoundTypeMethodEntry(parent, name, type, typeList, internalMethodEntries);
+    }
+    
+    public void addPrivateMethod(CXClassType parent, String name, CXType type, ParameterTypeList typeList) {
+        addCompoundTypeMethodEntry(parent, name, type, typeList, privateMethodEntries);
+    }
+    
+    public void addCompoundTypeMethodEntry(CXCompoundType parent, String name, CXType type, ParameterTypeList typeList,
+                                           HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {
+        CompoundDeclarationKey key = new MethodKey(parent, name, typeList);
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
+        
+        if(methodVisible(parent, name, typeList)) {
+            assert parent instanceof CXClassType;
+            System.out.println(((CXClassType) parent).classInfo());
+            throw new RedeclareError(name);
+        }
+        publicMethodEntries.put(key, typeTrackerEntry);
+        
     }
     
     public CXType getFieldType(CXCompoundType owner, String name) {
@@ -363,10 +436,10 @@ public class TypeTracker {
         return null;
     }
     
-    public CXType getMethodType(CXClassType owner, String name) {
+    public CXType getMethodType(CXClassType owner, String name, ParameterTypeList typeList) {
         for (CXClassType cxClassType : owner.getReverseInheritanceOrder()) {
-            if (!methodVisible(cxClassType, name)) continue;
-            CompoundDeclarationKey key = new CompoundDeclarationKey(cxClassType, name);
+            if (!methodVisible(cxClassType, name, typeList)) continue;
+            CompoundDeclarationKey key = new MethodKey(cxClassType, name, typeList);
             if (publicMethodEntries.containsKey(key)) {
                 return publicMethodEntries.get(key).getType();
             }
