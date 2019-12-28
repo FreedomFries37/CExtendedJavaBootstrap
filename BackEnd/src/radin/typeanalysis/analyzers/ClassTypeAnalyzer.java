@@ -11,6 +11,7 @@ import radin.interphase.semantics.types.compound.FunctionPointer;
 import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.errors.IncorrectReturnTypeError;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -62,27 +63,42 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                     CXType paramType = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
                     parameterTypes.add(paramType);
                 }
+                
+                
     
                 FunctionPointer type = new FunctionPointer(returnType,
                         parameterTypes);
                 clsLevelDec.getASTChild(ASTNodeType.function_definition).setType(type);
     
-                assert visibility != null;
-                switch (visibility) {
-                    case _public: {
-                        getCurrentTracker().addPublicMethod(cxClassType,  name, returnType, type.getParameterTypeList());
-                        break;
+                boolean isVirtual  = astNode.hasChild(ASTNodeType._virtual);
+                ParameterTypeList parameterTypeList = type.getParameterTypeList();
+                if(isVirtual && getCurrentTracker().methodVisible(cxClassType, name, parameterTypeList)) {
+                    CXType virtType = getCurrentTracker().getMethodType(cxClassType, name, parameterTypeList);
+                    if(!is(returnType, virtType)) {
+                        
+                        throw new IncorrectReturnTypeError(virtType, returnType);
                     }
-                    case internal: {
-                        getCurrentTracker().addInternalMethod(cxClassType, name, returnType, type.getParameterTypeList());
-                        break;
-                    }
-                    case _private: {
-                        getCurrentTracker().addPrivateMethod(cxClassType, name, returnType, type.getParameterTypeList());
-                        break;
+                } else {
+    
+    
+                    assert visibility != null;
+    
+                    switch (visibility) {
+                        case _public: {
+                            getCurrentTracker().addPublicMethod(cxClassType, name, returnType,
+                                    parameterTypeList);
+                            break;
+                        }
+                        case internal: {
+                            getCurrentTracker().addInternalMethod(cxClassType, name, returnType, parameterTypeList);
+                            break;
+                        }
+                        case _private: {
+                            getCurrentTracker().addPrivateMethod(cxClassType, name, returnType, parameterTypeList);
+                            break;
+                        }
                     }
                 }
-                
                 
             }
         }

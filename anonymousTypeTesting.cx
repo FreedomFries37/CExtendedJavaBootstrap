@@ -17,13 +17,15 @@ class rectangle {
 		else if(i == 1) return this->s2;
 		return -1;
 	}
+	
+	
 };
 
 class square : rectangle {
 	public square(double s) : super(s1) { }
 	
-	public double get_area() {
-		return 0.0;
+	virtual public int get_side(int i) {
+		return 1;
 	}
 };
 
