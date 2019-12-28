@@ -19,6 +19,12 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
         this.tree = tree;
         trackerStack = new Stack<>();
         trackerStack.push(new TypeTracker());
+        if(environment != null && environment.typedefExists("boolean")) {
+            CXType booleanType = environment.getTypeDefinition("boolean");
+            
+            getCurrentTracker().addFixedFunction("true", new ConstantType(booleanType));
+            getCurrentTracker().addFixedFunction("false", new ConstantType(booleanType));
+        }
     }
     
     public static TypeEnvironment getEnvironment() {
@@ -49,6 +55,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     @Override
     public void releaseTrackingClosure() {
         trackerStack.pop();
+        getCurrentTracker().removeParentlessStructFields();
     }
     
     @Override
@@ -64,8 +71,9 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
      * @param o2 type2
      * @return whether they can be used
      */
-    protected boolean is(CXType o1, CXType o2) {
-        if(o2 instanceof ConstantType) {
+    protected static boolean is(CXType o1, CXType o2) {
+        
+        if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
             return o1.is(((ConstantType) o2).getSubtype(), getEnvironment());
         }
         return o1.is(o2, getEnvironment());

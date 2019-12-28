@@ -4,9 +4,11 @@ import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.ConstantType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.errors.ConstModificationError;
 import radin.typeanalysis.errors.IllegalLValueError;
 import radin.typeanalysis.errors.IncorrectTypeError;
 
@@ -26,6 +28,14 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
         TypeAnalyzer analyzer = new ExpressionTypeAnalyzer(lhs);
         if (!determineTypes(analyzer)) {
             return false;
+        }
+        if(lhs.getCXType() instanceof ConstantType) {
+            
+            if(lhs.getASTType() == ASTNodeType.id)
+                throw new ConstModificationError(lhs.getToken().getImage(), lhs.getCXType());
+            else {
+                throw new ConstModificationError(lhs.getCXType());
+            }
         }
         CXType rhsType;
         if(rhs.getASTType() != ASTNodeType.assignment) {

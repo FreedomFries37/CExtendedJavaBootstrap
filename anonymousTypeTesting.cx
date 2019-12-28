@@ -1,0 +1,44 @@
+class other {
+	float f;
+	double d;
+	
+};
+
+class t {
+	public other bew;
+	public int n;
+};
+
+
+
+struct complex_type {
+	union {
+		double d;
+		long l;
+	} u;
+	char type;
+};
+
+
+
+typedef struct n borp;
+
+int main() {
+	struct n object;
+	t* bean = new t();
+	t bean2;
+	int yello = bean->n;
+	
+	struct complex_type r;
+	r.u.d = 4.0;
+	r.type = 'd';
+	
+	other f = bean->bew;
+
+	return 0;
+}
+
+struct n {
+	int id;
+	int length;
+};

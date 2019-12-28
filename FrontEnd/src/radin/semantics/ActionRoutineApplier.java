@@ -579,6 +579,8 @@ public class ActionRoutineApplier {
                             node.setSynthesized(getCatNode("StructOrUnionSpecifier").getSynthesized());
                             return true;
                         } else if(node.firstIs(TokenType.t_typename)) {
+                            // TODO: Fix this interaction
+                            
                             CXType type = environment.getType(node.getLeafNode(TokenType.t_typename).getSynthesized());
                             node.setSynthesized(
                                     new TypeAbstractSyntaxNode(ASTNodeType.specifier, type)
@@ -703,6 +705,7 @@ public class ActionRoutineApplier {
                     case "ClassSpecifier": {
                         LeafNode nameNode = node.getLeafNode(TokenType.t_id);
                         if(nameNode == null) nameNode = node.getLeafNode(TokenType.t_typename);
+                        
                         AbstractSyntaxNode nameAST = nameNode != null? nameNode.getSynthesized() : null;
                         AbstractSyntaxNode specifierInner = new AbstractSyntaxNode(
                                 ASTNodeType.compound_type_reference,

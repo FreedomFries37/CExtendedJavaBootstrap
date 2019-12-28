@@ -32,7 +32,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         
         typeTrackingClosure();
         if(hasOwnerType) {
-            getCurrentTracker().addEntry("this", new PointerType(owner));
+            getCurrentTracker().addVariable("this", new PointerType(owner));
         }
         TypeAugmentedSemanticNode parameters = node.getASTChild(ASTNodeType.parameter_list);
         for (TypeAugmentedSemanticNode parameter : parameters.getAllChildren(ASTNodeType.declaration)) {
@@ -40,7 +40,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
             CXType type = ((TypeAbstractSyntaxNode) parameter.getASTNode()).getCxType();
             String name = parameter.getASTChild(ASTNodeType.id).getToken().getImage();
             
-            getCurrentTracker().addEntry(name, type);
+            getCurrentTracker().addVariable(name, type);
         }
     
         TypeAugmentedSemanticNode compoundStatement = node.getASTChild(ASTNodeType.compound_statement);

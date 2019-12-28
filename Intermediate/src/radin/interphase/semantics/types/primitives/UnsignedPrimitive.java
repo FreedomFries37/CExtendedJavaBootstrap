@@ -21,6 +21,14 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
         this(CXPrimitiveType.INTEGER);
     }
     
+    public static UnsignedPrimitive createUnsignedShort() {
+        try {
+            return new UnsignedPrimitive(CXPrimitiveType.CHAR);
+        } catch (InvalidPrimitiveException e) {
+            return null;
+        }
+    }
+    
     @Override
     public String generateCDefinition() {
         return "unsigned " + primitiveCXType.generateCDefinition();

@@ -29,6 +29,13 @@ public class DeclarationsAnalyzer extends TypeAnalyzer {
             assert declaration.getASTNode() instanceof TypeAbstractSyntaxNode;
             
             CXType declarationType = ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType();
+            if(declarationType instanceof CXCompoundType) {
+                CXCompoundType cxCompoundType = ((CXCompoundType) declarationType);
+                if(!getCurrentTracker().isTracking(cxCompoundType)) {
+                    getCurrentTracker().addBasicCompoundType(cxCompoundType);
+                    getCurrentTracker().addIsTracking(cxCompoundType);
+                }
+            }
             String name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
     
             switch (visibility) {

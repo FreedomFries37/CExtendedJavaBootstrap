@@ -24,7 +24,9 @@ public class Main {
         System.out.println("Testing out lexer");
         String text;
         try {
-            text = new String(Files.readAllBytes(Paths.get("classTest.cx")));
+            if(args.length > 0) {
+                text = new String(Files.readAllBytes(Paths.get(args[0])));
+            } else text = new String(Files.readAllBytes(Paths.get("classTest.cx")));
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -38,7 +40,7 @@ public class Main {
         CategoryNode program = parser.parse();
         program.printTreeForm();
     
-        TypeEnvironment environment = new TypeEnvironment();
+        TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
         boolean b = applier.enactActionRoutine(program);
         if(b) {

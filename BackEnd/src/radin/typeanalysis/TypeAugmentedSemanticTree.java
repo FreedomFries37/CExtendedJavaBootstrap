@@ -30,7 +30,8 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
             CXType type = typeAbstractSyntaxNode.getCxType();
             if(type instanceof CXCompoundTypeNameIndirection) {
                 CXType newType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) type).getTypename());
-                head = new TypeAbstractSyntaxNode(head.getType(), newType, head.getChildList());
+                if(newType != null)
+                    head = new TypeAbstractSyntaxNode(head.getType(), newType, head.getChildList());
             }
         }
         return new TypeAugmentedSemanticNode(head, children);

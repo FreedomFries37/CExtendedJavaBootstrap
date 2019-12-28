@@ -243,6 +243,8 @@ public class Lexer implements Iterable<Token> {
                 return new Token(TokenType.t_virtual);
             }else if(image.equals("sizeof")) {
                 return new Token(TokenType.t_sizeof);
+            }else if(image.equals("boolean")) {
+                return new Token(TokenType.t_typename, image);
             }
             
             return new Token(TokenType.t_id, image);

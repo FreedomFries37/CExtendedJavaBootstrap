@@ -55,10 +55,10 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         
         if(node.getASTNode().getType() == ASTNodeType.id) {
             String image = node.getToken().getImage();
-            if(!getCurrentTracker().entryExists(image)) throw new IdentifierDoesNotExistError(image);
+            if(!getCurrentTracker().variableExists(image)) throw new IdentifierDoesNotExistError(image);
             CXType type = getCurrentTracker().getType(image);
             node.setType(type);
-            node.setLValue(!(type instanceof ConstantType));
+            node.setLValue(true);
             return true;
         }
         
@@ -74,21 +74,28 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 throw new IllegalTypesForOperationError(opToken, lhs.getCXType(), rhs.getCXType());
             }
             if(isComparison(opToken.getType())) {
-                node.setType(CXPrimitiveType.INTEGER);
+                if(getEnvironment().isStandardBooleanDefined()) {
+                    node.setType(getEnvironment().getTypeDefinition("boolean"));
+                } else {
+                    node.setType(UnsignedPrimitive.createUnsignedShort());
+                }
             } else {
                 if(rhs.getCXType() instanceof PointerType) {
                     node.setType(rhs.getCXType());
                 } else node.setType(lhs.getCXType());
+    
+                if(lhs.getCXType() instanceof PointerType || lhs.getCXType() instanceof ArrayType) {
+                    node.setLValue(true);
+                } else if(rhs.getCXType() instanceof PointerType || rhs.getCXType() instanceof ArrayType) {
+                    node.setLValue(true);
+                } else node.setLValue(false);
+    
+                if(node.getCXType() instanceof ConstantType) {
+                    node.setType(((ConstantType) node.getCXType()).getSubtype());
+                }
+    
             }
-            if(lhs.getCXType() instanceof PointerType || lhs.getCXType() instanceof ArrayType) {
-                node.setLValue(true);
-            } else if(rhs.getCXType() instanceof PointerType || rhs.getCXType() instanceof ArrayType) {
-                node.setLValue(true);
-            } else node.setLValue(false);
             
-            if(node.getCXType() instanceof ConstantType) {
-                node.setType(((ConstantType) node.getCXType()).getSubtype());
-            }
             
             return true;
         }
@@ -115,6 +122,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             TypeAugmentedSemanticNode child = node.getChild(0);
             
             if(!determineTypes(child)) return false;
+            
             if(!child.isLValue()) throw new IllegalLValueError(child);
             node.setType(new PointerType(child.getCXType()));
             node.setLValue(true);
@@ -166,16 +174,26 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(lhs)) return false;
             if(!determineTypes(rhs)) return false;
     
-            if(!(canBinaryOp(lhs.getCXType(), rhs.getCXType()) || canDereference(lhs.getCXType()))) {
-                throw new IllegalTypesForOperationError(node.getASTNode().getToken(), lhs.getCXType(), rhs.getCXType());
+            CXType cxType = lhs.getCXType();
+            boolean isConstant = false;
+            if(cxType instanceof ConstantType) {
+                cxType = ((ConstantType) cxType).getSubtype();
+                isConstant = true;
             }
             
-            if(lhs.getCXType() instanceof ArrayType) {
-                node.setType(((ArrayType) lhs.getCXType()).getBaseType());
-            } else {
-                node.setType(((PointerType) lhs.getCXType()).getSubType());
+            if(!(canBinaryOp(cxType, rhs.getCXType()) || canDereference(cxType))) {
+                throw new IllegalTypesForOperationError(node.getASTNode().getToken(), cxType, rhs.getCXType());
             }
-    
+            CXType nextType;
+            if(cxType instanceof ArrayType) {
+                nextType = ((ArrayType) cxType).getBaseType();
+            } else {
+                nextType = ((PointerType) cxType).getSubType();
+            }
+            if(isConstant) {
+                nextType = new ConstantType(nextType);
+            }
+            node.setType(nextType);
             node.setLValue(lhs.isLValue() || rhs.isLValue());
             
             return true;
@@ -183,7 +201,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         
         if(node.getASTNode().getType() == ASTNodeType.function_call) {
             String name =node.getASTChild(ASTNodeType.id).getToken().getImage();
-            if(getCurrentTracker().entryExists(name)) {
+            if(getCurrentTracker().variableExists(name)) {
                 throw new IdentifierNotFunctionError(name);
             }
             if(!getCurrentTracker().functionExists(name)) return false;
@@ -200,14 +218,18 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             
             assert objectInteraction.getCXType() instanceof CXCompoundType || objectInteraction.getCXType() instanceof ConstantType;
-            
+            String name =node.getChild(1).getToken().getImage();
             CXType parentType;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 parentType = objectInteraction.getCXType();
-            } else {
+            } else if(objectInteraction.getCXType() instanceof ConstantType){
                 parentType = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(getEnvironment());
+            } else {
+                throw new IllegalAccessError(objectInteraction.getCXType(), name);
             }
-            String name =node.getChild(1).getToken().getImage();
+            
+            
+            
             CXType nextType;
             
             

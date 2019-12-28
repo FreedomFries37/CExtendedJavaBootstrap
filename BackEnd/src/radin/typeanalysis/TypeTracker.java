@@ -2,48 +2,49 @@ package radin.typeanalysis;
 
 import radin.interphase.semantics.exceptions.RedeclareError;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.PointerType;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXCompoundType;
 import radin.typeanalysis.errors.ClassNotDefinedError;
 import radin.typeanalysis.errors.IdentifierDoesNotExistError;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class TypeTracker {
-
+    
     public enum EntryStatus {
         OLD,
-        NEW
+        NEW,
+        FIXED,
     }
     
     public static class TypeTrackerEntry {
         private EntryStatus status;
         private CXType type;
-    
+        
         TypeTrackerEntry(EntryStatus status, CXType type) {
             this.status = status;
             this.type = type;
         }
-    
+        
         public TypeTrackerEntry(TypeTrackerEntry other) {
             this.status = other.status;
             this.type = other.type;
         }
-    
+        
         public EntryStatus getStatus() {
             return status;
         }
-    
+        
         void setStatus(EntryStatus status) {
             this.status = status;
         }
-    
+        
         public CXType getType() {
             return type;
         }
-    
+        
         @Override
         public String toString() {
             return "{" +
@@ -56,30 +57,30 @@ public class TypeTracker {
     private static class CompoundDeclarationKey {
         private CXCompoundType type;
         private String name;
-    
+        
         public CompoundDeclarationKey(CXCompoundType type, String name) {
             this.type = type;
             this.name = name;
         }
-    
+        
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-        
+            
             CompoundDeclarationKey compoundDeclarationKey = (CompoundDeclarationKey) o;
-        
+            
             if (!type.equals(compoundDeclarationKey.type)) return false;
             return name.equals(compoundDeclarationKey.name);
         }
-    
+        
         @Override
         public int hashCode() {
             int result = type.hashCode();
             result = 31 * result + name.hashCode();
             return result;
         }
-    
+        
         @Override
         public String toString() {
             return "{" +
@@ -89,7 +90,7 @@ public class TypeTracker {
         }
     }
     
-    
+    private HashSet<CXCompoundType> trackingTypes;
     // lexical variables
     // these should be demoted
     private HashMap<String, TypeTrackerEntry> variableEntries;
@@ -126,9 +127,11 @@ public class TypeTracker {
         internalMethodEntries = new HashMap<>();
         privateMethodEntries = new HashMap<>();
         privateFieldEntries = new HashMap<>();
+        trackingTypes = new HashSet<>();
     }
     
     private TypeTracker(TypeTracker old) {
+        trackingTypes = new HashSet<>(old.trackingTypes);
         variableEntries = new HashMap<>();
         demoteEntries(variableEntries, old.variableEntries);
         
@@ -136,7 +139,7 @@ public class TypeTracker {
         
         publicMethodEntries = old.publicMethodEntries;
         publicFieldEntries = old.publicFieldEntries;
-    
+        
         
         internalFieldEntries = new HashMap<>();
         internalMethodEntries = new HashMap<>();
@@ -155,7 +158,7 @@ public class TypeTracker {
         
         TypeTracker typeTracker = classTrackers.getOrDefault(parentType, null);
         if(typeTracker == null) throw new ClassNotDefinedError();
-    
+        
         demoteEntries(internalFieldEntries, typeTracker.internalFieldEntries);
         demoteEntries(internalMethodEntries, typeTracker.internalMethodEntries);
     }
@@ -194,6 +197,11 @@ public class TypeTracker {
     }
     
     public boolean entryExists(String name) {
+        if(variableEntries.containsKey(name)) return true;
+        return functionExists(name);
+    }
+    
+    public boolean variableExists(String name) {
         return variableEntries.containsKey(name);
     }
     
@@ -223,13 +231,28 @@ public class TypeTracker {
         return false;
     }
     
-    public void addEntry(String name, CXType type) {
+    public void addVariable(String name, CXType type) {
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
+        addVariable(name, typeTrackerEntry);
+    }
+    
+    public void addVariableEntry(String name, CXType type) {
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.FIXED, type);
+        addVariable(name, typeTrackerEntry);
+    }
+    
+    private TypeTrackerEntry getEntry(String name) {
+        if(!entryExists(name)) return null;
+        if(functionExists(name)) return functionEntries.get(name);
+        return variableEntries.get(name);
+    }
+    
+    private void addVariable(String name, TypeTrackerEntry typeTrackerEntry) {
         if(!entryExists(name)) {
             variableEntries.put(name, typeTrackerEntry);
         } else {
-            TypeTrackerEntry oldEntry = variableEntries.get(name);
-            if(oldEntry.getStatus() == EntryStatus.NEW) {
+            TypeTrackerEntry oldEntry = getEntry(name);
+            if(oldEntry.getStatus() != EntryStatus.OLD) {
                 throw new RedeclareError(name);
             }
             
@@ -243,7 +266,14 @@ public class TypeTracker {
         functionEntries.put(name, typeTrackerEntry);
     }
     
-    private void putEntry(String name, CXType type) {
+    public void addFixedFunction(String name, CXType type) {
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.FIXED, type);
+        if(functionExists(name)) throw new RedeclareError(name);
+        functionEntries.put(name, typeTrackerEntry);
+    }
+    
+    
+    private void putVariable(String name, CXType type) {
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
         variableEntries.put(name, typeTrackerEntry);
     }
@@ -261,6 +291,40 @@ public class TypeTracker {
                 throw new RedeclareError(name);
             }
             publicMethodEntries.put(key, typeTrackerEntry);
+        }
+    }
+    
+    public void addIsTracking(CXCompoundType type) {
+        trackingTypes.add(type);
+    }
+    
+    public boolean isTracking(CXCompoundType type) {
+        return trackingTypes.contains(type);
+    }
+    
+    public void addBasicCompoundType(CXCompoundType type) {
+        if(type instanceof CXClassType) return;
+        for (CXCompoundType.FieldDeclaration field : type.getFields()) {
+            addPublic(type, true, field.getName(), field.getType());
+            if(field.getType() instanceof CXCompoundType) {
+                CXCompoundType fieldType = (CXCompoundType) field.getType();
+                if(!isTracking(fieldType)) {
+                    addBasicCompoundType(fieldType);
+                    addIsTracking(fieldType);
+                }
+            }
+        }
+    }
+    
+    public void removeParentlessStructFields() {
+        HashSet<CompoundDeclarationKey> remove = new HashSet<>();
+        for (CompoundDeclarationKey compoundDeclarationKey : publicFieldEntries.keySet()) {
+            if(!(compoundDeclarationKey.type instanceof CXClassType) && !trackingTypes.contains(compoundDeclarationKey.type)) {
+                remove.add(compoundDeclarationKey);
+            }
+        }
+        for (CompoundDeclarationKey compoundDeclarationKey : remove) {
+            publicFieldEntries.remove(compoundDeclarationKey);
         }
     }
     
@@ -316,14 +380,15 @@ public class TypeTracker {
         return null;
     }
     
-   
+    
     public CXType getType(String name) {
-        if(!entryExists(name)) {
+        if(entryExists(name)) {
             if(functionExists(name)) {
                 return functionEntries.get(name).getType();
             }
-            throw new IdentifierDoesNotExistError(name);
+            return variableEntries.get(name).getType();
         }
-        return variableEntries.get(name).getType();
+        throw new IdentifierDoesNotExistError(name);
+        
     }
 }

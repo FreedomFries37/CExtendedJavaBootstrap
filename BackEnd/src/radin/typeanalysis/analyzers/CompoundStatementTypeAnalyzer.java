@@ -1,6 +1,7 @@
 package radin.typeanalysis.analyzers;
 
 import radin.interphase.semantics.ASTNodeType;
+import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
@@ -21,6 +22,7 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         if(createNewScope) typeTrackingClosure();
     
+        /*
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
             
             
@@ -39,6 +41,18 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
             
             } else if(child.getASTType() == ASTNodeType.if_cond) {
     
+                ExpressionTypeAnalyzer expressionTypeAnalyzer = new ExpressionTypeAnalyzer(child.getChild(0));
+                if(!determineTypes(expressionTypeAnalyzer)) return false;
+                
+                TypeAugmentedSemanticNode ifTrue = child.getChild(0);
+                if(ifTrue.getASTNode() != AbstractSyntaxNode.EMPTY) {
+    
+                    TypeAnalyzer secondAnalyzer;
+                    
+    
+                    if(!determineTypes(secondAnalyzer)) return false;
+                }
+                
     
     
             } else if(child.getASTType() == ASTNodeType.while_cond) {
@@ -50,30 +64,78 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
     
     
             } else if(child.getASTType() == ASTNodeType.for_cond) {
+                typeTrackingClosure();
+                if(child.getChild(0).getASTNode() != AbstractSyntaxNode.EMPTY) {
+                    TypeAnalyzer firstAnalyzer;
+                    if(child.getChild(0).getASTType() == ASTNodeType.declarations) {
+                        firstAnalyzer = new StatementDeclarationTypeAnalyzer(child.getChild(0));
+                    } else {
+                        firstAnalyzer = new ExpressionTypeAnalyzer(child.getChild(0));
+                    }
+                    
+                    if(!determineTypes(firstAnalyzer)) return false;
+                }
     
+                if(child.getChild(1).getASTNode() != AbstractSyntaxNode.EMPTY) {
+                    TypeAnalyzer secondAnalyzer;
+                    if(child.getChild(1).getASTType() == ASTNodeType.declarations) {
+                        secondAnalyzer = new StatementDeclarationTypeAnalyzer(child.getChild(1));
+                    } else {
+                        secondAnalyzer = new ExpressionTypeAnalyzer(child.getChild(1));
+                    }
+        
+                    if(!determineTypes(secondAnalyzer)) return false;
+                }
     
+                if(child.getChild(2).getASTNode() != AbstractSyntaxNode.EMPTY) {
+                    TypeAnalyzer thirdAnalyzer = new ExpressionTypeAnalyzer(child.getChild(2));
+                    
+                    if(!determineTypes(thirdAnalyzer)) return false;
+                }
     
+                TypeAnalyzer statementAnalyzer;
+                if(child.getChild(3).getASTType() == ASTNodeType.compound_statement) {
+                    statementAnalyzer = new CompoundStatementTypeAnalyzer(child.getChild(3), returnType, false);
+                } else {
+                    statementAnalyzer = new ExpressionTypeAnalyzer(child.getChild(3));
+                }
+                
+                if(!determineTypes(statementAnalyzer)) return false;
+                
+                
+                releaseTrackingClosure();
             } else if(child.getASTType() == ASTNodeType._return) {
-                if(child.getChildren().isEmpty()) {
+                if(child.getChildren().isEmpty() || child.getChild(0).getASTNode() == AbstractSyntaxNode.EMPTY) {
                     if(returnType != CXPrimitiveType.VOID) {
                         throw new NonVoidReturnType();
                     }
                 } else {
+                    
                     ExpressionTypeAnalyzer expressionTypeAnalyzer = new ExpressionTypeAnalyzer(child.getChild(0));
                     if(!determineTypes(expressionTypeAnalyzer)) return false;
     
                     CXType gottenReturnType = child.getChild(0).getCXType();
-                    if(!gottenReturnType.is(returnType, getEnvironment())) throw new IncorrectReturnTypeError(returnType, gottenReturnType);
+                    if(returnType == CXPrimitiveType.VOID || !gottenReturnType.is(returnType, getEnvironment())) {
+                        throw new IncorrectReturnTypeError(returnType, gottenReturnType);
+                    }
                     
                 }
             }else if(child.getASTType() == ASTNodeType.compound_statement) {
-    
-    
-    
+                CompoundStatementTypeAnalyzer typeAnalyzer = new CompoundStatementTypeAnalyzer(child, returnType, true);
+                
+                if(!determineTypes(typeAnalyzer)) return false;
             } else return false;
             
             
         }
+        
+         */
+        for (TypeAugmentedSemanticNode child : node.getChildren()) {
+            StatementAnalyzer analyzer = new StatementAnalyzer(child,returnType);
+            
+            if(!determineTypes(analyzer)) return false;
+        }
+        
         
         if(createNewScope) releaseTrackingClosure();
         return true;

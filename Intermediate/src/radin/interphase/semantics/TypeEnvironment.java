@@ -68,6 +68,8 @@ public class TypeEnvironment {
     private int longLongSize = 8;
     private int longDoubleSize = 10;
     
+    private boolean standardBooleanDefined;
+    
     static {
         primitives = new HashSet<>();
         primitives.addAll(Arrays.asList("char",
@@ -83,6 +85,8 @@ public class TypeEnvironment {
         namedCompoundTypesMap = new HashMap<>();
         lateBoundReferences = new HashSet<>();
         createdClasses = new HashSet<>();
+        
+        standardBooleanDefined = false;
     }
     
     public int getPointerSize() {
@@ -139,6 +143,10 @@ public class TypeEnvironment {
         return type;
     }
     
+    public CXType getTypeDefinition(String name) {
+        return typeDefinitions.get(name);
+    }
+    
     public CXType addTypeDefinition(CXType type, String name) {
         
         typeDefinitions.put(name, type);
@@ -158,7 +166,7 @@ public class TypeEnvironment {
             if(!typedefExists(ast.getToken().getImage())) {
                 throw new TypeDoesNotExist(ast.getToken().getImage());
             }
-            return typeDefinitions.get(ast.getToken().getImage()).getTypeIndirection();
+            return typeDefinitions.get(ast.getToken().getImage());
         }
         
         if(ast.getType().equals(ASTNodeType.pointer_type)) {
@@ -561,5 +569,23 @@ public class TypeEnvironment {
     
     public CXCompoundType getNamedCompoundType(String name) {
         return namedCompoundTypesMap.getOrDefault(name, null);
+    }
+    
+    public boolean isStandardBooleanDefined() {
+        return standardBooleanDefined;
+    }
+    
+    public static TypeEnvironment getStandardEnvironment() {
+        TypeEnvironment environment = new TypeEnvironment();
+        
+        
+        environment.addTypeDefinition(
+                UnsignedPrimitive.createUnsignedShort(), "boolean"
+        );
+        
+        environment.standardBooleanDefined = true;
+        
+        
+        return environment;
     }
 }

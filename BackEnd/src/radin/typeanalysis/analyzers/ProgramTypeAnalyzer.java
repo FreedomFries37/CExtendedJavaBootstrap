@@ -4,6 +4,7 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
+import radin.interphase.semantics.types.compound.CXCompoundType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
@@ -47,6 +48,19 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 
                 if(!determineTypes(analyzer)) return false;
             
+            } else if(child.getASTType() == ASTNodeType.qualifiers_and_specifiers) {
+            
+                if(child.getASTNode().getChild(0) instanceof TypeAbstractSyntaxNode) {
+                    CXType declarationType = ((TypeAbstractSyntaxNode) child.getASTNode().getChild(0)).getCxType();
+    
+                    if(declarationType instanceof CXCompoundType) {
+                        CXCompoundType cxCompoundType = ((CXCompoundType) declarationType);
+                        if(!getCurrentTracker().isTracking(cxCompoundType)) {
+                            getCurrentTracker().addBasicCompoundType(cxCompoundType);
+                            getCurrentTracker().addIsTracking(cxCompoundType);
+                        }
+                    }
+                }
             }
             
             

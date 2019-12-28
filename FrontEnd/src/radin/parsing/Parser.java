@@ -263,7 +263,7 @@ public class Parser extends BasicParser {
             case t_while: {
                 consumeAndAddAsLeaf(child);
                 if(!consume(TokenType.t_lpar)) return false;
-                if(!parseAssignmentExpression(child)) return false;
+                if(!parseTopExpression(child)) return false;
                 if(!consume(TokenType.t_rpar)) return false;
                 if(!parseStatement(child)) return false;
                 break;
@@ -1298,7 +1298,10 @@ public class Parser extends BasicParser {
         
         if(!consume(TokenType.t_class)) return false;
         if(!match(TokenType.t_id)) return false;
+        String image = getCurrent().getImage();
         consumeAndAddAsLeaf(output);
+        typedefed.add(image);
+        
         
         parent.addChild(output);
         return true;
@@ -1691,7 +1694,13 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("ClassDeclaration");
         
         if(!consumeAndAddAsLeaf(TokenType.t_class, child)) return false;
-        if(!consumeAndAddAsLeaf(TokenType.t_id, child)) return false;
+        Token token = undoTypeName(getCurrent());
+        if(token.getType() != TokenType.t_id) return false;
+        child.addChild(new LeafNode(token));
+        getNext();
+       // if(!consumeAndAddAsLeaf(TokenType.t_id, child)) return false;
+        
+        
         
         String name = child.getLeafNode(TokenType.t_id).getToken().getImage();
         typedefed.add(name);

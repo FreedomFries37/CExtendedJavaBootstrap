@@ -40,7 +40,7 @@ public class PointerType extends AbstractCXPrimitiveType {
         }
         if(!(other instanceof PointerType)) return false;
         if(this.subType == CXPrimitiveType.VOID){
-            return true;
+                return true;
         }
         CXType subType = ((PointerType) other).subType;
         if(subType == CXPrimitiveType.VOID){

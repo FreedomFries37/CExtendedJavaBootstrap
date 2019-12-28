@@ -43,6 +43,7 @@ public class ConstantType extends CXType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e) {
-        return subtype.is(other, e);
+        if(other instanceof ConstantType) return subtype.is(((ConstantType) other).getSubtype(), e);
+        return false;
     }
 }

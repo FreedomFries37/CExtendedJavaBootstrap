@@ -4,9 +4,11 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
+import radin.interphase.semantics.types.compound.CXCompoundType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IncorrectTypeError;
+import radin.typeanalysis.errors.TypeNotDefinedError;
 
 public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
     
@@ -27,10 +29,17 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 declarationType =
                         ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+                
+                
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
                     declarationType =
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
+                } else if(declarationType == null) {
+                    throw new TypeNotDefinedError();
                 }
+                
+                
+                
                 name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
                 
             } else if(declaration.getASTType() == ASTNodeType.initialized_declaration) {
@@ -42,7 +51,10 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
                     declarationType =
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
+                } else if(declarationType == null) {
+                    throw new TypeNotDefinedError();
                 }
+    
                 name = subDeclaration.getASTChild(ASTNodeType.id).getToken().getImage();
                 
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
@@ -59,8 +71,18 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 return false;
             }
             
+            if(declarationType instanceof CXCompoundType) {
+                CXCompoundType cxCompoundType = ((CXCompoundType) declarationType);
+                if(!getCurrentTracker().isTracking(cxCompoundType)) {
+                    getCurrentTracker().addBasicCompoundType(cxCompoundType);
+                    getCurrentTracker().addIsTracking(cxCompoundType);
+                }
+            }
             
-            getCurrentTracker().addEntry(name, declarationType);
+            
+            
+            
+            getCurrentTracker().addVariable(name, declarationType);
         }
         
         
