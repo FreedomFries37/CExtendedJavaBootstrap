@@ -185,7 +185,7 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         String output;
         if(!isTypedExpression()) output = astNode.toString();
         else {
-            if(isLValue()) return astNode.toString() + " -> " + type.toString() + " [L]";
+            if(isLValue()) output = astNode.toString() + " -> " + type.toString() + " [L]";
             else output = astNode.toString() + " -> " + type.toString() + " [R]";
         }
         if(!compilationTags.isEmpty())

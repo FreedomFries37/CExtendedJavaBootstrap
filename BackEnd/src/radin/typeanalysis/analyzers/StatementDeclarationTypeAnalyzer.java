@@ -5,10 +5,14 @@ import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.compound.CXCompoundType;
+import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IncorrectTypeError;
 import radin.typeanalysis.errors.TypeNotDefinedError;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
     
@@ -73,7 +77,18 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
     
                 name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
                 
+                
                 getCurrentTracker().addFunction(name, declarationType);
+    
+                TypeAugmentedSemanticNode astChild = declaration.getASTChild(ASTNodeType.parameter_list);
+                List<CXType> typeList = new LinkedList<>();
+                for (TypeAugmentedSemanticNode child : astChild.getChildren()) {
+                    typeList.add(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
+                }
+                CXFunctionPointer pointer = new CXFunctionPointer(declarationType, typeList);
+                
+                getCurrentTracker().addVariable(name, pointer);
+                declaration.getASTChild(ASTNodeType.id).setType(pointer);
                 return true;
             } else {
                 return false;
@@ -91,6 +106,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             
             
             getCurrentTracker().addVariable(name, declarationType);
+            declaration.setType(declarationType);
         }
         
         

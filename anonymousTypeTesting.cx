@@ -35,12 +35,18 @@ class rectangle : shape {
     }
 };
 
+
+
 class square : rectangle {
 	public square(double s) : super(s, s) { }
 	
 	virtual public int get_side(int i) {
 		double s = this->s1;
 		return super->get_side(1);
+	}
+
+	virtual public int get_num_sides() {
+		return super->get_num_sides();
 	}
 };
 
@@ -69,7 +75,12 @@ int main() {
 	double area = r1->get_area();
 	int i = r1->get_side(1);
 
-	const int num_sides = r1->get_num_sides();
+	const int num_sides = (*r1).get_num_sides();
+	square r3 = *r1;
+	r3.get_num_sides();
+	square** r4 = &r1;
+	(*r4)->get_num_sides();
+	(*new square(2.0)).get_num_sides();
 
 	
 	return 0;

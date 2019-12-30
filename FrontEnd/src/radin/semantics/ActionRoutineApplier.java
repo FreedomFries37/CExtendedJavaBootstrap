@@ -6,10 +6,8 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
-import radin.interphase.semantics.types.ArrayType;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
+import radin.interphase.semantics.types.*;
+import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.parsing.CategoryNode;
 import radin.parsing.LeafNode;
 import radin.parsing.ParseNode;
@@ -651,7 +649,8 @@ public class ActionRoutineApplier {
                             );
                             
                         } else {
-                            node.setSynthesized(node.getInherit());
+                            CXType type = environment.getType(node.getInherit());
+                            node.setSynthesized(node.getInherit().addType(type));
                         }
                         
                         return true;
@@ -845,16 +844,49 @@ public class ActionRoutineApplier {
                     }
                     case "DirectDeclarator": {
                         AbstractSyntaxNode mid = node.getInherit();
-                        AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        node.getChild(0).setInherit(node.getInherit());
+                        AbstractSyntaxNode name = node.getChild(0).getSynthesized();
                         
                         getCatNode("DirectDeclaratorTail").setInherit(mid, 0);
                         getCatNode("DirectDeclaratorTail").setInherit(name, 1);
-                        
-                        TypeAbstractSyntaxNode directDeclaratorTail = (TypeAbstractSyntaxNode) getCatNode("DirectDeclaratorTail").getSynthesized();
-                        CXType type = directDeclaratorTail.getCxType();
+                        TypeAbstractSyntaxNode directDeclaratorTail = (TypeAbstractSyntaxNode) getCatNode("DirectDeclaratorTail").getSynthesized();;
+                        if(directDeclaratorTail.getType() == ASTNodeType.function_description) {
+                            directDeclaratorTail.printTreeForm();
+                            
+                            if(directDeclaratorTail.getChildList().size() == 2 &&
+                                    directDeclaratorTail.getChild(0).getType() == ASTNodeType.declaration && directDeclaratorTail.getChild(1).getType() == ASTNodeType.parameter_list) {
+                                
+                                if(((TypeAbstractSyntaxNode) directDeclaratorTail.getChild(0)).getCxType().is(new PointerType(directDeclaratorTail.getCxType()), environment)) {
+                                
+                                    // this a function pointer
+    
+                                    System.out.println("function pointer");
+                                    List<CXType> parameters = new LinkedList<>();
+                                    for (AbstractSyntaxNode abstractSyntaxNode : directDeclaratorTail.getChild(1).getChildList()) {
+                                        assert abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
+                                        parameters.add(((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType());
+                                    }
+                                    
+                                    CXType functionPointerType = new CXFunctionPointer(directDeclaratorTail.getCxType()
+                                            , parameters);
+    
+                                    AbstractSyntaxNode id = directDeclaratorTail.getChild(0).getChild(0);
+                                    node.setSynthesized(
+                                            new TypeAbstractSyntaxNode(ASTNodeType.declaration, functionPointerType,
+                                                    id)
+                                    );
+                                    
+                                    return true;
+    
+                                }
+                            }
+                            
+                            
+                        }
                         node.setSynthesized(
-                                directDeclaratorTail
+                                    directDeclaratorTail
                         );
+                        
                         return true;
                     }
                     case "DirectDeclaratorTail": {
@@ -1064,11 +1096,22 @@ public class ActionRoutineApplier {
                     case "ParameterDeclaration": {
                         
                         AbstractSyntaxNode specifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
-                        CategoryNode declarator = getCatNode("Declarator");
+                        CategoryNode declarator;
+                        if(node.hasChildCategory("Declarator")) {
+                            declarator =  getCatNode("Declarator");
+                        } else if(node.hasChildCategory("AbstractDeclarator")){
+                            declarator = getCatNode("AbstractDeclarator");
+                        } else {
+                            node.setSynthesized(specifiers);
+                            return true;
+                        }
+                       
                         declarator.setInherit(specifiers);
+    
+                        AbstractSyntaxNode declaratorSynthesized = declarator.getSynthesized();
                         
                         node.setSynthesized(
-                                declarator.getSynthesized()
+                                declaratorSynthesized
                         );
                         
                         return true;
@@ -1175,6 +1218,9 @@ public class ActionRoutineApplier {
                 if(!enactActionRoutine(e.node)) return false;
             } catch (InheritMissingError | MissingCategoryNodeError | InvalidPrimitiveException e) {
                 e.printStackTrace();
+                if(e instanceof MissingCategoryNodeError) {
+                    node.printTreeForm();
+                }
                 cont = false;
             }
         }

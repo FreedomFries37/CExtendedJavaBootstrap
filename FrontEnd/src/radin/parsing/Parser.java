@@ -1640,7 +1640,9 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("ParameterTypeList");
         
         if(!parseParameterList(child)) return false;
-        
+        if(consume(TokenType.t_comma)) {
+            if(!consume(TokenType.t_ellipsis)) return false;
+        }
         
         parent.addChild(child);
         return true;
@@ -1671,9 +1673,15 @@ public class Parser extends BasicParser {
     private boolean parseParameterListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ParameterListTail");
         
+        pushState();
         if(consume(TokenType.t_comma)) {
-            if(!parseParameterList(child)) return false;
-        }
+            if(attemptParse(this::parseParameterList, child)) {
+                popState();
+            } else {
+                applyState();
+            }
+            //if(!parseParameterList(child)) return false;
+        } else popState();
         
         
         parent.addChild(child);

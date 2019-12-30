@@ -78,9 +78,11 @@ public class ExpressionCompiler extends AbstractCompiler {
                 break;
             }
             case indirection: {
+                print('(');
                 print("*");
                 TypeAugmentedSemanticNode child = node.getChild(0);
-                compile(child);
+                if(!compile(child)) return false;
+                print(')');
                 break;
             }
             case array_reference: {
@@ -129,13 +131,77 @@ public class ExpressionCompiler extends AbstractCompiler {
             }
             case method_call: {
                 TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
+                String objectInteractionImage;
+                boolean isLValueMethodCall = objectInteraction.isLValue();
+                boolean needToGetReference = !node.containsCompilationTag(BasicCompilationTag.INDIRECT_METHOD_CALL);
                 MethodCallTag methodCallTag = objectInteraction.getCompilationTag(MethodCallTag.class);
-                boolean isVirtualCall =
-                        objectInteraction.containsCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
-                
-                
+    
+                if(!isLValueMethodCall) {
+                    if (needToGetReference || getSettings().isReduceIndirection()) {
+                        objectInteractionImage = compileToString(objectInteraction); // save for later use
+                        if (objectInteractionImage == null) return false;
+                        print(objectInteractionImage);
+                        print('.');
+                    } else {
+                        objectInteractionImage = compileToString(objectInteraction.getChild(0));
+                        if (objectInteractionImage == null) return false;
+                        print(objectInteractionImage);
+                        print("->");
+                    }
+                    boolean isVirtualCall =
+                            objectInteraction.containsCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
+    
+                    if (isVirtualCall) {
+                        print(getSettings().getvTableName());
+                        print('.');
+                    }
+    
+                    if (needToGetReference) {
+                        objectInteractionImage = "&" + "(" + objectInteractionImage + ")";
+                    }
+    
+                    String sequence = compileToString(node.getASTChild(ASTNodeType.sequence));
+                    if(sequence == null) return false;
+                    if (sequence.isEmpty()) {
+                        print(methodCallTag.getMethod().methodCall(objectInteractionImage));
+                    } else {
+                        print(methodCallTag.getMethod().methodCall(objectInteractionImage, sequence));
+                    }
+                } else if(node.getChild(0).containsCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE)){
+                    TypeAugmentedSemanticNode original = node.getChild(0).getChild(0); // get constructor call
+                    objectInteractionImage = compileToString(original);
+                    if(objectInteractionImage == null) return false;
+    
+                    String sequence = compileToString(node.getASTChild(ASTNodeType.sequence));
+                    if(sequence == null) return false;
+                    if (sequence.isEmpty()) {
+                        print(methodCallTag.getMethod().methodAsFunctionCall(objectInteractionImage));
+                    } else {
+                        print(methodCallTag.getMethod().methodAsFunctionCall(objectInteractionImage, sequence));
+                    }
+                    
+                } else return false;
                 
                 break;
+            }
+            case field_get: {
+                TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
+                boolean isIndirect = objectInteraction.containsCompilationTag(BasicCompilationTag.INDIRECT_FIELD_GET);
+    
+                if (!isIndirect || getSettings().isReduceIndirection()) {
+                    if(compile(objectInteraction)) return false;
+                    print('.');
+                } else {
+                    if(!compile(objectInteraction.getChild(0))) return false;
+                    print("->");
+                }
+                
+                if(!compile(node.getChild(1))) return false;
+                
+                break;
+            }
+            case constructor_call: {
+            
             }
             default:
                 return false;

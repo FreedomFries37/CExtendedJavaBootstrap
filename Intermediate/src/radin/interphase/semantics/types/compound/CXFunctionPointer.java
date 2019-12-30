@@ -9,18 +9,18 @@ import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import java.util.Arrays;
 import java.util.List;
 
-public class FunctionPointer extends AbstractCXPrimitiveType {
+public class CXFunctionPointer extends AbstractCXPrimitiveType {
     
     private CXType returnType;
     private List<CXType> parameterTypes;
     
     
-    public FunctionPointer(CXType returnType, List<CXType> parameterTypes) {
+    public CXFunctionPointer(CXType returnType, List<CXType> parameterTypes) {
         this.returnType = returnType;
         this.parameterTypes = parameterTypes;
     }
     
-    public FunctionPointer(CXType returnType) {
+    public CXFunctionPointer(CXType returnType) {
         this.returnType = returnType;
         parameterTypes = Arrays.asList(CXPrimitiveType.VOID);
     }
@@ -67,7 +67,12 @@ public class FunctionPointer extends AbstractCXPrimitiveType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
-        return false;
+        if(!(other instanceof CXFunctionPointer)) return false;
+        CXFunctionPointer that = (CXFunctionPointer) other;
+        
+        if(!that.returnType.is(returnType, e)) return false;
+        
+        return that.getParameterTypeList().equals(this.getParameterTypeList(), e);
     }
     
     @Override

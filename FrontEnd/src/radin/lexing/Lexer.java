@@ -361,7 +361,10 @@ public class Lexer implements Iterable<Token> {
             }
             case '[': return new Token(TokenType.t_lbrac);
             case ']': return new Token(TokenType.t_rbrac);
-            case '.': return new Token(TokenType.t_dot);
+            case '.': {
+                if(consume("..")) return new Token(TokenType.t_ellipsis);
+                return new Token(TokenType.t_dot);
+            }
             case '~': {
                 if(consume('=')){
                     return new Token(TokenType.t_operator_assign, "~=");

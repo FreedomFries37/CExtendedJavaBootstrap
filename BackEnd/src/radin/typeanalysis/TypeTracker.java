@@ -326,14 +326,16 @@ public class TypeTracker {
     }
     
     private void addVariable(String name, TypeTrackerEntry typeTrackerEntry) {
-        if(!entryExists(name)) {
+        if(!variableExists(name)) {
             variableEntries.put(name, typeTrackerEntry);
         } else {
-            TypeTrackerEntry oldEntry = getEntry(name);
-            if(oldEntry.getStatus() != EntryStatus.OLD) {
-                throw new RedeclareError(name);
+            if(!functionExists(name)) {
+                TypeTrackerEntry oldEntry = getEntry(name);
+    
+                if (oldEntry.getStatus() != EntryStatus.OLD) {
+                    throw new RedeclareError(name);
+                }
             }
-            
             variableEntries.replace(name, typeTrackerEntry);
         }
     }
@@ -505,9 +507,12 @@ public class TypeTracker {
     
     public CXType getType(String name) {
         if(entryExists(name)) {
+            /*
             if(functionExists(name)) {
                 return functionEntries.get(name).getType();
             }
+            
+             */
             return variableEntries.get(name).getType();
         }
         throw new IdentifierDoesNotExistError(name);

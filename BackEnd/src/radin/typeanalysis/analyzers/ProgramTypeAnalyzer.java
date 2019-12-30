@@ -5,10 +5,14 @@ import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.compound.CXCompoundType;
+import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.TypeTracker;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class ProgramTypeAnalyzer extends TypeAnalyzer {
     
@@ -41,7 +45,20 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 
                 String name = child.getASTChild(ASTNodeType.id).getToken().getImage();
                 CXType returnType = astNode.getCxType();
-                getCurrentTracker().addFunction(name, returnType);
+                if(!getCurrentTracker().functionExists(name)) {
+                    getCurrentTracker().addFunction(name, returnType);
+    
+                    TypeAugmentedSemanticNode astChild = child.getASTChild(ASTNodeType.parameter_list);
+                    List<CXType> typeList = new LinkedList<>();
+                    for (TypeAugmentedSemanticNode param : astChild.getChildren()) {
+                        typeList.add(((TypeAbstractSyntaxNode) param.getASTNode()).getCxType());
+                    }
+                    CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
+    
+    
+                    getCurrentTracker().addVariable(name, pointer);
+                    child.getASTChild(ASTNodeType.id).setType(pointer);
+                }
                 
             } else if(child.getASTType() == ASTNodeType.declarations) {
                 StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(child);

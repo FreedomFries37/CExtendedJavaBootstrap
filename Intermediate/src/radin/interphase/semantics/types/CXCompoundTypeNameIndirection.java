@@ -50,7 +50,12 @@ public class CXCompoundTypeNameIndirection extends CXType {
             }
             return namedCompoundType.is(other, e);
         } else {
-            if(!e.namedCompoundTypeExists(((CXCompoundTypeNameIndirection) other).typename)) throw new TypeDoesNotExist(((CXCompoundTypeNameIndirection) other).typename);
+            if(!e.namedCompoundTypeExists(((CXCompoundTypeNameIndirection) other).typename)) {
+                if(this.compoundType == ((CXCompoundTypeNameIndirection) other).compoundType && this.typename == ((CXCompoundTypeNameIndirection) other).typename) {
+                    return true;
+                }
+                throw new TypeDoesNotExist(((CXCompoundTypeNameIndirection) other).typename);
+            }
             return namedCompoundType.is(e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename), e);
         }
     }

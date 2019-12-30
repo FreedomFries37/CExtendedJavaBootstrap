@@ -10,6 +10,8 @@ public class CompilationSettings implements ICompilationSettings {
     private String indent = "    ";
     private String vTableName = "vtable";
     
+    private boolean reduceIndirection = false;
+    
     @Override
     public void setOptimizationLevel(int value) {
         optimizationLevel = value;
@@ -37,7 +39,7 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public void setUseTryCatch(boolean value) {
-        useStackTrace = value;
+        useTryCatch = value;
     }
     
     @Override
@@ -66,5 +68,15 @@ public class CompilationSettings implements ICompilationSettings {
     
     public void setvTableName(String vTableName) {
         this.vTableName = vTableName;
+    }
+    
+    @Override
+    public boolean isReduceIndirection() {
+        return reduceIndirection;
+    }
+    
+    @Override
+    public void setReduceIndirection(boolean reduceIndirection) {
+        this.reduceIndirection = reduceIndirection;
     }
 }

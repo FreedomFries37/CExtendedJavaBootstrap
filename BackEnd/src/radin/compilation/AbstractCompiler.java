@@ -6,6 +6,7 @@ import radin.interphase.lexical.Token;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Locale;
 
 public abstract class AbstractCompiler {
@@ -26,6 +27,22 @@ public abstract class AbstractCompiler {
     }
     
     abstract public boolean compile(TypeAugmentedSemanticNode node);
+    
+    protected final String compileToString(TypeAugmentedSemanticNode node) {
+        PrintWriter saved = printWriter; // temporarily change where output is directed
+       
+        StringWriter writer = new StringWriter();
+        printWriter = new PrintWriter(writer);
+        
+        String output;
+        if(compile(node))  {
+            output = writer.toString();
+        } else {
+            output = null;
+        }
+        printWriter = saved;
+        return output;
+    }
     
     
     public void flush() {

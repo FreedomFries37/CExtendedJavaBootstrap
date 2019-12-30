@@ -6,7 +6,7 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.*;
 import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.compound.FunctionPointer;
+import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
 
@@ -96,8 +96,8 @@ public class CXMethod implements CXEquivalent {
         return methodBody;
     }
     
-    public FunctionPointer getFunctionPointer() {
-        return new FunctionPointer(returnType, getParameterTypes());
+    public CXFunctionPointer getFunctionPointer() {
+        return new CXFunctionPointer(returnType, getParameterTypes());
     }
     
     public PointerType getThisType() {
@@ -136,16 +136,32 @@ public class CXMethod implements CXEquivalent {
     
     
     public String getCFunctionName() {
-        return parent.getCTypeName() + "_" + name + "_" + getParameterMangle(parameters);
+       
+        return parent.getCTypeName() + "_" + name + "_" + getParameterMangle();
+    }
+    
+    public String getCMethodName() {
+        return  name + "_" + getParameterMangle();
     }
     
     public String methodCall(String thisValue, String sequence) {
-        return getCFunctionName() + "(" + thisValue + "," + sequence + ")";
+        return getCMethodName() + "(" + thisValue + "," + sequence + ")";
     }
     
     public String methodCall(String thisValue) {
+        return getCMethodName() + "(" + thisValue + ")";
+    }
+    
+    public String methodAsFunctionCall(String thisValue) {
         return getCFunctionName() + "(" + thisValue + ")";
     }
+    
+    public String methodAsFunctionCall(String thisValue, String sequence) {
+        return getCFunctionName() + "(" + thisValue + "," + sequence + ")";
+    }
+    
+    
+    
     
     @Override
     public String generateCDefinition() {
@@ -166,6 +182,12 @@ public class CXMethod implements CXEquivalent {
         return output.toString();
     }
     
+    public String getParameterMangle() {
+        List<CXParameter> parameters = new LinkedList<>(this.parameters);
+        parameters.add(0, new CXParameter(new PointerType(CXPrimitiveType.VOID), methodThisParameterName));
+        return getParameterMangle(parameters);
+    }
+    
     public static String getParameterMangle(List<CXParameter> parameters) {
         return parameters.stream().map(
                 (CXParameter c) -> c.getType().generateCDefinition()
@@ -177,13 +199,29 @@ public class CXMethod implements CXEquivalent {
                         .replace("*", "p")).collect(Collectors.joining());
     }
     
-    protected void fixMethodBody() {
-        AbstractSyntaxNode define = new AbstractSyntaxNode(
+    public CXMethod createSuperMethod() {
+        String name = "super_" + this.getName();
+        AbstractSyntaxNode oldSave = new TypeAbstractSyntaxNode(
                 ASTNodeType.declaration,
+                getFunctionPointer(),
                 new AbstractSyntaxNode(
-                        ASTNodeType.typename,
-                        getThisType().getTokenEquivalent()
-                ),
+                        ASTNodeType.id,
+                        new Token(TokenType.t_id, "old")
+                )
+        );
+        /*AbstractSyntaxNode reassignment = new AbstractSyntaxNode(
+        
+        )
+        
+         */
+        
+        return null;
+    }
+    
+    protected void fixMethodBody() {
+        AbstractSyntaxNode define = new TypeAbstractSyntaxNode(
+                ASTNodeType.declaration,
+                parent,
                 new AbstractSyntaxNode(
                         ASTNodeType.id,
                         new Token(TokenType.t_id, "this")
@@ -195,12 +233,9 @@ public class CXMethod implements CXEquivalent {
                         ASTNodeType.id,
                         new Token(TokenType.t_id, "this")
                 ),
-                new AbstractSyntaxNode(
+                new TypeAbstractSyntaxNode(
                         ASTNodeType.cast,
-                        new AbstractSyntaxNode(
-                                ASTNodeType.typename,
-                                getThisType().getTokenEquivalent()
-                        ),
+                        parent,
                         new AbstractSyntaxNode(
                                 ASTNodeType.id,
                                 new Token(TokenType.t_id, "__this")
@@ -208,7 +243,7 @@ public class CXMethod implements CXEquivalent {
                 )
         );
         this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast);
-        
+        /*
         if(parent.getParent() != null) {
             
             CXClassType superType = parent.getParent();
@@ -225,6 +260,8 @@ public class CXMethod implements CXEquivalent {
             );
             this.methodBody = new AbstractSyntaxNode(this.methodBody, true, superDefine);
         }
+        
+         */
         
         fixedMethodBody = true;
     }

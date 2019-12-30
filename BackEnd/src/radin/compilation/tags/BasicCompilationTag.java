@@ -8,7 +8,11 @@ import java.util.HashSet;
 
 public enum BasicCompilationTag implements ICompilationTag{
     VIRTUAL_METHOD_CALL("VIRTUAL METHOD CALL", ASTNodeType.method_call),
-    SHADOWING_FIELD_NAME("SHADOWING FIELD NAME", ASTNodeType.id)
+    SHADOWING_FIELD_NAME("SHADOWING FIELD NAME", ASTNodeType.id),
+    INDIRECT_METHOD_CALL("INDIRECT METHOD CALL", ASTNodeType.method_call),
+    INDIRECT_FIELD_GET("INDIRECT FIELD GET", ASTNodeType.field_get),
+    NEW_OBJECT_DEREFERENCE("NEW OBJECT DEREFERENCE", ASTNodeType.indirection),
+    COMPILE_AS_FIELD_GET("COMPILE AS FIELD GET", ASTNodeType.method_call)
     ;
     
     private HashSet<ASTNodeType> validAttachmentPoints;

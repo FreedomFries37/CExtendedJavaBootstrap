@@ -1,13 +1,12 @@
 package radin.typeanalysis.analyzers;
 
-import radin.interphase.lexical.Token;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.compound.FunctionPointer;
+import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
@@ -71,7 +70,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 
                 
     
-                FunctionPointer type = new FunctionPointer(returnType,
+                CXFunctionPointer type = new CXFunctionPointer(returnType,
                         parameterTypes);
                 clsLevelDec.getASTChild(ASTNodeType.function_definition).setType(type);
     

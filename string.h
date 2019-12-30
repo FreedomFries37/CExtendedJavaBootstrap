@@ -6,7 +6,7 @@ typedef unsigned long size_t;
 size_t strlen(const char* str);
 
 class string {
-	private char* ptr;
+	char* ptr;
 	private int length;
 
 	public string() : this("") {}
@@ -34,6 +34,17 @@ class string {
 		return this->length;
 	}
 };
+
+class string2 : string {
+
+	public string2(string other) : super(other.ptr) { }
+
+	virtual public int get_num_characters() {
+    		return super->get_num_characters() * 2;
+    }
+};
+
+
 
 
 int main() {

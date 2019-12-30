@@ -38,6 +38,8 @@ public class CXClassType extends CXCompoundType {
     private List<CXMethod> concreteMethodsOrder;
     private List<CXConstructor> constructors;
     
+    private List<CXMethod> generateSupers;
+    
     private boolean sealed;
     private TypeEnvironment environment;
     
@@ -63,6 +65,7 @@ public class CXClassType extends CXCompoundType {
         }
         concreteMethodsOrder = new LinkedList<>();
         this.constructors = constructors;
+        generateSupers = new LinkedList<>();
         
         for (CXMethod method : methods) {
             method.setParent(this);
@@ -87,7 +90,7 @@ public class CXClassType extends CXCompoundType {
                     for (int i = 0; i < virtualMethodOrder.size(); i++) {
                         CXMethod cxMethod = virtualMethodOrder.get(i);
                         if(cxMethod.getName().equals(method.getName()) && cxMethod.getParameterTypes().equals(method.getParameterTypes())) {
-                            
+                            generateSupers.add(cxMethod);
                             virtualMethodOrder.set(i, method);
                             if(cxMethod.getVisibility() != method.getVisibility()) {
                                 visibilityMap.replace(method.getName(), method.getVisibility());
@@ -346,7 +349,7 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public String generateCDefinition(String identifier) {
-        return null;
+        return generateCDefinition() + " " + identifier;
     }
     
     public CXClassType getParent() {
@@ -372,41 +375,7 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public String generateCDefinition() {
-        StringBuilder output = new StringBuilder();
-        if(!sealed) {
-            return null;
-        }
-        output.append("struct " + getCTypeName() + ";\n");
-        
-        output.append(createNewFunctionDeclaration());
-        for (CXMethod cxMethod : concreteMethodsOrder) {
-            output.append(cxMethod.generateCDeclaration());
-        }
-        output.append("\n\n");
-        
-        output.append(String.format("#ifndef %s\n", guard()));
-        output.append(String.format("#define %s\n", guard()));
-        output.append("typedef struct " + getCTypeName() + " " + getTypeName() + ";\n");
-        output.append("\n\n");
-        CXCompoundType vTable = environment.getNamedCompoundType(getVTableName());
-        output.append(vTable.generateCDefinition());
-        output.append("\n");
-        CXCompoundType structure = environment.getNamedCompoundType(getCTypeName());
-        output.append(structure.generateCDefinition());
-        output.append("\n\n");
-        output.append(createNewFunctionDefinition());
-        
-        output.append("\n\n");
-        output.append("#endif\n");
-    
-        
-        output.append("#else\n");
-       
-        
-        
-        
-        
-        return output.toString();
+        return getTypeName();
     }
     
     @Override
