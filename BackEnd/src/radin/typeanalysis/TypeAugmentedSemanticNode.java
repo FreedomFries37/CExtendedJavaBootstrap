@@ -5,7 +5,9 @@ import radin.interphase.AbstractTree;
 import radin.interphase.lexical.Token;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
+import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.wrapped.CXDynamicTypeDefinition;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -117,6 +119,10 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
     }
     
     public CXType getCXType() {
+        //if(type instanceof CXDynamicTypeDefinition) return ((CXDynamicTypeDefinition) type).getWrappedType();
+        if(type instanceof CXCompoundTypeNameIndirection) {
+            return type.getCTypeIndirection();
+        }
         return type;
     }
     

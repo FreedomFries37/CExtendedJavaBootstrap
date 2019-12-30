@@ -25,6 +25,10 @@ public class CXFunctionPointer extends AbstractCXPrimitiveType {
         parameterTypes = Arrays.asList(CXPrimitiveType.VOID);
     }
     
+    public List<CXType> getParameterTypes() {
+        return parameterTypes;
+    }
+    
     @Override
     public boolean isValid(TypeEnvironment e) {
         if(!returnType.isValid(e)) return false;

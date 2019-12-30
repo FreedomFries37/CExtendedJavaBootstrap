@@ -31,14 +31,20 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
         return this.getTypeName().equals(((CXCompoundType) other).getTypeName());
     }
     
-    @Override
-    public String generateCDefinition(String identifier) {
-        return generateCDefinition() + " " + identifier;
-    }
+    abstract protected String getSpecifier();
     
     @Override
-    public String generateCDefinition() {
+    public String generateCDefinition(String identifier) {
+        
         StringBuilder builder = new StringBuilder();
+        getBaseStruct(builder);
+        builder.append(" ");
+        builder.append(identifier);
+        return builder.toString();
+    }
+    
+    protected void getBaseStruct(StringBuilder builder) {
+        builder.append(getSpecifier());
         if(!isAnonymous()) {
             builder.append(" ");
             builder.append(getTypeName());
@@ -49,7 +55,13 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
             builder.append(field.getType().generateCDefinition(field.getName()));
             builder.append(";\n");
         }
-        builder.append("};\n");
+        builder.append("}");
+    }
+    
+    @Override
+    public String generateCDefinition() {
+        StringBuilder builder = new StringBuilder();
+        getBaseStruct(builder);
         return builder.toString();
     }
 }

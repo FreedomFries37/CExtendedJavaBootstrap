@@ -6,7 +6,7 @@ import radin.interphase.semantics.exceptions.IncorrectParameterTypesError;
 import radin.interphase.semantics.exceptions.RedeclareError;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
-import radin.interphase.semantics.types.PointerType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.methods.CXConstructor;
 import radin.interphase.semantics.types.methods.CXMethod;
@@ -260,7 +260,9 @@ public class CXClassType extends CXCompoundType {
             this.environment =e;
         }
     }
-    
+    public CXStructType getStructEquivalent() {
+        return getStructEquivalent(environment);
+    }
     public CXStructType getStructEquivalent(TypeEnvironment environment) {
         
         if(!environment.namedCompoundTypeExists(getVTableName())) {
@@ -386,7 +388,7 @@ public class CXClassType extends CXCompoundType {
             CXCompoundType namedCompoundType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).getTypename());
             if(!(namedCompoundType instanceof CXClassType)) return false;
             
-            return is(namedCompoundType, e);
+            return e.is(this, namedCompoundType);
         }
         return false;
         

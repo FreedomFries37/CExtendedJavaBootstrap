@@ -1,9 +1,11 @@
-package radin.interphase.semantics.types;
+package radin.interphase.semantics.types.wrapped;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.ICXWrapper;
 import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 
-public class ArrayType extends AbstractCXPrimitiveType {
+public class ArrayType extends AbstractCXPrimitiveType implements ICXWrapper {
 
     private CXType baseType;
     private boolean constSize;
@@ -69,6 +71,11 @@ public class ArrayType extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public CXType getWrappedType() {
+        return getBaseType();
+    }
+    
+    @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof ArrayType || other instanceof PointerType)) {
             return false;
@@ -79,6 +86,7 @@ public class ArrayType extends AbstractCXPrimitiveType {
         }else {
             baseType = ((PointerType) other).getSubType();
         }
-        return this.baseType.is(baseType, e);
+        return e.is(this.baseType, baseType);
+        //return this.baseType.is(baseType, e);
     }
 }

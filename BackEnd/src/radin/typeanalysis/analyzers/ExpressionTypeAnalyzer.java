@@ -18,6 +18,10 @@ import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.interphase.semantics.types.primitives.LongPrimitive;
 import radin.interphase.semantics.types.primitives.UnsignedPrimitive;
+import radin.interphase.semantics.types.wrapped.ArrayType;
+import radin.interphase.semantics.types.wrapped.CXDynamicTypeDefinition;
+import radin.interphase.semantics.types.wrapped.ConstantType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.*;
@@ -69,6 +73,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             String image = node.getToken().getImage();
             if(!getCurrentTracker().variableExists(image)) throw new IdentifierDoesNotExistError(image);
             CXType type = getCurrentTracker().getType(image);
+            if(type instanceof CXDynamicTypeDefinition) {
+                type = ((CXDynamicTypeDefinition) type).getOriginal();
+            }
             node.setType(type);
             node.setLValue(true);
             return true;
@@ -191,6 +198,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(cxType instanceof ConstantType) {
                 cxType = ((ConstantType) cxType).getSubtype();
                 isConstant = true;
+            }
+            if(cxType instanceof CXDynamicTypeDefinition) {
+                cxType = ((CXDynamicTypeDefinition) cxType).getWrappedType();
             }
             
             if(!(canBinaryOp(cxType, rhs.getCXType()) || canDereference(cxType))) {

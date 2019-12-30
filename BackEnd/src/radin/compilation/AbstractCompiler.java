@@ -14,7 +14,7 @@ public abstract class AbstractCompiler {
     private PrintWriter printWriter;
     private static ICompilationSettings settings;
     
-    public ICompilationSettings getSettings() {
+    public static ICompilationSettings getSettings() {
         return settings;
     }
     
@@ -59,7 +59,8 @@ public abstract class AbstractCompiler {
     }
     
     public void print(Token s){
-        printWriter.print(s.getImage());
+        if(s.getImage() == null) printWriter.print(s.getType().toString());
+        else printWriter.print(s.getImage());
     }
     
     public void print(Object obj) {

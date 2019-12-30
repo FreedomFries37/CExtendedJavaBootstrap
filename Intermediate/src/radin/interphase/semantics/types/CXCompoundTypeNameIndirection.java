@@ -32,12 +32,13 @@ public class CXCompoundTypeNameIndirection extends CXType {
     
     @Override
     public String generateCDefinition() {
+        if(compoundType == CompoundType._class) return getCTypeIndirection().generateCDefinition();
         return compoundType.cequiv + " " + typename;
     }
     
     @Override
     public String generateCDefinition(String identifier) {
-        return compoundType.cequiv + " " + typename + " " + identifier;
+        return generateCDefinition() + " " + identifier;
     }
     
     @Override
@@ -48,15 +49,16 @@ public class CXCompoundTypeNameIndirection extends CXType {
             if(namedCompoundType == null){
                 return false;
             }
-            return namedCompoundType.is(other, e);
+            return e.is(namedCompoundType, other);
         } else {
             if(!e.namedCompoundTypeExists(((CXCompoundTypeNameIndirection) other).typename)) {
-                if(this.compoundType == ((CXCompoundTypeNameIndirection) other).compoundType && this.typename == ((CXCompoundTypeNameIndirection) other).typename) {
+                if(this.compoundType == ((CXCompoundTypeNameIndirection) other).compoundType && this.typename.equals(((CXCompoundTypeNameIndirection) other).typename)) {
                     return true;
                 }
                 throw new TypeDoesNotExist(((CXCompoundTypeNameIndirection) other).typename);
             }
-            return namedCompoundType.is(e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename), e);
+            return e.is(namedCompoundType, e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename));
+            //return namedCompoundType.is(e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename), e);
         }
     }
     
@@ -91,7 +93,7 @@ public class CXCompoundTypeNameIndirection extends CXType {
     @Override
     public CXType getCTypeIndirection() {
         if(compoundType.equals(CompoundType._class)) return new CXCompoundTypeNameIndirection(CompoundType.struct,
-            typename);
+            "class_" + typename);
         return new CXCompoundTypeNameIndirection(compoundType, typename);
     }
 }

@@ -2,10 +2,9 @@ package radin.typeanalysis.analyzers;
 
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.PointerType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.compound.CXStructType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;

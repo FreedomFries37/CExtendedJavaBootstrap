@@ -45,6 +45,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 
                 String name = child.getASTChild(ASTNodeType.id).getToken().getImage();
                 CXType returnType = astNode.getCxType();
+                node.setType(returnType);
                 if(!getCurrentTracker().functionExists(name)) {
                     getCurrentTracker().addFunction(name, returnType);
     
@@ -78,6 +79,8 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                         }
                     }
                 }
+            } else if(child.getASTType() == ASTNodeType.typedef) {
+                child.setType(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
             }
             
             

@@ -24,9 +24,8 @@ public class CXUnionType extends CXBasicCompoundType {
     }
     
     @Override
-    public String generateCDefinition() {
-        return "union" + super.generateCDefinition();
-        
+    protected String getSpecifier() {
+        return "union";
     }
     
     @Override

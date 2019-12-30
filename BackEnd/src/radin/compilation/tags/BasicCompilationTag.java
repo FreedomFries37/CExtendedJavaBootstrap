@@ -12,7 +12,10 @@ public enum BasicCompilationTag implements ICompilationTag{
     INDIRECT_METHOD_CALL("INDIRECT METHOD CALL", ASTNodeType.method_call),
     INDIRECT_FIELD_GET("INDIRECT FIELD GET", ASTNodeType.field_get),
     NEW_OBJECT_DEREFERENCE("NEW OBJECT DEREFERENCE", ASTNodeType.indirection),
-    COMPILE_AS_FIELD_GET("COMPILE AS FIELD GET", ASTNodeType.method_call)
+    COMPILE_AS_FIELD_GET("COMPILE AS FIELD GET", ASTNodeType.method_call),
+    OPERATOR_ASSIGNMENT("OPERATOR ASSIGNMENT", ASTNodeType.assignment_type),
+    HAS_ELSE("HAS ELSE", ASTNodeType.if_cond),
+    VOID_RETURN("VOID RETURN", ASTNodeType._return)
     ;
     
     private HashSet<ASTNodeType> validAttachmentPoints;

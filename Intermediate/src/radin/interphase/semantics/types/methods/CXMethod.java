@@ -8,6 +8,7 @@ import radin.interphase.semantics.types.*;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 
 
 import java.util.LinkedList;

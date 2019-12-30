@@ -23,13 +23,12 @@ public class CXStructType extends CXBasicCompoundType {
         super(name, f1, fields);
     }
     
-    
-    
     @Override
-    public String generateCDefinition() {
-        return "struct" + super.generateCDefinition();
-        
+    protected String getSpecifier() {
+        return "struct";
     }
+    
+    
     
     @Override
     public CXType getTypeIndirection() {

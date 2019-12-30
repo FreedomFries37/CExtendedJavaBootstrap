@@ -1,46 +1,35 @@
 package radin.compilation;
 
+import radin.compilation.microcompilers.IndentPrintWriter;
+import radin.interphase.lexical.Token;
+
 import java.io.PrintWriter;
 
 public abstract class AbstractIndentedOutputCompiler extends AbstractCompiler {
     
     private int indent;
     
+    
     public AbstractIndentedOutputCompiler(PrintWriter printWriter, int indent) {
-        super(printWriter);
+        super(new IndentPrintWriter(printWriter, indent, getSettings().getIndent()));
         this.indent = indent;
+       
     }
     
-    private String getIndentString(String s) {
-        return getSettings().getIndent().repeat(indent) + s;
+    public AbstractIndentedOutputCompiler(IndentPrintWriter printWriter) {
+        super(printWriter);
     }
     
-    private String getIndentString() {
-        return getSettings().getIndent().repeat(indent);
+    @Override
+    public IndentPrintWriter getPrintWriter() {
+        return (IndentPrintWriter) super.getPrintWriter();
     }
     
     public int getIndent() {
         return indent;
     }
     
-    @Override
-    public void println() {
-        super.println();
-        if(indent > 0)
-            print(getIndentString());
-    }
-    
-    @Override
-    public void println(String x) {
-        super.println(x);
-        if(indent > 0)
-            print(getIndentString());
-    }
-    
-    @Override
-    public void println(Object x) {
-        super.println(x);
-        if(indent > 0)
-            print(getIndentString());
+    protected void setIndent(int indent) {
+        this.indent = indent;
     }
 }

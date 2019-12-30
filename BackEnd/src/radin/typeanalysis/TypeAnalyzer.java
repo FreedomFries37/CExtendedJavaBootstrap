@@ -1,10 +1,9 @@
 package radin.typeanalysis;
 
-import radin.interphase.CompilationSettings;
 import radin.interphase.ICompilationSettings;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.ConstantType;
+import radin.interphase.semantics.types.wrapped.ConstantType;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.methods.CXMethod;
 

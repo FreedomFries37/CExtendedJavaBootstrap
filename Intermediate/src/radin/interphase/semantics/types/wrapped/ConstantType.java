@@ -1,8 +1,10 @@
-package radin.interphase.semantics.types;
+package radin.interphase.semantics.types.wrapped;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.ICXWrapper;
 
-public class ConstantType extends CXType {
+public class ConstantType extends CXType implements ICXWrapper {
     
     private CXType subtype;
     
@@ -40,8 +42,16 @@ public class ConstantType extends CXType {
     }
     
     @Override
+    public CXType getWrappedType() {
+        return getSubtype();
+    }
+    
+    @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
-        if(other instanceof ConstantType) return subtype.is(((ConstantType) other).getSubtype(), e);
+        if(other instanceof ConstantType) {
+            return e.is(subtype, ((ConstantType) other).getSubtype());
+            // return subtype.is(((ConstantType) other).getSubtype(), e);
+        }
         return false;
     }
 }

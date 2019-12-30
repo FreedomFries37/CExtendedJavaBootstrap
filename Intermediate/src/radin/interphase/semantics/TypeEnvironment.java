@@ -10,6 +10,9 @@ import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.interphase.semantics.types.primitives.LongPrimitive;
 import radin.interphase.semantics.types.primitives.UnsignedPrimitive;
+import radin.interphase.semantics.types.wrapped.CXDynamicTypeDefinition;
+import radin.interphase.semantics.types.wrapped.ConstantType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 
 import java.util.*;
 
@@ -139,7 +142,7 @@ public class TypeEnvironment {
         if(typeDefinitions.containsKey(name)) throw new TypeDefinitionAlreadyExistsError(name);
         
         CXType type = getType(typeAST);
-        typeDefinitions.put(name, type);
+        typeDefinitions.put(name, new CXDynamicTypeDefinition(name, type));
         return type;
     }
     
@@ -549,7 +552,10 @@ public class TypeEnvironment {
     public boolean is(CXType o1, CXType o2) {
         
         if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
-            return o1.is(((ConstantType) o2).getSubtype(), this);
+            return is(o1, ((ConstantType) o2).getSubtype());
+        }
+        if(o2 instanceof CXDynamicTypeDefinition) {
+            return is(o1, ((CXDynamicTypeDefinition) o2).getOriginal());
         }
         return o1.is(o2,this);
     }

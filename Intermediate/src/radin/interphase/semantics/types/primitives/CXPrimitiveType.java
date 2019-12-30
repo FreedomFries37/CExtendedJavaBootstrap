@@ -2,7 +2,7 @@ package radin.interphase.semantics.types.primitives;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.ConstantType;
+import radin.interphase.semantics.types.wrapped.ConstantType;
 
 public class CXPrimitiveType extends AbstractCXPrimitiveType {
     enum Primitives {

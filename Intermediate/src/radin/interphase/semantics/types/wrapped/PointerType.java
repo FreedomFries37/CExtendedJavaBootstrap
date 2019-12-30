@@ -1,10 +1,12 @@
-package radin.interphase.semantics.types;
+package radin.interphase.semantics.types.wrapped;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.ICXWrapper;
 import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
-public class PointerType extends AbstractCXPrimitiveType {
+public class PointerType extends AbstractCXPrimitiveType implements ICXWrapper {
     
     private CXType subType;
     
@@ -54,7 +56,13 @@ public class PointerType extends AbstractCXPrimitiveType {
         if(subType == CXPrimitiveType.VOID){
             return true;
         }
-        return this.subType.is(subType, e);
+        
+        return e.is(this.subType, subType);
+    }
+    
+    @Override
+    public CXType getWrappedType() {
+        return getSubType();
     }
     
     @Override

@@ -28,7 +28,7 @@ public abstract class AbstractCompilationTag implements ICompilationTag {
     }
     
     public boolean isAttachToAny() {
-        return !validAttachmentPoints.isEmpty();
+        return validAttachmentPoints.isEmpty();
     }
     
     @Override

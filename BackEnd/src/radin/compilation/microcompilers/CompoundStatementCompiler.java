@@ -13,9 +13,12 @@ public class CompoundStatementCompiler extends AbstractIndentedOutputCompiler {
     
     @Override
     public boolean compile(TypeAugmentedSemanticNode node) {
-        StatementCompiler statementCompiler = new StatementCompiler(getPrintWriter(), getIndent());
+        StatementCompiler statementCompiler = new StatementCompiler(getPrintWriter());
+        //print(getIndentString());
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
+           
             if(!statementCompiler.compile(child)) return false;
+            println();
         }
         return true;
     }

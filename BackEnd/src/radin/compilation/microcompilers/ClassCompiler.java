@@ -1,12 +1,14 @@
 package radin.compilation.microcompilers;
 
 import radin.compilation.AbstractIndentedOutputCompiler;
+import radin.compilation.AbstractIndentedOutputSingleOutputCompiler;
 import radin.interphase.semantics.types.compound.CXClassType;
+import radin.interphase.semantics.types.compound.CXStructType;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;
 
-public class ClassCompiler extends AbstractIndentedOutputCompiler {
+public class ClassCompiler extends AbstractIndentedOutputSingleOutputCompiler {
     
     private CXClassType cxClassType;
     
@@ -16,12 +18,18 @@ public class ClassCompiler extends AbstractIndentedOutputCompiler {
     }
     
     @Override
-    public boolean compile(TypeAugmentedSemanticNode node) {
-        
+    public boolean compile() {
         cxClassType.generateSuperMethods(getSettings().getvTableName());
-        
-        
-        
-        return false;
+    
+        CXStructType vTable = cxClassType.getVTable();
+        print(vTable.generateCDefinition());
+        println(";");
+    
+        CXStructType structEquivalent = cxClassType.getStructEquivalent();
+        print(structEquivalent.generateCDefinition());
+        println(";");
+    
+    
+        return true;
     }
 }

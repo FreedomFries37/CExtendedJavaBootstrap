@@ -1,10 +1,14 @@
 package radin;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 
+import radin.compilation.AbstractCompiler;
+import radin.compilation.FileCompiler;
 import radin.interphase.CompilationSettings;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
@@ -24,23 +28,31 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Testing out lexer");
         String text;
+        String filename = "classTest.cx";
+        
+        if(args.length > 0) {
+            filename = args[0];
+        }
         try {
-            if(args.length > 0) {
-                text = new String(Files.readAllBytes(Paths.get(args[0])));
-            } else text = new String(Files.readAllBytes(Paths.get("classTest.cx")));
+            
+            text = new String(Files.readAllBytes(Paths.get(filename)));
+            
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
+        
+        String outputFile = filename.replace(".cx", ".c");
+        
         Lexer lex = new Lexer(text);
         for (Token token : lex) {
             System.out.println(token);
         }
-       
+        
         Parser parser = new Parser(lex);
         CategoryNode program = parser.parse();
         program.printTreeForm();
-    
+        
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
         boolean b = applier.enactActionRoutine(program);
@@ -52,7 +64,7 @@ public class Main {
                 //System.out.println(completed.getRepresentation());
                 
                 System.out.println("applier.noTypeErrors() = " + applier.noTypeErrors());
-    
+                
                 TypeAnalyzer.setEnvironment(environment);
                 CompilationSettings compilationSettings = new CompilationSettings();
                 TypeAnalyzer.setCompilationSettings(compilationSettings);
@@ -73,7 +85,14 @@ public class Main {
                     tasTree.printTreeForm();
                     e.printStackTrace();
                 }
-                
+    
+                File output = new File(outputFile);
+                output.createNewFile();
+    
+                AbstractCompiler.setSettings(compilationSettings);
+    
+                FileCompiler compiler = new FileCompiler(output);
+                System.out.println("compiler.compile(tasTree.getHead()) = " + compiler.compile(tasTree.getHead()));
                 
                 /*
                 for (CXClassType createdClass : environment.getCreatedClasses()) {
@@ -83,7 +102,7 @@ public class Main {
                 
                  */
                 
-            } catch (SynthesizedMissingException e) {
+            } catch (SynthesizedMissingException | IOException e) {
                 e.printStackTrace();
             }
         }

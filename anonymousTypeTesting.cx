@@ -1,4 +1,4 @@
-
+class shape;
 class shape {
 
 	virtual public double get_area() {

@@ -8,6 +8,8 @@ import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.InvalidPrimitiveException;
 import radin.interphase.semantics.types.*;
 import radin.interphase.semantics.types.compound.CXFunctionPointer;
+import radin.interphase.semantics.types.wrapped.ArrayType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 import radin.parsing.CategoryNode;
 import radin.parsing.LeafNode;
 import radin.parsing.ParseNode;

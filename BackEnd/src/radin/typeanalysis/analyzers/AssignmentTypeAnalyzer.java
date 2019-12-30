@@ -1,10 +1,11 @@
 package radin.typeanalysis.analyzers;
 
+import radin.compilation.tags.BasicCompilationTag;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.ConstantType;
+import radin.interphase.semantics.types.wrapped.ConstantType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
@@ -52,6 +53,9 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
         if(!lhs.isLValue()) throw new IllegalLValueError(lhs);
     
         Token operator = node.getASTChild(ASTNodeType.assignment_type).getToken();
+        if(operator.getType() != TokenType.t_assign) {
+            node.addCompilationTag(BasicCompilationTag.OPERATOR_ASSIGNMENT);
+        }
         
         if(operator.getType() == TokenType.t_assign) {
             

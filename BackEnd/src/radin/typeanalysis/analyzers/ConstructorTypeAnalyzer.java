@@ -1,10 +1,9 @@
 package radin.typeanalysis.analyzers;
 
-import radin.compilation.tags.BasicCompilationTag;
 import radin.compilation.tags.PriorConstructorTag;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.PointerType;
+import radin.interphase.semantics.types.wrapped.PointerType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.methods.CXConstructor;

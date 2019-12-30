@@ -6,13 +6,13 @@ import radin.compilation.tags.MethodCallTag;
 import radin.interphase.lexical.Token;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
-import radin.interphase.semantics.types.compound.CXClassType;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;
 
 public class ExpressionCompiler extends AbstractCompiler {
+    
+    
     
     public ExpressionCompiler(PrintWriter printWriter) {
         super(printWriter);
@@ -75,6 +75,14 @@ public class ExpressionCompiler extends AbstractCompiler {
                 print(castType.generateCDefinition());
                 print(") ");
                 if(!compile(child)) return false;
+                break;
+            }
+            case addressof: {
+                print("&");
+                print("(");
+                TypeAugmentedSemanticNode child = node.getChild(0);
+                if(!compile(child)) return false;
+                print(')');
                 break;
             }
             case indirection: {
@@ -207,6 +215,9 @@ public class ExpressionCompiler extends AbstractCompiler {
                 return false;
         }
         
+        
         return true;
     }
+    
+    
 }

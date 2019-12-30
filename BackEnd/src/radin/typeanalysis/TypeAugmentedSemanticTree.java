@@ -1,5 +1,6 @@
 package radin.typeanalysis;
 
+import radin.compilation.tags.TypeDefHelperTag;
 import radin.interphase.AbstractTree;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
@@ -30,8 +31,12 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
             CXType type = typeAbstractSyntaxNode.getCxType();
             if(type instanceof CXCompoundTypeNameIndirection) {
                 CXType newType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) type).getTypename());
-                if(newType != null)
+                if(newType != null) {
                     head = new TypeAbstractSyntaxNode(head.getType(), newType, head.getChildList());
+                    TypeAugmentedSemanticNode output = new TypeAugmentedSemanticNode(head, children);
+                    output.addCompilationTag(new TypeDefHelperTag(type));
+                    return output;
+                }
             }
         }
         return new TypeAugmentedSemanticNode(head, children);

@@ -1,7 +1,7 @@
 package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.types.ArrayType;
+import radin.interphase.semantics.types.wrapped.ArrayType;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.ICXCompoundType;
 
