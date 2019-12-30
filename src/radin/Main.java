@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 
+import radin.interphase.CompilationSettings;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.compound.CXClassType;
@@ -53,6 +54,8 @@ public class Main {
                 System.out.println("applier.noTypeErrors() = " + applier.noTypeErrors());
     
                 TypeAnalyzer.setEnvironment(environment);
+                CompilationSettings compilationSettings = new CompilationSettings();
+                TypeAnalyzer.setCompilationSettings(compilationSettings);
                 TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(completed, environment);
                 tasTree.printTreeForm();
                 

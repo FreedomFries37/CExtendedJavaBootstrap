@@ -38,7 +38,8 @@ public class CXClassType extends CXCompoundType {
     private List<CXMethod> concreteMethodsOrder;
     private List<CXConstructor> constructors;
     
-    private List<CXMethod> generateSupers;
+    private List<CXMethod> supersToCreate;
+    private List<CXMethod> generatedSupers;
     
     private boolean sealed;
     private TypeEnvironment environment;
@@ -65,7 +66,7 @@ public class CXClassType extends CXCompoundType {
         }
         concreteMethodsOrder = new LinkedList<>();
         this.constructors = constructors;
-        generateSupers = new LinkedList<>();
+        supersToCreate = new LinkedList<>();
         
         for (CXMethod method : methods) {
             method.setParent(this);
@@ -90,7 +91,7 @@ public class CXClassType extends CXCompoundType {
                     for (int i = 0; i < virtualMethodOrder.size(); i++) {
                         CXMethod cxMethod = virtualMethodOrder.get(i);
                         if(cxMethod.getName().equals(method.getName()) && cxMethod.getParameterTypes().equals(method.getParameterTypes())) {
-                            generateSupers.add(cxMethod);
+                            supersToCreate.add(cxMethod);
                             virtualMethodOrder.set(i, method);
                             if(cxMethod.getVisibility() != method.getVisibility()) {
                                 visibilityMap.replace(method.getName(), method.getVisibility());
@@ -210,6 +211,23 @@ public class CXClassType extends CXCompoundType {
         return null;
     }
     
+    public void generateSuperMethods(String vtablename) {
+        generatedSupers = new LinkedList<>();
+        for (CXMethod method : supersToCreate) {
+            generatedSupers.add(method.createSuperMethod(this, vtablename));
+        }
+    }
+    
+    public CXMethod getSuperMethod(String name, ParameterTypeList typeList) {
+        if(generatedSupers == null) return null;
+        for (CXMethod generatedSuper : generatedSupers) {
+            if(generatedSuper.getName().equals("super_" + name) && typeList.equals(generatedSuper.getParameterTypeList(),
+                    environment)) return generatedSuper;
+        }
+        
+        return null;
+    }
+    
     public boolean isVirtual(String name, ParameterTypeList typeList) {
         Reference<Boolean> output = new Reference<>();
         CXMethod method = getMethod(name, typeList, output);
@@ -293,8 +311,9 @@ public class CXClassType extends CXCompoundType {
         return builder.toString();
     }
     
-    
-    
+    public List<CXMethod> getGeneratedSupers() {
+        return generatedSupers;
+    }
     
     public List<FieldDeclaration> getCFields(TypeEnvironment e) {
         List<FieldDeclaration> output= new LinkedList<>();

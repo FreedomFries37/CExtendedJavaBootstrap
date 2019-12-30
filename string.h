@@ -40,7 +40,7 @@ class string2 : string {
 	public string2(string other) : super(other.ptr) { }
 
 	virtual public int get_num_characters() {
-    		return super->get_num_characters() * 2;
+    		return (*super).get_num_characters() * 2;
     }
 };
 

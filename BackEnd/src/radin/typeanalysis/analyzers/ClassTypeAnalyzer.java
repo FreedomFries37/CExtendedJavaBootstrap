@@ -3,13 +3,19 @@ package radin.typeanalysis.analyzers;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.PointerType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXFunctionPointer;
+import radin.interphase.semantics.types.compound.CXStructType;
+import radin.interphase.semantics.types.methods.CXMethod;
+import radin.interphase.semantics.types.methods.CXParameter;
 import radin.interphase.semantics.types.methods.ParameterTypeList;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.errors.IncorrectReturnTypeError;
 import radin.typeanalysis.errors.RedeclarationError;
 
@@ -27,9 +33,41 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
         assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
         assert ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType() instanceof CXClassType;
         CXClassType cxClassType = (CXClassType) ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+        cxClassType.generateSuperMethods(getCompilationSettings().getvTableName());
+        for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
+            typeTrackingClosure();
         
+            CXStructType vTable = cxClassType.getVTable();
+            getCurrentTracker().addBasicCompoundType(vTable);
+            getCurrentTracker().addPrivateField(cxClassType, getCompilationSettings().getvTableName(),
+                    vTable);
+        
+            getCurrentTracker().addVariable("__this", new PointerType(CXPrimitiveType.VOID));
+        
+        
+        
+            for (CXParameter parameter : generatedSuper.getParameters()) {
+                getCurrentTracker().addVariable(parameter.getName(), parameter.getType());
+            }
+            TypeAugmentedSemanticNode tree = new TypeAugmentedSemanticTree(generatedSuper.getMethodBody(),
+                    getEnvironment()).getHead();
+            CompoundStatementTypeAnalyzer compoundStatementTypeAnalyzer = new CompoundStatementTypeAnalyzer(tree,
+                    generatedSuper.getReturnType(), false);
+            tree.printTreeForm();
+            /* // TODO: implement type checking for super methods. Currently have to be non type checked
+            if(!determineTypes(compoundStatementTypeAnalyzer)) {
+                tree.printTreeForm();
+                return false;
+            }
+            
+             */
+            getMethods().put(generatedSuper, tree);
+            releaseTrackingClosure();
+        }
+    
         typeTrackingClosure(cxClassType);
     
+        
     
         List<TypeAugmentedSemanticNode> decs = node.getAllChildren(ASTNodeType.class_level_declaration);
         // STEP 1 -> set up fields and methods in tracker
@@ -140,6 +178,8 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             
             if(!determineTypes(analyzer)) return false;
         }
+        
+        
     
         releaseTrackingClosure();
         return true;

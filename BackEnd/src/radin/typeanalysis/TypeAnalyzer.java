@@ -1,13 +1,14 @@
 package radin.typeanalysis;
 
+import radin.interphase.CompilationSettings;
+import radin.interphase.ICompilationSettings;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.ConstantType;
 import radin.interphase.semantics.types.compound.CXClassType;
+import radin.interphase.semantics.types.methods.CXMethod;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public abstract class TypeAnalyzer implements ITypeAnalyzer{
 
@@ -16,10 +17,28 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     private TypeAugmentedSemanticNode tree;
     
     private static TypeEnvironment environment;
+    private static ICompilationSettings compilationSettings;
     private static List<Error> errors;
+    
+    private static HashMap<CXMethod, TypeAugmentedSemanticNode> methods;
+    
+    
     
     static {
         errors = new LinkedList<>();
+        methods = new HashMap<>();
+    }
+    
+    public static HashMap<CXMethod, TypeAugmentedSemanticNode> getMethods() {
+        return methods;
+    }
+    
+    public static ICompilationSettings getCompilationSettings() {
+        return compilationSettings;
+    }
+    
+    public static void setCompilationSettings(ICompilationSettings compilationSettings) {
+        TypeAnalyzer.compilationSettings = compilationSettings;
     }
     
     public TypeAnalyzer(TypeAugmentedSemanticNode tree) {

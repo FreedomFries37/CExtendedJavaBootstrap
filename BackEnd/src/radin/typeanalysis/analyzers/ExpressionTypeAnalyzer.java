@@ -3,6 +3,7 @@ package radin.typeanalysis.analyzers;
 import radin.compilation.tags.BasicCompilationTag;
 import radin.compilation.tags.ConstructorCallTag;
 import radin.compilation.tags.MethodCallTag;
+import radin.compilation.tags.SuperCallTag;
 import radin.interphase.Reference;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
@@ -94,17 +95,17 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 if(rhs.getCXType() instanceof PointerType) {
                     node.setType(rhs.getCXType());
                 } else node.setType(lhs.getCXType());
-    
+                
                 if(lhs.getCXType() instanceof PointerType || lhs.getCXType() instanceof ArrayType) {
                     node.setLValue(true);
                 } else if(rhs.getCXType() instanceof PointerType || rhs.getCXType() instanceof ArrayType) {
                     node.setLValue(true);
                 } else node.setLValue(false);
-    
+                
                 if(node.getCXType() instanceof ConstantType) {
                     node.setType(((ConstantType) node.getCXType()).getSubtype());
                 }
-    
+                
             }
             
             
@@ -152,7 +153,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(child)) return false;
             CXType childCXType = child.getCXType();
             single_op(node, child, childCXType);
-    
+            
             return true;
         }
         
@@ -181,10 +182,10 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.getASTNode().getType() == ASTNodeType.array_reference) {
             TypeAugmentedSemanticNode lhs = node.getChild(0);
             TypeAugmentedSemanticNode rhs = node.getChild(1);
-    
+            
             if(!determineTypes(lhs)) return false;
             if(!determineTypes(rhs)) return false;
-    
+            
             CXType cxType = lhs.getCXType();
             boolean isConstant = false;
             if(cxType instanceof ConstantType) {
@@ -229,7 +230,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
            
              */
             if(!determineTypes(node.getChild(0))) return false;
-    
+            
             assert node.getChild(0).getCXType() instanceof CXFunctionPointer;
             CXFunctionPointer cxType = (CXFunctionPointer) node.getChild(0).getCXType();
             node.setType(cxType.getReturnType());
@@ -276,18 +277,21 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             node.setLValue(objectInteraction.isLValue());
             return true;
         }
-    
+        
         if(node.getASTNode().getType() == ASTNodeType.method_call) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) {
                 throw new IllegalAccessError();
             }
-            
+            boolean isSuperCall = false;
             if(objectInteraction.getASTType() == ASTNodeType.indirection) {
                 node.addCompilationTag(BasicCompilationTag.INDIRECT_METHOD_CALL);
+                if(objectInteraction.getChild(0).getASTType() == ASTNodeType._super) {
+                    isSuperCall = true;
+                }
             }
-    
-    
+            
+            
             CXType cxClass;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 cxClass = objectInteraction.getCXType();
@@ -302,7 +306,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             SequenceTypeAnalyzer analyzer = new SequenceTypeAnalyzer(sequenceNode);
             
             if(!determineTypes(analyzer)) return false;
-    
+            
             ParameterTypeList typeList = new ParameterTypeList(analyzer.getCollectedTypes());
             
             
@@ -322,18 +326,23 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name, typeList);
             if(nextType == null) throw new IllegalAccessError();
-    
-            Reference<Boolean> ref = new Reference<>();
-            CXMethod method = ((CXClassType) cxClass).getMethod(name, typeList, ref);
-            if (ref.getValue()) {
-                node.addCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
+            
+            if(!isSuperCall) {
+                Reference<Boolean> ref = new Reference<>();
+                CXMethod method = ((CXClassType) cxClass).getMethod(name, typeList, ref);
+                if (ref.getValue()) {
+                    node.addCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
+                }
+                
+                node.addCompilationTag(new MethodCallTag(method));
+            } else {
+                CXMethod superMethod = ((CXClassType) cxClass).getSuperMethod(name, typeList);
+                if(superMethod != null)
+                    node.addCompilationTag(new SuperCallTag(superMethod));
             }
             
-            node.addCompilationTag(new MethodCallTag(method));
-            
-            
             node.setType(nextType);
-        
+            
             return true;
         }
         
@@ -374,10 +383,10 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!getCurrentTracker().constructorVisible(((CXClassType) constructedType), parameterTypeList)) {
                 throw new NoConstructorError(((CXClassType) constructedType), parameterTypeList);
             }
-    
+            
             CXConstructor constructor = ((CXClassType) constructedType).getConstructor(parameterTypeList);
             node.addCompilationTag(new ConstructorCallTag(constructor));
-    
+            
             node.setType(new PointerType(constructedType));
             return true;
         }
@@ -392,7 +401,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(opToken.getType() == TokenType.t_inc || opToken.getType() == TokenType.t_dec) {
             if(!canIncrementOrDecrement(childCXType)) throw new IllegalTypesForOperationError(node.getToken(),
                     childCXType);
-    
+            
             node.setType(childCXType);
         } else if(opToken.getType() == TokenType.t_bang) {
             node.setType(CXPrimitiveType.INTEGER);

@@ -40,14 +40,9 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
             if(owner instanceof CXClassType) {
                 CXClassType cxClassType = (CXClassType) owner;
                 if(cxClassType.getParent() != null) {
-                    CXClassType parent = cxClassType.getParent();
-                    CXStructType superVTable = parent.getVTable();
-                    if (!getCurrentTracker().isTracking(superVTable)) {
-                        getCurrentTracker().addBasicCompoundType(superVTable);
-                        getCurrentTracker().addIsTracking(superVTable);
-                    }
                     
-                    getCurrentTracker().addVariable("super", new PointerType(parent));
+                    
+                    getCurrentTracker().addVariable("super", new PointerType(owner));
                 }
             }
         }

@@ -24,4 +24,8 @@ public class CXParameter {
     public String toString() {
         return type.generateCDefinition(name);
     }
+    
+    public String getName() {
+        return name;
+    }
 }

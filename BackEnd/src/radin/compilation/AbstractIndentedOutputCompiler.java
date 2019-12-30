@@ -1,7 +1,5 @@
 package radin.compilation;
 
-import radin.compilation.tags.AbstractCompilationTag;
-
 import java.io.PrintWriter;
 
 public abstract class AbstractIndentedOutputCompiler extends AbstractCompiler {
@@ -13,33 +11,36 @@ public abstract class AbstractIndentedOutputCompiler extends AbstractCompiler {
         this.indent = indent;
     }
     
-    private String getIndent(String s) {
+    private String getIndentString(String s) {
         return getSettings().getIndent().repeat(indent) + s;
     }
     
-    private String getIndent() {
+    private String getIndentString() {
         return getSettings().getIndent().repeat(indent);
     }
     
+    public int getIndent() {
+        return indent;
+    }
     
     @Override
     public void println() {
         super.println();
         if(indent > 0)
-            print(getIndent());
+            print(getIndentString());
     }
     
     @Override
     public void println(String x) {
         super.println(x);
         if(indent > 0)
-            print(getIndent());
+            print(getIndentString());
     }
     
     @Override
     public void println(Object x) {
         super.println(x);
         if(indent > 0)
-            print(getIndent());
+            print(getIndentString());
     }
 }

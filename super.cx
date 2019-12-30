@@ -138,9 +138,11 @@ string2* string2_constructor_structstring(void* __this, string str) {
 int string2_super_get_num_characters_voidp(void* __this) {
 	string2* this;
 	this = (string2*) __this;
-	int (*old)(void*) = this->vtable.get_num_characters;
+	int (*old)(void*);
+	old = this->vtable.get_num_characters;
 	this->vtable.get_num_characters = string_get_num_characters_voidp;
-	int output = this->vtable.get_num_characters(this);
+	int output;
+	output = this->vtable.get_num_characters(this);
 	this->vtable.get_num_characters = old;
 	return output;
 }
