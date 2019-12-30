@@ -40,7 +40,7 @@ public class ShortPrimitive extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         return primitiveCXType.is(other, e);
     }
 }

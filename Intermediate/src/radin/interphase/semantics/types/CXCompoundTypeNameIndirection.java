@@ -41,7 +41,7 @@ public class CXCompoundTypeNameIndirection extends CXType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof ICXCompoundType || other instanceof CXCompoundTypeNameIndirection)) return false;
         CXCompoundType namedCompoundType = e.getNamedCompoundType(typename);
         if(other instanceof ICXCompoundType) {

@@ -61,8 +61,12 @@ public class FunctionPointer extends AbstractCXPrimitiveType {
         return returnType.generateCDefinition() + " (*) (" + parameters.toString() + ")";
     }
     
+    public CXType getReturnType() {
+        return returnType;
+    }
+    
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         return false;
     }
     

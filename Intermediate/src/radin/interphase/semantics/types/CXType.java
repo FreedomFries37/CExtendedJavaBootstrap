@@ -19,7 +19,11 @@ public abstract class CXType implements CXEquivalent {
     
     abstract public long getDataSize(TypeEnvironment e);
     
-    abstract public boolean is(CXType other, TypeEnvironment e);
+    public boolean is(CXType other, TypeEnvironment e) {
+        return is(other, e, false);
+    }
+    
+    abstract public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality);
     
     @Override
     public String toString() {

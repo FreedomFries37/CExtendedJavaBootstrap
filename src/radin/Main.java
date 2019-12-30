@@ -58,8 +58,14 @@ public class Main {
                 
                 ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer(tasTree.getHead());
                 try{
-                    System.out.println("analyzer.determineTypes() = " + analyzer.determineTypes());
+                    boolean determineTypes = analyzer.determineTypes();
+                    System.out.println("analyzer.determineTypes() = " + determineTypes);
                     tasTree.printTreeForm();
+                    if(!determineTypes) {
+                        for (Error error : TypeAnalyzer.getErrors()) {
+                            System.err.println(error.toString());
+                        }
+                    }
                 } catch (Error e) {
                     tasTree.printTreeForm();
                     e.printStackTrace();

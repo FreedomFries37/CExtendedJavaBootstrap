@@ -37,12 +37,14 @@ public class CXMethod implements CXEquivalent {
         this.isVirtual = isVirtual;
         this.returnType = returnType;
         this.parameters = parameters;
-        this.parameters.add(
+        /*this.parameters.add(
                 new CXParameter(
                         new PointerType(CXPrimitiveType.VOID),
                         "__this"
                 )
         );
+        
+         */
         this.methodBody = methodBody;
         fixedMethodBody = false;
     }
@@ -79,6 +81,10 @@ public class CXMethod implements CXEquivalent {
         return output;
     }
     
+    public ParameterTypeList getParameterTypeList() {
+        return new ParameterTypeList(getParameterTypes());
+    }
+    
     public List<CXParameter> getParameters() {
         return parameters;
     }
@@ -97,6 +103,12 @@ public class CXMethod implements CXEquivalent {
     public PointerType getThisType() {
         CXCompoundTypeNameIndirection cxCompoundTypeNameIndirection =
                 new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType._class, parent);
+        return new PointerType(cxCompoundTypeNameIndirection);
+    }
+    
+    public PointerType getSuperType() {
+        CXCompoundTypeNameIndirection cxCompoundTypeNameIndirection =
+                new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType._class, parent.getParent());
         return new PointerType(cxCompoundTypeNameIndirection);
     }
     
@@ -196,6 +208,24 @@ public class CXMethod implements CXEquivalent {
                 )
         );
         this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast);
+        
+        if(parent.getParent() != null) {
+            
+            CXClassType superType = parent.getParent();
+            AbstractSyntaxNode superDefine = new AbstractSyntaxNode(
+                    ASTNodeType.declaration,
+                    new AbstractSyntaxNode(
+                            ASTNodeType.typename,
+                            getSuperType().getTokenEquivalent()
+                    ),
+                    new AbstractSyntaxNode(
+                            ASTNodeType.id,
+                            new Token(TokenType.t_id, "super")
+                    )
+            );
+            this.methodBody = new AbstractSyntaxNode(this.methodBody, true, superDefine);
+        }
+        
         fixedMethodBody = true;
     }
 }

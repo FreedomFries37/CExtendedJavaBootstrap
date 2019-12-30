@@ -33,16 +33,24 @@ public class PointerType extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
-        if(other instanceof AbstractCXPrimitiveType && !(other instanceof PointerType)) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
+        if(other instanceof AbstractCXPrimitiveType && !(other instanceof PointerType || other instanceof ArrayType)) {
             AbstractCXPrimitiveType abstractCXPrimitiveType = (AbstractCXPrimitiveType) other;
             return abstractCXPrimitiveType.isIntegral();
         }
-        if(!(other instanceof PointerType)) return false;
+        if(!(other instanceof ArrayType || other instanceof PointerType)) {
+            return false;
+        }
         if(this.subType == CXPrimitiveType.VOID){
                 return true;
         }
-        CXType subType = ((PointerType) other).subType;
+       
+        CXType subType;
+        if(other instanceof ArrayType) {
+            subType = ((ArrayType) other).getBaseType();
+        }else {
+            subType = ((PointerType) other).getSubType();
+        }
         if(subType == CXPrimitiveType.VOID){
             return true;
         }

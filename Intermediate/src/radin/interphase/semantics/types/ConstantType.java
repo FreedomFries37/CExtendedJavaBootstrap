@@ -2,8 +2,6 @@ package radin.interphase.semantics.types;
 
 import radin.interphase.semantics.TypeEnvironment;
 
-import javax.print.attribute.standard.Fidelity;
-
 public class ConstantType extends CXType {
     
     private CXType subtype;
@@ -42,7 +40,7 @@ public class ConstantType extends CXType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(other instanceof ConstantType) return subtype.is(((ConstantType) other).getSubtype(), e);
         return false;
     }

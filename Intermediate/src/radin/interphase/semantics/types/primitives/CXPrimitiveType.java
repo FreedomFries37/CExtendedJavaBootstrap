@@ -2,6 +2,7 @@ package radin.interphase.semantics.types.primitives;
 
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.ConstantType;
 
 public class CXPrimitiveType extends AbstractCXPrimitiveType {
     enum Primitives {
@@ -97,7 +98,15 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
    
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
+        if(other instanceof ConstantType) {
+            other = ((ConstantType) other).getSubtype();
+        }
+        if(strictPrimitiveEquality) {
+            if (!(other instanceof AbstractCXPrimitiveType)) return false;
+    
+            return this.isIntegral() && ((AbstractCXPrimitiveType) other).isIntegral() || this.isFloatingPoint() && ((AbstractCXPrimitiveType) other).isFloatingPoint();
+        }
         
         return other instanceof CXPrimitiveType || other instanceof LongPrimitive || other instanceof ShortPrimitive || other instanceof UnsignedPrimitive;
     }

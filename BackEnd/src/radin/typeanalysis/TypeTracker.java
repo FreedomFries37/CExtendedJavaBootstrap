@@ -3,11 +3,13 @@ package radin.typeanalysis;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.RedeclareError;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXCompoundType;
 import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.errors.ClassNotDefinedError;
 import radin.typeanalysis.errors.IdentifierDoesNotExistError;
+import radin.typeanalysis.errors.RedeclarationError;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -108,7 +110,6 @@ public class TypeTracker {
             if (!super.equals(o)) return false;
             
             MethodKey methodKey = (MethodKey) o;
-            
             return parameterTypeList.equals(methodKey.parameterTypeList, environment);
         }
         
@@ -126,6 +127,16 @@ public class TypeTracker {
         }
     }
     
+    private class ConstructorKey extends MethodKey {
+    
+        public ConstructorKey(CXCompoundType type, ParameterTypeList params) {
+            super(type, "", params);
+        }
+    }
+    
+    /**
+     * Keep track of available types
+     */
     private HashSet<CXCompoundType> trackingTypes;
     // lexical variables
     // these should be demoted
@@ -136,16 +147,19 @@ public class TypeTracker {
     private HashMap<String, TypeTrackerEntry> functionEntries;
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries;
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicFieldEntries;
+    private HashSet<ConstructorKey> publicConstructors;
     
     // internal availability
     // these should be demoted
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> internalMethodEntries;
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> internalFieldEntries;
+    private HashSet<ConstructorKey> internalConstructors;
     
     // private availability
     // these should be new for every class declaration
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> privateFieldEntries;
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> privateMethodEntries;
+    private HashSet<ConstructorKey> privateConstructors;
     
     
     private static HashMap<CXClassType, TypeTracker> classTrackers;
@@ -159,12 +173,19 @@ public class TypeTracker {
         this.environment = environment;
         variableEntries = new HashMap<>();
         functionEntries = new HashMap<>();
+        
         publicMethodEntries = new HashMap<>();
         publicFieldEntries = new HashMap<>();
+        publicConstructors = new HashSet<>();
+        
         internalFieldEntries = new HashMap<>();
         internalMethodEntries = new HashMap<>();
+        internalConstructors = new HashSet<>();
+        
         privateMethodEntries = new HashMap<>();
         privateFieldEntries = new HashMap<>();
+        privateConstructors = new HashSet<>();
+        
         trackingTypes = new HashSet<>();
     }
     
@@ -178,18 +199,21 @@ public class TypeTracker {
         
         publicMethodEntries = old.publicMethodEntries;
         publicFieldEntries = old.publicFieldEntries;
-        
+        publicConstructors = old.publicConstructors;
         
         internalFieldEntries = new HashMap<>();
         internalMethodEntries = new HashMap<>();
         demoteEntries(internalFieldEntries, old.internalFieldEntries);
         demoteEntries(internalMethodEntries, old.internalMethodEntries);
+        internalConstructors = new HashSet<>(old.internalConstructors);
+        
+        
         
         privateMethodEntries = new HashMap<>();
         privateFieldEntries = new HashMap<>();
         demoteEntries(privateFieldEntries, old.privateFieldEntries);
         demoteEntries(privateFieldEntries, old.privateMethodEntries);
-        
+        privateConstructors = new HashSet<>();
     }
     
     private TypeTracker(TypeTracker old, CXClassType parentType) {
@@ -200,6 +224,8 @@ public class TypeTracker {
         
         demoteEntries(internalFieldEntries, typeTracker.internalFieldEntries);
         demoteEntries(internalMethodEntries, typeTracker.internalMethodEntries);
+        
+        internalConstructors.addAll(typeTracker.internalConstructors);
     }
     
     /**
@@ -352,7 +378,7 @@ public class TypeTracker {
     public void addBasicCompoundType(CXCompoundType type) {
         if(type instanceof CXClassType) return;
         for (CXCompoundType.FieldDeclaration field : type.getFields()) {
-            addPublic(type, true, field.getName(), field.getType());
+            addPublicField(type, field.getName(), field.getType());
             if(field.getType() instanceof CXCompoundType) {
                 CXCompoundType fieldType = (CXCompoundType) field.getType();
                 if(!isTracking(fieldType)) {
@@ -375,15 +401,15 @@ public class TypeTracker {
         }
     }
     
-    public void addPublic(CXCompoundType parent, boolean isField, String name, CXType type) {
+    public void addPublicField(CXCompoundType parent, String name, CXType type) {
         addCompoundTypeField(parent, name, type, publicFieldEntries, publicMethodEntries);
     }
     
-    public void addInternal(CXClassType parent, boolean isField, String name, CXType type) {
+    public void addInternalField(CXClassType parent, String name, CXType type) {
         addCompoundTypeField(parent, name, type, internalFieldEntries, internalMethodEntries);
     }
     
-    public void addPrivate(CXClassType parent, boolean isField, String name, CXType type) {
+    public void addPrivateField(CXClassType parent, String name, CXType type) {
         addCompoundTypeField(parent, name, type, privateFieldEntries, privateMethodEntries);
     }
     
@@ -398,6 +424,29 @@ public class TypeTracker {
     public void addPrivateMethod(CXClassType parent, String name, CXType type, ParameterTypeList typeList) {
         addCompoundTypeMethodEntry(parent, name, type, typeList, privateMethodEntries);
     }
+    
+    public void addConstructor(Visibility visibility, CXClassType owner, ParameterTypeList parameterTypeList) {
+        ConstructorKey constructorKey = new ConstructorKey(owner, parameterTypeList);
+        if(constructorVisible(owner, parameterTypeList)) throw new RedeclarationError("Constructor of type " + owner + " on parameters " + parameterTypeList);
+        
+        switch (visibility) {
+            case _public:
+                publicConstructors.add(constructorKey);
+            return;
+            case internal:
+                internalConstructors.add(constructorKey);
+                return;
+            case _private:
+                privateConstructors.add(constructorKey);
+            
+        }
+    }
+    
+    public boolean constructorVisible(CXClassType owner, ParameterTypeList parameterTypeList) {
+        ConstructorKey constructorKey = new ConstructorKey(owner, parameterTypeList);
+        return publicConstructors.contains(constructorKey) || internalConstructors.contains(constructorKey) || privateConstructors.contains(constructorKey);
+    }
+    
     
     public void addCompoundTypeMethodEntry(CXCompoundType parent, String name, CXType type, ParameterTypeList typeList,
                                            HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {

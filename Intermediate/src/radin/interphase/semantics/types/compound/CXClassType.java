@@ -1,5 +1,6 @@
 package radin.interphase.semantics.types.compound;
 
+import radin.interphase.Reference;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.IncorrectParameterTypesError;
 import radin.interphase.semantics.exceptions.RedeclareError;
@@ -9,6 +10,7 @@ import radin.interphase.semantics.types.PointerType;
 import radin.interphase.semantics.types.Visibility;
 import radin.interphase.semantics.types.methods.CXConstructor;
 import radin.interphase.semantics.types.methods.CXMethod;
+import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
 import java.util.*;
@@ -40,15 +42,16 @@ public class CXClassType extends CXCompoundType {
     private TypeEnvironment environment;
     
     public CXClassType(String typename, List<ClassFieldDeclaration> declarations,
-                       List<CXMethod> methods, List<CXConstructor> constructors) {
-        this(typename, null, declarations, methods, constructors);
+                       List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment environment) {
+        this(typename, null, declarations, methods, constructors, environment);
         
     }
     
     
     public CXClassType(String typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
-                       List<CXMethod> methods, List<CXConstructor> constructors) {
+                       List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
         super(typename, new LinkedList<>(declarations));
+        this.environment = e;
         sealed = false;
         this.parent = parent;
         if(parent != null) {
@@ -80,13 +83,10 @@ public class CXClassType extends CXCompoundType {
                     throw new RedeclareError(method.getName());
                 }
                 
-                if(isExistingVirtualMethod(method.getName())) {
+                if(isVirtual(method.getName(), method.getParameterTypeList())) {
                     for (int i = 0; i < virtualMethodOrder.size(); i++) {
                         CXMethod cxMethod = virtualMethodOrder.get(i);
-                        if(cxMethod.getName().equals(method.getName())) {
-                            if(cxMethod.getParameterTypes().equals(method.getParameterTypes())) {
-                                throw new IncorrectParameterTypesError();
-                            }
+                        if(cxMethod.getName().equals(method.getName()) && cxMethod.getParameterTypes().equals(method.getParameterTypes())) {
                             
                             virtualMethodOrder.set(i, method);
                             if(cxMethod.getVisibility() != method.getVisibility()) {
@@ -119,6 +119,10 @@ public class CXClassType extends CXCompoundType {
         for (CXConstructor constructor : constructors) {
             visibilityMap.put(constructor.getName(), constructor.getVisibility());
         }
+    }
+    
+    public void setEnvironment(TypeEnvironment environment) {
+        this.environment = environment;
     }
     
     public CXStructType getVTable() {
@@ -178,6 +182,51 @@ public class CXClassType extends CXCompoundType {
     public CXConstructor getConstructor(int length) {
         for (CXConstructor constructor : constructors) {
             if(constructor.getParameterTypes().size() == length + 1) return constructor;
+        }
+        return null;
+    }
+    
+    public CXConstructor getConstructor(ParameterTypeList parameterTypeList) {
+        for (CXConstructor constructor : constructors) {
+            if(parameterTypeList.equals(constructor.getParameterTypeList(), environment)) return constructor;
+        }
+        return null;
+    }
+    
+    public CXMethod getMethod(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+        CXMethod output = getVirtualMethod(name, parameterTypeList);
+        if(output != null) {
+            isVirtual.setValue(true);
+            return output;
+        }
+        CXMethod concreteMethod = getConcreteMethod(name, parameterTypeList);
+        if(concreteMethod != null) {
+            isVirtual.setValue(false);
+            return concreteMethod;
+        }
+        return null;
+    }
+    
+    public boolean isVirtual(String name, ParameterTypeList typeList) {
+        Reference<Boolean> output = new Reference<>();
+        CXMethod method = getMethod(name, typeList, output);
+        return method != null && output.getValue();
+    }
+    
+    private CXMethod getVirtualMethod(String name, ParameterTypeList parameterTypeList) {
+        for (CXMethod cxMethod : virtualMethodOrder) {
+            if(cxMethod.getName().equals(name) && parameterTypeList.equals(cxMethod.getParameterTypeList(), environment)) {
+                return cxMethod;
+            }
+        }
+        return null;
+    }
+    
+    private CXMethod getConcreteMethod(String name, ParameterTypeList parameterTypeList) {
+        for (CXMethod cxMethod : concreteMethodsOrder) {
+            if(cxMethod.getName().equals(name) && parameterTypeList.equals(cxMethod.getParameterTypeList(), environment)) {
+                return cxMethod;
+            }
         }
         return null;
     }
@@ -305,7 +354,7 @@ public class CXClassType extends CXCompoundType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         
         
         if(other instanceof CXClassType){

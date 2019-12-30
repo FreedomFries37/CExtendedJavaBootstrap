@@ -1,0 +1,70 @@
+package radin.interphase;
+
+public class CompilationSettings implements ICompilationSettings {
+    
+    private int optimizationLevel = 0;
+    private boolean useStackTrace = false;
+    private boolean useTryCatch = false;
+    private boolean createStrings = false;
+    
+    private String indent = "    ";
+    private String vTableName = "vtable";
+    
+    @Override
+    public void setOptimizationLevel(int value) {
+        optimizationLevel = value;
+    }
+    
+    @Override
+    public int getOptimizationLevel() {
+        return optimizationLevel;
+    }
+    
+    @Override
+    public boolean getUseStackTrace() {
+        return useStackTrace;
+    }
+    
+    @Override
+    public void setUseStackTrace(boolean value) {
+        useStackTrace = value;
+    }
+    
+    @Override
+    public boolean getUseTryCatch() {
+        return useTryCatch;
+    }
+    
+    @Override
+    public void setUseTryCatch(boolean value) {
+        useStackTrace = value;
+    }
+    
+    @Override
+    public boolean autoCreateStrings() {
+        return createStrings;
+    }
+    
+    @Override
+    public void setAutoCreateStrings(boolean value) {
+        createStrings = value;
+    }
+    
+    @Override
+    public String getIndent() {
+        return indent;
+    }
+    
+    @Override
+    public void setIndent(String s) {
+        indent = s;
+    }
+    
+    public String getvTableName() {
+        return vTableName;
+    }
+    
+    public void setvTableName(String vTableName) {
+        this.vTableName = vTableName;
+    }
+}

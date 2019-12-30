@@ -69,7 +69,7 @@ public class ArrayType extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof ArrayType || other instanceof PointerType)) {
             return false;
         }
@@ -79,6 +79,6 @@ public class ArrayType extends AbstractCXPrimitiveType {
         }else {
             baseType = ((PointerType) other).getSubType();
         }
-        return this.baseType.is(other, e);
+        return this.baseType.is(baseType, e);
     }
 }

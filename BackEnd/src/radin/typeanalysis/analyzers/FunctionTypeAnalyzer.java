@@ -4,8 +4,12 @@ import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.PointerType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
+import radin.interphase.semantics.types.compound.CXClassType;
+import radin.interphase.semantics.types.compound.CXStructType;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.errors.MissingReturnError;
 
 public class FunctionTypeAnalyzer extends TypeAnalyzer {
     
@@ -33,6 +37,19 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         typeTrackingClosure();
         if(hasOwnerType) {
             getCurrentTracker().addVariable("this", new PointerType(owner));
+            if(owner instanceof CXClassType) {
+                CXClassType cxClassType = (CXClassType) owner;
+                if(cxClassType.getParent() != null) {
+                    CXClassType parent = cxClassType.getParent();
+                    CXStructType superVTable = parent.getVTable();
+                    if (!getCurrentTracker().isTracking(superVTable)) {
+                        getCurrentTracker().addBasicCompoundType(superVTable);
+                        getCurrentTracker().addIsTracking(superVTable);
+                    }
+                    
+                    getCurrentTracker().addVariable("super", new PointerType(parent));
+                }
+            }
         }
         TypeAugmentedSemanticNode parameters = node.getASTChild(ASTNodeType.parameter_list);
         for (TypeAugmentedSemanticNode parameter : parameters.getAllChildren(ASTNodeType.declaration)) {
@@ -47,6 +64,13 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         CompoundStatementTypeAnalyzer compoundStatementTypeAnalyzer =
                 new CompoundStatementTypeAnalyzer(compoundStatement, returnType, false);
         if(!determineTypes(compoundStatementTypeAnalyzer)) return false;
+        
+        
+        if(returnType != CXPrimitiveType.VOID) {
+            if(!compoundStatementTypeAnalyzer.isReturns()) throw new MissingReturnError();
+        }
+        
+        
         releaseTrackingClosure();
         return true;
     }

@@ -1,13 +1,19 @@
 package radin.typeanalysis.analyzers;
 
+import radin.compilation.tags.BasicCompilationTag;
+import radin.compilation.tags.ConstructorCallTag;
+import radin.compilation.tags.MethodCallTag;
+import radin.interphase.Reference;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.*;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.compound.CXCompoundType;
+import radin.interphase.semantics.types.compound.FunctionPointer;
+import radin.interphase.semantics.types.methods.CXConstructor;
+import radin.interphase.semantics.types.methods.CXMethod;
 import radin.interphase.semantics.types.methods.ParameterTypeList;
-import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.interphase.semantics.types.primitives.LongPrimitive;
 import radin.interphase.semantics.types.primitives.UnsignedPrimitive;
@@ -29,12 +35,16 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         if(node.isTypedExpression()) return true;
         
+        if(node.getASTNode().getType() == ASTNodeType._super) {
+            node.setType(getCurrentTracker().getType("super"));
+            return true;
+        }
         
         if(node.getASTNode().getType() == ASTNodeType.literal) {
             String image = node.getToken().getImage();
             Pattern floatingPoint = Pattern.compile("-?\\d+\\.\\d*|\\d*\\.\\d+");
             Pattern integer = Pattern.compile("\\d+|0b[01]+|0x[a-fA-F]+");
-            Pattern character = Pattern.compile("'(.|\\.)'");
+            Pattern character = Pattern.compile("'(.|\\\\.)'");
             
             if(floatingPoint.matcher(image).matches()) {
                 node.setType(CXPrimitiveType.DOUBLE);
@@ -134,23 +144,16 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             TypeAugmentedSemanticNode child = node.getChild(1);
             if(!determineTypes(child)) return false;
             CXType childCXType = child.getCXType();
-            if(!childCXType.isPrimitive()) throw new IllegalTypesForOperationError(node.getToken(),
-                    childCXType);
+            single_op(node, child, childCXType);
     
-            Token opToken = node.getASTChild(ASTNodeType.operator).getToken();
-            if(opToken.getType() == TokenType.t_inc || opToken.getType() == TokenType.t_dec) {
-                if(!canIncrementOrDecrement(childCXType)) throw new IllegalTypesForOperationError(node.getToken(),
-                        childCXType);
-                
-                node.setType(childCXType);
-            } else if(opToken.getType() == TokenType.t_bang) {
-                node.setType(CXPrimitiveType.INTEGER);
-            } else {
-                node.setType(childCXType);
-            }
-            
-            node.setLValue(child.isLValue());
-            
+            return true;
+        }
+        
+        if(node.getASTNode().getType() == ASTNodeType.postop) {
+            TypeAugmentedSemanticNode child = node.getChild(0);
+            if(!determineTypes(child)) return false;
+            CXType childCXType = child.getCXType();
+            single_op(node, child, childCXType);
             return true;
         }
         
@@ -201,13 +204,25 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getType() == ASTNodeType.function_call) {
-            String name =node.getASTChild(ASTNodeType.id).getToken().getImage();
-            if(getCurrentTracker().variableExists(name)) {
-                throw new IdentifierNotFunctionError(name);
+            
+            if(node.getChild(0).getASTType() != ASTNodeType.id) {
+                if(!determineTypes(node.getChild(0))) return false;
+    
+                assert node.getChild(0).getCXType() instanceof FunctionPointer;
+                FunctionPointer cxType = (FunctionPointer) node.getChild(0).getCXType();
+                node.setType(cxType.getReturnType());
+    
+            } else {
+                String name = node.getASTChild(ASTNodeType.id).getToken().getImage();
+                if (getCurrentTracker().variableExists(name)) {
+                    throw new IdentifierNotFunctionError(name);
+                }
+                if (!getCurrentTracker().functionExists(name)) {
+                    throw new IdentifierDoesNotExistError(name);
+                }
+                CXType type = getCurrentTracker().getType(name);
+                node.setType(type);
             }
-            if(!getCurrentTracker().functionExists(name)) return false;
-            CXType type = getCurrentTracker().getType(name);
-            node.setType(type);
             node.setLValue(false);
             return true;
         }
@@ -266,7 +281,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             assert cxClass instanceof CXClassType;
             String name = node.getChild(1).getToken().getImage();
             
-            TypeAugmentedSemanticNode sequenceNode = node.getASTChild(ASTNodeType.args_list);
+            TypeAugmentedSemanticNode sequenceNode = node.getASTChild(ASTNodeType.sequence);
             SequenceTypeAnalyzer analyzer = new SequenceTypeAnalyzer(sequenceNode);
             
             if(!determineTypes(analyzer)) return false;
@@ -275,14 +290,19 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             
             if(!getCurrentTracker().methodVisible(((CXClassType) cxClass), name, typeList)) {
-                throw new IllegalAccessError(cxClass, name);
+                throw new IllegalAccessError(cxClass, name, typeList);
             }
             
             CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name, typeList);
             if(nextType == null) throw new IllegalAccessError();
+    
+            Reference<Boolean> ref = new Reference<>();
+            CXMethod method = ((CXClassType) cxClass).getMethod(name, typeList, ref);
+            if (ref.getValue()) {
+                node.addCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
+            }
             
-            
-            
+            node.addCompilationTag(new MethodCallTag(method));
             
             
             node.setType(nextType);
@@ -316,11 +336,44 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         
         if(node.getASTType() == ASTNodeType.constructor_call) {
             assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
-            node.setType(new PointerType(((TypeAbstractSyntaxNode) node.getASTNode()).getCxType()));
+            CXType constructedType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+            
+            assert constructedType instanceof CXClassType;
+            SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(node.getASTChild(ASTNodeType.sequence));
+            
+            if(!determineTypes(sequenceTypeAnalyzer)) return false;
+            ParameterTypeList parameterTypeList = new ParameterTypeList(sequenceTypeAnalyzer.getCollectedTypes());
+            
+            if(!getCurrentTracker().constructorVisible(((CXClassType) constructedType), parameterTypeList)) {
+                throw new NoConstructorError(((CXClassType) constructedType), parameterTypeList);
+            }
+    
+            CXConstructor constructor = ((CXClassType) constructedType).getConstructor(parameterTypeList);
+            node.addCompilationTag(new ConstructorCallTag(constructor));
+    
+            node.setType(new PointerType(constructedType));
             return true;
         }
         
         return false;
+    }
+    
+    public void single_op(TypeAugmentedSemanticNode node, TypeAugmentedSemanticNode child, CXType childCXType) {
+        if(!childCXType.isPrimitive()) throw new IllegalTypesForOperationError(node.getToken(),
+                childCXType);
+        Token opToken = node.getASTChild(ASTNodeType.operator).getToken();
+        if(opToken.getType() == TokenType.t_inc || opToken.getType() == TokenType.t_dec) {
+            if(!canIncrementOrDecrement(childCXType)) throw new IllegalTypesForOperationError(node.getToken(),
+                    childCXType);
+    
+            node.setType(childCXType);
+        } else if(opToken.getType() == TokenType.t_bang) {
+            node.setType(CXPrimitiveType.INTEGER);
+        } else {
+            node.setType(childCXType);
+        }
+        
+        node.setLValue(child.isLValue());
     }
     
     private boolean canIncrementOrDecrement(CXType type) {

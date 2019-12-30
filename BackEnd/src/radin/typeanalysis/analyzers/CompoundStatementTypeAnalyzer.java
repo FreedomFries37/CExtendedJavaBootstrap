@@ -7,16 +7,27 @@ import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IncorrectReturnTypeError;
+import radin.typeanalysis.errors.UnreachableCodeError;
 
 public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
     private CXType returnType;
     private boolean createNewScope;
+    private boolean returns;
     
     public CompoundStatementTypeAnalyzer(TypeAugmentedSemanticNode tree, CXType returnType, boolean createNewScope) {
         super(tree);
         this.returnType = returnType;
         this.createNewScope = createNewScope;
     }
+    
+    public boolean isReturns() {
+        return returns;
+    }
+    
+    private void setReturns(boolean returns) {
+        this.returns = returns;
+    }
+    
     
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
@@ -131,9 +142,21 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
         
          */
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
-            StatementAnalyzer analyzer = new StatementAnalyzer(child,returnType);
+            if(isReturns()) throw new UnreachableCodeError();
             
-            if(!determineTypes(analyzer)) return false;
+                StatementAnalyzer analyzer = new StatementAnalyzer(child,returnType);
+            
+            
+            
+            if(!determineTypes(analyzer)){
+                setIsFailurePoint(child);
+                return false;
+            }
+            
+            if(analyzer.isReturns()) {
+                setReturns(analyzer.isReturns());
+            }
+            
         }
         
         

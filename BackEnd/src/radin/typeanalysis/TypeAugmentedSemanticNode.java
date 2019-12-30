@@ -1,21 +1,21 @@
 package radin.typeanalysis;
 
+import radin.compilation.tags.ICompilationTag;
 import radin.interphase.AbstractTree;
 import radin.interphase.lexical.Token;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
-import radin.interphase.semantics.types.compound.CXClassType;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanticNode> {
     
     private AbstractSyntaxNode astNode;
-   
+    
     private TypeAugmentedSemanticNode parent;
     private List<TypeAugmentedSemanticNode> children;
     
@@ -23,13 +23,16 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
     private CXType type;
     
     private boolean isLValue = false;
-   
+    private boolean isFailurePoint = false;
+    
+    private HashSet<ICompilationTag> compilationTags;
+    
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode base) {
         this.astNode = base;
         parent = null;
         children = new LinkedList<>();
-        
+        compilationTags = new HashSet<>();
     }
     
     public boolean isLValue() {
@@ -40,10 +43,19 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         isLValue = LValue;
     }
     
+    public boolean isFailurePoint() {
+        return isFailurePoint;
+    }
+    
+    void setFailurePoint(boolean failurePoint) {
+        isFailurePoint = failurePoint;
+    }
+    
     public TypeAugmentedSemanticNode(AbstractSyntaxNode astNode, TypeAugmentedSemanticNode parent, List<TypeAugmentedSemanticNode> children) {
         this.astNode = astNode;
         setParent(parent);
         addAllChildren(children);
+        compilationTags = new HashSet<>();
     }
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode astNode, List<TypeAugmentedSemanticNode> children) {
@@ -58,12 +70,14 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
        
          */
         addAllChildren(children);
+        compilationTags = new HashSet<>();
     }
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode astNode, TypeAugmentedSemanticNode parent) {
         this.astNode = astNode;
         setParent(parent);
         children = new LinkedList<>();
+        compilationTags = new HashSet<>();
     }
     
     public TypeAugmentedSemanticNode getParent() {
@@ -128,9 +142,8 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
     }
     
     public TypeAugmentedSemanticNode getASTChild(ASTNodeType type) {
-        AbstractSyntaxNode child = astNode.getChild(type);
         for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
-            if(typeAugmentedSemanticNode.astNode == child) return typeAugmentedSemanticNode;
+            if(typeAugmentedSemanticNode.astNode.getType() == type) return typeAugmentedSemanticNode;
         }
         return null;
     }
@@ -166,14 +179,63 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
     
     @Override
     public String toString() {
-        if(!isTypedExpression()) return astNode.toString();
-        if(isLValue()) return astNode.toString() + " -> " + type.toString() + " [L]";
-        return astNode.toString() + " -> " + type.toString() + " [R]";
+        if(isFailurePoint()) {
+            return astNode.toString() + " -- FAILURE POINT";
+        }
+        String output;
+        if(!isTypedExpression()) output = astNode.toString();
+        else {
+            if(isLValue()) return astNode.toString() + " -> " + type.toString() + " [L]";
+            else output = astNode.toString() + " -> " + type.toString() + " [R]";
+        }
+        if(!compilationTags.isEmpty())
+            output += "  compilation tags: " + compilationTags;
+        return output;
     }
     
     @Override
     public List<? extends AbstractTree<TypeAugmentedSemanticNode>> getDirectChildren() {
         return getChildren();
+    }
+    
+    public void addCompilationTag(ICompilationTag tag) {
+        if(!tag.canAttachTo(this)) throw new IllegalArgumentException();
+        compilationTags.add(tag);
+    }
+    
+    
+    public void addCompilationTags(ICompilationTag... tag) {
+        for (ICompilationTag iCompilationTag : tag) {
+            addCompilationTag(iCompilationTag);
+        }
+    }
+    public boolean containsCompilationTag(ICompilationTag tag) {
+        for (ICompilationTag compilationTag : compilationTags) {
+            if(tag.equals(compilationTag)) return true;
+        }
+        return false;
+    }
+    
+    public boolean containsCompilationTags(ICompilationTag... tag) {
+        for (ICompilationTag iCompilationTag : tag) {
+            if(!containsCompilationTag(iCompilationTag)) return false;
+        }
+        return true;
+    }
+    
+    public boolean containsCompilationTag(Class<? extends ICompilationTag> clazz) {
+        for (ICompilationTag compilationTag : compilationTags) {
+            if(clazz.isInstance(compilationTag)) return true;
+        }
+        return false;
+    }
+    
+    public <T extends ICompilationTag> T getCompilationTag(Class<T> clazz) {
+        if(!containsCompilationTag(clazz)) return null;
+        for (ICompilationTag compilationTag : compilationTags) {
+            if(clazz.isInstance(compilationTag)) return (T) compilationTag;
+        }
+        return null;
     }
     
     @Override

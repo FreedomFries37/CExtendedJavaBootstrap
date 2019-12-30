@@ -417,6 +417,14 @@ public class ActionRoutineApplier {
                             );
                             
                             return true;
+                        } else if(node.firstIs(TokenType.t_super)) {
+                            
+                            if(getCatNode("FunctionCall").hasChildren()) throw new IllegalArgumentException();
+                            
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType._super)
+                            );
+                            return true;
                         }
                         return false;
                     }
@@ -483,7 +491,17 @@ public class ActionRoutineApplier {
                             if(object.equals(GLOBAL_NODE)) {
                                 node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.function_call, name,
                                         call));
+                            } /*else if(object.getType() == ASTNodeType.indirection && object.hasChild(ASTNodeType
+                            ._super)) {
+                                
+                                AbstractSyntaxNode inner = new AbstractSyntaxNode(ASTNodeType.field_get, object,
+                                        name);
+                                
+                                node.setSynthesized(
+                                        new AbstractSyntaxNode(ASTNodeType.function_call, inner, call)
+                                );
                             }
+                            */
                             else node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.method_call, object, name,
                                     call));
                         } else {
@@ -501,7 +519,7 @@ public class ActionRoutineApplier {
                         AbstractSyntaxNode[] array = foldList(node, EntryCategory, HeadCatName, TailCatName);
                         
                         
-                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.args_list, array));
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.sequence, array));
                         return true;
                     }
                     case "CastExpression": {

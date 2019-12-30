@@ -12,6 +12,7 @@ import radin.interphase.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IncorrectReturnTypeError;
+import radin.typeanalysis.errors.RedeclarationError;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -50,6 +51,10 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 );
                 
                 if(!determineTypes(fieldAnalyzers)) return false;
+                
+                
+                
+                
             } else if(clsLevelDec.hasASTChild(ASTNodeType.function_definition)) {
                 assert clsLevelDec.getASTChild(ASTNodeType.function_definition).getASTNode() instanceof TypeAbstractSyntaxNode;
                 TypeAbstractSyntaxNode astNode =
@@ -100,13 +105,39 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                     }
                 }
                 
+            } else if(clsLevelDec.hasASTChild(ASTNodeType.constructor_definition)) {
+                TypeAugmentedSemanticNode def = clsLevelDec.getASTChild(ASTNodeType.constructor_definition);
+    
+                List<CXType> parameterTypes = new LinkedList<>();
+                for (AbstractSyntaxNode abstractSyntaxNode :
+                        def.getASTChild(ASTNodeType.parameter_list).getASTNode().getChildList()) {
+                    assert  abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
+                    CXType paramType = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
+                    parameterTypes.add(paramType);
+                }
+                
+                ParameterTypeList typeList = new ParameterTypeList(parameterTypes);
+                
+                if(getCurrentTracker().constructorVisible(cxClassType, typeList)) {
+                    throw new RedeclarationError("constructor for " + cxClassType+ " with parameters" + parameterTypes);
+                }
+                
+                getCurrentTracker().addConstructor(visibility, cxClassType, typeList);
+            
             }
         }
         
-        //STEP 2 -> analyze functions
+        //STEP 2 -> analyze functions and constructors
         List<TypeAugmentedSemanticNode> functions = node.getAllChildren(ASTNodeType.function_definition);
         for (TypeAugmentedSemanticNode function : functions) {
             FunctionTypeAnalyzer analyzer = new FunctionTypeAnalyzer(function, cxClassType);
+            
+            if(!determineTypes(analyzer)) return false;
+        }
+    
+        List<TypeAugmentedSemanticNode> constructors = node.getAllChildren(ASTNodeType.constructor_definition);
+        for (TypeAugmentedSemanticNode constructor : constructors) {
+            ConstructorTypeAnalyzer analyzer = new ConstructorTypeAnalyzer(constructor, cxClassType);
             
             if(!determineTypes(analyzer)) return false;
         }

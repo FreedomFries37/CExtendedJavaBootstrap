@@ -1,14 +1,26 @@
-class rectangle {
-	private double s1;
-	private double s2;
-	private rectangle* next;
+
+class shape {
+
+	virtual public double get_area() {
+		return 0.0;
+	}
+
+	virtual public int get_num_sides() {
+		return 0.0;
+	}
+
+};
+
+class rectangle : shape {
+	double s1;
+	double s2;
 	
 	public rectangle(double s1, double s2) {
 		this->s1 = s1;
 		this->s2 = s2;
 	}
 	
-	public double get_area() {
+	virtual public double get_area() {
 		return this->s1 * this->s2;
 	}
 	
@@ -18,27 +30,47 @@ class rectangle {
 		return -1;
 	}
 	
-	
+	virtual public int get_num_sides() {
+    		return 4;
+    }
 };
 
 class square : rectangle {
-	public square(double s) : super(s1) { }
+	public square(double s) : super(s, s) { }
 	
 	virtual public int get_side(int i) {
-		return 1;
+		double s = this->s1;
+		return super->get_side(1);
 	}
 };
 
+void increment(int* n) {
+	*n = *n + 1;
+	return;
+}
+
+int returnValue() {
+	do {
+
+		if(0) {
+			return 1;
+		}
+	} while(1);
+
+	return 0;
+}
+
 int main() {
 
-	rectangle* r1 = new square(5.0);
-	rectangle r2 = *new square(5.0);
-	
-	square* s2 = (square *) new rectangle(3.0, 2.0);
+
+	square* r1 = new square(5.0);
+
 	
 	double area = r1->get_area();
 	int i = r1->get_side(1);
-	
+
+	const int num_sides = r1->get_num_sides();
+
 	
 	return 0;
 }

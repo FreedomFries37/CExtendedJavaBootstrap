@@ -1,5 +1,6 @@
 package radin.typeanalysis.analyzers;
 
+import radin.compilation.tags.BasicCompilationTag;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
@@ -40,20 +41,28 @@ public class DeclarationsAnalyzer extends TypeAnalyzer {
                 }
             }
             String name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
+            if(parent instanceof CXClassType) {
+                CXClassType superType = ((CXClassType) parent).getParent();
+                if(superType != null) {
+                    if(getCurrentTracker().fieldVisible(superType, name)) {
+                        declaration.getASTChild(ASTNodeType.id).addCompilationTag(BasicCompilationTag.SHADOWING_FIELD_NAME);
+                    }
+                }
+            }
     
             switch (visibility) {
                 case _public: {
-                    getCurrentTracker().addPublic(parent, true, name, declarationType);
+                    getCurrentTracker().addPublicField(parent, name, declarationType);
                     break;
                 }
                 case internal: {
                     assert parent instanceof CXClassType;
-                    getCurrentTracker().addInternal(((CXClassType) parent), true, name, declarationType);
+                    getCurrentTracker().addInternalField(((CXClassType) parent), name, declarationType);
                     break;
                 }
                 case _private: {
                     assert parent instanceof CXClassType;
-                    getCurrentTracker().addPrivate(((CXClassType) parent), true, name, declarationType);
+                    getCurrentTracker().addPrivateField(((CXClassType) parent), name, declarationType);
                     break;
                 }
             }

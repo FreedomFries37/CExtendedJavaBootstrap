@@ -1,0 +1,1 @@
+Load super in as variable in method declarations, super is the virtual table of the parent class

@@ -154,7 +154,7 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
     @Override
     public String toString() {
         if(token == null) return type.toString();
-        if(token.getImage() != null) return type.toString() + " \"" + token.getImage() + "\"";
+        if(token.getImage() != null) return type.toString() + " $" + token.getImage();
         return type.toString() + "::" + token.toString();
     }
     

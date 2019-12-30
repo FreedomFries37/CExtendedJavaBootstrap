@@ -67,6 +67,14 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 
                 
+            } else if(declaration.getASTType() == ASTNodeType.function_description) {
+                declarationType =
+                        ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+    
+                name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                
+                getCurrentTracker().addFunction(name, declarationType);
+                return true;
             } else {
                 return false;
             }

@@ -15,7 +15,7 @@ public enum ASTNodeType {
     literal("literal"),
     id("id"),
     string("string"),
-    args_list("sequence"),
+    sequence("sequence"),
     typename("type"),
     object_interaction("object_interact"),
     parameter_list("params"),
@@ -70,7 +70,8 @@ public enum ASTNodeType {
     constructor_definition("constructor_definition"),
     _virtual("virtual"),
     _super("super"),
-    inherit("inherit")
+    inherit("inherit"),
+    
     ;
     
     

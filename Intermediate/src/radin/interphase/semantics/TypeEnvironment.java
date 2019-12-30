@@ -355,17 +355,17 @@ public class TypeEnvironment {
                 String image = ast.getChild(ASTNodeType.inherit)
                         .getChild(ASTNodeType.typename).getToken().getImage();
                 CXClassType parent = ((CXClassType) getNamedCompoundType(image));
-                cxClassType = new CXClassType(name, parent, fieldDeclarations, methods, new LinkedList<>());
+                cxClassType = new CXClassType(name, parent, fieldDeclarations, methods, new LinkedList<>(), this);
                 
                 
             }
-            else cxClassType = new CXClassType(name, fieldDeclarations, methods, new LinkedList<>());
+            else cxClassType = new CXClassType(name, fieldDeclarations, methods, new LinkedList<>(), this);
             
             Iterator<Visibility> visibilityIterator = constructorVisibilities.iterator();
             for (AbstractSyntaxNode dec: constructorDefinitions) {
                 AbstractSyntaxNode params = dec.getChild(ASTNodeType.parameter_list);
                 AbstractSyntaxNode compound = dec.getChild(ASTNodeType.compound_statement);
-                if(dec.hasChild(ASTNodeType.args_list)) {
+                if(dec.hasChild(ASTNodeType.sequence)) {
                     
                     AbstractSyntaxNode priorAST = dec.getChild(2);
                     CXConstructor prior;
@@ -391,6 +391,7 @@ public class TypeEnvironment {
             }
             cxClassType.addConstructors(constructors);
             createdClasses.add(cxClassType);
+            cxClassType.setEnvironment(this);
             addNamedCompoundType(cxClassType);
             return cxClassType;
             
@@ -500,7 +501,7 @@ public class TypeEnvironment {
                                             AbstractSyntaxNode compound, CXConstructor prior) {
         List<CXParameter> parameters = createParameters(params);
         
-        return new CXConstructor(parent, visibility, prior, parameters, compound);
+        return new CXConstructor(parent, visibility, parameters, compound);
     }
     
     private List<CXParameter> createParameters(AbstractSyntaxNode ast) {

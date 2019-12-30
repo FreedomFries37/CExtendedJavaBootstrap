@@ -422,7 +422,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseDoubleOr(child)) return false;
                 if(!parseDoubleOrTail(child)) return false;
                 if(!parseExpressionTail(child)) return false;
@@ -468,7 +469,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseDoubleAnd(child)) return false;
                 if(!parseDoubleAndTail(child)) return false;
                 break;
@@ -511,6 +513,7 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_literal:
             case t_id:
+            case t_super:
             case t_string:
             case t_sizeof:
             case t_new:{
@@ -558,7 +561,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseNot(child)) return false;
                 if(!parseNotTail(child)) return false;
                 break;
@@ -603,7 +607,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseAnd(child)) return false;
                 if(!parseAndTail(child)) return false;
                 break;
@@ -648,7 +653,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseEquation(child)) return false;
                 if(!parseEquationTail(child)) return false;
                 break;
@@ -693,7 +699,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseC(child)) return false;
                 if(!parseCTail(child)) return false;
                 break;
@@ -742,7 +749,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseG(child)) return false;
                 if(!parseGTail(child)) return false;
                 break;
@@ -793,7 +801,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseT(child)) return false;
                 if(!parseTTail(child)) return false;
                 break;
@@ -842,7 +851,8 @@ public class Parser extends BasicParser {
             case t_id:
             case t_string:
             case t_sizeof:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseFactor(child)) return false;
                 if(!parseFactorTail(child)) return false;
                 break;
@@ -904,7 +914,8 @@ public class Parser extends BasicParser {
                 break;
             }
             case t_id:
-            case t_new:{
+            case t_new:
+            case t_super:{
                 if(!parseAtom(child)) return false;
                 if(!parseAtomTail(child)) return false;
                 break;
@@ -966,7 +977,8 @@ public class Parser extends BasicParser {
                 if(!consume(TokenType.t_rpar)) return error("Missing matching )");
                 break;
             }
-            case t_id: {
+            case t_id:
+            case t_super:{
                 consumeAndAddAsLeaf(child);
                 if(!parseFunctionCall(child)) return false;
                 break;
@@ -1698,7 +1710,7 @@ public class Parser extends BasicParser {
         if(token.getType() != TokenType.t_id) return false;
         child.addChild(new LeafNode(token));
         getNext();
-       // if(!consumeAndAddAsLeaf(TokenType.t_id, child)) return false;
+        // if(!consumeAndAddAsLeaf(TokenType.t_id, child)) return false;
         
         
         
@@ -1753,7 +1765,7 @@ public class Parser extends BasicParser {
     
     private boolean parseClassTopLevelDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ClassTopLevelDeclaration");
-    
+        
         consumeAndAddAsLeaf(TokenType.t_virtual, child);
         attemptParse(this::parseVisibility, child);
         
@@ -1791,7 +1803,12 @@ public class Parser extends BasicParser {
         
         if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) return false;
         if(!consume(TokenType.t_lpar)) return false;
-        if(!parseParameterList(child)) return false;
+        if(!match(TokenType.t_rpar)) {
+            if (!parseParameterList(child)) return error("Could not parse parameter list");
+        } else {
+            // add empty parameter list
+            child.addChild(new CategoryNode("ParameterList"));
+        }
         if(!consume(TokenType.t_rpar)) return error("Missing matching )");
         if(consume(TokenType.t_colon)) {
             if(match(TokenType.t_id)) {
@@ -1803,7 +1820,9 @@ public class Parser extends BasicParser {
             }
             consumeAndAddAsLeaf(child);
             if(!consume(TokenType.t_lpar)) return false;
-            if(!parseArgsList(child)) return false;
+            
+            if (!parseArgsList(child)) return error("Could not parse args list");
+            
             if(!consume(TokenType.t_rpar)) return error("Missing matching )");
         }
         if(!parseCompoundStatement(child)) return false;

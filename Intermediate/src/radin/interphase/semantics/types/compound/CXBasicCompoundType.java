@@ -24,7 +24,7 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
     }
     
     @Override
-    public boolean is(CXType other, TypeEnvironment e) {
+    public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof CXCompoundType)) return false;
         if(this.isAnonymous() || ((CXCompoundType) other).isAnonymous()) return false;
         

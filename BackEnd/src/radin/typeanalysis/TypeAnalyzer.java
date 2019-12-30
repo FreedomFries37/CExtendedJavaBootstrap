@@ -5,6 +5,8 @@ import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.ConstantType;
 import radin.interphase.semantics.types.compound.CXClassType;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 public abstract class TypeAnalyzer implements ITypeAnalyzer{
@@ -14,6 +16,11 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     private TypeAugmentedSemanticNode tree;
     
     private static TypeEnvironment environment;
+    private static List<Error> errors;
+    
+    static {
+        errors = new LinkedList<>();
+    }
     
     public TypeAnalyzer(TypeAugmentedSemanticNode tree) {
         this.tree = tree;
@@ -63,9 +70,18 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     
     @Override
     public boolean determineTypes() {
-        return determineTypes(tree);
+        try {
+            return determineTypes(tree);
+        }catch (Error e) {
+            setIsFailurePoint(tree);
+            errors.add(e);
+            return false;
+        }
     }
     
+    public static List<Error> getErrors() {
+        return errors;
+    }
     
     /**
      * Checks if two types are equivalent, with const stripping for going from non-const to const
@@ -84,5 +100,9 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     public <T extends TypeAnalyzer> boolean determineTypes(T other) {
         ((TypeAnalyzer) other).trackerStack = trackerStack;
         return other.determineTypes();
+    }
+    
+    protected void setIsFailurePoint(TypeAugmentedSemanticNode node) {
+        node.setFailurePoint(true);
     }
 }
