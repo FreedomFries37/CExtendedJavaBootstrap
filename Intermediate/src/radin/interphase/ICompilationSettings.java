@@ -93,4 +93,12 @@ public interface ICompilationSettings {
      * @param reduceIndirection
      */
     void setReduceIndirection(boolean reduceIndirection);
+    
+    boolean isShowErrorStackTrace();
+    
+    void setShowErrorStackTrace(boolean showErrorStackTrace);
+    
+    int getTabSize();
+    
+    void setTabSize(int tabSize);
 }

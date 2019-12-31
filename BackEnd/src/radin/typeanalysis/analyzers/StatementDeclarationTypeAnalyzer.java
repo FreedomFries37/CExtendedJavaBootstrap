@@ -6,10 +6,12 @@ import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.compound.CXCompoundType;
 import radin.interphase.semantics.types.compound.CXFunctionPointer;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IncorrectTypeError;
 import radin.typeanalysis.errors.TypeNotDefinedError;
+import radin.typeanalysis.errors.VoidTypeError;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +35,8 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 declarationType =
                         ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+                
+                if(is(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
                 
                 
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {

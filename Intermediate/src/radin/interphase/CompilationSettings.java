@@ -12,6 +12,11 @@ public class CompilationSettings implements ICompilationSettings {
     
     private boolean reduceIndirection = false;
     
+    private boolean showErrorStackTrace = false;
+    
+    private int tabSize = 4;
+    
+    
     @Override
     public void setOptimizationLevel(int value) {
         optimizationLevel = value;
@@ -78,5 +83,25 @@ public class CompilationSettings implements ICompilationSettings {
     @Override
     public void setReduceIndirection(boolean reduceIndirection) {
         this.reduceIndirection = reduceIndirection;
+    }
+    
+    @Override
+    public boolean isShowErrorStackTrace() {
+        return showErrorStackTrace;
+    }
+    
+    @Override
+    public void setShowErrorStackTrace(boolean showErrorStackTrace) {
+        this.showErrorStackTrace = showErrorStackTrace;
+    }
+    
+    @Override
+    public int getTabSize() {
+        return tabSize;
+    }
+    
+    @Override
+    public void setTabSize(int tabSize) {
+        this.tabSize = tabSize;
     }
 }

@@ -1,11 +1,14 @@
 package radin.typeanalysis;
 
+import radin.interphase.CompilationError;
 import radin.interphase.ICompilationSettings;
+import radin.interphase.lexical.Token;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.wrapped.ConstantType;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.methods.CXMethod;
+import radin.typeanalysis.errors.RecoverableError;
 
 import java.util.*;
 
@@ -17,7 +20,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     
     private static TypeEnvironment environment;
     private static ICompilationSettings compilationSettings;
-    private static List<Error> errors;
+    private static List<CompilationError<?>> errors;
     
     private static HashMap<CXMethod, TypeAugmentedSemanticNode> methods;
     
@@ -90,16 +93,26 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     public boolean determineTypes() {
         try {
             return determineTypes(tree);
-        }catch (Error e) {
+        }catch (RecoverableError e) {
+            Token closestToken = tree.findFailureToken();
+            CompilationError<Error> error = new CompilationError<>(e, closestToken);
+            errors.add(error);
+            return true;
+        } catch (Error e) {
             setIsFailurePoint(tree);
-            errors.add(e);
+            Token closestToken = tree.findFailureToken();
+            CompilationError<Error> error = new CompilationError<>(e, closestToken);
+            errors.add(error);
             return false;
         }
     }
     
-    public static List<Error> getErrors() {
+    
+    public static List<CompilationError<?>> getErrors() {
         return errors;
     }
+    
+    
     
     /**
      * Checks if two types are equivalent, with const stripping for going from non-const to const

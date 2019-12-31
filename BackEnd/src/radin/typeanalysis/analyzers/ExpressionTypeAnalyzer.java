@@ -126,6 +126,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     child.getCXType());
             assert child.getCXType() instanceof PointerType;
             
+            if(is(((PointerType) child.getCXType()).getSubType(), CXPrimitiveType.VOID)) throw new VoidDereferenceError();
+            
             if(child.getASTType() == ASTNodeType.constructor_call) {
                 node.addCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE);
             }

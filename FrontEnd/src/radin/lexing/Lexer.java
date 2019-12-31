@@ -1,5 +1,6 @@
 package radin.lexing;
 
+import radin.interphase.ICompilationSettings;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 
@@ -58,8 +59,10 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                 
                 output = output.replaceAll("(\\W)" + thisArg + "(\\W)", "$1" + replace + "$2");
                 output = output.replaceAll("##" + thisArg + "\\W", replace + "$1");
-                output = output.replaceAll("\\W" + thisArg + "##", "$1" + replace);
-                output = output.replaceAll("##" + thisArg + "##", replace);
+                output = output.replaceAll("##" + thisArg + "$", replace);
+                output = output.replaceAll("\\W" + thisArg + "##", "$1" + replace + "##");
+                output = output.replaceAll("^" + thisArg + "##", replace + "##");
+                //output = output.replaceAll("##" + thisArg + "##", replace);
             }
             if(isVararg) {
                 List<String> extraArgs = new LinkedList<>();
@@ -89,10 +92,17 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
     private int tokenIndex;
     private boolean inIfStatement;
     private boolean skipToIfFalse;
-    
+    private String filename;
     private HashMap<String, Define> defines;
+    private static ICompilationSettings compilationSettings;
     
+    public static ICompilationSettings getCompilationSettings() {
+        return compilationSettings;
+    }
     
+    public static void setCompilationSettings(ICompilationSettings compilationSettings) {
+        Lexer.compilationSettings = compilationSettings;
+    }
     
     public int getTokenIndex() {
         return tokenIndex;
@@ -103,8 +113,9 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
         this.tokenIndex = tokenIndex;
     }
     
-    public Lexer(String inputString) {
-        this.inputString = inputString.trim();
+    public Lexer(String filename, String inputString) {
+        this.inputString = inputString;
+        this.filename = filename;
         createdTokens = new LinkedList<>();
         tokenIndex = -1;
         column = 1;
@@ -124,6 +135,8 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
         if(getChar() == '\n') {
             ++lineNumber;
             column = 1;
+        } else if(getChar() == '\t' ) {
+            column += getCompilationSettings().getTabSize();
         } else {
             column++;
         }
@@ -164,12 +177,28 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
         char[] chars = s.toCharArray();
         for (int i = chars.length - 1; i >= 0; i--) {
             currentIndex--;
+            column--;
             if(!match(chars[i])) {
                 currentIndex++;
+                column--;
+                column++;
                 return;
+            } else if(chars[i] == '\n') {
+                lineNumber--;
+                column = getColumn() + 1;
             }
             
         }
+    }
+    
+    private int getColumn() {
+        int output = 1;
+        int fakeIndex = currentIndex- 1;
+        while(fakeIndex > 0 && inputString.charAt(fakeIndex) != '\n') {
+            fakeIndex--;
+            output++;
+        }
+        return output;
     }
     
     private void insertString(String s) {
@@ -210,7 +239,7 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
             case "#define": {
                 
                 Pattern function = Pattern.compile("(?<id>[a-zA-Z]\\w*)(?<isfunc>\\(\\s*(?<args>(([a-zA-Z]\\w*\\s*(," +
-                        "\\s*[a-zA-Z]\\w*\\s)*)(,\\s*\\.\\.\\.\\s*)?)|(\\s*\\.\\.\\.\\s*)?)\\))?");
+                        "\\s*[a-zA-Z]\\w*\\s*)*)(,\\s*\\.\\.\\.\\s*)?)|(\\s*\\.\\.\\.\\s*)?)\\))?");
                 
                 Matcher matcher = function.matcher(arguments);
                 if(matcher.find()) {
@@ -265,6 +294,7 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                 if(!inIfStatement) throw new IllegalArgumentException();
                 skipToIfFalse = false;
                 inIfStatement = false;
+                return;
             }
             case "#include": {
                 if(!(arguments.charAt(0) == arguments.charAt(arguments.length() - 1) &&
@@ -304,10 +334,16 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                     e.printStackTrace();
                     System.exit(-1);
                 }
-                
-                String fullText = text.toString();
+                int restoreLineNumber = lineNumber;
+                String fullText = "#line " + 1 + " \""+ filename + "\"\n" + text.toString() +
+                        "\n#line " + restoreLineNumber + " \""+ this.filename + "\"\n";
                 replaceString(originalString, fullText);
-                
+                return;
+            }
+            case "#line": {
+                //int lineNumber = Integer.parseInt(arguments);
+                //this.lineNumber = lineNumber;
+                return;
             }
             default:
                 return;
@@ -323,12 +359,25 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
         return getNextChars(str.length()).equals(str);
     }
     
+    public String getInputString() {
+        return inputString;
+    }
+    
     private Token singleLex() {
-        String image = "";
+       
         
         
         while(true) {
+            String image = "";
+            
             do {
+                if (consume("//")) {
+                    while (!consume("\n")) {
+                        consumeChar();
+                    }
+                } else if (consume("/*")) {
+                    while (!consume("*/")) consumeChar();
+                }
                 //(skipToIfFalse && getChar() != '#') &&
                 while ( getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
                     consumeChar();

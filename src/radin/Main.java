@@ -7,7 +7,9 @@ import java.nio.file.Paths;
 
 import radin.compilation.AbstractCompiler;
 import radin.compilation.FileCompiler;
+import radin.interphase.CompilationError;
 import radin.interphase.CompilationSettings;
+import radin.interphase.ICompilationSettings;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.compound.CXClassType;
@@ -22,6 +24,19 @@ import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.analyzers.ProgramTypeAnalyzer;
 
 public class Main {
+    
+    private static ICompilationSettings settings;
+    
+    public static ICompilationSettings getSettings() {
+        return settings;
+    }
+    
+    public static void setCompilationSettings(ICompilationSettings settings) {
+        Main.settings = settings;
+        TypeAnalyzer.setCompilationSettings(settings);
+        AbstractCompiler.setSettings(settings);
+        Lexer.setCompilationSettings(settings);
+    }
     
     public static void main(String[] args) {
         System.out.println("Testing out lexer");
@@ -56,8 +71,12 @@ public class Main {
         
         String outputFile = filename.replace(".cx", ".c");
     
-        String fullText = text.toString();
-        Lexer lex = new Lexer(fullText);
+        CompilationSettings compilationSettings = new CompilationSettings();
+        compilationSettings.setShowErrorStackTrace(false);
+        setCompilationSettings(compilationSettings);
+    
+        String fullText = text.toString().replace("\t", " ".repeat(compilationSettings.getTabSize()));
+        Lexer lex = new Lexer(filename, fullText);
         for (Token token : lex) {
             System.out.println(token);
         }
@@ -65,6 +84,20 @@ public class Main {
         Parser parser = new Parser(lex);
         CategoryNode program = parser.parse();
         program.printTreeForm();
+        
+        if(args.length >= 2) {
+            if(args[1].equals("-p")) {
+                File preprocesserOutput = new File(filename.replace(".cx", ".cxp"));
+                try {
+                    FileWriter fileWriter = new FileWriter(preprocesserOutput);
+                    fileWriter.write(lex.getInputString());
+                    fileWriter.flush();
+                    fileWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
@@ -79,8 +112,8 @@ public class Main {
                 System.out.println("applier.noTypeErrors() = " + applier.noTypeErrors());
                 
                 TypeAnalyzer.setEnvironment(environment);
-                CompilationSettings compilationSettings = new CompilationSettings();
-                TypeAnalyzer.setCompilationSettings(compilationSettings);
+                
+                
                 TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(completed, environment);
                 tasTree.printTreeForm();
                 
@@ -89,23 +122,27 @@ public class Main {
                     boolean determineTypes = analyzer.determineTypes();
                     System.out.println("analyzer.determineTypes() = " + determineTypes);
                     tasTree.printTreeForm();
+                    
+                    
                     if(!determineTypes) {
-                        for (Error error : TypeAnalyzer.getErrors()) {
-                            System.err.println(error.toString());
-                        }
+                        ErrorReader errorReader = new ErrorReader(filename, lex.getInputString(),
+                                TypeAnalyzer.getErrors());
+                        errorReader.readErrors();
+                    } else {
+    
+    
+                        File output = new File(outputFile);
+                        output.createNewFile();
+    
+    
+                        FileCompiler compiler = new FileCompiler(output);
+                        System.out.println("compiler.compile(tasTree.getHead()) = " + compiler.compile(tasTree.getHead()));
                     }
                 } catch (Error e) {
                     tasTree.printTreeForm();
                     e.printStackTrace();
                 }
     
-                File output = new File(outputFile);
-                output.createNewFile();
-    
-                AbstractCompiler.setSettings(compilationSettings);
-    
-                FileCompiler compiler = new FileCompiler(output);
-                System.out.println("compiler.compile(tasTree.getHead()) = " + compiler.compile(tasTree.getHead()));
                 
                 /*
                 for (CXClassType createdClass : environment.getCreatedClasses()) {

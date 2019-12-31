@@ -8,5 +8,6 @@ struct header_struct {
 
 int get_value(int i);
 
+int rex = 4;
 
-##endif
+#endif

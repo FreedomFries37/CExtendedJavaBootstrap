@@ -141,6 +141,7 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
         }
         
          */
+        boolean output = true;
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
             if(isReturns()) throw new UnreachableCodeError();
             
@@ -150,7 +151,7 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
             
             if(!determineTypes(analyzer)){
                 setIsFailurePoint(child);
-                return false;
+                output = false;
             }
             
             if(analyzer.isReturns()) {
@@ -161,6 +162,6 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
         
         
         if(createNewScope) releaseTrackingClosure();
-        return true;
+        return output;
     }
 }

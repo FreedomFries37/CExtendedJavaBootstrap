@@ -253,4 +253,34 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         output.add(this);
         return output;
     }
+    
+    public Token findFirstToken() {
+        if(this.getASTNode().hasToken()) return this.getASTNode().getToken();
+        for (TypeAugmentedSemanticNode child : getChildren()) {
+            Token childFirst = child.findFirstToken();
+            if(childFirst != null) return childFirst;
+        }
+        return null;
+    }
+    
+    public TypeAugmentedSemanticNode getDeepestFailureNode() {
+        TypeAugmentedSemanticNode output = null;
+        for (TypeAugmentedSemanticNode child : children) {
+            TypeAugmentedSemanticNode deepestFailureNode = child.getDeepestFailureNode();
+            if(deepestFailureNode != null) {
+                output = deepestFailureNode;
+                break;
+            }
+        }
+        if(output == null && this.isFailurePoint()) {
+            output = this;
+        }
+        return output;
+    }
+    
+    public Token findFailureToken() {
+        TypeAugmentedSemanticNode deepestFailureNode = getDeepestFailureNode();
+        if(deepestFailureNode == null) return null;
+        return deepestFailureNode.findFirstToken();
+    }
 }
