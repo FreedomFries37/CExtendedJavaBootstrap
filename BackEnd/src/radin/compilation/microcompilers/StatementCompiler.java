@@ -78,12 +78,13 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                 if (!expressionCompiler.compile(node.getChild(0))) {
                     return false;
                 }
-                print(")");
+                print(") ");
                 if(!compile(node.getChild(1))) return false;
                 if(node.containsCompilationTag(BasicCompilationTag.HAS_ELSE)) {
-                    print("else ");
+                    print(" else ");
+                    if(!compile(node.getChild(2))) return false;
                 }
-                if(!compile(node.getChild(2))) return false;
+                
                 break;
             }
             case while_cond: {
@@ -106,8 +107,6 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
             case for_cond: {
                 print("for (");
                 if(!compile(node.getChild(0)))return false;
-                print(" " +
-                        "");
                 if(!expressionCompiler.compile(node.getChild(1))) return false;
                 print("; ");
                 if(!expressionCompiler.compile(node.getChild(2))) return false;
@@ -129,7 +128,7 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                 CompoundStatementCompiler compoundStatementCompiler = new CompoundStatementCompiler(getPrintWriter(),
                         getIndent() + 1);
                 compoundStatementCompiler.compile(node);
-                println("}");
+                print("}");
                 break;
             }
             case empty: {

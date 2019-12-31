@@ -20,12 +20,16 @@ public class ClassCompiler extends AbstractIndentedOutputSingleOutputCompiler {
     @Override
     public boolean compile() {
         cxClassType.generateSuperMethods(getSettings().getvTableName());
-    
+        CXStructType structEquivalent = cxClassType.getStructEquivalent();
+        print("typedef ");
+        print(structEquivalent.getTypeIndirection().generateCDefinition(cxClassType.getTypeName()));
+        println(";");
+        
         CXStructType vTable = cxClassType.getVTable();
         print(vTable.generateCDefinition());
         println(";");
     
-        CXStructType structEquivalent = cxClassType.getStructEquivalent();
+        
         print(structEquivalent.generateCDefinition());
         println(";");
     

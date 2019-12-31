@@ -92,7 +92,9 @@ public class CXMethod implements CXEquivalent {
     }
     
     public CXFunctionPointer getFunctionPointer() {
-        return new CXFunctionPointer(returnType, getParameterTypes());
+        List<CXType> parameterTypes = new LinkedList<>(getParameterTypes());
+        parameterTypes.add(0, new PointerType(CXPrimitiveType.VOID));
+        return new CXFunctionPointer(returnType, parameterTypes);
     }
     
     public PointerType getThisType() {

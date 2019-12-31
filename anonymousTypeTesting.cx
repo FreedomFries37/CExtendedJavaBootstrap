@@ -1,3 +1,6 @@
+#include \
+<string.h>
+
 class shape;
 class shape {
 
@@ -61,6 +64,9 @@ int returnValue() {
 		if(0) {
 			return 1;
 		}
+
+		if(1); else for(;;);
+
 	} while(1);
 
 	return 0;

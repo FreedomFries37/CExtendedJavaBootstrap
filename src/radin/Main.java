@@ -1,8 +1,6 @@
 package radin;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -27,15 +25,29 @@ public class Main {
     
     public static void main(String[] args) {
         System.out.println("Testing out lexer");
-        String text;
+        
         String filename = "classTest.cx";
         
         if(args.length > 0) {
             filename = args[0];
         }
+    
+        StringBuilder text = new StringBuilder();
         try {
+    
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
             
-            text = new String(Files.readAllBytes(Paths.get(filename)));
+            String line;
+            while((line = bufferedReader.readLine()) != null) {
+                
+                if(!line.endsWith("\\")) {
+                    text.append(line);
+                    text.append("\n");
+                } else {
+                    text.append(line, 0, line.length() - 1);
+                    text.append(' ');
+                }
+            }
             
         } catch (IOException e) {
             e.printStackTrace();
@@ -43,8 +55,9 @@ public class Main {
         }
         
         String outputFile = filename.replace(".cx", ".c");
-        
-        Lexer lex = new Lexer(text);
+    
+        String fullText = text.toString();
+        Lexer lex = new Lexer(fullText);
         for (Token token : lex) {
             System.out.println(token);
         }

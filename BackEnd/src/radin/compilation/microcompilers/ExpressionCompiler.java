@@ -211,6 +211,9 @@ public class ExpressionCompiler extends AbstractCompiler {
             case constructor_call: {
             
             }
+            case empty: {
+                break;
+            }
             default:
                 return false;
         }

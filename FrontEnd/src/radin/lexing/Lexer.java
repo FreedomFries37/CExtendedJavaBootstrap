@@ -4,27 +4,26 @@ import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 
 import java.io.EOFException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Lexer implements Iterable<Token> {
     
     class LexIterator implements Iterator<Token> {
         private List<Token> createdTokensInitial;
         private int index = 0;
-    
+        
         public LexIterator(List<Token> createdTokensInitial) {
             this.createdTokensInitial = new LinkedList<>(createdTokensInitial);
         }
-    
+        
         @Override
         public boolean hasNext() {
             if(index < createdTokensInitial.size()) return true;
             return currentIndex < inputString.length();
         }
-    
+        
         @Override
         public Token next() {
             if(index < createdTokensInitial.size()) {
@@ -32,6 +31,63 @@ public class Lexer implements Iterable<Token> {
             }
             return getNext();
         }
+    }
+    
+    private class Define {
+        private String identifier;
+        public final boolean hasArgs;
+        public final int numArgs;
+        public final boolean isVararg;
+        private List<String> args;
+        private String replacementString;
+        
+        public Define(String identifier) {
+            this.identifier = identifier;
+            numArgs = 0;
+            isVararg = false;
+            hasArgs = false;
+        }
+        
+        public Define(String identifier, String replacementString) {
+            this.identifier = identifier;
+            this.replacementString = replacementString;
+            numArgs = 0;
+            isVararg = false;
+            hasArgs = false;
+        }
+        
+        
+        public Define(String identifier, boolean isVararg, List<String> args, String replacementString) {
+            this.identifier = identifier;
+            numArgs =args.size();
+            hasArgs = true;
+            this.isVararg = isVararg;
+            this.args = args;
+            this.replacementString = replacementString;
+        }
+        
+        public String invoke() {
+            if(numArgs != 0) throw new IllegalArgumentException();
+            return replacementString;
+        }
+        
+        public String invoke(String[] args) {
+            if(args.length < numArgs) throw new IllegalArgumentException();
+            if(!isVararg && args.length > numArgs) throw new IllegalArgumentException();
+            
+            String output = replacementString;
+            for (int i = 0; i < this.args.size(); i++) {
+                String thisArg = this.args.get(i);
+                String replace = args[i].trim().replaceAll("\\s+", " ");
+                
+                output = output.replaceAll("\\s" + thisArg + "\\s", replace);
+                output = output.replaceAll("##" + thisArg + "\\s", replace);
+                output = output.replaceAll("##" + thisArg + "##", replace);
+            }
+            
+            return output;
+        }
+        
     }
     
     private String inputString;
@@ -43,6 +99,8 @@ public class Lexer implements Iterable<Token> {
     private int lineNumber;
     private List<Token> createdTokens;
     private int tokenIndex;
+    
+    private HashMap<String, Define> defines;
     
     public int getTokenIndex() {
         return tokenIndex;
@@ -57,11 +115,12 @@ public class Lexer implements Iterable<Token> {
         this.inputString = inputString.trim();
         createdTokens = new LinkedList<>();
         tokenIndex = -1;
-        column = 0;
+        column = 1;
         lineNumber = 1;
-        prevColumn = 0;
+        prevColumn = 1;
         prevLineNumber = 1;
         maxIndex = this.inputString.length();
+        defines = new HashMap<>();
     }
     
     private char getChar() {
@@ -72,7 +131,7 @@ public class Lexer implements Iterable<Token> {
     private char consumeChar() {
         if(getChar() == '\n') {
             ++lineNumber;
-            column = 0;
+            column = 1;
         } else {
             column++;
         }
@@ -94,11 +153,11 @@ public class Lexer implements Iterable<Token> {
     }
     
     private boolean consume(String str) {
-       if(match(str)) {
-           consumeNextChars(str.length());
-           return true;
-       }
-       return false;
+        if(match(str)) {
+            consumeNextChars(str.length());
+            return true;
+        }
+        return false;
     }
     
     private boolean consume(char c) {
@@ -107,6 +166,76 @@ public class Lexer implements Iterable<Token> {
             return true;
         }
         return false;
+    }
+    
+    private void unconsume(String s) {
+        char[] chars = s.toCharArray();
+        for (int i = chars.length - 1; i >= 0; i--) {
+            if(!match(chars[i])) return;
+            currentIndex--;
+        }
+    }
+    
+    private void insertString(String s) {
+        inputString = inputString.substring(0, currentIndex) + s + inputString.substring(currentIndex);
+    }
+    
+    private void removeString(int length) {
+        inputString = inputString.substring(0, currentIndex) + inputString.substring(currentIndex + length);
+    }
+    
+    private void replaceString(String original, String replace) {
+        if(match(original)) {
+            removeString(original.length());
+            insertString(replace);
+        }
+    }
+    
+    private void invokePreprocessorDirective(String directiveString) {
+        if(!directiveString.startsWith("#")) return;
+        String directive = directiveString.substring(0, directiveString.indexOf(' '));
+        String arguments = directiveString.substring(directiveString.indexOf(directive)).trim();
+        
+        switch (directive) {
+            case "#define": {
+                Pattern function = Pattern.compile("(?<id>[a-zA-Z]\\w*)(?<isfunc>\\(\\s*(?<args>(([a-zA-Z]\\w*\\s*(," +
+                        "\\s*[a-zA-Z]\\w*\\s)*)(,\\s*\\.\\.\\.\\s*)?)|(\\s*\\.\\.\\.\\s*)?)\\))");
+                
+                Matcher matcher = function.matcher(arguments);
+                if(matcher.find()) {
+                    String rest = arguments.substring(matcher.end()).trim();
+                    String identifier = matcher.group("id");
+                    boolean isFunc = !matcher.group("isfunc").isEmpty();
+                    Define define;
+                    if(isFunc) {
+                        String argsFull = matcher.group("args");
+                        String[] args = argsFull.split(",");
+                        List<String> defArgs = new LinkedList<>();
+                        boolean isVarArg = false;
+                        for (String arg : args) {
+                            if(arg.equals("...")) {
+                                isVarArg = true;
+                            } else {
+                                defArgs.add(arg);
+                            }
+                        }
+                        define = new Define(identifier, isVarArg, defArgs, rest);
+                    } else {
+                        if(rest.isEmpty() || rest.isBlank())
+                            define = new Define(identifier);
+                        else
+                            define = new Define(identifier, rest);
+                    }
+                    
+                    defines.put(identifier, define);
+                }
+                return;
+            }
+            
+            
+            default:
+                return;
+        }
     }
     
     private boolean match(char c) {
@@ -120,28 +249,38 @@ public class Lexer implements Iterable<Token> {
     private Token singleLex() {
         String image = "";
         
-       
         
-        while(getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
-            consumeChar();
-            if(consume("//") || consume("#")) {
-                while (!consume(System.lineSeparator())) {
-                    consumeChar();
+        
+        do {
+            while (getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
+                consumeChar();
+                if (consume("//")) {
+                    while (!consume(System.lineSeparator())) {
+                        consumeChar();
+                    }
+                } else if (consume("/*")) {
+                    while (!consume("*/")) consumeChar();
                 }
-            }else if(consume("/*")) {
-                while (!consume("*/")) consumeChar();
             }
-        }
+            
+            if (getChar() == '#') {
+                if (column != 1) return null;
+                String preprocessorDirective = "";
+                while(getChar() != '\n') {
+                    preprocessorDirective += consumeChar();
+                }
+                preprocessorDirective = preprocessorDirective.replaceAll("\\s+", " ");
+                invokePreprocessorDirective(preprocessorDirective);
+                
+                consumeChar();
+            } else break;
+        }while(true);
         
-        while(getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
-            consumeChar();
-        }
-    
         if(getChar() == '\0') {
             return new Token(TokenType.t_eof);
         }
         
-       
+        
         
         if(getChar() == '"') {
             consumeChar();
@@ -189,7 +328,15 @@ public class Lexer implements Iterable<Token> {
             while(Character.isLetter(getChar()) || getChar() == '_' || Character.isDigit(getChar())) {
                 image += consumeChar();
             }
-    
+            
+            if(defines.containsKey(image)) {
+                Define define = defines.get(image);
+                
+                
+                
+            }
+            
+            
             if(image.equals("char")) {
                 return new Token(TokenType.t_char);
             }else if(image.equals("const")) {
