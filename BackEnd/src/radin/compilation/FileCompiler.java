@@ -140,7 +140,9 @@ public class FileCompiler extends AbstractCompiler {
                                 return false;
                         }
                         println(";");
+                        
                     }
+                    break;
                 }
                 case class_type_definition: {
                     CXClassType cxClass = (CXClassType) ((TypeAbstractSyntaxNode) topLevelDeclaration.getASTNode()).getCxType();

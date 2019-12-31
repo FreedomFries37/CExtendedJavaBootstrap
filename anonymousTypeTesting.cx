@@ -1,5 +1,4 @@
-#include \
-<string.h>
+
 
 class shape;
 class shape {
@@ -73,6 +72,7 @@ int returnValue() {
 }
 
 int main() {
+	int max = MAX (3,5);
 
 
 	square* r1 = new square(5.0);
