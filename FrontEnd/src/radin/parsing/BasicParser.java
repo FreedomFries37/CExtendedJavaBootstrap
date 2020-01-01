@@ -15,8 +15,11 @@ public abstract class BasicParser {
     protected enum AttemptStatus {
         PARSED,
         ROLLBACK,
-        DESYNC
+        DESYNC;
+        
+        
     }
+    public class IllegalAttemptStatus extends Error {}
     
     protected Lexer lexer;
     protected Stack<Integer> states;
@@ -140,16 +143,44 @@ public abstract class BasicParser {
             if(!forceParse.peek()) {
                 applyState();
                 suppressErrors.pop();
+                forceParse.pop();
                 return AttemptStatus.ROLLBACK;
             } else {
-                suppressErrors.pop();
                 popState();
+                suppressErrors.pop();
+                forceParse.pop();
+                
                 return AttemptStatus.DESYNC;
             }
         }
-        suppressErrors.pop();
+        
+        
         popState();
+        suppressErrors.pop();
+        forceParse.pop();
         return AttemptStatus.PARSED;
+    }
+    
+    final protected boolean oneMustParse(CategoryNode parent, ParseFunction parseFunction, ParseFunction... functions) {
+        switch (attemptParse(parseFunction, parent)) {
+            case PARSED:
+                return true;
+            case ROLLBACK:
+                break;
+            case DESYNC:
+                return false;
+        }
+        for (ParseFunction function : functions) {
+            switch (attemptParse(function, parent)) {
+                case PARSED:
+                    return true;
+                case ROLLBACK:
+                    break;
+                case DESYNC:
+                    return false;
+            }
+        }
+        return false;
     }
     
     

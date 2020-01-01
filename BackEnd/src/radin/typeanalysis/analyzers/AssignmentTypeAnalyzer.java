@@ -61,7 +61,7 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
             
             if(!is(rhsType, lhs.getCXType())) {
                 setIsFailurePoint(rhs);
-                throw new IncorrectTypeError(lhs.getCXType(), rhsType);
+                throw new IncorrectTypeError(lhs.getCXType(), rhsType, lhs.findFirstToken(), rhs.findFirstToken());
             }
             //if(!rhsType.is(lhs.getCXType(), getEnvironment())) throw new IncorrectTypeError(lhs.getCXType(), rhsType);
             

@@ -21,8 +21,11 @@ int main(int argc, char* argv[]) {
 	t.s = MAX(MAX(1,2), MAX(3,4));
 	struct r* t_ptr = &t;
 
-	t_ptr->s = 1;
+	t_ptr->s = (int) "hello world my name is Joshua Radin";
+	char c;
 
+
+	 c = t;
 
 	char* name = "hello" + 3;
 

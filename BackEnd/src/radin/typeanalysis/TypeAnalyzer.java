@@ -1,5 +1,6 @@
 package radin.typeanalysis;
 
+import radin.interphase.AbstractCompilationError;
 import radin.interphase.CompilationError;
 import radin.interphase.ICompilationSettings;
 import radin.interphase.lexical.Token;
@@ -20,7 +21,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     
     private static TypeEnvironment environment;
     private static ICompilationSettings compilationSettings;
-    private static List<CompilationError<?>> errors;
+    private static List<AbstractCompilationError> errors;
     
     private static HashMap<CXMethod, TypeAugmentedSemanticNode> methods;
     
@@ -95,20 +96,24 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
             return determineTypes(tree);
         }catch (RecoverableError e) {
             Token closestToken = tree.findFailureToken();
-            CompilationError<Error> error = new CompilationError<>(e, closestToken);
+            CompilationError error = new CompilationError(e, closestToken);
             errors.add(error);
             return true;
+        }catch (AbstractCompilationError compilationError) {
+            setIsFailurePoint(tree);
+            errors.add(compilationError);
+            return false;
         } catch (Error e) {
             setIsFailurePoint(tree);
             Token closestToken = tree.findFailureToken();
-            CompilationError<Error> error = new CompilationError<>(e, closestToken);
+            CompilationError error = new CompilationError(e, closestToken);
             errors.add(error);
             return false;
         }
     }
     
     
-    public static List<CompilationError<?>> getErrors() {
+    public static List<AbstractCompilationError> getErrors() {
         return errors;
     }
     
@@ -123,6 +128,18 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
      */
     protected static boolean is(CXType o1, CXType o2) {
         return environment.is(o1, o2);
+    }
+    
+    /**
+     * Checks if two types are equivalent, with const stripping for going from non-const to const
+     * checks if type1 <= type2
+     * Strict primitive type checking
+     * @param o1 type1
+     * @param o2 type2
+     * @return whether they can be used
+     */
+    protected static boolean isStrict(CXType o1, CXType o2) {
+        return environment.isStrict(o1, o2);
     }
     
     @Override

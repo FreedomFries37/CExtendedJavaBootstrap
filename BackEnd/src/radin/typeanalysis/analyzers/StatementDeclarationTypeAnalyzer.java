@@ -36,7 +36,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 declarationType =
                         ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
                 
-                if(is(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
+                if(isStrict(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
                 
                 
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
@@ -69,7 +69,8 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
                 if(!determineTypes(analyzer)) return false;
                 
-                if(!is(expression.getCXType(), declarationType)) throw new IncorrectTypeError(declarationType, expression.getCXType());
+                if(!is(expression.getCXType(), declarationType)) throw new IncorrectTypeError(declarationType,
+                        expression.getCXType(), expression.findFirstToken(), declaration.findFirstToken());
                 //if(!expression.getCXType().is(declarationType, getEnvironment())) throw new IncorrectTypeError
                 // (declarationType, expression.getCXType());
                 

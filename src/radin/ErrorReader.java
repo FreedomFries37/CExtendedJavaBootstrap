@@ -1,10 +1,9 @@
 package radin;
 
-import radin.interphase.CompilationError;
+import radin.interphase.AbstractCompilationError;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,10 +31,10 @@ public class ErrorReader {
                     '}';
         }
     }
-    private List<CompilationError<?>> errors;
+    private List<AbstractCompilationError> errors;
     private List<LineHolder> lines;
     
-    public ErrorReader(String filename, String inputString, List<CompilationError<?>> errors) {
+    public ErrorReader(String filename, String inputString, List<AbstractCompilationError> errors) {
         this.errors = errors;
         this.lines = new LinkedList<>();
         
@@ -61,40 +60,107 @@ public class ErrorReader {
     }
     
     public void readErrors() {
-        for (CompilationError<?> error : errors) {
+        for (AbstractCompilationError error : errors) {
             // System.out.println(error.getError());
             if(!Main.getSettings().isShowErrorStackTrace())
-                System.out.println(error.getError());
+                System.out.println(error.toString());
             else
-                error.getError().printStackTrace(System.out);
+                error.printStackTrace(System.out);
             
-            if(error.getClosestToken() != null) {
-                LineHolder lineInfo = lines.get(error.getClosestToken().getLineNumber() - 1);
-                int column = error.getClosestToken().getColumn();
+            List<AbstractCompilationError.ErrorInformation> infoMessages = new LinkedList<>();
+            LineHolder lineHolderCurrent = null;
+            int maxSize = 0;
+            boolean printedFile = false;
+    
+            for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {
+                LineHolder lineInfo = lines.get(errorInformation.getToken().getLineNumber() - 1);
+                
+                if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
+                    System.out.printf("In %s:\n", lineHolderCurrent.fileName);
+                    printedFile =true;
+                    printError(lineHolderCurrent, infoMessages);
+                    infoMessages.clear();
+                } else if(lineHolderCurrent == null) {
+                    lineHolderCurrent = lineInfo;
+                }
+                
+                infoMessages.add(errorInformation);
+            }
+    
+            if(lineHolderCurrent != null) {
+                if (!printedFile)
+                    System.out.printf("In %s:\n", lineHolderCurrent.fileName);
+                printError(lineHolderCurrent, infoMessages);
+            }
+            /*
+            for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {
+                LineHolder lineInfo = lines.get(errorInformation.getToken().getLineNumber() - 1);
+                int column = errorInformation.getToken().getColumn();
                 int lineNumberDigits = (int) Math.log10(lineInfo.lineNumber) + 1;
                 System.out.printf("In %s:\n", lineInfo.fileName);
                 String repeat = " ".repeat(lineNumberDigits + 1);
                 System.out.println(repeat + "|" );
                 System.out.println(lineInfo.lineNumber + " | " + lineInfo.contents);
-                int maxSize = lineInfo.contents.length();
-                System.out.println(repeat + "|" + errorAt(column, maxSize));
-                
+                maxSize = lineInfo.contents.length();
+                System.out.println(repeat + "|" + errorAt(column, errorInformation.getToken().getImage().length(), maxSize,
+                        errorInformation.getInfo()));
             }
+            */
         }
     }
     
-    private String errorAt(int column, int maxSize) {
+    private void printError(LineHolder lineHolder, List<AbstractCompilationError.ErrorInformation> informations) {
+        int lineNumberDigits = (int) Math.log10(lineHolder.lineNumber) + 1;
+        
+        String repeat = " ".repeat(lineNumberDigits + 1);
+        System.out.println(repeat + "|" );
+        System.out.println(lineHolder.lineNumber + " | " + lineHolder.contents);
+        List<Integer> columns = new LinkedList<>();
+        for (AbstractCompilationError.ErrorInformation information : informations) {
+            int imageLength = information.getToken().getImage().length();
+            columns.add(information.getToken().getColumn() + imageLength/2);
+        }
+        columns.sort(Integer::compareTo);
+        int maxSize = lineHolder.contents.length();
+        boolean first = true;
+        for (int i = informations.size() - 1; i >= 0; i--) {
+            if(!first) System.out.println(repeat + "|" + errorAt(-1, maxSize, null, columns, first));
+            System.out.println(repeat + "|" + errorAt(columns.get(i), maxSize, informations.get(i).getInfo(), columns, first));
+            columns.remove(i);
+            if(first) first = false;
+            
+        }
+    }
+    
+    private String errorAt(int column, int maxSize, String info, List<Integer> otherColumns, boolean topLine) {
         StringBuilder output = new StringBuilder();
-        for (int i = 0; i < maxSize + 1; i++) {
-            if(i < column) {
-                output.append(" ");
+        for (int i = 0; i < maxSize + 8; i++) {
+            if(i < column || column == -1) {
+                if(otherColumns.contains(i)) {
+                    if(topLine) {
+                        output.append('^');
+                    } else {
+                        output.append('|');
+                    }
+                }
+                else
+                    output.append(" ");
             } else if(i == column) {
-                output.append("^");
+                if(topLine) {
+                    output.append('^');
+                } else {
+                    output.append('|');
+                }
             } else {
-                output.append("~");
+                output.append("_");
             }
+        }
+        if(info != null) {
+            output.append(' ');
+            output.append(info);
         }
         return output.toString();
     }
+    
     
 }

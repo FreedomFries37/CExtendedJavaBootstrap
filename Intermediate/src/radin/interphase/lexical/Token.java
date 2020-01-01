@@ -1,6 +1,6 @@
 package radin.interphase.lexical;
 
-public class Token {
+public class Token implements Comparable<Token> {
 
     private TokenType type;
     private String image;
@@ -47,5 +47,11 @@ public class Token {
     public String getRepresentation() {
         if(image != null) return image;
         return type.toString();
+    }
+    
+    @Override
+    public int compareTo(Token o) {
+        if(getLineNumber() != o.getLineNumber()) return getLineNumber() - o.getLineNumber();
+        return getColumn() - o.getColumn();
     }
 }

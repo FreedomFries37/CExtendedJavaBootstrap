@@ -181,7 +181,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(child)) return false;
             CXType fromCXType = child.getCXType();
             
-            if(!is(castType, fromCXType)) throw new IllegalCastError(fromCXType, castType);
+            if(!is(castType, fromCXType)) throw new IllegalCastError(fromCXType, castType, child.findFirstToken());
             //if(!castType.is(fromCXType, getEnvironment())) throw new IllegalCastError(fromCXType, castType);
             node.setType(castType);
             node.setLValue(child.isLValue());
@@ -375,7 +375,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             } else if(rhs.getCXType().is(lhs.getCXType(), getEnvironment())) {
                 outputType = lhs.getCXType();
             } else {
-                throw new IncorrectTypeError(rhs.getCXType(), lhs.getCXType());
+                throw new IncorrectTypeError(rhs.getCXType(), lhs.getCXType(), lhs.findFirstToken(), rhs.findFirstToken());
             }
             
             node.setType(outputType);

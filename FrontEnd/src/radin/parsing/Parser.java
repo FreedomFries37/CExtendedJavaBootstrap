@@ -6,6 +6,8 @@ import radin.interphase.lexical.TokenType;
 
 import java.util.*;
 
+import static radin.interphase.lexical.TokenType.t_const;
+
 public class Parser extends BasicParser {
     
     private HashSet<String> typedefed;
@@ -101,6 +103,7 @@ public class Parser extends BasicParser {
     private boolean parseTopLevelDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("TopLevelDeclaration");
         
+        OUTER:
         switch (getCurrentType()) {
             case t_typedef: {
                 if(!parseTypeDef(child)) return false;
@@ -108,8 +111,12 @@ public class Parser extends BasicParser {
                 break;
             }
             case t_class:
-                if(attemptParse(this::parseClassDeclaration, child)) {
-                    break;
+                switch (attemptParse(this::parseClassDeclaration, child)) {
+                    case PARSED:
+                        break OUTER;
+                    case ROLLBACK:
+                    case DESYNC:
+                        break;
                 }
             case t_typename:
             case t_void:
@@ -124,8 +131,14 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_const:
             {
+                /*
                 if(!attemptParse(this::parseDeclaration, child)) {
                     if(!parseFunctionDefinition(child)) return error("Could not parse declaration", true);
+                }
+                */
+                
+                if(!oneMustParse(child, this::parseFunctionDefinition,this::parseDeclaration)) {
+                    return error("Could not parse declaration", true);
                 }
                 /*
                 if(!attemptParse(this::parseFunctionDefinition, child)) {
@@ -281,9 +294,15 @@ public class Parser extends BasicParser {
             case t_for: {
                 consumeAndAddAsLeaf(child);
                 if(!consume(TokenType.t_lpar)) return false;
+                if(!oneMustParse(child, this::parseDeclaration, this::parseExpressionStatement)) {
+                    return false;
+                }
+                /*
                 if(!attemptParse(this::parseDeclaration, child)) {
                     if (!parseExpressionStatement(child)) return false;
                 }
+                */
+                
                 if(!parseExpressionStatement(child)) return false;
                 if(!match(TokenType.t_rpar)) {
                     if(!parseTopExpression(child)) return false;
@@ -906,10 +925,12 @@ public class Parser extends BasicParser {
                 break;
             }
             case t_lpar: {
-                boolean attemptParse = attemptParse(this::parseCastExpression, child);
-                if(!attemptParse) {
+                AttemptStatus attemptStatus = attemptParse(this::parseCastExpression, child);
+                if(attemptStatus == AttemptStatus.ROLLBACK) {
                     if(!parseAtom(child)) return false;
                     if(!parseAtomTail(child)) return false;
+                } else if(attemptStatus == AttemptStatus.DESYNC) {
+                    return false;
                 }
                 break;
             }
@@ -1185,7 +1206,7 @@ public class Parser extends BasicParser {
     private boolean parseQualifier(CategoryNode parent) {
         CategoryNode output = new CategoryNode("Qualifier");
         
-        if(!match(TokenType.t_const)) return false;
+        if(!match(t_const)) return false;
         consumeAndAddAsLeaf(output);
         
         parent.addChild(output);
@@ -1206,7 +1227,7 @@ public class Parser extends BasicParser {
     private boolean parseQualifierListTail(CategoryNode parent) {
         CategoryNode output = new CategoryNode("QualifierListTail");
         
-        if(match(TokenType.t_const)) {
+        if(match(t_const)) {
             if(!parseQualifierList(parent)) return false;
         }
         
@@ -1371,7 +1392,7 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("Pointer");
         
         if(!consume(TokenType.t_star)) return false;
-        if (match(TokenType.t_const)) {
+        if (match(t_const)) {
             if (!parseQualifierList(child)) return false;
         }
         if(match(TokenType.t_star)) {
@@ -1444,8 +1465,10 @@ public class Parser extends BasicParser {
         switch (getCurrentType()) {
             case t_lpar: {
                 getNext();
-                if(!attemptParse(this::parseParameterTypeList, child)) {
-                    attemptParse(this::parseIdentifierList, child);
+                if(attemptParse(this::parseParameterTypeList, child) == AttemptStatus.ROLLBACK) {
+                    if(attemptParse(this::parseIdentifierList, child) == AttemptStatus.DESYNC) {
+                        return false;
+                    }
                 }
                 if(!consume(TokenType.t_rpar)) return false;
                 break;
@@ -1615,9 +1638,14 @@ public class Parser extends BasicParser {
     
     private boolean parseAssignmentExpression(CategoryNode parent) {
         CategoryNode child = new CategoryNode("AssignmentExpression");
-        
+    
+        /*
         if(!attemptParse(this::parseAssignment, child)) {
             if(!parseExpression(child)) return false;
+        }
+        */
+        if(!oneMustParse(child, this::parseAssignment, this::parseExpression)) {
+            return false;
         }
         
         
@@ -1662,9 +1690,10 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("ParameterDeclaration");
         
         if(!parseDeclarationSpecifiers(child)) return false;
-        if(!attemptParse(this::parseDeclarator, child)) {
+        if(attemptParse(this::parseDeclarator, child) == AttemptStatus.ROLLBACK) {
             attemptParse(this::parseAbstractDeclarator, child);
         }
+        
         
         parent.addChild(child);
         return true;
@@ -1675,7 +1704,7 @@ public class Parser extends BasicParser {
         
         pushState();
         if(consume(TokenType.t_comma)) {
-            if(attemptParse(this::parseParameterList, child)) {
+            if(attemptParse(this::parseParameterList, child) == AttemptStatus.PARSED) {
                 popState();
             } else {
                 applyState();
@@ -1724,12 +1753,16 @@ public class Parser extends BasicParser {
         
         String name = child.getLeafNode(TokenType.t_id).getToken().getImage();
         typedefed.add(name);
-        
+        boolean forced = false;
         if(match(TokenType.t_colon)) {
+            forceParse();
+            forced = true;
             if(!parseInherit(child)) return false;
         }
         if(!consume(TokenType.t_lcurl)) return false;
-        
+        if(!forced) {
+            forceParse();
+        }
         if(!parseClassDeclarationList(child)) return false;
         
         if(!consume(TokenType.t_rcurl)) return error("Missing matching }");
@@ -1776,7 +1809,7 @@ public class Parser extends BasicParser {
         
         consumeAndAddAsLeaf(TokenType.t_virtual, child);
         attemptParse(this::parseVisibility, child);
-        
+        /*
         if(!attemptParse(this::parseConstructorDefinition, child)) {
             if(!attemptParse(this::parseDeclaration, child)) {
                 
@@ -1784,6 +1817,12 @@ public class Parser extends BasicParser {
                     return error("Could not parse class declaration", true);
                 }
             }
+        }
+        
+         */
+    
+        if (!oneMustParse(child, this::parseConstructorDefinition, this::parseDeclaration, this::parseFunctionDefinition)) {
+            return error("Could not parse class declaration");
         }
         
         parent.addChild(child);
@@ -1811,6 +1850,7 @@ public class Parser extends BasicParser {
         
         if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) return false;
         if(!consume(TokenType.t_lpar)) return false;
+        forceParse();
         if(!match(TokenType.t_rpar)) {
             if (!parseParameterList(child)) return error("Could not parse parameter list");
         } else {

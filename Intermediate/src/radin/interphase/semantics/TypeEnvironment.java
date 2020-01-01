@@ -560,6 +560,25 @@ public class TypeEnvironment {
         return o1.is(o2,this);
     }
     
+    /**
+     * Checks if two types are equivalent, with const stripping for going from non-const to const
+     * checks if type1 <= type2
+     * Strict primitive type checking
+     * @param o1 type1
+     * @param o2 type2
+     * @return whether they can be used
+     */
+    public boolean isStrict(CXType o1, CXType o2) {
+        
+        if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
+            return is(o1, ((ConstantType) o2).getSubtype());
+        }
+        if(o2 instanceof CXDynamicTypeDefinition) {
+            return is(o1, ((CXDynamicTypeDefinition) o2).getOriginal());
+        }
+        return o1.is(o2,this, true);
+    }
+    
     
     public HashSet<CXClassType> getCreatedClasses() {
         return createdClasses;
