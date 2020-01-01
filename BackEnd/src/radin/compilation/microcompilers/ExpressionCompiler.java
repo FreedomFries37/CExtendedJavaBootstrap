@@ -59,9 +59,9 @@ public class ExpressionCompiler extends AbstractCompiler {
                 if (!compile(lhs)) {
                     return false;
                 }
-                print(" ");
+                //print(" ");
                 print(opToken);
-                print(" ");
+                //print(" ");
                 if (!compile(rhs)) {
                     return false;
                 }
@@ -197,7 +197,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                 boolean isIndirect = objectInteraction.containsCompilationTag(BasicCompilationTag.INDIRECT_FIELD_GET);
     
                 if (!isIndirect || getSettings().isReduceIndirection()) {
-                    if(compile(objectInteraction)) return false;
+                    if(!compile(objectInteraction)) return false;
                     print('.');
                 } else {
                     if(!compile(objectInteraction.getChild(0))) return false;

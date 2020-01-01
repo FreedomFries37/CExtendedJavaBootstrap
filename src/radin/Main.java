@@ -1,20 +1,13 @@
 package radin;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-
 import radin.compilation.AbstractCompiler;
 import radin.compilation.FileCompiler;
-import radin.interphase.CompilationError;
 import radin.interphase.CompilationSettings;
 import radin.interphase.ICompilationSettings;
+import radin.interphase.lexical.Token;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.types.compound.CXClassType;
 import radin.lexing.Lexer;
-import radin.interphase.lexical.Token;
 import radin.parsing.CategoryNode;
 import radin.parsing.Parser;
 import radin.semantics.ActionRoutineApplier;
@@ -22,6 +15,8 @@ import radin.semantics.SynthesizedMissingException;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.analyzers.ProgramTypeAnalyzer;
+
+import java.io.*;
 
 public class Main {
     
@@ -73,6 +68,7 @@ public class Main {
     
         CompilationSettings compilationSettings = new CompilationSettings();
         compilationSettings.setShowErrorStackTrace(false);
+        compilationSettings.setReduceIndirection(false);
         setCompilationSettings(compilationSettings);
     
         String fullText = text.toString().replace("\t", " ".repeat(compilationSettings.getTabSize()));

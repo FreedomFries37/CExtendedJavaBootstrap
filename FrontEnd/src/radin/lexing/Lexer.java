@@ -672,6 +672,9 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                     return new Token(TokenType.t_comma);
                 }
                 case ':': {
+                    if(consume(':')) {
+                        return new Token(TokenType.t_namespace);
+                    }
                     return new Token(TokenType.t_colon);
                 }
                 case '(': {
@@ -742,11 +745,15 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
     
     public Token getNext() {
         if(++tokenIndex == createdTokens.size()) {
-            Token t = Objects.requireNonNull(singleLex()).addColumnAndLineNumber(prevColumn, prevLineNumber);
+            
+            Token tok = singleLex();
+            if(tok == null) return null;
+            String representation = tok.getRepresentation();
+            tok.addColumnAndLineNumber(column - representation.length(), lineNumber);
             prevLineNumber = lineNumber;
             prevColumn = column;
-            createdTokens.add(t);
-            return t;
+            createdTokens.add(tok);
+            return tok;
         }
         return createdTokens.get(tokenIndex);
     }

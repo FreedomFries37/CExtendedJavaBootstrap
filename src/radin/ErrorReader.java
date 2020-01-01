@@ -85,10 +85,10 @@ public class ErrorReader {
     
     private String errorAt(int column, int maxSize) {
         StringBuilder output = new StringBuilder();
-        for (int i = 0; i < maxSize; i++) {
-            if(i < column - 1) {
+        for (int i = 0; i < maxSize + 1; i++) {
+            if(i < column) {
                 output.append(" ");
-            } else if(i == column - 1) {
+            } else if(i == column) {
                 output.append("^");
             } else {
                 output.append("~");

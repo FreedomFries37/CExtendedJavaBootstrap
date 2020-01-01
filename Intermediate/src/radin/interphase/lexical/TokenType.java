@@ -63,6 +63,7 @@ public enum TokenType {
     t_bar("|"),
     t_qmark("?"),
     t_ellipsis("..."),
+    t_namespace("::"),
     t_new("new"),
     t_super("super"),
     t_virtual("virtual"),

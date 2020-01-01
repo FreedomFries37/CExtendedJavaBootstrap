@@ -12,17 +12,18 @@ int main(int argc, char* argv[]) {
 	int i = 4;
 	void* ptr = &i;
 
-	i = *ptr;
+
 	struct r{
 		int s;
 	} t;
 
 
-	t.s = 3;
+	t.s = MAX(MAX(1,2), MAX(3,4));
 	struct r* t_ptr = &t;
-	t_ptr->s = 5;
 
-	t.s = "hello";
+	t_ptr->s = 1;
+
+
 	char* name = "hello" + 3;
 
 	return 0;

@@ -264,6 +264,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             } else if(objectInteraction.getCXType() instanceof ConstantType){
                 parentType = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(getEnvironment());
             } else {
+                setIsFailurePoint(node.getChild(1));
                 throw new IllegalAccessError(objectInteraction.getCXType(), name);
             }
             
