@@ -12,16 +12,25 @@ import java.util.Stack;
 
 public abstract class BasicParser {
     
+    protected enum AttemptStatus {
+        PARSED,
+        ROLLBACK,
+        DESYNC
+    }
+    
     protected Lexer lexer;
     protected Stack<Integer> states;
     private Stack<Void> suppressErrors;
+    private Stack<Boolean> forceParse;
     private List<String> allErrors;
+    
     
     public BasicParser(Lexer lexer) {
         this.lexer = lexer;
         states = new Stack<>();
         suppressErrors = new Stack<>();
         allErrors = new LinkedList<>();
+        forceParse = new Stack<>();
     }
     
     
@@ -51,6 +60,13 @@ public abstract class BasicParser {
         if(states.empty()) return false;
         lexer.setTokenIndex(states.pop());
         return true;
+    }
+    
+    public void forceParse() {
+        if(!forceParse.empty()) {
+            forceParse.pop();
+            forceParse.push(true);
+        }
     }
     
     final protected boolean consume(TokenType type) {
@@ -116,17 +132,24 @@ public abstract class BasicParser {
         boolean parse(CategoryNode parent);
     }
     
-    final protected boolean attemptParse(ParseFunction function, CategoryNode parent) {
+    final protected AttemptStatus attemptParse(ParseFunction function, CategoryNode parent) {
         pushState();
         suppressErrors.push(null);
+        forceParse.push(false);
         if(!function.parse(parent)) {
-            applyState();
-            suppressErrors.pop();
-            return false;
+            if(!forceParse.peek()) {
+                applyState();
+                suppressErrors.pop();
+                return AttemptStatus.ROLLBACK;
+            } else {
+                suppressErrors.pop();
+                popState();
+                return AttemptStatus.DESYNC;
+            }
         }
         suppressErrors.pop();
         popState();
-        return true;
+        return AttemptStatus.PARSED;
     }
     
     
