@@ -6,7 +6,7 @@ import radin.interphase.lexical.TokenType;
 
 import java.util.*;
 
-import static radin.interphase.lexical.TokenType.t_const;
+import static radin.interphase.lexical.TokenType.*;
 
 public class Parser extends BasicParser {
     
@@ -107,7 +107,7 @@ public class Parser extends BasicParser {
         switch (getCurrentType()) {
             case t_typedef: {
                 if(!parseTypeDef(child)) return false;
-                if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+                if(!consume(TokenType.t_semic)) return missingError("Missing semi-colon");
                 break;
             }
             case t_class:
@@ -136,9 +136,10 @@ public class Parser extends BasicParser {
                     if(!parseFunctionDefinition(child)) return error("Could not parse declaration", true);
                 }
                 */
-                
+                Token corresponding = getCurrent();
                 if(!oneMustParse(child, this::parseFunctionDefinition,this::parseDeclaration)) {
-                    return error("Could not parse declaration", true);
+                    return absorbErrors("Could not parse declaration", true, corresponding);
+                    //return error("Could not parse declaration",true, corresponding);
                 }
                 /*
                 if(!attemptParse(this::parseFunctionDefinition, child)) {
@@ -149,7 +150,8 @@ public class Parser extends BasicParser {
                  */
                 break;
             }
-            
+            default:
+                return error("Not a valid top level declaration");
         }
         clearErrors();
         
@@ -171,9 +173,15 @@ public class Parser extends BasicParser {
     
     private boolean parseFunctionDefinition(CategoryNode parent) {
         CategoryNode child = new CategoryNode("FunctionDefinition");
-        
-        
-        attemptParse(this::parseDeclarationSpecifiers, child);
+    
+    
+        switch (attemptParse(this::parseDeclarationSpecifiers, child)) {
+            case PARSED:
+            case ROLLBACK:
+                break;
+            case DESYNC:
+                return false;
+        }
         if(!parseDeclarator(child)) return false;
         if(!match(TokenType.t_lcurl)) {
             if(!parseDeclarationList(child)) return false;
@@ -246,9 +254,20 @@ public class Parser extends BasicParser {
     
     private boolean parseExpressionStatement(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ExpressionStatement");
-        
-        attemptParse(this::parseTopExpression, child);
-        if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+    
+        switch (attemptParse(this::parseTopExpression, child)) {
+            case PARSED:
+            case ROLLBACK:
+                break;
+            case DESYNC:
+                return false;
+        }
+        if(!consume(TokenType.t_semic)) {
+    
+            if (!recoverableMissingError("Missing semi-colon", t_semic, t_rcurl)) {
+                return false;
+            }
+        }
         
         parent.addChild(child);
         return true;
@@ -261,7 +280,13 @@ public class Parser extends BasicParser {
         
         if(!consume(TokenType.t_lcurl)) return error("missing { for compound statement");
         //attemptParse(this::parseDeclarationList, child);
-        attemptParse(this::parseStatementList, child);
+        switch (attemptParse(this::parseStatementList, child)) {
+            case PARSED:
+            case ROLLBACK:
+                break;
+            case DESYNC:
+                return false;
+        }
         if(!consume(TokenType.t_rcurl)) return error("missing matching } for compound statement");
         
         
@@ -288,7 +313,7 @@ public class Parser extends BasicParser {
                 if(!consume(TokenType.t_lpar)) return false;
                 if(!parseTopExpression(child)) return false;
                 if(!consume(TokenType.t_rpar)) return false;
-                if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+                if(!consume(TokenType.t_semic)) return missingError("Missing semi-colon");
                 break;
             }
             case t_for: {
@@ -351,7 +376,7 @@ public class Parser extends BasicParser {
                 return false;
         }
         
-        if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+        if(!consume(TokenType.t_semic)) return missingError("Missing semi-colon");
         parent.addChild(child);
         return true;
     }
@@ -360,6 +385,7 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("StatementList");
         
         if(!parseStatement(child)) return false;
+        forceParse();
         if(!parseStatementListTail(child)) return false;
         
         parent.addChild(child);
@@ -368,8 +394,14 @@ public class Parser extends BasicParser {
     
     private boolean parseStatementListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("StatementListTail");
-        
-        attemptParse(this::parseStatementList, child);
+    
+        switch (attemptParse(this::parseStatementList, child)) {
+            case PARSED:
+            case ROLLBACK:
+                break;
+            case DESYNC:
+                return false;
+        }
         
         parent.addChild(child);
         return true;
@@ -387,8 +419,14 @@ public class Parser extends BasicParser {
     
     private boolean parseDeclarationListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("DeclarationListTail");
-        
-        attemptParse(this::parseDeclarationList, child);
+    
+        switch (attemptParse(this::parseDeclarationList, child)) {
+            case PARSED:
+            case ROLLBACK:
+                break;
+            case DESYNC:
+                return false;
+        }
         
         parent.addChild(child);
         return true;
@@ -401,6 +439,7 @@ public class Parser extends BasicParser {
         
         if(!parseFactor(child)) return false;
         if(!parseAssignOperator(child)) return false;
+        forceParse();
         if(!parseAssignmentExpression(child)) return false;
         
         parent.addChild(child);
@@ -449,7 +488,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -495,7 +534,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -541,7 +580,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return  error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -587,7 +626,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -633,7 +672,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -679,7 +718,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -725,7 +764,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -775,7 +814,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -827,7 +866,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -877,7 +916,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -927,6 +966,7 @@ public class Parser extends BasicParser {
             case t_lpar: {
                 AttemptStatus attemptStatus = attemptParse(this::parseCastExpression, child);
                 if(attemptStatus == AttemptStatus.ROLLBACK) {
+                    //forceParse();
                     if(!parseAtom(child)) return false;
                     if(!parseAtomTail(child)) return false;
                 } else if(attemptStatus == AttemptStatus.DESYNC) {
@@ -949,7 +989,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("unrecognized expression");
         }
         
         parent.addChild(child);
@@ -995,7 +1035,7 @@ public class Parser extends BasicParser {
             case t_lpar: {
                 next();
                 if(!parseExpression(child)) return false;
-                if(!consume(TokenType.t_rpar)) return error("Missing matching )");
+                if(!consume(TokenType.t_rpar)) return missingError("Missing matching )");
                 break;
             }
             case t_id:
@@ -1046,7 +1086,7 @@ public class Parser extends BasicParser {
             case t_lbrac: {
                 consumeAndAddAsLeaf(child);
                 if(!parseExpression(child));
-                if(!consume(TokenType.t_rbrac)) return error("Missing matching ]");
+                if(!consume(TokenType.t_rbrac)) return missingError("Missing matching ]");
                 if(!parseAtomTail(child)) return false;
                 break;
             }
@@ -1351,6 +1391,7 @@ public class Parser extends BasicParser {
             }
             case t_lpar:
             case t_lbrac: {
+                forceParse();
                 if(!parseDirectAbstractDeclarator(output)) return false;
             }
             default:
@@ -1367,7 +1408,7 @@ public class Parser extends BasicParser {
         switch (getCurrentType()) {
             case t_lbrac: {
                 if(!consumeAndAddAsLeaf(TokenType.t_lbrac, child)) return false;
-                if(!consumeAndAddAsLeaf(TokenType.t_rbrac, child)) return error("Missing matching ]");
+                if(!consumeAndAddAsLeaf(TokenType.t_rbrac, child)) return missingError("Missing matching ]");
                 if(!parseDirectAbstractDeclarator(child)) return false;
                 break;
             }
@@ -1376,7 +1417,7 @@ public class Parser extends BasicParser {
                 if(!match(TokenType.t_rpar)) {
                     if(!parseParameterTypeList(child)) return false;
                 }
-                if(!consumeAndAddAsLeaf(TokenType.t_rpar, child)) return error("Missing matching )");
+                if(!consumeAndAddAsLeaf(TokenType.t_rpar, child)) return missingError("Missing matching )");
                 
                 break;
             }
@@ -1409,8 +1450,13 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("TypeDef");
         
         if(!consume(TokenType.t_typedef)) return false;
-        if(!parseTypeName(child)) return false;
-        if(!match(TokenType.t_id)) return error("ID already exists as a type");
+        forceParse();
+        if(!parseTypeName(child)) return error("Can't typedef this");
+        if(!match(TokenType.t_id)) {
+            if(match(t_literal)) return error("Can't typedef a literal");
+            if(match(t_typename)) return error("ID already exists as a type");
+            return error("Can't typedef a " + getCurrentType());
+        }
         String typename = getCurrent().getImage();
         consumeAndAddAsLeaf(child);
         
@@ -1445,7 +1491,7 @@ public class Parser extends BasicParser {
             case t_lpar: {
                 getNext();
                 if(!parseDeclarator(child)) return false;
-                if(!consume(TokenType.t_rpar)) return error("Missing matching )");
+                if(!consume(TokenType.t_rpar)) return missingError("Missing matching )");
                 break;
             }
             default:
@@ -1467,16 +1513,28 @@ public class Parser extends BasicParser {
                 getNext();
                 if(attemptParse(this::parseParameterTypeList, child) == AttemptStatus.ROLLBACK) {
                     if(attemptParse(this::parseIdentifierList, child) == AttemptStatus.DESYNC) {
-                        return false;
+                        return error("Error parsing parameter list", true);
                     }
                 }
-                if(!consume(TokenType.t_rpar)) return false;
+                if(!consume(TokenType.t_rpar)) {
+                    return false;
+                }
                 break;
             }
             case t_lbrac: {
                 consumeAndAddAsLeaf(child);
-                attemptParse(this::parseExpression, parent);
-                if(!consume(TokenType.t_rbrac)) return false;
+    
+                switch (attemptParse(this::parseExpression, child)) {
+                    case PARSED:
+                    case ROLLBACK:
+                        break;
+                    case DESYNC:
+                        return false;
+                }
+                if(!consume(TokenType.t_rbrac)){
+                    forceParse();
+                    return error("Missing matching ]");
+                }
                 if(!parseDirectDeclaratorTail(child)) return false;
                 break;
             }
@@ -1545,7 +1603,7 @@ public class Parser extends BasicParser {
         
         if(!parseSpecsAndQuals(child)) return false;
         if(!parseStructDeclaratorList(child)) return false;
-        if(!consume(TokenType.t_semic)) return error("Missing ;");
+        if(!consume(TokenType.t_semic)) return missingError("Missing ;");
         
         parent.addChild(child);
         return true;
@@ -1568,7 +1626,11 @@ public class Parser extends BasicParser {
         if(!match(TokenType.t_semic)) {
             if(!parseInitDeclaratorList(child)) return false;
         }
-        if(!consume(TokenType.t_semic)) return false;
+        if(!consume(TokenType.t_semic)){
+            if (!recoverableMissingError("Missing semi-colon", t_semic, t_lcurl)) {
+                return false;
+            }
+        }
         
         parent.addChild(child);
         return true;
@@ -1611,7 +1673,10 @@ public class Parser extends BasicParser {
         
         if(!parseDeclarator(child)) return false;
         if(consume(TokenType.t_assign)) {
-            if(!parseInitializer(child)) return false;
+            forceParse();
+            if(!parseInitializer(child)){
+                return missingError("Missing initial value");
+            }
         }
         
         parent.addChild(child);
@@ -1690,8 +1755,21 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("ParameterDeclaration");
         
         if(!parseDeclarationSpecifiers(child)) return false;
-        if(attemptParse(this::parseDeclarator, child) == AttemptStatus.ROLLBACK) {
-            attemptParse(this::parseAbstractDeclarator, child);
+        switch (attemptParse(this::parseDeclarator, child)) {
+            case PARSED:
+                break;
+            case ROLLBACK: {
+                switch (attemptParse(this::parseAbstractDeclarator, child)) {
+                    case PARSED:
+                    case ROLLBACK:
+                        break;
+                    case DESYNC:
+                        return error("Failure parsing parameter declaration", true);
+                }
+                break;
+            }
+            case DESYNC:
+                return error("Failure parsing parameter declaration", true);
         }
         
         
@@ -1765,8 +1843,8 @@ public class Parser extends BasicParser {
         }
         if(!parseClassDeclarationList(child)) return false;
         
-        if(!consume(TokenType.t_rcurl)) return error("Missing matching }");
-        if(!consume(TokenType.t_semic)) return error("Missing semi-colon");
+        if(!consume(TokenType.t_rcurl)) return missingError("Missing matching }");
+        if(!consume(TokenType.t_semic)) return missingError("Missing semi-colon");
         
         parent.addChild(child);
         return true;
@@ -1857,7 +1935,7 @@ public class Parser extends BasicParser {
             // add empty parameter list
             child.addChild(new CategoryNode("ParameterList"));
         }
-        if(!consume(TokenType.t_rpar)) return error("Missing matching )");
+        if(!consume(TokenType.t_rpar)) return missingError("Missing matching )");
         if(consume(TokenType.t_colon)) {
             if(match(TokenType.t_id)) {
                 if(!getCurrent().getImage().equals("this")) return error("prior constructor must be either this or " +
@@ -1871,7 +1949,7 @@ public class Parser extends BasicParser {
             
             if (!parseArgsList(child)) return error("Could not parse args list");
             
-            if(!consume(TokenType.t_rpar)) return error("Missing matching )");
+            if(!consume(TokenType.t_rpar)) return missingError("Missing matching )");
         }
         if(!parseCompoundStatement(child)) return false;
         

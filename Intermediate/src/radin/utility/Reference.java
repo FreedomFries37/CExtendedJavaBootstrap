@@ -1,4 +1,4 @@
-package radin.interphase;
+package radin.utility;
 
 public class Reference<T> {
     private T value;

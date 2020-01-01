@@ -4,7 +4,7 @@ import radin.compilation.tags.BasicCompilationTag;
 import radin.compilation.tags.ConstructorCallTag;
 import radin.compilation.tags.MethodCallTag;
 import radin.compilation.tags.SuperCallTag;
-import radin.interphase.Reference;
+import radin.utility.Reference;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 import radin.interphase.semantics.ASTNodeType;
@@ -122,11 +122,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.getASTNode().getType() == ASTNodeType.indirection) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)) return false;
-            if(!canDereference(child.getCXType())) throw new IllegalTypesForOperationError(new Token(TokenType.t_star),
-                    child.getCXType());
+            if(!canDereference(child.getCXType()))
+                throw new IllegalTypesForOperationError(new Token(TokenType.t_star),
+                    child.getCXType(), child.findFirstToken());
             assert child.getCXType() instanceof PointerType;
             
-            if(is(((PointerType) child.getCXType()).getSubType(), CXPrimitiveType.VOID)) throw new VoidDereferenceError();
+            if(strictIs(((PointerType) child.getCXType()).getSubType(), CXPrimitiveType.VOID)) throw new VoidDereferenceError();
             
             if(child.getASTType() == ASTNodeType.constructor_call) {
                 node.addCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE);
@@ -412,7 +413,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 childCXType);
         Token opToken = node.getASTChild(ASTNodeType.operator).getToken();
         if(opToken.getType() == TokenType.t_inc || opToken.getType() == TokenType.t_dec) {
-            if(!canIncrementOrDecrement(childCXType)) throw new IllegalTypesForOperationError(node.getToken(),
+            if(!canIncrementOrDecrement(childCXType))
+                throw new IllegalTypesForOperationError(opToken,
                     childCXType);
             
             node.setType(childCXType);

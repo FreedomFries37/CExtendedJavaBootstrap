@@ -1,6 +1,7 @@
 package radin.compilation.microcompilers;
 
 import radin.compilation.AbstractIndentedOutputCompiler;
+import radin.compilation.tags.ArrayWithSizeTag;
 import radin.compilation.tags.BasicCompilationTag;
 import radin.interphase.semantics.ASTNodeType;
 import radin.interphase.semantics.types.CXType;
@@ -32,12 +33,24 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                     switch (child.getASTType()) {
                         case declaration: {
                             String varName = child.getChild(0).getToken().getImage();
-                            print(type.generateCDefinition(varName));
+                            String s = type.generateCDefinition(varName);
+                            if(child.containsCompilationTag(ArrayWithSizeTag.class)) {
+                                ArrayWithSizeTag compilationTag = child.getCompilationTag(ArrayWithSizeTag.class);
+                                String size = expressionCompiler.compileToString(compilationTag.getExpression());
+                                s = s.replace("$REPLACE ME$", size);
+                            }
+                            print(s);
                             break;
                         }
                         case initialized_declaration: {
                             String varName = child.getASTChild(ASTNodeType.declaration).getChild(0).getToken().getImage();
-                            print(type.generateCDefinition(varName));
+                            String s = type.generateCDefinition(varName);
+                            if(child.containsCompilationTag(ArrayWithSizeTag.class)) {
+                                ArrayWithSizeTag compilationTag = child.getCompilationTag(ArrayWithSizeTag.class);
+                                String size = expressionCompiler.compileToString(compilationTag.getExpression());
+                                s = s.replace("$REPLACE ME$", size);
+                            }
+                            print(s);
                             print(" = ");
                             if(!expressionCompiler.compile(child.getChild(1))) return false;
                             break;
@@ -45,6 +58,7 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                         default:
                             return false;
                     }
+                    
                     print(';');
                 }
                 break;

@@ -1,6 +1,6 @@
 package radin.lexing;
 
-import radin.interphase.ICompilationSettings;
+import radin.utility.ICompilationSettings;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
 
@@ -177,24 +177,24 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
         char[] chars = s.toCharArray();
         for (int i = chars.length - 1; i >= 0; i--) {
             currentIndex--;
-            column--;
+            //column--;
             if(!match(chars[i])) {
                 currentIndex++;
-                column--;
                 column++;
                 return;
             } else if(chars[i] == '\n') {
                 lineNumber--;
-                column = getColumn() + 1;
+                //column = getColumn() + 1;
             }
             
         }
+        column = getColumn();
     }
     
     private int getColumn() {
         int output = 1;
         int fakeIndex = currentIndex- 1;
-        while(fakeIndex > 0 && inputString.charAt(fakeIndex) != '\n') {
+        while(fakeIndex >= 0 && inputString.charAt(fakeIndex) != '\n') {
             fakeIndex--;
             output++;
         }
@@ -382,7 +382,7 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                 while ( getChar() == ' ' || getChar() == '\n' || getChar() == '\t' || getChar() == '\r') {
                     consumeChar();
                     if (consume("//")) {
-                        while (!consume(System.lineSeparator())) {
+                        while (!consume('\n')) {
                             consumeChar();
                         }
                     } else if (consume("/*")) {
@@ -736,6 +736,19 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                 }
             }
         }
+    }
+    
+    public Token getFirst() {
+        return createdTokens.get(0);
+    }
+    
+    public Token getLast() {
+        return createdTokens.get(createdTokens.size() - 1);
+    }
+    
+    public Token getPrevious() {
+        if(createdTokens.size() <= 1) return null;
+        return createdTokens.get(tokenIndex - 1);
     }
     
     public Token getCurrent() {

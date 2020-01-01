@@ -1,11 +1,14 @@
-package radin.interphase;
+package radin.interphase.errorhandling;
 
 import radin.interphase.lexical.Token;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractCompilationError extends Error {
+    
+   
     
     /**
      * A class representing error information
@@ -80,6 +83,44 @@ public abstract class AbstractCompilationError extends Error {
         super();
         this.correspondingTokens = correspondingTokens;
         this.errorInformation = errorInformation;
+    }
+    
+    /**
+     * Create a compilation error object for useful error messages
+     * The size of the error information array must be <= the size of the correspond tokens
+     * Anything after that will be ignored.
+     *
+     * @param error error string
+     * @param correspondingToken the corresponding tokens to point to
+     * @param errorInformation helpful information strings
+     */
+    public AbstractCompilationError(String error, Token correspondingToken, String errorInformation) {
+        this(error, Collections.singletonList(correspondingToken), errorInformation);
+    }
+    
+    /**
+     * Create a compilation error object for useful error messages
+     * The size of the error information array must be <= the size of the correspond tokens
+     * Anything after that will be ignored.
+     *
+     * @param error error string
+     * @param correspondingToken the corresponding tokens to point to
+     * @param errorInformation helpful information strings
+     */
+    public AbstractCompilationError(Throwable error, Token correspondingToken, String errorInformation) {
+        this(error, Collections.singletonList(correspondingToken), errorInformation);
+    }
+    
+    /**
+     * Create a compilation error object for useful error messages
+     * The size of the error information array must be <= the size of the correspond tokens
+     * Anything after that will be ignored.
+     *
+     * @param correspondingToken the corresponding tokens to point to
+     * @param errorInformation helpful information strings
+     */
+    public AbstractCompilationError(Token correspondingToken, String errorInformation) {
+        this(Collections.singletonList(correspondingToken), errorInformation);
     }
     
     

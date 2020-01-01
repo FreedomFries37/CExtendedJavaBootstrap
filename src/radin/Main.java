@@ -2,8 +2,8 @@ package radin;
 
 import radin.compilation.AbstractCompiler;
 import radin.compilation.FileCompiler;
-import radin.interphase.CompilationSettings;
-import radin.interphase.ICompilationSettings;
+import radin.utility.CompilationSettings;
+import radin.utility.ICompilationSettings;
 import radin.interphase.lexical.Token;
 import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
@@ -79,6 +79,11 @@ public class Main {
         
         Parser parser = new Parser(lex);
         CategoryNode program = parser.parse();
+        if(parser.hasErrors() || program == null) {
+            ErrorReader errorReader = new ErrorReader(filename, lex.getInputString(), parser.getErrors());
+            errorReader.readErrors();
+            return;
+        }
         program.printTreeForm();
         
         if(args.length >= 2) {
@@ -122,7 +127,7 @@ public class Main {
                     
                     if(!determineTypes) {
                         ErrorReader errorReader = new ErrorReader(filename, lex.getInputString(),
-                                TypeAnalyzer.getErrors());
+                                analyzer.getErrors());
                         errorReader.readErrors();
                     } else {
     

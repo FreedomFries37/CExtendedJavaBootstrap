@@ -909,12 +909,20 @@ public class ActionRoutineApplier {
                                 );
                                 
                             } else if(node.firstIs(TokenType.t_lbrac)) {
-                                CXType newType = new ArrayType(type);
+                                CXType newType;
+                                AbstractSyntaxNode expression = AbstractSyntaxNode.EMPTY;
+                                if(node.hasChildCategory("Expression")) {
+                                    expression = node.getCategoryNode("Expression").getSynthesized();
+                                    newType = new ArrayType(type, expression);
+                                } else {
+                                    newType = new ArrayType(type);
+                                }
                                 node.setSynthesized(
                                         new TypeAbstractSyntaxNode(
                                                 ASTNodeType.declaration,
                                                 newType,
-                                                node.getInherit(1)
+                                                node.getInherit(1),
+                                                expression
                                         )
                                 );
                             } else

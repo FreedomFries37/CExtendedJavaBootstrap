@@ -1,6 +1,6 @@
 package radin;
 
-import radin.interphase.AbstractCompilationError;
+import radin.interphase.errorhandling.AbstractCompilationError;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -60,26 +60,45 @@ public class ErrorReader {
     }
     
     public void readErrors() {
+        String outputedFileName = null;
         for (AbstractCompilationError error : errors) {
             // System.out.println(error.getError());
-            if(!Main.getSettings().isShowErrorStackTrace())
-                System.out.println(error.toString());
-            else
-                error.printStackTrace(System.out);
+            
             
             List<AbstractCompilationError.ErrorInformation> infoMessages = new LinkedList<>();
             LineHolder lineHolderCurrent = null;
             int maxSize = 0;
-            boolean printedFile = false;
+            boolean firstLine = true;
+            String repeat = "";
+            boolean errorPrinted = false;
     
             for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {
                 LineHolder lineInfo = lines.get(errorInformation.getToken().getLineNumber() - 1);
                 
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
-                    System.out.printf("In %s:\n", lineHolderCurrent.fileName);
-                    printedFile =true;
-                    printError(lineHolderCurrent, infoMessages);
+                    if (!lineInfo.fileName.equals(outputedFileName)) {
+                        System.out.printf("In %s:\n", lineHolderCurrent.fileName);
+                        outputedFileName = lineInfo.fileName;
+                    }
+                    
+                    if(!errorPrinted) {
+                        if (!Main.getSettings().isShowErrorStackTrace())
+                            System.out.println(error.toString());
+                        else
+                            error.printStackTrace(System.out);
+                        errorPrinted = true;
+                    }
+                    
+                    
+                    if(firstLine) {
+                        
+                        firstLine = false;
+                    } else {
+                        System.out.println(repeat + "|" );
+                    }
+                    repeat = printError(lineHolderCurrent, infoMessages);
                     infoMessages.clear();
+                    lineHolderCurrent = lineInfo;
                 } else if(lineHolderCurrent == null) {
                     lineHolderCurrent = lineInfo;
                 }
@@ -88,8 +107,19 @@ public class ErrorReader {
             }
     
             if(lineHolderCurrent != null) {
-                if (!printedFile)
+                if (!lineHolderCurrent.fileName.equals(outputedFileName)) {
                     System.out.printf("In %s:\n", lineHolderCurrent.fileName);
+                    outputedFileName = lineHolderCurrent.fileName;
+                }
+                if(!errorPrinted) {
+                    if (!Main.getSettings().isShowErrorStackTrace())
+                        System.out.println(error.toString());
+                    else
+                        error.printStackTrace(System.out);
+                }
+                if(!firstLine) {
+                    System.out.println(repeat + "|" );
+                }
                 printError(lineHolderCurrent, infoMessages);
             }
             /*
@@ -109,7 +139,7 @@ public class ErrorReader {
         }
     }
     
-    private void printError(LineHolder lineHolder, List<AbstractCompilationError.ErrorInformation> informations) {
+    private String printError(LineHolder lineHolder, List<AbstractCompilationError.ErrorInformation> informations) {
         int lineNumberDigits = (int) Math.log10(lineHolder.lineNumber) + 1;
         
         String repeat = " ".repeat(lineNumberDigits + 1);
@@ -117,24 +147,30 @@ public class ErrorReader {
         System.out.println(lineHolder.lineNumber + " | " + lineHolder.contents);
         List<Integer> columns = new LinkedList<>();
         for (AbstractCompilationError.ErrorInformation information : informations) {
-            int imageLength = information.getToken().getImage().length();
+            int imageLength = information.getToken().getRepresentation().length();
             columns.add(information.getToken().getColumn() + imageLength/2);
         }
         columns.sort(Integer::compareTo);
         int maxSize = lineHolder.contents.length();
         boolean first = true;
         for (int i = informations.size() - 1; i >= 0; i--) {
-            if(!first) System.out.println(repeat + "|" + errorAt(-1, maxSize, null, columns, first));
+            if(!first) {
+                System.out.println(repeat + "|" + errorAt(-1, maxSize, null, columns, first));
+            }
             System.out.println(repeat + "|" + errorAt(columns.get(i), maxSize, informations.get(i).getInfo(), columns, first));
             columns.remove(i);
             if(first) first = false;
             
         }
+        
+        return repeat;
     }
     
     private String errorAt(int column, int maxSize, String info, List<Integer> otherColumns, boolean topLine) {
         StringBuilder output = new StringBuilder();
-        for (int i = 0; i < maxSize + 8; i++) {
+        int addition = 8;
+        if(info == null) addition = 0;
+        for (int i = 0; i < maxSize + addition; i++) {
             if(i < column || column == -1) {
                 if(otherColumns.contains(i)) {
                     if(topLine) {
@@ -152,7 +188,10 @@ public class ErrorReader {
                     output.append('|');
                 }
             } else {
-                output.append("_");
+                if(info != null)
+                    output.append("_");
+                else
+                    output.append('^');
             }
         }
         if(info != null) {

@@ -1,6 +1,6 @@
 package radin.typeanalysis.errors;
 
-import radin.interphase.AbstractCompilationError;
+import radin.interphase.errorhandling.AbstractCompilationError;
 import radin.interphase.lexical.Token;
 import radin.interphase.semantics.types.CXType;
 

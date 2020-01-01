@@ -1,19 +1,20 @@
 package radin.typeanalysis;
 
-import radin.interphase.AbstractCompilationError;
-import radin.interphase.CompilationError;
-import radin.interphase.ICompilationSettings;
+import radin.interphase.errorhandling.AbstractCompilationError;
+import radin.interphase.errorhandling.CompilationError;
+import radin.utility.ICompilationSettings;
+import radin.interphase.errorhandling.ICompilationErrorCollector;
 import radin.interphase.lexical.Token;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.wrapped.ConstantType;
 import radin.interphase.semantics.types.compound.CXClassType;
 import radin.interphase.semantics.types.methods.CXMethod;
-import radin.typeanalysis.errors.RecoverableError;
+import radin.interphase.errorhandling.RecoverableCompilationError;
 
 import java.util.*;
 
-public abstract class TypeAnalyzer implements ITypeAnalyzer{
+public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCollector {
 
    
     private Stack<TypeTracker> trackerStack;
@@ -21,14 +22,29 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     
     private static TypeEnvironment environment;
     private static ICompilationSettings compilationSettings;
-    private static List<AbstractCompilationError> errors;
+    private List<AbstractCompilationError> errors;
     
     private static HashMap<CXMethod, TypeAugmentedSemanticNode> methods;
     
+    private static class EmptyTypeAnalyzer extends TypeAnalyzer{
+    
+        public EmptyTypeAnalyzer(TypeAugmentedSemanticNode tree) {
+            super(tree);
+        }
+    
+        @Override
+        public boolean determineTypes(TypeAugmentedSemanticNode node) {
+            return false;
+        }
+    }
+    
+    public static TypeAnalyzer getInstance() {
+        return new EmptyTypeAnalyzer(null);
+    }
     
     
     static {
-        errors = new LinkedList<>();
+        
         methods = new HashMap<>();
     }
     
@@ -47,6 +63,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     public TypeAnalyzer(TypeAugmentedSemanticNode tree) {
         this.tree = tree;
         trackerStack = new Stack<>();
+        errors = new LinkedList<>();
         
         if(environment != null && environment.typedefExists("boolean")) {
             trackerStack.push(new TypeTracker(environment));
@@ -94,7 +111,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     public boolean determineTypes() {
         try {
             return determineTypes(tree);
-        }catch (RecoverableError e) {
+        }catch (RecoverableCompilationError e) {
             Token closestToken = tree.findFailureToken();
             CompilationError error = new CompilationError(e, closestToken);
             errors.add(error);
@@ -113,10 +130,14 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     }
     
     
-    public static List<AbstractCompilationError> getErrors() {
+    public List<AbstractCompilationError> getTypeErrors() {
         return errors;
     }
     
+    @Override
+    public List<AbstractCompilationError> getErrors() {
+        return getTypeErrors();
+    }
     
     
     /**
@@ -138,7 +159,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
      * @param o2 type2
      * @return whether they can be used
      */
-    protected static boolean isStrict(CXType o1, CXType o2) {
+    protected static boolean strictIs(CXType o1, CXType o2) {
         return environment.isStrict(o1, o2);
     }
     
@@ -147,6 +168,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer{
     
     public <T extends TypeAnalyzer> boolean determineTypes(T other) {
         ((TypeAnalyzer) other).trackerStack = trackerStack;
+        ((TypeAnalyzer) other).errors = errors;
         return other.determineTypes();
     }
     

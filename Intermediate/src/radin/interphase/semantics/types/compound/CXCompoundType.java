@@ -101,10 +101,6 @@ public abstract class CXCompoundType extends ICXCompoundType {
         for (FieldDeclaration field : fields) {
             if(!field.getType().isValid(e)) return false;
         }
-        CXType lastType = fields.get(fields.size() - 1).type;
-        if (lastType instanceof ArrayType) {
-            return ((ArrayType) lastType).isConstSize();
-        }
         return true;
     }
     

@@ -1,9 +1,7 @@
-package radin.interphase;
+package radin.utility;
 
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 public interface ICompilationSettings {
     

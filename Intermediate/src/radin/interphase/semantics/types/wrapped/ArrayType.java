@@ -1,5 +1,6 @@
 package radin.interphase.semantics.types.wrapped;
 
+import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.ICXWrapper;
@@ -8,44 +9,39 @@ import radin.interphase.semantics.types.primitives.AbstractCXPrimitiveType;
 public class ArrayType extends AbstractCXPrimitiveType implements ICXWrapper {
 
     private CXType baseType;
-    private boolean constSize;
-    private long size;
+    private AbstractSyntaxNode size;
     
     public ArrayType(CXType baseType) {
         this.baseType = baseType;
-        constSize = false;
+        this.size = null;
     }
     
-    public ArrayType(CXType baseType, long size) {
+    public ArrayType(CXType baseType, AbstractSyntaxNode size) {
         this.baseType = baseType;
         this.size = size;
-        constSize = true;
     }
     
     public CXType getBaseType() {
         return baseType;
     }
     
-    public boolean isConstSize() {
-        return constSize;
-    }
     
-    public long getSize() {
+    public AbstractSyntaxNode getSize() {
         return size;
     }
     
     @Override
     public String generateCDefinition() {
-        if(isConstSize()) {
-            return baseType.generateCDefinition() + "[" + constSize + "]";
+        if(size != null) {
+            return baseType.generateCDefinition() + "[" + size.getRepresentation() + "]";
         }
         return baseType.generateCDefinition() + "[]";
     }
     
     @Override
     public String generateCDefinition(String identifier) {
-        if(isConstSize()) {
-            return baseType.generateCDefinition() + " " + identifier + "[" + constSize + "]";
+        if(size != null) {
+            return baseType.generateCDefinition() + " " + identifier + "[" + "$REPLACE ME$" + "]";
         }
         return baseType.generateCDefinition() + " " + identifier + "[]";
     }
@@ -57,7 +53,7 @@ public class ArrayType extends AbstractCXPrimitiveType implements ICXWrapper {
     
     @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
-        return new ArrayType(baseType.getTypeRedirection(e));
+        return new ArrayType(baseType.getTypeRedirection(e), size);
     }
     
     @Override

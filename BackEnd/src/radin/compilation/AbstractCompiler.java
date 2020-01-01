@@ -1,7 +1,6 @@
 package radin.compilation;
 
-import radin.compilation.tags.AbstractCompilationTag;
-import radin.interphase.ICompilationSettings;
+import radin.utility.ICompilationSettings;
 import radin.interphase.lexical.Token;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
@@ -28,7 +27,7 @@ public abstract class AbstractCompiler {
     
     abstract public boolean compile(TypeAugmentedSemanticNode node);
     
-    protected final String compileToString(TypeAugmentedSemanticNode node) {
+    public String compileToString(TypeAugmentedSemanticNode node) {
         PrintWriter saved = printWriter; // temporarily change where output is directed
        
         StringWriter writer = new StringWriter();

@@ -1,6 +1,6 @@
 package radin.interphase.semantics.types.compound;
 
-import radin.interphase.Reference;
+import radin.utility.Reference;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.IncorrectParameterTypesError;
 import radin.interphase.semantics.exceptions.RedeclareError;

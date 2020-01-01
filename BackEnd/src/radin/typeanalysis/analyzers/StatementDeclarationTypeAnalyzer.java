@@ -1,12 +1,16 @@
 package radin.typeanalysis.analyzers;
 
+import radin.compilation.tags.ArrayWithSizeTag;
+import radin.compilation.tags.BasicCompilationTag;
 import radin.interphase.semantics.ASTNodeType;
+import radin.interphase.semantics.AbstractSyntaxNode;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
 import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
 import radin.interphase.semantics.types.compound.CXCompoundType;
 import radin.interphase.semantics.types.compound.CXFunctionPointer;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
+import radin.interphase.semantics.types.wrapped.ArrayType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IncorrectTypeError;
@@ -36,7 +40,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 declarationType =
                         ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
                 
-                if(isStrict(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
+                if(strictIs(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
                 
                 
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
@@ -44,6 +48,23 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
                 } else if(declarationType == null) {
                     throw new TypeNotDefinedError();
+                }
+                
+                if(declarationType instanceof ArrayType) {
+                    AbstractSyntaxNode size = ((ArrayType) declarationType).getSize();
+                    if(size != null) {
+                        ArrayWithSizeTag tag = new ArrayWithSizeTag(size, getEnvironment());
+                        declaration.addCompilationTag(tag);
+                        if(tag.isConstant()) {
+                            declaration.addCompilationTag(BasicCompilationTag.CONSTANT_SIZE);
+                        } else {
+                            ExpressionTypeAnalyzer typeAnalyzer = new ExpressionTypeAnalyzer(tag.getExpression());
+                            if(!determineTypes(typeAnalyzer)) {
+                                setIsFailurePoint(declaration);
+                                return false;
+                            }
+                        }
+                    }
                 }
                 
                 

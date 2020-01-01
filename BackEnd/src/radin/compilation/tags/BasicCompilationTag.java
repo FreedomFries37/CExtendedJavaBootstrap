@@ -15,7 +15,8 @@ public enum BasicCompilationTag implements ICompilationTag{
     COMPILE_AS_FIELD_GET("COMPILE AS FIELD GET", ASTNodeType.method_call),
     OPERATOR_ASSIGNMENT("OPERATOR ASSIGNMENT", ASTNodeType.assignment_type),
     HAS_ELSE("HAS ELSE", ASTNodeType.if_cond),
-    VOID_RETURN("VOID RETURN", ASTNodeType._return)
+    VOID_RETURN("VOID RETURN", ASTNodeType._return),
+    CONSTANT_SIZE("CONST SIZE", ASTNodeType.declaration)
     ;
     
     private HashSet<ASTNodeType> validAttachmentPoints;
