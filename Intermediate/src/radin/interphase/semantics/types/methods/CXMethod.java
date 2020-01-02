@@ -24,7 +24,7 @@ public class CXMethod implements CXEquivalent {
     private Visibility visibility;
     private boolean isVirtual;
     private CXType returnType;
-    private String name;
+    private CXIdentifier name;
     private List<CXParameter> parameters;
     private AbstractSyntaxNode methodBody;
     
@@ -34,7 +34,7 @@ public class CXMethod implements CXEquivalent {
                     AbstractSyntaxNode methodBody) {
         this.parent = parent;
         this.visibility = visibility;
-        this.name = name;
+        this.name = new CXIdentifier(name, false);
         this.isVirtual = isVirtual;
         this.returnType = returnType;
         this.parameters = parameters;
@@ -48,6 +48,10 @@ public class CXMethod implements CXEquivalent {
         this.parent = parent;
     }
     
+    public void setIdentifier(CXIdentifier name) {
+        this.name = name;
+    }
+    
     public CXClassType getParent() {
         return parent;
     }
@@ -57,7 +61,7 @@ public class CXMethod implements CXEquivalent {
     }
     
     public String getName() {
-        return name;
+        return name.toString();
     }
     
     public boolean isVirtual() {

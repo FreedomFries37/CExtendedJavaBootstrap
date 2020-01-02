@@ -26,6 +26,10 @@ public class TypeEnvironment {
     
     private HashSet<CXCompoundTypeNameIndirection> lateBoundReferences;
     
+    
+    private CXIdentifier currentNamespace = null;
+    private NamespaceTree namespaceTree = new NamespaceTree();
+    
     private final static HashSet<String> primitives;
     private int pointerSize = 8;
     
@@ -90,6 +94,17 @@ public class TypeEnvironment {
         createdClasses = new HashSet<>();
         
         standardBooleanDefined = false;
+    }
+    
+    public void pushNamespace(String identifier) {
+        this.currentNamespace = new CXIdentifier(this.currentNamespace, identifier);
+        namespaceTree.addNamespace(this.currentNamespace);
+    }
+    
+    public void popNamespace() {
+        if(currentNamespace != null) {
+            currentNamespace = currentNamespace.getParentNamespace();
+        }
     }
     
     public int getPointerSize() {
@@ -165,11 +180,40 @@ public class TypeEnvironment {
             return ((TypeAbstractSyntaxNode) ast).getCxType();
         }
         
+        if(ast.getType().equals(ASTNodeType.namespaced)) {
+            ast.printTreeForm();
+            AbstractSyntaxNode node = ast;
+            CXIdentifier namespace = null;
+            while (node.getType() == ASTNodeType.namespaced) {
+                namespace = new CXIdentifier(namespace, node.getChild(0).getToken().getImage());
+                node = node.getChild(1);
+            }
+    
+            CXIdentifier certainNamespace = namespaceTree.getNamespace(currentNamespace, namespace);
+    
+            for (CXCompoundType cxCompoundType : namespaceTree.getTypesForNamespace(certainNamespace)) {
+                if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(node.getToken().getImage())) {
+                    return cxCompoundType;
+                }
+            }
+            
+            throw new TypeDoesNotExist(new CXIdentifier(namespace,node.getToken().getImage()).toString());
+        }
+        
         if(ast.getType().equals(ASTNodeType.typename)) {
+            
+            if(typeDefinitions.containsKey(ast.getToken().getImage())) {
+                return typeDefinitions.get(ast.getToken().getImage());
+            }
+            String image = ast.getToken().getImage();
+            List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(currentNamespace);
+            for (CXCompoundType cxCompoundType : typesForNamespace) {
+                if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(image))
+                    return cxCompoundType;
+            }
             if(!typedefExists(ast.getToken().getImage())) {
                 throw new TypeDoesNotExist(ast.getToken().getImage());
             }
-            return typeDefinitions.get(ast.getToken().getImage());
         }
         
         if(ast.getType().equals(ASTNodeType.pointer_type)) {
@@ -219,7 +263,7 @@ public class TypeEnvironment {
         if(ast.getType().equals(ASTNodeType.specifier)) {
             
             if(ast.hasChild(ASTNodeType.basic_compound_type_dec)) {
-                return createType(ast.getChild(ASTNodeType.basic_compound_type_dec));
+                return createType(ast.getChild(ASTNodeType.basic_compound_type_dec), null);
             } else if(ast.hasChild(ASTNodeType.compound_type_reference)) {
                 AbstractSyntaxNode name = ast.getChild(ASTNodeType.compound_type_reference).getChild(ASTNodeType.id);
                 String image = name.getToken().getImage();
@@ -269,7 +313,7 @@ public class TypeEnvironment {
         }
         
         if(ast.getType().equals(ASTNodeType.class_type_definition)) {
-            return createType(ast);
+            return createType(ast, currentNamespace);
         }
         
         throw new UnsupportedOperationException(ast.getType().toString());
@@ -284,7 +328,7 @@ public class TypeEnvironment {
         return o1Specifier;
     }
     
-    private CXCompoundType createType(AbstractSyntaxNode ast) {
+    private CXCompoundType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
         
         AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
         String name = nameAST != null? nameAST.getToken().getImage() : null;
@@ -314,6 +358,7 @@ public class TypeEnvironment {
             
             output = type;
         } else {
+            CXIdentifier identifier = new CXIdentifier(namespace, name);
             List<CXMethod> methods = new LinkedList<>();
             List<CXConstructor> constructors = new LinkedList<>();
             List<CXClassType.ClassFieldDeclaration> fieldDeclarations = new LinkedList<>();
@@ -358,11 +403,13 @@ public class TypeEnvironment {
                 String image = ast.getChild(ASTNodeType.inherit)
                         .getChild(ASTNodeType.typename).getToken().getImage();
                 CXClassType parent = ((CXClassType) getNamedCompoundType(image));
-                cxClassType = new CXClassType(name, parent, fieldDeclarations, methods, new LinkedList<>(), this);
+                
+                
+                cxClassType = new CXClassType(identifier, parent, fieldDeclarations, methods, new LinkedList<>(), this);
                 
                 
             }
-            else cxClassType = new CXClassType(name, fieldDeclarations, methods, new LinkedList<>(), this);
+            else cxClassType = new CXClassType(identifier, fieldDeclarations, methods, new LinkedList<>(), this);
             
             Iterator<Visibility> visibilityIterator = constructorVisibilities.iterator();
             for (AbstractSyntaxNode dec: constructorDefinitions) {
@@ -395,6 +442,9 @@ public class TypeEnvironment {
             cxClassType.addConstructors(constructors);
             createdClasses.add(cxClassType);
             cxClassType.setEnvironment(this);
+            
+            namespaceTree.getTypesForNamespace(namespace).add(cxClassType);
+            
             addNamedCompoundType(cxClassType);
             return cxClassType;
             

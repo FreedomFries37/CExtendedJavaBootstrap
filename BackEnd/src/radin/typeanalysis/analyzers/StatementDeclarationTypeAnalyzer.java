@@ -47,7 +47,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     declarationType =
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
                 } else if(declarationType == null) {
-                    throw new TypeNotDefinedError();
+                    throw new TypeNotDefinedError(declaration.findFirstToken().getPrevious());
                 }
                 
                 if(declarationType instanceof ArrayType) {
@@ -81,7 +81,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     declarationType =
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
                 } else if(declarationType == null) {
-                    throw new TypeNotDefinedError();
+                    throw new TypeNotDefinedError(subDeclaration.findFirstToken().getPrevious());
                 }
     
                 name = subDeclaration.getASTChild(ASTNodeType.id).getToken().getImage();
@@ -90,8 +90,9 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
                 if(!determineTypes(analyzer)) return false;
                 
-                if(!is(expression.getCXType(), declarationType)) throw new IncorrectTypeError(declarationType,
-                        expression.getCXType(), expression.findFirstToken(), declaration.findFirstToken());
+                if(!is(expression.getCXType(), declarationType))
+                    throw new IncorrectTypeError(declarationType, expression.getCXType(),
+                            declaration.findFirstToken(), expression.findFirstToken());
                 //if(!expression.getCXType().is(declarationType, getEnvironment())) throw new IncorrectTypeError
                 // (declarationType, expression.getCXType());
                 

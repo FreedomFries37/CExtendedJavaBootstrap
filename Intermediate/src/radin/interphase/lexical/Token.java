@@ -6,6 +6,9 @@ public class Token implements Comparable<Token> {
     private String image;
     private int column = -1;
     private int lineNumber = -1;
+    private Token previous;
+    
+    
     
     public Token(TokenType type) {
         this.type = type;
@@ -14,6 +17,14 @@ public class Token implements Comparable<Token> {
     public Token(TokenType type, String image) {
         this.type = type;
         this.image = image;
+    }
+    
+    public Token getPrevious() {
+        return previous;
+    }
+    
+    public void setPrevious(Token previous) {
+        this.previous = previous;
     }
     
     public int getColumn() {

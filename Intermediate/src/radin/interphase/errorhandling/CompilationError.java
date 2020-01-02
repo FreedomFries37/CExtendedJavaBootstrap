@@ -11,7 +11,9 @@ public class CompilationError extends AbstractCompilationError{
         super(thrownError, Collections.singletonList(closestToken), thrownError.getMessage());
     }
     
-    
+    public CompilationError(String thrownError, Token closestToken) {
+        super(thrownError, Collections.singletonList(closestToken));
+    }
     
     
 }

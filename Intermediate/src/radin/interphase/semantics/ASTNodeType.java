@@ -71,7 +71,10 @@ public enum ASTNodeType {
     _virtual("virtual"),
     _super("super"),
     inherit("inherit"),
-    
+    namespaced("namespaced"),
+    implement_block("implement_block"),
+    implement_single("implement_single"),
+    implementing("implementing")
     ;
     
     

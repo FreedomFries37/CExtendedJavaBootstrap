@@ -70,7 +70,9 @@ public enum TokenType {
     t_eof("EOF"),
     t_typename("typename"),
     t_sizeof("sizeof"),
-    t_internal("internal");
+    t_internal("internal"),
+    t_in("in"),
+    t_implement("implement");
     
     private String str;
     

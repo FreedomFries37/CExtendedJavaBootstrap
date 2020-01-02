@@ -1,7 +1,7 @@
 package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.types.wrapped.ArrayType;
+import radin.interphase.semantics.types.CXIdentifier;
 import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.ICXCompoundType;
 
@@ -53,7 +53,7 @@ public abstract class CXCompoundType extends ICXCompoundType {
     }
     
     private List<FieldDeclaration> fields;
-    private String typeName;
+    private CXIdentifier typeName;
     private boolean anonymous;
     
     public CXCompoundType(List<FieldDeclaration> fields) {
@@ -67,16 +67,16 @@ public abstract class CXCompoundType extends ICXCompoundType {
         anonymous = true;
     }
     
-    public CXCompoundType(String name, List<FieldDeclaration> fields) {
+    public CXCompoundType(CXIdentifier identifier, List<FieldDeclaration> fields) {
         this.fields = fields;
-        this.typeName = name;
+        this.typeName = identifier;
         anonymous = false;
     }
     
-    public CXCompoundType(String name, FieldDeclaration f1, FieldDeclaration... fields) {
+    public CXCompoundType(CXIdentifier identifier, FieldDeclaration f1, FieldDeclaration... fields) {
         this.fields = Arrays.asList(fields);
         this.fields.add(0, f1);
-        this.typeName = name;
+        this.typeName = identifier;
         anonymous = false;
     }
     
@@ -89,6 +89,10 @@ public abstract class CXCompoundType extends ICXCompoundType {
     }
     
     public String getTypeName() {
+        return typeName.toString();
+    }
+    
+    public CXIdentifier getTypeNameIdentifier() {
         return typeName;
     }
     

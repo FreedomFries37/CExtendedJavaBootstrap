@@ -107,7 +107,8 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
     
             return this.isIntegral() && ((AbstractCXPrimitiveType) other).isIntegral() || this.isFloatingPoint() && ((AbstractCXPrimitiveType) other).isFloatingPoint();
         }
-        
-        return other instanceof CXPrimitiveType || other instanceof LongPrimitive || other instanceof ShortPrimitive || other instanceof UnsignedPrimitive;
+        return other.isPrimitive();
+        //return other instanceof CXPrimitiveType || other instanceof LongPrimitive || other instanceof
+        // ShortPrimitive || other instanceof UnsignedPrimitive;
     }
 }

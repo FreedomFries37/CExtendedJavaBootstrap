@@ -91,7 +91,7 @@ public class Parser extends BasicParser {
     private boolean parseTopLevelDecsList(CategoryNode parent) {
         CategoryNode output = new CategoryNode("TopLevelDecsList");
         
-        if(!getCurrentType().equals(TokenType.t_eof)) {
+        if(!getCurrentType().equals(TokenType.t_eof) && getCurrentType() != t_rcurl) {
             if (!parseTopLevelDeclaration(output)) return false;
             if (!parseTopLevelDecsTail(output)) return false;
         }
@@ -131,23 +131,19 @@ public class Parser extends BasicParser {
             case t_lpar:
             case t_const:
             {
-                /*
-                if(!attemptParse(this::parseDeclaration, child)) {
-                    if(!parseFunctionDefinition(child)) return error("Could not parse declaration", true);
-                }
-                */
                 Token corresponding = getCurrent();
                 if(!oneMustParse(child, this::parseFunctionDefinition,this::parseDeclaration)) {
                     return absorbErrors("Could not parse declaration", true, corresponding);
                     //return error("Could not parse declaration",true, corresponding);
                 }
-                /*
-                if(!attemptParse(this::parseFunctionDefinition, child)) {
-                    if(!parseDeclaration(child)) return error("Could not parse declaration");
-                    
-                }
-                
-                 */
+                break;
+            }
+            case t_in: {
+                if(!parseInIdentifier(child)) return false;
+                break;
+            }
+            case t_implement: {
+                if(!parseImplement(child)) return false;
                 break;
             }
             default:
@@ -162,9 +158,76 @@ public class Parser extends BasicParser {
     private boolean parseTopLevelDecsTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("TopLevelDecsTail");
         
-        if(!getCurrentType().equals(TokenType.t_eof)) {
+        if(!getCurrentType().equals(TokenType.t_eof ) && getCurrentType() != t_rcurl) {
             if(!parseTopLevelDecsList(child)) return false;
         }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseInIdentifier(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("InIdentifier");
+        
+        if(!consume(t_in)) return false;
+        if(!consumeAndAddAsLeaf(t_id, child)) return error("Must be a valid identifier");
+        if (getCurrentType() == t_lcurl) {
+            getNext();
+            if (!parseTopLevelDecsList(child)) return false;
+            if (!consume(t_rcurl)) return error("Missing matching }");
+        } else {
+            if (!parseTopLevelDeclaration(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseImplement(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Implement");
+        
+        if(!consume(t_implement)) return false;
+        if(!parseNamespacedType(child)) return error("Must be a valid typename");
+        if (getCurrentType() == t_lcurl) {
+            getNext();
+            if (!parseImplementList(child)) return false;
+            if (!consume(t_rcurl)) return error("Missing matching }");
+        } else {
+            if (!parseImplementation(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseImplementList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ImplementList");
+        
+        if(!parseImplementation(child)) return false;
+        if(!parseImplementListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseImplementListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("ImplementListTail");
+        
+        if(!match(t_rcurl)) {
+            if(!parseImplementList(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseImplementation(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Implementation");
+        
+        
+        if(!parseFunctionDefinition(child)) return error("Illegal statement in implement section");
+        
+        
         
         parent.addChild(child);
         return true;
@@ -173,8 +236,8 @@ public class Parser extends BasicParser {
     
     private boolean parseFunctionDefinition(CategoryNode parent) {
         CategoryNode child = new CategoryNode("FunctionDefinition");
-    
-    
+        
+        
         switch (attemptParse(this::parseDeclarationSpecifiers, child)) {
             case PARSED:
             case ROLLBACK:
@@ -229,6 +292,10 @@ public class Parser extends BasicParser {
                 if(!parseDeclaration(child)) return false;
                 break;
             }
+            case t_id: {
+                if(!oneMustParse(child, this::parseDeclaration, this::parseExpressionStatement)) return false;
+                break;
+            }
             default:
                 if(!parseExpressionStatement(child)) return false;
                 break;
@@ -254,7 +321,7 @@ public class Parser extends BasicParser {
     
     private boolean parseExpressionStatement(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ExpressionStatement");
-    
+        
         switch (attemptParse(this::parseTopExpression, child)) {
             case PARSED:
             case ROLLBACK:
@@ -263,7 +330,7 @@ public class Parser extends BasicParser {
                 return false;
         }
         if(!consume(TokenType.t_semic)) {
-    
+            
             if (!recoverableMissingError("Missing semi-colon", t_semic, t_rcurl)) {
                 return false;
             }
@@ -394,7 +461,7 @@ public class Parser extends BasicParser {
     
     private boolean parseStatementListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("StatementListTail");
-    
+        
         switch (attemptParse(this::parseStatementList, child)) {
             case PARSED:
             case ROLLBACK:
@@ -419,7 +486,7 @@ public class Parser extends BasicParser {
     
     private boolean parseDeclarationListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("DeclarationListTail");
-    
+        
         switch (attemptParse(this::parseDeclarationList, child)) {
             case PARSED:
             case ROLLBACK:
@@ -1200,6 +1267,10 @@ public class Parser extends BasicParser {
                 if(!parseSpecifier(output)) return false;
                 if(!parseSpecsAndQualsTail(output)) return false;
                 break;
+            case t_id:
+                if(!parseNamespacedType(output)) return false;
+                if(!parseSpecsAndQualsTail(output)) return false;
+                break;
             default:
                 return false;
         }
@@ -1209,6 +1280,25 @@ public class Parser extends BasicParser {
         return true;
     }
     
+    private boolean parseNamespacedType(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("NamespacedType");
+        
+        switch (getCurrentType()) {
+            case t_id:
+                consumeAndAddAsLeaf(child);
+                if(!consume(t_namespace)) return error("Not a valid type");
+                if(!parseNamespacedType(child)) return false;
+                break;
+            case t_typename:
+                consumeAndAddAsLeaf(child);
+                break;
+            default:
+                return error("Not a valid type");
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
     
     
     
@@ -1523,7 +1613,7 @@ public class Parser extends BasicParser {
             }
             case t_lbrac: {
                 consumeAndAddAsLeaf(child);
-    
+                
                 switch (attemptParse(this::parseExpression, child)) {
                     case PARSED:
                     case ROLLBACK:
@@ -1898,7 +1988,7 @@ public class Parser extends BasicParser {
         }
         
          */
-    
+        
         if (!oneMustParse(child, this::parseConstructorDefinition, this::parseDeclaration, this::parseFunctionDefinition)) {
             return error("Could not parse class declaration");
         }
@@ -1913,6 +2003,7 @@ public class Parser extends BasicParser {
         switch (getCurrentType()) {
             case t_public:
             case t_private:
+            case t_internal:
                 consumeAndAddAsLeaf(child);
                 break;
             default:

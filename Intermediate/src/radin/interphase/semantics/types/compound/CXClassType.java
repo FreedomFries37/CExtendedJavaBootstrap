@@ -1,5 +1,6 @@
 package radin.interphase.semantics.types.compound;
 
+import radin.interphase.semantics.types.CXIdentifier;
 import radin.utility.Reference;
 import radin.interphase.semantics.TypeEnvironment;
 import radin.interphase.semantics.exceptions.IncorrectParameterTypesError;
@@ -44,14 +45,14 @@ public class CXClassType extends CXCompoundType {
     private boolean sealed;
     private TypeEnvironment environment;
     
-    public CXClassType(String typename, List<ClassFieldDeclaration> declarations,
+    public CXClassType(CXIdentifier identifier, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment environment) {
-        this(typename, null, declarations, methods, constructors, environment);
+        this(identifier, null, declarations, methods, constructors, environment);
         
     }
     
     
-    public CXClassType(String typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
+    public CXClassType(CXIdentifier typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
         super(typename, new LinkedList<>(declarations));
         this.environment = e;
@@ -82,6 +83,11 @@ public class CXClassType extends CXCompoundType {
         }
         List<String> virtualMethodsAlreadyExplored = new LinkedList<>();
         for (CXMethod method : methods) {
+            
+            
+            method.setIdentifier(new CXIdentifier(typename, method.getName()));
+            
+            
             if(method.isVirtual()) {
                 if(virtualMethodsAlreadyExplored.contains(method.getName())) {
                     throw new RedeclareError(method.getName());

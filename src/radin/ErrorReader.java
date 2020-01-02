@@ -191,7 +191,7 @@ public class ErrorReader {
                 if(info != null)
                     output.append("_");
                 else
-                    output.append('^');
+                    output.append('~');
             }
         }
         if(info != null) {

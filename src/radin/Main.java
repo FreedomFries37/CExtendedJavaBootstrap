@@ -76,6 +76,12 @@ public class Main {
         for (Token token : lex) {
             System.out.println(token);
         }
+        if(lex.hasErrors()) {
+            ErrorReader errorReader = new ErrorReader(filename, lex.getInputString(),
+                    lex.getErrors());
+            errorReader.readErrors();
+            return;
+        }
         
         Parser parser = new Parser(lex);
         CategoryNode program = parser.parse();

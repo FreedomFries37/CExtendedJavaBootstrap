@@ -1,7 +1,9 @@
 package radin.interphase.semantics.types.compound;
 
 import radin.interphase.semantics.TypeEnvironment;
+import radin.interphase.semantics.types.CXIdentifier;
 import radin.interphase.semantics.types.CXType;
+import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 
 import java.util.List;
 
@@ -16,11 +18,11 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
     }
     
     public CXBasicCompoundType(String name, List<FieldDeclaration> fields) {
-        super(name, fields);
+        super(new CXIdentifier(name, false), fields);
     }
     
     public CXBasicCompoundType(String name, FieldDeclaration f1, FieldDeclaration... fields) {
-        super(name, f1, fields);
+        super(new CXIdentifier(name, false), f1, fields);
     }
     
     @Override

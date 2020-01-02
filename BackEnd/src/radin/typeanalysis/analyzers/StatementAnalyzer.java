@@ -8,6 +8,7 @@ import radin.interphase.semantics.types.CXType;
 import radin.interphase.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.errors.IllegalStatementError;
 import radin.typeanalysis.errors.IncorrectReturnTypeError;
 import radin.typeanalysis.errors.NonVoidReturnTypeError;
 
@@ -166,7 +167,7 @@ public class StatementAnalyzer extends TypeAnalyzer {
             }
             
         } else if(node.getASTNode() == AbstractSyntaxNode.EMPTY) return true;
-        else return false;
+        else throw new IllegalStatementError();
         
         return true;
     }

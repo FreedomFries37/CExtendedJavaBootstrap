@@ -196,6 +196,7 @@ public class ActionRoutineApplier {
                         }
                         // MUST CONTINUE THROUGH INTO NEXT SECTION
                     }
+                    
                     case "AssignOperator":
                     case "TopExpression":
                     case "Statement":
@@ -553,6 +554,8 @@ public class ActionRoutineApplier {
                             sOrQ = getCatNode("Qualifier").getSynthesized();
                         } else if(node.firstIs("Specifier")) {
                             sOrQ = getCatNode("Specifier").getSynthesized();
+                        } else if(node.firstIs("NamespacedType")) {
+                            sOrQ = getCatNode("NamespacedType").getSynthesized();
                         } else return error("Typename without valid specifier or qualifier");
                         
                         //getCatNode("SpecsAndQualsTail").setInherit(sOrQ);
@@ -1217,6 +1220,77 @@ public class ActionRoutineApplier {
                                             parameterList, compoundStatement)
                             );
                         }
+                        return true;
+                    }
+                    case "InIdentifier": {
+                        String id = node.getLeafNode(TokenType.t_id).getToken().getImage();
+                        boolean push = false;
+                        try{
+                            node.setSynthesized(
+                                    node.getChild(1).getSynthesized()
+                            );
+                        }catch (SynthesizedMissingException e) {
+                            push = true;
+                        }
+                        
+                        if(push) environment.pushNamespace(id);
+                        
+                        node.setSynthesized(
+                                node.getChild(1).getSynthesized()
+                        );
+                        
+                        environment.popNamespace();
+                        return true;
+                    }
+                    case "NamespacedType": {
+                        System.out.println(node.getDirectChildren());
+                        
+                        if(node.hasChildToken(TokenType.t_typename)) {
+                            node.setSynthesized(node.getLeafNode(TokenType.t_typename).getSynthesized());
+                        } else {
+                            AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                            AbstractSyntaxNode next = getCatNode("NamespacedType", 2).getSynthesized();
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.namespaced, id, next)
+                            );
+                        }
+                        
+                        return true;
+                    }
+                    case "Implement": {
+                        AbstractSyntaxNode namespacedTypeNode = getCatNode("NamespacedType").getSynthesized();
+                        CXType namespacedType = environment.getType(namespacedTypeNode);
+                        TypeAbstractSyntaxNode implementing = new TypeAbstractSyntaxNode(ASTNodeType.implementing,
+                                namespacedType, namespacedTypeNode);
+                        
+                        if(node.hasChildCategory("Implementation")) {
+                            AbstractSyntaxNode implementation = getCatNode("Implementation").getSynthesized();
+                            
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.implement_single,
+                                            namespacedType,
+                                            implementation
+                                    )
+                            );
+                        } else {
+                            String EntryCategory = "Implementation";
+                            String HeadCatName = "ImplementList";
+                            String TailCatName = "ImplementListTail";
+    
+                            AbstractSyntaxNode[] array = foldList(node.getCategoryNode("ImplementList"), EntryCategory,
+                                    HeadCatName, TailCatName, implementing);
+    
+    
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.implement_single, namespacedType, array)
+                            );
+                        }
+                        
+                        return true;
+                    }
+                    case "Implementation": {
+                        node.getChild(0).setInherit(node.getInherit());
+                        node.setSynthesized(node.getChild(0).getSynthesized());
                         return true;
                     }
                     default:

@@ -1,5 +1,7 @@
 package radin.lexing;
 
+import radin.interphase.errorhandling.AbstractCompilationError;
+import radin.interphase.errorhandling.ICompilationErrorCollector;
 import radin.utility.ICompilationSettings;
 import radin.interphase.lexical.Token;
 import radin.interphase.lexical.TokenType;
@@ -9,7 +11,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Lexer implements Iterable<Token>, Iterator<Token> {
+public class Lexer implements Iterable<Token>, Iterator<Token>, ICompilationErrorCollector {
     
     
     
@@ -95,6 +97,8 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
     private String filename;
     private HashMap<String, Define> defines;
     private static ICompilationSettings compilationSettings;
+    private List<AbstractCompilationError> compilationErrors;
+    private int finishedIndex = -1;
     
     public static ICompilationSettings getCompilationSettings() {
         return compilationSettings;
@@ -124,6 +128,12 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
         prevLineNumber = 1;
         maxIndex = this.inputString.length();
         defines = new HashMap<>();
+        compilationErrors = new LinkedList<>();
+    }
+    
+    @Override
+    public List<AbstractCompilationError> getErrors() {
+        return compilationErrors;
     }
     
     private char getChar() {
@@ -419,7 +429,7 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                     if (getChar() == '\\') {
                         image += consumeNextChars(2);
                     } else if (getChar() == '\n') {
-                        return null;
+                        throw new TokenizationError("Incomplete String", getPrevious());
                     } else {
                         char nextChar = consumeChar();
                         if (nextChar == '"') {
@@ -565,6 +575,12 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
                     return new Token(TokenType.t_sizeof);
                 } else if (image.equals("boolean")) {
                     return new Token(TokenType.t_typename, image);
+                } else if(image.equals("in")) {
+                    return new Token(TokenType.t_in);
+                } else if(image.equals("implement")) {
+                    return new Token(TokenType.t_implement);
+                } else if(image.equals("internal")) {
+                    return new Token(TokenType.t_implement);
                 }
                 
                 return new Token(TokenType.t_id, image);
@@ -747,7 +763,7 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
     }
     
     public Token getPrevious() {
-        if(createdTokens.size() <= 1) return null;
+        if(createdTokens.size() < 1) return null;
         return createdTokens.get(tokenIndex - 1);
     }
     
@@ -758,9 +774,17 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
     
     public Token getNext() {
         if(++tokenIndex == createdTokens.size()) {
-            
-            Token tok = singleLex();
+            Token tok;
+            try {
+                 tok = singleLex();
+                 
+            }catch (AbstractCompilationError e) {
+                compilationErrors.add(e);
+                finishedIndex = tokenIndex;
+                tok = null;
+            }
             if(tok == null) return null;
+            tok.setPrevious(getPrevious());
             String representation = tok.getRepresentation();
             tok.addColumnAndLineNumber(column - representation.length(), lineNumber);
             prevLineNumber = lineNumber;
@@ -783,6 +807,9 @@ public class Lexer implements Iterable<Token>, Iterator<Token> {
     
     @Override
     public boolean hasNext() {
+        if(finishedIndex >= 0 && tokenIndex >= finishedIndex) {
+            return false;
+        }
         if(tokenIndex < createdTokens.size() - 1) return true;
         
         return currentIndex < inputString.length();

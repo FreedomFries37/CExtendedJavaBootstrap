@@ -123,7 +123,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
         } catch (Error e) {
             setIsFailurePoint(tree);
             Token closestToken = tree.findFailureToken();
-            CompilationError error = new CompilationError(e, closestToken);
+            CompilationError error = new CompilationError(e.getMessage(), closestToken);
             errors.add(error);
             return false;
         }

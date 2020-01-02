@@ -52,7 +52,7 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
                 priorType = owner;
             } else if(node.hasASTChild(ASTNodeType._super)) {
                 if(owner.getParent() == null) {
-                    throw new TypeNotDefinedError();
+                    throw new TypeNotDefinedError(node.getASTChild(ASTNodeType._super).findFirstToken());
                 }
                 priorType = owner.getParent();
             } else {
