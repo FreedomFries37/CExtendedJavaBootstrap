@@ -48,12 +48,12 @@ public class CXIdentifier implements CXEquivalent {
     @Override
     public String toString() {
         if(parentNamespace == null) return identifier;
-        return parentNamespace.toString() + "." + identifier;
+        return parentNamespace.toString() + "::" + identifier;
     }
     
     @Override
     public String generateCDefinition() {
-        return toString().replace(".", "_") + hashCode();
+        return toString().replace("::", "_") + hashCode();
     }
     
 }

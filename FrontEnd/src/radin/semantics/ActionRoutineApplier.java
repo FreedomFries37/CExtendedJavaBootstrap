@@ -568,6 +568,7 @@ public class ActionRoutineApplier {
                                 )
                         );
                         
+                        
                         return true;
                     }
                     case "SpecsAndQualsTail": {
@@ -758,6 +759,11 @@ public class ActionRoutineApplier {
                     }
                     case "Declaration": {
                         AbstractSyntaxNode declarationSpecifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        if(!(declarationSpecifiers instanceof TypeAbstractSyntaxNode)) {
+                            declarationSpecifiers = declarationSpecifiers.addType(
+                                    environment.getType(declarationSpecifiers)
+                            );
+                        }
                         if(node.hasChildCategory("InitDeclaratorList")) {
                             getCatNode("InitDeclaratorList").setInherit(declarationSpecifiers);
                             node.setSynthesized(
@@ -1264,7 +1270,9 @@ public class ActionRoutineApplier {
                                 namespacedType, namespacedTypeNode);
                         
                         if(node.hasChildCategory("Implementation")) {
-                            AbstractSyntaxNode implementation = getCatNode("Implementation").getSynthesized();
+                            CategoryNode implementationCat = getCatNode("Implementation");
+                            implementationCat.setInherit(implementing);
+                            AbstractSyntaxNode implementation = implementationCat.getSynthesized();
                             
                             node.setSynthesized(
                                     new TypeAbstractSyntaxNode(ASTNodeType.implement_single,

@@ -221,6 +221,10 @@ public class TypeEnvironment {
         }
         
         if(ast.getType().equals(ASTNodeType.qualifiers_and_specifiers)) {
+            if(ast.hasChild(ASTNodeType.namespaced)) {
+                return getType(ast.getChild(ASTNodeType.namespaced));
+            }
+            
             List<AbstractSyntaxNode> specifiers = ast.getChildren(ASTNodeType.specifier);
             specifiers.sort(new SpecifierComparator());
             CXType type = null;
