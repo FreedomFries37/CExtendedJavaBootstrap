@@ -1,6 +1,7 @@
 package radin.core.frontend;
 
 import radin.core.lexical.Token;
+import radin.core.lexical.TokenType;
 import radin.utility.ICompilationSettings;
 
 import java.util.LinkedList;
@@ -17,6 +18,8 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
     protected int lineNumber;
     protected String filename;
     
+    protected final static char EOF = '\0';
+    
     public Tokenizer(String inputString, String filename) {
         this.inputString = inputString;
         createdTokens = new LinkedList<>();
@@ -24,6 +27,73 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         column = 1;
         lineNumber = 1;
         this.filename = filename;
+    }
+    
+    public static Token getReservedToken(String image) {
+        switch (image) {
+            case "char":
+                return new Token(TokenType.t_char);
+            case "const":
+                return new Token(TokenType.t_const);
+            case "do":
+                return new Token(TokenType.t_do);
+            case "double":
+                return new Token(TokenType.t_double);
+            case "else":
+                return new Token(TokenType.t_else);
+            case "float":
+                return new Token(TokenType.t_float);
+            case "for":
+                return new Token(TokenType.t_for);
+            case "if":
+                return new Token(TokenType.t_if);
+            case "int":
+                return new Token(TokenType.t_int);
+            case "long":
+                return new Token(TokenType.t_long);
+            case "return":
+                return new Token(TokenType.t_return);
+            case "short":
+                return new Token(TokenType.t_short);
+            case "static":
+                return new Token(TokenType.t_static);
+            case "typedef":
+                return new Token(TokenType.t_typedef);
+            case "union":
+                return new Token(TokenType.t_union);
+            case "unsigned":
+                return new Token(TokenType.t_unsigned);
+            case "struct":
+                return new Token(TokenType.t_struct);
+            case "void":
+                return new Token(TokenType.t_void);
+            case "while":
+                return new Token(TokenType.t_while);
+            case "class":
+                return new Token(TokenType.t_class);
+            case "public":
+                return new Token(TokenType.t_public);
+            case "private":
+                return new Token(TokenType.t_private);
+            case "new":
+                return new Token(TokenType.t_new);
+            case "super":
+                return new Token(TokenType.t_super);
+            case "virtual":
+                return new Token(TokenType.t_virtual);
+            case "sizeof":
+                return new Token(TokenType.t_sizeof);
+            case "boolean":
+                return new Token(TokenType.t_typename, image);
+            case "in":
+                return new Token(TokenType.t_in);
+            case "implement":
+                return new Token(TokenType.t_implement);
+            case "internal":
+                return new Token(TokenType.t_internal);
+            default:
+                return new Token(TokenType.t_id, image);
+        }
     }
     
     @Override
@@ -78,7 +148,7 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
     }
     
     protected char getChar() {
-        if(currentIndex == getInputString().length()) return '\0';
+        if(currentIndex == getInputString().length()) return EOF;
         return getInputString().charAt(currentIndex);
     }
     

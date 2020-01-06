@@ -419,71 +419,10 @@ public class PreprocessingLexer extends Tokenizer<Token> {
                     }
                     
                 }
-                
-                
-                if (image.equals("char")) {
-                    return new Token(TokenType.t_char);
-                } else if (image.equals("const")) {
-                    return new Token(TokenType.t_const);
-                } else if (image.equals("do")) {
-                    return new Token(TokenType.t_do);
-                } else if (image.equals("double")) {
-                    return new Token(TokenType.t_double);
-                } else if (image.equals("else")) {
-                    return new Token(TokenType.t_else);
-                } else if (image.equals("float")) {
-                    return new Token(TokenType.t_float);
-                } else if (image.equals("for")) {
-                    return new Token(TokenType.t_for);
-                } else if (image.equals("if")) {
-                    return new Token(TokenType.t_if);
-                } else if (image.equals("int")) {
-                    return new Token(TokenType.t_int);
-                } else if (image.equals("long")) {
-                    return new Token(TokenType.t_long);
-                } else if (image.equals("return")) {
-                    return new Token(TokenType.t_return);
-                } else if (image.equals("short")) {
-                    return new Token(TokenType.t_short);
-                } else if (image.equals("static")) {
-                    return new Token(TokenType.t_static);
-                } else if (image.equals("typedef")) {
-                    return new Token(TokenType.t_typedef);
-                } else if (image.equals("union")) {
-                    return new Token(TokenType.t_union);
-                } else if (image.equals("unsigned")) {
-                    return new Token(TokenType.t_unsigned);
-                } else if (image.equals("struct")) {
-                    return new Token(TokenType.t_struct);
-                } else if (image.equals("void")) {
-                    return new Token(TokenType.t_void);
-                } else if (image.equals("while")) {
-                    return new Token(TokenType.t_while);
-                } else if (image.equals("class")) {
-                    return new Token(TokenType.t_class);
-                } else if (image.equals("public")) {
-                    return new Token(TokenType.t_public);
-                } else if (image.equals("private")) {
-                    return new Token(TokenType.t_private);
-                } else if (image.equals("new")) {
-                    return new Token(TokenType.t_new);
-                } else if (image.equals("super")) {
-                    return new Token(TokenType.t_super);
-                } else if (image.equals("virtual")) {
-                    return new Token(TokenType.t_virtual);
-                } else if (image.equals("sizeof")) {
-                    return new Token(TokenType.t_sizeof);
-                } else if (image.equals("boolean")) {
-                    return new Token(TokenType.t_typename, image);
-                } else if(image.equals("in")) {
-                    return new Token(TokenType.t_in);
-                } else if(image.equals("implement")) {
-                    return new Token(TokenType.t_implement);
-                } else if(image.equals("internal")) {
-                    return new Token(TokenType.t_implement);
-                }
-                
-                return new Token(TokenType.t_id, image);
+    
+    
+                return getReservedToken(image);
+    
             }
             
             switch (consumeChar()) {

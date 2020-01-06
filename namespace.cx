@@ -1,7 +1,7 @@
 int bleh();
 
 in std class object {
-
+		private object o;
 		private char* name;
 
 		public object(char* name) {
@@ -24,21 +24,23 @@ in std implement object int hashcode(void) {
 }
 
 
-in std {
-	implement object {
-		int hashcode(void) {
-        		return (int) this;
-        }
 
-        int equals(object* other) {
-        	return this == other;
-        }
+implement std::object {
+	int hashcode(void) {
+			return (int) this;
 	}
+
+
+
+	int equals(object* other) {
+		return this == other;
+	}
+}
 
 	int hello() {
 		return -1;
 	}
-}
+
 
 void main() {
 	std::object* o = new std::object("hello");
