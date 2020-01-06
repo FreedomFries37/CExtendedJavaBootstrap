@@ -1,10 +1,8 @@
 package radin.compilation.microcompilers;
 
-import radin.compilation.AbstractIndentedOutputCompiler;
 import radin.compilation.AbstractIndentedOutputSingleOutputCompiler;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
-import radin.interphase.semantics.types.methods.CXParameter;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.methods.CXParameter;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;

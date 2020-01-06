@@ -1,12 +1,12 @@
 package radin.typeanalysis.analyzers;
 
 import radin.compilation.tags.BasicCompilationTag;
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
-import radin.interphase.semantics.types.Visibility;
-import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.Visibility;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXCompoundType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 

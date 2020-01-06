@@ -1,7 +1,7 @@
 package radin.typeanalysis.errors;
 
-import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.methods.ParameterTypeList;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.methods.ParameterTypeList;
 
 public class NoConstructorError extends Error {
     

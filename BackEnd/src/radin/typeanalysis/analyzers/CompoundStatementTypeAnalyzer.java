@@ -1,12 +1,8 @@
 package radin.typeanalysis.analyzers;
 
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.AbstractSyntaxNode;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.primitives.CXPrimitiveType;
+import radin.core.semantics.types.CXType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
-import radin.typeanalysis.errors.IncorrectReturnTypeError;
 import radin.typeanalysis.errors.UnreachableCodeError;
 
 public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {

@@ -1,7 +1,7 @@
 package radin.typeanalysis.errors;
 
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.methods.ParameterTypeList;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.methods.ParameterTypeList;
 
 public class IllegalAccessError extends Error {
     

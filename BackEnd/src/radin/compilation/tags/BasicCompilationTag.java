@@ -1,6 +1,6 @@
 package radin.compilation.tags;
 
-import radin.interphase.semantics.ASTNodeType;
+import radin.core.semantics.ASTNodeType;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.util.Arrays;

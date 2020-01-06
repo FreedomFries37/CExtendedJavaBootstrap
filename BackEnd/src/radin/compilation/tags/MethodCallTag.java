@@ -1,7 +1,7 @@
 package radin.compilation.tags;
 
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.methods.CXMethod;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.methods.CXMethod;
 
 public class MethodCallTag extends AbstractCompilationTag {
     

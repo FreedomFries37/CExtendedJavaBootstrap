@@ -1,6 +1,6 @@
 package radin.typeanalysis;
 
-import radin.interphase.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXClassType;
 
 public interface ITypeAnalyzer {
     

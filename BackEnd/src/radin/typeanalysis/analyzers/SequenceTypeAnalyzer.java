@@ -1,6 +1,6 @@
 package radin.typeanalysis.analyzers;
 
-import radin.interphase.semantics.types.CXType;
+import radin.core.semantics.types.CXType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 

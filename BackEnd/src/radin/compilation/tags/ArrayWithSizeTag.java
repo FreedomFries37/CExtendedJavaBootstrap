@@ -1,14 +1,11 @@
 package radin.compilation.tags;
 
-import radin.compilation.microcompilers.ExpressionCompiler;
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.AbstractSyntaxNode;
-import radin.interphase.semantics.TypeEnvironment;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.TypeEnvironment;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.analyzers.ExpressionTypeAnalyzer;
-
-import java.util.HashSet;
 
 public class ArrayWithSizeTag extends AbstractCompilationTag {
     

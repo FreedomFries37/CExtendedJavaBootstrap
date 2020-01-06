@@ -1,8 +1,8 @@
 package radin.typeanalysis.errors;
 
-import radin.interphase.errorhandling.AbstractCompilationError;
-import radin.interphase.lexical.Token;
-import radin.interphase.semantics.types.CXType;
+import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.lexical.Token;
+import radin.core.semantics.types.CXType;
 
 import java.util.Arrays;
 

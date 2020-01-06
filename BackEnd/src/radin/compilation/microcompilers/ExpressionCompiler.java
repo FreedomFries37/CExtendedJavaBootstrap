@@ -3,9 +3,9 @@ package radin.compilation.microcompilers;
 import radin.compilation.AbstractCompiler;
 import radin.compilation.tags.BasicCompilationTag;
 import radin.compilation.tags.MethodCallTag;
-import radin.interphase.lexical.Token;
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.CXType;
+import radin.core.lexical.Token;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.CXType;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;

@@ -1,6 +1,6 @@
 package radin;
 
-import radin.interphase.errorhandling.AbstractCompilationError;
+import radin.core.errorhandling.AbstractCompilationError;
 
 import java.util.LinkedList;
 import java.util.List;

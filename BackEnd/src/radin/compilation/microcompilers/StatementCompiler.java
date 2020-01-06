@@ -3,8 +3,8 @@ package radin.compilation.microcompilers;
 import radin.compilation.AbstractIndentedOutputCompiler;
 import radin.compilation.tags.ArrayWithSizeTag;
 import radin.compilation.tags.BasicCompilationTag;
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.CXType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.CXType;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;

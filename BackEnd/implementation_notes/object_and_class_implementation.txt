@@ -1,0 +1,89 @@
+
+
+in std {
+
+class String;
+class Class;
+
+class Object {
+    private Class* clazz;
+
+    public Object();
+    public Class* getClass();
+    virtual public int equals(Object other);
+}
+
+class Class : Object {
+    private Class parent;
+    private String typename;
+    private int hashcode;
+
+
+    virtual public equals(Object* other);
+    public equals(Class* other);
+
+    public is(Object* o);
+}
+}
+
+Class getClass(int hashcode);
+
+in std implement Object int equals (Object* other) {
+    return this == other;
+}
+
+in std implement Class int equals (Object* other) {
+    if (!other) return false;
+    if (other !is Class) return false;
+    return this->hashcode == ((Class) other)->hashcode;
+}
+
+
+in std implement Class int is(Object* o) {
+    if (o->getClass()->equals(this)) return true;
+    if (o->getClass()->parent) {
+         return this->is(o->getClass()->parent);
+    }
+    return 0;
+}
+
+implement std::Class int equals(std::Class* other) {
+    return this->hashcode == other->hashcode;
+}
+
+interface ITokenizer<T> extends IEnumerator<T>, IEnumerable<T> {
+    void reset();
+    T getPrevious();
+    T getCurrent();
+    T getNext();
+}
+
+interface IParser<T, P extends AbstractTree<? extends P>> {
+    void setTokenizer(ITokenizer<? extends T> t);
+    P parse();
+}
+
+interface ISemanticAnalyzer<P extends AbstractTree<? extends P>, S> {
+    S analyze(P tree);
+}
+
+class FrontEndUnit <T, P ..., S ...> {
+    ITokenizer<? extends T> lexer;
+    IParser<? super T, ? extends P> parser;
+    ISemanticAnalyzer<? super P, ? extends S> builder;
+
+    public S build();
+}
+
+ICharLexer extends ITokenizer<Character>
+ITokenLexer extends ITokenizer<Token>
+
+ICharParser extends IParser<Character, ParseNode>
+ITokenParser extends IParser<Token, ParseNode>
+
+ConstantExpressionAnalyzer implements ISemanticAnalyzer<ParseNode, Number>
+ProgramBuilder implements <ParseNode, AbstractSyntaxTree>
+
+
+
+

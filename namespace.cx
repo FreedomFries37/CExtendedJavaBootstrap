@@ -1,17 +1,26 @@
-in std {
-	class object {
+int bleh();
 
-			private char* name;
+in std class object {
 
-			virtual int hashcode(void);
-			virtual int equals(object* other);
-	};
-}
+		private char* name;
+
+		public object(char* name) {
+			this->name = name;
+		}
+
+		virtual int hashcode();
+		virtual int equals(object* other);
+};
+
 
 int main() {
 		std::object id;
 
 		return 0;
+}
+
+in std implement object int hashcode(void) {
+	return (int) this;
 }
 
 
@@ -25,6 +34,14 @@ in std {
         	return this == other;
         }
 	}
+
+	int hello() {
+		return -1;
+	}
+}
+
+void main() {
+	std::object* o = new std::object("hello");
 }
 
 

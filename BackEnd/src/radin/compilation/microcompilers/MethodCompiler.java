@@ -1,9 +1,7 @@
 package radin.compilation.microcompilers;
 
-import radin.interphase.semantics.AbstractSyntaxNode;
-import radin.interphase.semantics.types.methods.CXMethod;
+import radin.core.semantics.types.methods.CXMethod;
 import radin.typeanalysis.TypeAnalyzer;
-import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;
 

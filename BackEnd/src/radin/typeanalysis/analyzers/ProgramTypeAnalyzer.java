@@ -1,15 +1,14 @@
 package radin.typeanalysis.analyzers;
 
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.AbstractSyntaxNode;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
-import radin.interphase.semantics.types.compound.CXCompoundType;
-import radin.interphase.semantics.types.compound.CXFunctionPointer;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
-import radin.typeanalysis.TypeTracker;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -1,8 +1,7 @@
 package radin.compilation.tags;
 
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.methods.CXConstructor;
-import radin.typeanalysis.analyzers.ConstructorTypeAnalyzer;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.methods.CXConstructor;
 
 public class ConstructorCallTag extends AbstractCompilationTag{
     

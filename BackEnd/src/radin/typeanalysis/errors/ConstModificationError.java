@@ -1,9 +1,6 @@
 package radin.typeanalysis.errors;
 
-import radin.interphase.semantics.types.CXType;
-import radin.typeanalysis.errors.IllegalAccessError;
-
-import javax.xml.stream.util.EventReaderDelegate;
+import radin.core.semantics.types.CXType;
 
 public class ConstModificationError extends Error {
     

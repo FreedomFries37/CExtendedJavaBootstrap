@@ -1,12 +1,12 @@
 package radin.typeanalysis.analyzers;
 
 import radin.compilation.tags.BasicCompilationTag;
-import radin.interphase.lexical.Token;
-import radin.interphase.lexical.TokenType;
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.wrapped.ConstantType;
-import radin.interphase.semantics.types.primitives.CXPrimitiveType;
+import radin.core.lexical.Token;
+import radin.core.lexical.TokenType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.wrapped.ConstantType;
+import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.ConstModificationError;

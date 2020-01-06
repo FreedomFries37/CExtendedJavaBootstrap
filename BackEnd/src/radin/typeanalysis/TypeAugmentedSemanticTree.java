@@ -1,12 +1,12 @@
 package radin.typeanalysis;
 
 import radin.compilation.tags.TypeDefHelperTag;
-import radin.interphase.AbstractTree;
-import radin.interphase.semantics.AbstractSyntaxNode;
-import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.CXCompoundTypeNameIndirection;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.AbstractTree;
+import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.CXCompoundTypeNameIndirection;
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
 
 import java.util.Collections;
 import java.util.LinkedList;

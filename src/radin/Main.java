@@ -2,16 +2,17 @@ package radin;
 
 import radin.compilation.AbstractCompiler;
 import radin.compilation.FileCompiler;
+import radin.core.frontend.FrontEndUnit;
+import radin.core.frontend.Tokenizer;
 import radin.utility.CompilationSettings;
 import radin.utility.ICompilationSettings;
-import radin.interphase.lexical.Token;
-import radin.interphase.semantics.AbstractSyntaxNode;
-import radin.interphase.semantics.TypeEnvironment;
-import radin.lexing.Lexer;
-import radin.parsing.CategoryNode;
-import radin.parsing.Parser;
-import radin.semantics.ActionRoutineApplier;
-import radin.semantics.SynthesizedMissingException;
+import radin.core.lexical.Token;
+import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.TypeEnvironment;
+import radin.v1.lexing.PreprocessingLexer;
+import radin.v1.parsing.ParseNode;
+import radin.v1.parsing.Parser;
+import radin.v1.semantics.ActionRoutineApplier;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.analyzers.ProgramTypeAnalyzer;
@@ -30,7 +31,7 @@ public class Main {
         Main.settings = settings;
         TypeAnalyzer.setCompilationSettings(settings);
         AbstractCompiler.setSettings(settings);
-        Lexer.setCompilationSettings(settings);
+        Tokenizer.setCompilationSettings(settings);
     }
     
     public static void main(String[] args) {
@@ -72,6 +73,7 @@ public class Main {
         setCompilationSettings(compilationSettings);
     
         String fullText = text.toString().replace("\t", " ".repeat(compilationSettings.getTabSize()));
+        /*
         Lexer lex = new Lexer(filename, fullText);
         for (Token token : lex) {
             System.out.println(token);
@@ -109,10 +111,20 @@ public class Main {
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
         boolean b = applier.enactActionRoutine(program);
-        if(b) {
+        
+         */
+        PreprocessingLexer lex = new PreprocessingLexer(filename, fullText);
+        Parser parser = new Parser();
+        TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
+        ActionRoutineApplier applier = new ActionRoutineApplier(environment);
+    
+        FrontEndUnit<Token, ParseNode, AbstractSyntaxNode> frontEndUnit = new FrontEndUnit<>(lex, parser, applier);
+    
+        AbstractSyntaxNode build = frontEndUnit.build();
+    
+        if(build != null) {
             try {
-                AbstractSyntaxNode completed = program.getSynthesized();
-                completed.printTreeForm();
+                build.printTreeForm();
                 //System.out.println(applier.getSuccessOrder());
                 //System.out.println(completed.getRepresentation());
                 
@@ -121,7 +133,7 @@ public class Main {
                 TypeAnalyzer.setEnvironment(environment);
                 
                 
-                TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(completed, environment);
+                TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(build, environment);
                 tasTree.printTreeForm();
                 
                 ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer(tasTree.getHead());
@@ -159,9 +171,13 @@ public class Main {
                 
                  */
                 
-            } catch (SynthesizedMissingException | IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            ErrorReader errorReader = new ErrorReader(filename, lex.getInputString(),
+                    frontEndUnit.getErrors());
+            errorReader.readErrors();
         }
     }
 }

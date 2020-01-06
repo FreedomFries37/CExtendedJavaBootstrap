@@ -1,14 +1,14 @@
 package radin.typeanalysis.analyzers;
 
 import radin.compilation.tags.PriorConstructorTag;
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.wrapped.PointerType;
-import radin.interphase.semantics.types.TypeAbstractSyntaxNode;
-import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.methods.CXConstructor;
-import radin.interphase.semantics.types.methods.ParameterTypeList;
-import radin.interphase.semantics.types.primitives.CXPrimitiveType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.wrapped.PointerType;
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.methods.CXConstructor;
+import radin.core.semantics.types.methods.ParameterTypeList;
+import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.typeanalysis.TypeAnalyzer;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.IllegalReturnInConstructorError;

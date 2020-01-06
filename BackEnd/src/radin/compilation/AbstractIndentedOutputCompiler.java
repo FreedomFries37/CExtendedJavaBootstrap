@@ -1,7 +1,6 @@
 package radin.compilation;
 
 import radin.compilation.microcompilers.IndentPrintWriter;
-import radin.interphase.lexical.Token;
 
 import java.io.PrintWriter;
 

@@ -1,16 +1,16 @@
 package radin.typeanalysis;
 
-import radin.interphase.errorhandling.AbstractCompilationError;
-import radin.interphase.errorhandling.CompilationError;
+import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.errorhandling.CompilationError;
 import radin.utility.ICompilationSettings;
-import radin.interphase.errorhandling.ICompilationErrorCollector;
-import radin.interphase.lexical.Token;
-import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.wrapped.ConstantType;
-import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.methods.CXMethod;
-import radin.interphase.errorhandling.RecoverableCompilationError;
+import radin.core.errorhandling.ICompilationErrorCollector;
+import radin.core.lexical.Token;
+import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.wrapped.ConstantType;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.methods.CXMethod;
+import radin.core.errorhandling.RecoverableCompilationError;
 
 import java.util.*;
 

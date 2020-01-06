@@ -1,9 +1,6 @@
 package radin.compilation.tags;
 
-import radin.interphase.semantics.ASTNodeType;
-import radin.interphase.semantics.types.CXType;
-
-import java.util.HashSet;
+import radin.core.semantics.types.CXType;
 
 public class TypeDefHelperTag extends AbstractCompilationTag {
     

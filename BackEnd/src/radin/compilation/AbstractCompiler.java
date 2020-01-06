@@ -1,7 +1,7 @@
 package radin.compilation;
 
 import radin.utility.ICompilationSettings;
-import radin.interphase.lexical.Token;
+import radin.core.lexical.Token;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
 import java.io.PrintWriter;

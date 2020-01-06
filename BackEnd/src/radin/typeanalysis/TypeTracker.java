@@ -1,12 +1,12 @@
 package radin.typeanalysis;
 
-import radin.interphase.semantics.TypeEnvironment;
-import radin.interphase.semantics.exceptions.RedeclareError;
-import radin.interphase.semantics.types.CXType;
-import radin.interphase.semantics.types.Visibility;
-import radin.interphase.semantics.types.compound.CXClassType;
-import radin.interphase.semantics.types.compound.CXCompoundType;
-import radin.interphase.semantics.types.methods.ParameterTypeList;
+import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.exceptions.RedeclareError;
+import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.Visibility;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.typeanalysis.errors.ClassNotDefinedError;
 import radin.typeanalysis.errors.IdentifierDoesNotExistError;
 import radin.typeanalysis.errors.RedeclarationError;
