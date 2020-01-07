@@ -45,6 +45,8 @@ public class ClassCompiler extends AbstractIndentedOutputSingleOutputCompiler {
             println();
         }
     
+        
+        // PRINT METHODS
         for (CXMethod cxMethod : cxClassType.getVirtualMethodOrder()) {
             if(cxMethod.getMethodBody() != null) {
                 MethodCompiler methodCompiler = new MethodCompiler(getPrintWriter(), 0, cxMethod);

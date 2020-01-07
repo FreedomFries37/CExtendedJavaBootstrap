@@ -6,6 +6,7 @@ public interface ITypeAnalyzer {
     
     void typeTrackingClosure();
     void typeTrackingClosure(CXClassType classType);
+    void typeTrackingClosureLoad(CXClassType cxClassType);
     
     TypeTracker getCurrentTracker();
     

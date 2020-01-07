@@ -42,6 +42,8 @@ public class CXIdentifier implements CXEquivalent {
         return identifier;
     }
     
+    
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -61,6 +63,10 @@ public class CXIdentifier implements CXEquivalent {
         return result;
     }
     
+    public String getHashString() {
+        return "" + Math.abs(hashCode());
+    }
+    
     @Override
     public String toString() {
         if(parentNamespace == null) return identifier;
@@ -70,6 +76,11 @@ public class CXIdentifier implements CXEquivalent {
     @Override
     public String generateCDefinition() {
         return toString().replace("::", "_") + Math.abs(hashCode());
+    }
+    
+    
+    public String generateCDefinitionNoHash() {
+        return toString().replace("::", "_");
     }
     
 }

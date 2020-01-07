@@ -102,6 +102,12 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
     }
     
     @Override
+    public void typeTrackingClosureLoad(CXClassType cxClassType) {
+        if(!TypeTracker.trackerPresent(cxClassType)) typeTrackingClosure();
+        trackerStack.push(TypeTracker.getTracker(cxClassType));
+    }
+    
+    @Override
     public void releaseTrackingClosure() {
         trackerStack.pop();
         getCurrentTracker().removeParentlessStructFields();

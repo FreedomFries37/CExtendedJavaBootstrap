@@ -4,6 +4,7 @@ import radin.compilation.AbstractIndentedOutputSingleOutputCompiler;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.methods.CXParameter;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -37,6 +38,7 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
         println("{");
         CompoundStatementCompiler compoundStatementCompiler = new CompoundStatementCompiler(getPrintWriter(),
                 getIndent() + 1);
+        if(compoundStatement == null) throw new IncorrectlyMissingCompoundStatement();
         compoundStatementCompiler.compile(compoundStatement);
         println("}");
         println();

@@ -146,13 +146,18 @@ public class CXMethod implements CXEquivalent {
     
     
     
+    
+    
     public String getCFunctionName() {
-        
-        return parent.getCTypeName() + "_" + name.generateCDefinition() + "_" + getParameterMangle();
+        int hash = getParameterMangle().hashCode();
+        hash += parent.getTypeNameIdentifier().hashCode();
+        hash += name.hashCode();
+        hash = Math.abs(hash);
+        return name.generateCDefinitionNoHash() + hash;
     }
     
     public String getCMethodName() {
-        return  name.generateCDefinition() + "_" + getParameterMangle();
+        return name.generateCDefinition() + "_" + getParameterMangle();
     }
     
     public String methodCall(String thisValue, String sequence) {

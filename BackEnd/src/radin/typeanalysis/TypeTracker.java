@@ -504,6 +504,13 @@ public class TypeTracker {
         return null;
     }
     
+    public static TypeTracker getTracker(CXClassType cxClassType) {
+        return classTrackers.get(cxClassType);
+    }
+    
+    public static boolean trackerPresent(CXClassType cxClassType) {
+        return classTrackers.containsKey(cxClassType);
+    }
     
     public CXType getType(String name) {
         if(entryExists(name)) {

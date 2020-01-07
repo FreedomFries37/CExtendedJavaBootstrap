@@ -32,8 +32,10 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
         assert ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType() instanceof CXClassType;
+        
         CXClassType cxClassType = (CXClassType) ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
         cxClassType.generateSuperMethods(getCompilationSettings().getvTableName());
+        
         for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
             typeTrackingClosure();
         
