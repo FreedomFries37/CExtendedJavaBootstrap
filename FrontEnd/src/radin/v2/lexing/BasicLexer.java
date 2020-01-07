@@ -19,7 +19,7 @@ public class BasicLexer extends Tokenizer<Token> {
     }
     // char+const+do+double+els+float+for+if+int+long+return+short+static+typedef+union+unsigned+struct+void+while+class+public+private+new+super+virtual+sizeof+(boolean)+(in)+(implement)+(internal)+(using)
     @Override
-    public Token getNext() {
+    public Token singleLex() {
         do {
             if (Character.isWhitespace(getChar())) consumeChar();
             else if (consume("//")) {
@@ -200,7 +200,7 @@ public class BasicLexer extends Tokenizer<Token> {
             case ']':
                 return new Token(TokenType.t_rbrac);
             case '.': {
-                if (consume("")) return new Token(TokenType.t_ellipsis);
+                if (consume("..")) return new Token(TokenType.t_ellipsis);
                 return new Token(TokenType.t_dot);
             }
             case '~': {
@@ -249,6 +249,29 @@ public class BasicLexer extends Tokenizer<Token> {
         }
         
         return null;
+    }
+    
+    public Token getNext() {
+        if (++tokenIndex == createdTokens.size()) {
+            Token tok;
+            try {
+                tok = singleLex();
+                
+            } catch (AbstractCompilationError e) {
+                getErrors().add(e);
+                //finishedIndex = getTokenIndex();
+                tok = null;
+            }
+            if (tok == null) return null;
+            tok.setPrevious(getPrevious());
+            String representation = tok.getRepresentation();
+            tok.addColumnAndLineNumber(column - representation.length(), lineNumber);
+            //prevLineNumber = lineNumber;
+            //prevColumn = column;
+            createdTokens.add(tok);
+            return tok;
+        }
+        return createdTokens.get(getTokenIndex());
     }
     
     

@@ -1,6 +1,5 @@
-package radin.v2.parsing;
+package radin.v2.parsing.structure;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

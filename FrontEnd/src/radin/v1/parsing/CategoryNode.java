@@ -22,6 +22,11 @@ public class CategoryNode extends ParseNode {
         categoryChildren = new ArrayList<>();
     }
     
+    public void addChild(ParseNode n) {
+        if(n instanceof LeafNode) addChild(((LeafNode) n));
+        else if(n instanceof CategoryNode) addChild(((CategoryNode) n));
+    }
+    
     public void addChild(LeafNode leaf) {
         allChildren.add(leaf);
         leafChildren.add(leaf);

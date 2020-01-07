@@ -1,5 +1,6 @@
 package radin.core.frontend;
 
+import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.utility.ICompilationSettings;
@@ -212,8 +213,26 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         return getNextChars(str.length()).equals(str);
     }
     
+    protected abstract T singleLex();
+    
     @Override
-    public abstract T getNext();
+    public T getNext() {
+        if(++tokenIndex == createdTokens.size()) {
+            T tok;
+            try {
+                 tok = singleLex();
+                 
+            }catch (AbstractCompilationError e) {
+                getErrors().add(e);
+                //finishedIndex = getTokenIndex();
+                tok = null;
+            }
+            if(tok == null) return null;
+            createdTokens.add(tok);
+            return tok;
+        }
+        return createdTokens.get(getTokenIndex());
+    }
     
     @Override
     public void reset() {

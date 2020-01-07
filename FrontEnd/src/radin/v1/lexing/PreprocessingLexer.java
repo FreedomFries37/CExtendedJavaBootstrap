@@ -273,7 +273,8 @@ public class PreprocessingLexer extends Tokenizer<Token> {
     }
     
     
-    private Token singleLex() {
+    @Override
+    protected Token singleLex() {
        
         
         
@@ -543,7 +544,7 @@ public class PreprocessingLexer extends Tokenizer<Token> {
                 case ']':
                     return new Token(TokenType.t_rbrac);
                 case '.': {
-                    if (consume("")) return new Token(TokenType.t_ellipsis);
+                    if (consume("..")) return new Token(TokenType.t_ellipsis);
                     return new Token(TokenType.t_dot);
                 }
                 case '~': {
@@ -593,30 +594,28 @@ public class PreprocessingLexer extends Tokenizer<Token> {
         }
     }
     
-    @Override
     public Token getNext() {
-        if(++tokenIndex == createdTokens.size()) {
+        if (++tokenIndex == createdTokens.size()) {
             Token tok;
             try {
-                 tok = singleLex();
-                 
-            }catch (AbstractCompilationError e) {
-                compilationErrors.add(e);
-                finishedIndex = getTokenIndex();
+                tok = singleLex();
+    
+            } catch (AbstractCompilationError e) {
+                getErrors().add(e);
+                //finishedIndex = getTokenIndex();
                 tok = null;
             }
-            if(tok == null) return null;
+            if (tok == null) return null;
             tok.setPrevious(getPrevious());
             String representation = tok.getRepresentation();
             tok.addColumnAndLineNumber(column - representation.length(), lineNumber);
-            prevLineNumber = lineNumber;
-            prevColumn = column;
+            //prevLineNumber = lineNumber;
+            //prevColumn = column;
             createdTokens.add(tok);
             return tok;
         }
         return createdTokens.get(getTokenIndex());
     }
-    
     
     @Override
     public Iterator<Token> iterator() {

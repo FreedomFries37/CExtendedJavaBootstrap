@@ -1,4 +1,4 @@
-package radin.v2.parsing;
+package radin.v2.parsing.structure;
 
 import java.util.*;
 
@@ -7,9 +7,10 @@ import java.util.*;
  * @param <T> backing type of the non-terminals
  */
 public class GrammarBuilder <T>  {
-    public class NonTerminal extends ParsableObject<T> {
-        
-        public NonTerminal(T backingObject) {
+    
+    private class GrammarBuilderNonTerminal extends NonTerminal<T> {
+    
+        public GrammarBuilderNonTerminal(T backingObject) {
             super(backingObject);
         }
     }
@@ -35,8 +36,13 @@ public class GrammarBuilder <T>  {
         return symbol;
     }
     
-    public NonTerminal nonTerminal(T o) {
-        return new NonTerminal(o);
+    public void inherit(GrammarBuilder<? extends T> other) {
+        productions.addAll(other.productions);
+        symbols.putAll(other.symbols);
+    }
+    
+    public GrammarBuilderNonTerminal nonTerminal(T o) {
+        return new GrammarBuilderNonTerminal(o);
     }
     
     public void setStartingSymbol(Symbol startingSymbol) {
@@ -59,7 +65,7 @@ public class GrammarBuilder <T>  {
             } else if(rh instanceof Symbol) {
                 arr[index] = (Symbol) rh;
             } else if(NonTerminal.class.isInstance(rh)) {
-                arr[index] = (NonTerminal) rh;
+                arr[index] = (NonTerminal<T>) rh;
             } else {
                 arr[index] = nonTerminal((T) rh);
             }
@@ -74,8 +80,33 @@ public class GrammarBuilder <T>  {
         productions.add(new Production(lhs, Arrays.asList(rhs)));
     }
     
-    public LALRData<T> toData() {
-        return new LALRData<>(productions, startingSymbol);
+    public SLRData<T> toData(T eof) {
+        return new SLRData<>(productions, startingSymbol, eof);
     }
     
+    public boolean valid() {
+        Set<Symbol> discovered = new HashSet<>();
+        for (Production production : productions) {
+            discovered.add(production.getLhs());
+        }
+        return symbols.values().containsAll(discovered) &&
+                discovered.containsAll(symbols.values()) && startingSymbol != null;
+    }
+    
+    public Set<Symbol> invalidSymbols() {
+        Set<Symbol> discovered = new HashSet<>();
+        for (Production production : productions) {
+            discovered.add(production.getLhs());
+        }
+        // discovered.removeIf(symbol -> symbols.containsValue(symbol));
+        Set<Symbol> values = new HashSet<>(symbols.values());
+        values.removeIf(discovered::contains);
+        return values;
+    }
+    
+    public void print() {
+        for (Production production : productions) {
+            System.out.println(production);
+        }
+    }
 }
