@@ -1,6 +1,7 @@
 int bleh();
 
-in std class object {
+in std {
+	class object {
 		private object o;
 		private char* name;
 
@@ -10,6 +11,25 @@ in std class object {
 
 		virtual int hashcode();
 		virtual int equals(object* other);
+	};
+
+	in ko class object {
+    		private object o;
+    		private char* name;
+
+    		public object(char* name) {
+    			this->name = name;
+    		}
+
+    		virtual int hashcode();
+    		virtual int equals(object* other);
+    };
+}
+
+in ko
+class object {
+	private std::object other;
+
 };
 
 
@@ -19,20 +39,21 @@ int main() {
 		return 0;
 }
 
-in std implement object int hashcode(void) {
-	return (int) this;
+in std int foo() {
+	std::ko::object o;
+
+	return 1;
 }
 
 
-
 implement std::object {
-	int hashcode(void) {
+	int hashcode() {
 			return (int) this;
 	}
 
 
 
-	int equals(object* other) {
+	int equals(std::object* other) {
 		return this == other;
 	}
 }
@@ -43,7 +64,7 @@ implement std::object {
 
 
 void main() {
-	std::object* o = new std::object("hello");
+	// std::object* o = new std::object("hello");
 }
 
 

@@ -92,6 +92,10 @@ public abstract class CXCompoundType extends ICXCompoundType {
         return typeName.toString();
     }
     
+    public String getCTypeName() {
+        return typeName.generateCDefinition();
+    }
+    
     public CXIdentifier getTypeNameIdentifier() {
         return typeName;
     }

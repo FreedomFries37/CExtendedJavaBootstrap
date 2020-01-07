@@ -69,7 +69,7 @@ public class CXIdentifier implements CXEquivalent {
     
     @Override
     public String generateCDefinition() {
-        return toString().replace("::", "_") + hashCode();
+        return toString().replace("::", "_") + Math.abs(hashCode());
     }
     
 }

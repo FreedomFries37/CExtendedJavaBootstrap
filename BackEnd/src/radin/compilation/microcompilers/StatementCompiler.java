@@ -5,7 +5,9 @@ import radin.compilation.tags.ArrayWithSizeTag;
 import radin.compilation.tags.BasicCompilationTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
+import radin.typeanalysis.errors.IncorrectTypeError;
 
 import java.io.PrintWriter;
 
@@ -28,7 +30,13 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
         ExpressionCompiler expressionCompiler = new ExpressionCompiler(getPrintWriter());
         switch (node.getASTType()) {
             case declarations: {
+                
                 for (TypeAugmentedSemanticNode child : node.getChildren()) {
+                    if(child.getCXType() == null && child.getASTNode() instanceof TypeAbstractSyntaxNode) {
+                        child.setType(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
+                    } else if(child.getCXType() == null) {
+                        throw new NullPointerException();
+                    }
                     CXType type = child.getCXType();
                     switch (child.getASTType()) {
                         case declaration: {

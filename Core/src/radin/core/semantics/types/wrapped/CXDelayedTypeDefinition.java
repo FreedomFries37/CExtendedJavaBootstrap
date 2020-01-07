@@ -31,6 +31,7 @@ public class CXDelayedTypeDefinition extends CXType implements ICXWrapper {
     public boolean update() {
         try {
             CXType type = environment.getType(identifier);
+            if(type == this) return false;
             if(type == null) return false;
             actual = type;
             return true;

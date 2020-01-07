@@ -19,12 +19,12 @@ public class TypeAbstractSyntaxNode extends AbstractSyntaxNode {
        this(type, cxType, children.toArray(new AbstractSyntaxNode[children.size()]));
     }
     
-    public TypeAbstractSyntaxNode(AbstractSyntaxNode other, AbstractSyntaxNode add, CXType cxType, AbstractSyntaxNode... additionalChildren) {
+    public TypeAbstractSyntaxNode(AbstractSyntaxNode other, CXType cxType, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
         super(other, add, additionalChildren);
         this.cxType = cxType;
     }
     
-    public TypeAbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, AbstractSyntaxNode add, CXType cxType, AbstractSyntaxNode... additionalChildren) {
+    public TypeAbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, CXType cxType, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
         super(other, addFirst, add, additionalChildren);
         this.cxType = cxType;
     }

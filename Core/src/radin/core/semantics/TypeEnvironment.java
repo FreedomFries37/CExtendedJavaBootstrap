@@ -227,6 +227,9 @@ public class TypeEnvironment {
             return output;
         }
         List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(currentNamespace);
+        if(typesForNamespace == null) {
+            throw new TypeDoesNotExist(typenameImage);
+        }
         for (CXCompoundType cxCompoundType : typesForNamespace) {
             if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(typenameImage))
                 return cxCompoundType;
@@ -435,11 +438,14 @@ public class TypeEnvironment {
                 AbstractSyntaxNode dec = abstractSyntaxNode.getChild(1);
                 switch (dec.getType()) {
                     case declarations: {
-                        fieldDeclarations.addAll(
-                                createClassFieldDeclarations(visibility, dec)
-                        );
+                        if(dec.getType() != ASTNodeType.function_description) {
+                            fieldDeclarations.addAll(
+                                    createClassFieldDeclarations(visibility, dec)
+                            );
+                        }
                         break;
                     }
+                    case function_description:
                     case function_definition: {
                         boolean isVirtual = dec.hasChild(ASTNodeType._virtual);
                         methods.add(
@@ -603,7 +609,7 @@ public class TypeEnvironment {
     }
     
     private CXMethod createMethod(Visibility visibility, boolean isVirtual, AbstractSyntaxNode ast) {
-        if(!ast.getType().equals(ASTNodeType.function_definition)) {
+        if(!(ast.getType().equals(ASTNodeType.function_definition) || ast.getType() == ASTNodeType.function_description)) {
             throw new UnsupportedOperationException();
         }
         

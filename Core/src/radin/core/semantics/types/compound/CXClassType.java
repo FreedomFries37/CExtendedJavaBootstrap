@@ -1,6 +1,7 @@
 package radin.core.semantics.types.compound;
 
 import radin.core.semantics.types.CXIdentifier;
+import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
 import radin.utility.Reference;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
@@ -51,6 +52,9 @@ public class CXClassType extends CXCompoundType {
         
     }
     
+    public TypeEnvironment getEnvironment() {
+        return environment;
+    }
     
     public CXClassType(CXIdentifier typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
@@ -151,7 +155,7 @@ public class CXClassType extends CXCompoundType {
     }
     
     public String getCTypeName() {
-        return "class_" + getTypeName();
+        return "class_" + super.getCTypeName();
     }
     
     public boolean is(CXClassType other) {
@@ -169,7 +173,17 @@ public class CXClassType extends CXCompoundType {
         return "struct " + getCTypeName();
     }
     
+    public List<CXMethod> getVirtualMethodOrder() {
+        return virtualMethodOrder;
+    }
     
+    public List<CXMethod> getConcreteMethodsOrder() {
+        return concreteMethodsOrder;
+    }
+    
+    public List<CXConstructor> getConstructors() {
+        return constructors;
+    }
     
     public CXConstructor getConstructor(List<CXType> parameters, TypeEnvironment environment) {
         for (CXConstructor constructor : constructors) {
@@ -242,7 +256,8 @@ public class CXClassType extends CXCompoundType {
     
     private CXMethod getVirtualMethod(String name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : virtualMethodOrder) {
-            if(cxMethod.getName().equals(name) && parameterTypeList.equals(cxMethod.getParameterTypeList(), environment)) {
+            if(cxMethod.getName().equals(name) && parameterTypeList.equals(cxMethod.getParameterTypeList(),
+                    environment)) {
                 return cxMethod;
             }
         }
@@ -402,7 +417,7 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public String generateCDefinition() {
-        return getTypeName();
+        return getStructName();
     }
     
     @Override
@@ -446,7 +461,7 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public CXType getTypeIndirection() {
-        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType._class, this);
+        return new CXDelayedTypeDefinition(getTypeNameIdentifier(), environment);
     }
     
 }

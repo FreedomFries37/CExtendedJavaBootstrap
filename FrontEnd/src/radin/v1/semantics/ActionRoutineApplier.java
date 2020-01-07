@@ -9,6 +9,7 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
+import radin.core.semantics.exceptions.TypeDoesNotExist;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -36,7 +37,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     }
     
     private Stack<CategoryNode> catNodeStack;
-    private Stack<String> errors;
+    private Stack<String> stringErrors;
+    private List<AbstractCompilationError> errors;
     private List<AbstractSyntaxNode> successOrder;
     
     private TypeEnvironment environment;
@@ -44,15 +46,17 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     public ActionRoutineApplier() {
         catNodeStack = new Stack<>();
         successOrder = new LinkedList<>();
-        errors = new Stack<>();
+        stringErrors = new Stack<>();
         environment = new TypeEnvironment();
+        errors = new LinkedList<>();
     }
     
     public ActionRoutineApplier(TypeEnvironment environment) {
         catNodeStack = new Stack<>();
         successOrder = new LinkedList<>();
-        errors = new Stack<>();
+        stringErrors = new Stack<>();
         this.environment = environment;
+        errors = new LinkedList<>();
     }
     
     public List<AbstractSyntaxNode> getSuccessOrder() {
@@ -72,11 +76,17 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     }
     
     private boolean error(String message) {
-        if(errors.peek() == null) {
-            errors.pop();
-            errors.push(message);
+        if(stringErrors.peek() == null) {
+            stringErrors.pop();
+            stringErrors.push(message);
         }
         return false;
+    }
+    
+    public List<AbstractCompilationError> getErrors() {
+        List<AbstractCompilationError> output = new LinkedList<>(getStringErrors());
+        output.addAll(errors);
+        return output;
     }
     
     public boolean enactActionRoutine(ParseNode node) {
@@ -92,18 +102,18 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 
                 CategoryNode catNode = (CategoryNode) node;
                 catNodeStack.push(catNode);
-                errors.push(null);
+                stringErrors.push(null);
                 boolean b = enactActionRoutine(catNode);
                 if(!b) {
                     System.out.println("Failed to enact action routine for " +
                             String.format("%-30s", node) +
                             (node.hasChildren()? "(CHILDREN = " + ((CategoryNode) node).getAllChildren() + ")" : "") +
-                            (errors.peek() == null ? "" : String.format("  %60s", "Error: " + errors.peek())));
+                            (stringErrors.peek() == null ? "" : String.format("  %60s", "Error: " + stringErrors.peek())));
                     
                 } else {
                     if(!successOrder.contains(node.getSynthesized())) successOrder.add(node.getSynthesized());
                 }
-                errors.pop();
+                stringErrors.pop();
                 catNodeStack.pop();
                 return b;
             }
@@ -1201,6 +1211,20 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         AbstractSyntaxNode inner;
                         if(node.hasChildCategory("Declaration")) {
                             inner = getCatNode("Declaration").getSynthesized();
+                            
+                            if(inner.getChild(0).getType() == ASTNodeType.function_description) {
+                                inner = inner.getChild(0);
+                                assert inner instanceof TypeAbstractSyntaxNode;
+                                CXType ret = ((TypeAbstractSyntaxNode) inner).getCxType();
+                                if(node.hasChildToken(TokenType.t_virtual)) {
+                                    inner = new TypeAbstractSyntaxNode(inner, true, ret,
+                                            node.getLeafNode(TokenType.t_virtual).getSynthesized());
+                                } else {
+                                    inner = new TypeAbstractSyntaxNode(inner, true, ret,
+                                            AbstractSyntaxNode.EMPTY);
+                                }
+                            }
+                            
                         } else if(node.hasChildCategory("ConstructorDefinition")) {
                             inner = getCatNode("ConstructorDefinition").getSynthesized();
                         } else if(node.hasChildCategory("FunctionDefinition")) {
@@ -1326,11 +1350,17 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 
             } catch (SynthesizedMissingException e) {
                 if(!enactActionRoutine(e.node)) return false;
-            } catch (InheritMissingError | MissingCategoryNodeError | InvalidPrimitiveException e) {
+            } catch (InheritMissingError | MissingCategoryNodeError e) {
                 e.printStackTrace();
                 if(e instanceof MissingCategoryNodeError) {
                     node.printTreeForm();
                 }
+                cont = false;
+            }catch ( InvalidPrimitiveException | TypeDoesNotExist e) {
+                error(e.getMessage());
+                cont = false;
+            }catch (AbstractCompilationError e) {
+                errors.add(e);
                 cont = false;
             }
         }
@@ -1348,9 +1378,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
         return null;
     }
     
-    @Override
-    public List<AbstractCompilationError> getErrors() {
-        return errors.stream().map((o) -> new CompilationError(o, null)).collect(Collectors.toList());
+    
+    
+    public List<AbstractCompilationError> getStringErrors() {
+        return stringErrors.stream().map((o) -> new CompilationError(o, null)).collect(Collectors.toList());
     }
     
     private AbstractSyntaxNode[] foldList(CategoryNode listNode, String entryCategory, String headCatName, String tailCatName) throws SynthesizedMissingException {

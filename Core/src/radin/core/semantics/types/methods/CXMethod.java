@@ -44,6 +44,8 @@ public class CXMethod implements CXEquivalent {
         fixedMethodBody = false;
     }
     
+    
+    
     public void setParent(CXClassType parent) {
         this.parent = parent;
     }
@@ -61,8 +63,10 @@ public class CXMethod implements CXEquivalent {
     }
     
     public String getName() {
-        return name.toString();
+        return name.getIdentifier();
     }
+    
+    
     
     public boolean isVirtual() {
         return isVirtual;
@@ -87,8 +91,14 @@ public class CXMethod implements CXEquivalent {
     public List<CXParameter> getParameters() {
         return parameters;
     }
+    public List<CXParameter> getParametersExpanded() {
+        LinkedList<CXParameter> cxParameters = new LinkedList<>(getParameters());
+        cxParameters.add(new CXParameter(new PointerType(CXPrimitiveType.VOID), methodThisParameterName));
+        return cxParameters;
+    }
     
     public AbstractSyntaxNode getMethodBody() {
+        if(methodBody == null) return null;
         if(!fixedMethodBody) {
             fixMethodBody();
         }
@@ -138,11 +148,11 @@ public class CXMethod implements CXEquivalent {
     
     public String getCFunctionName() {
         
-        return parent.getCTypeName() + "_" + name + "_" + getParameterMangle();
+        return parent.getCTypeName() + "_" + name.generateCDefinition() + "_" + getParameterMangle();
     }
     
     public String getCMethodName() {
-        return  name + "_" + getParameterMangle();
+        return  name.generateCDefinition() + "_" + getParameterMangle();
     }
     
     public String methodCall(String thisValue, String sequence) {

@@ -48,6 +48,7 @@ public class NamespaceTree {
     }
     
     private List<Node> topNamespaces;
+    private List<CXCompoundType> baseObjects = new LinkedList<>();
     
     public NamespaceTree() {
         this.topNamespaces = new LinkedList<>();
@@ -81,12 +82,14 @@ public class NamespaceTree {
     }
     
     public List<CXCompoundType> getTypesForNamespace(CXIdentifier identifier) {
+        if(identifier == null) return baseObjects;
         Node node = getNode(identifier);
         if(node == null) return null;
         return node.getRelatedTypes();
     }
     
     private Node getNode(CXIdentifier currentNamespace) {
+        if(currentNamespace == null) return null;
         if(currentNamespace.getParentNamespace() == null) {
             for (Node topNamespace : topNamespaces) {
                 if(topNamespace.identifier.equals(currentNamespace)) return topNamespace;
@@ -95,7 +98,7 @@ public class NamespaceTree {
             Node parent = getNode(currentNamespace.getParentNamespace());
             if(parent == null) return null;
             for (Node child : parent.children) {
-                if(child.identifier == currentNamespace) return child;
+                if(child.identifier.equals(currentNamespace)) return child;
             }
         }
         return null;
