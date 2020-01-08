@@ -14,13 +14,14 @@
 3. [Future Plans](#Future Plans)
     - [Jodin Compiler written in Jodin](#Jodin Compiler written in Jodin)
     - [Finely Tuned Importing](#Finely Tuned Importing)
+4. [Code Examples](#Code Examples)
 4. [Experimental Features](#Experimental Features)
     
 
 ### Basics
 
 What is Jodin? Jodin is an Object-Oriented language, built off of the C-Language.
-Theoretically, any program written in C should result in a 1-1[<sup>1</sup>](#Footnotes)
+Theoretically, any program written in C should result in a 1-1[<sup>1</sup>](#Footnotes) mapping after compilation.
 > In fact, using the C Backend, a program outputed by the Jodin Compiler can be sent back into the compiler, and shoud
 result in the same file.
 
@@ -122,6 +123,105 @@ so you could still refer to it using `animals::mammals::Dolphin` within the `in 
 >    |            ^_________________________________________________ Could be CXClass ko::object or CXClass std::ko::object
 >```
 
+Code Examples
+---
+
+##### Inheritance Example, along with namespaces
+```
+void print(char* name);
+void println(char* name);
+
+in animals {
+	class animal {
+		private char* species;
+		private int numberOfLegs;
+
+		public animal(char* species, int numberOfLegs) {
+			this->species = species;
+			this->numberOfLegs = numberOfLegs;
+		}
+
+		public int getNumberOfLegs() {
+			return this->numberOfLegs;
+		}
+
+		virtual public void says() {
+			print(this->species);
+			print(" says ");
+		}
+	};
+
+	class quadAnimal : animal {
+
+		public quadAnimal(char* name) : super(name, 4) {}
+
+		virtual public void says() {
+			super->says();
+			print("I have 4 legs!");
+        }
+	};
+
+	class domesticated : quadAnimal {
+		private char* name;
+
+		public domesticated(char* name, char* species) : super(species) {
+			this->name = name;
+		}
+
+		public char* getName() {
+			return this->name;
+		}
+
+		virtual public void says() {
+			print(this->getName());
+			print(" the ");
+			super->says();
+			print(", also ARF");
+		}
+	};
+
+	class dog : domesticated {
+
+		public dog(char* name) : super(name, "dog") { }
+
+		public dog() : this("unknown") { }
+
+
+	};
+}
+
+class cat : animals::domesticated {
+
+	public cat(char* name) : super(name, "cat") {}
+
+	virtual public void says() {
+		println("I'm a cat, shove off");
+	}
+};
+
+
+int main() {
+
+	animals::animal griff = new animals::dog("The Griff");
+
+	griff->says();
+	println("");
+	griff->says();
+	println("");
+
+
+	animals::domesticated myCat = new cat("jeff");
+	myCat->says();
+
+	return 0;
+}
+```
+Upon compiling this code into C, then compiling that into an executable, this is what is outputted:
+```
+The Griff the dog says I have 4 legs!, also ARF
+The Griff the dog says I have 4 legs!, also ARF
+I'm a cat, shove off
+```
 
 Future Plans
 ---
@@ -204,7 +304,7 @@ Section coming son
 
 #### Reference Counting Garbage collectoin
 
-
+---
 ### Footnotes
 1. There will be some variation in the code, ie: all operations are put into parentheses, as
 the actual parentheses are currently lost in parsing
