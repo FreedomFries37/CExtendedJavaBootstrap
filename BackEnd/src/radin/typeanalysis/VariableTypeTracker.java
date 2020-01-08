@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class TypeTracker {
+public class VariableTypeTracker {
     
     public enum EntryStatus {
         OLD,
@@ -162,14 +162,14 @@ public class TypeTracker {
     private HashSet<ConstructorKey> privateConstructors;
     
     
-    private static HashMap<CXClassType, TypeTracker> classTrackers;
+    private static HashMap<CXClassType, VariableTypeTracker> classTrackers;
     private TypeEnvironment environment;
     
     static {
         classTrackers = new HashMap<>();
     }
     
-    public TypeTracker(TypeEnvironment environment) {
+    public VariableTypeTracker(TypeEnvironment environment) {
         this.environment = environment;
         variableEntries = new HashMap<>();
         functionEntries = new HashMap<>();
@@ -189,7 +189,7 @@ public class TypeTracker {
         trackingTypes = new HashSet<>();
     }
     
-    private TypeTracker(TypeTracker old) {
+    private VariableTypeTracker(VariableTypeTracker old) {
         environment = old.environment;
         trackingTypes = new HashSet<>(old.trackingTypes);
         variableEntries = new HashMap<>();
@@ -216,16 +216,16 @@ public class TypeTracker {
         privateConstructors = new HashSet<>();
     }
     
-    private TypeTracker(TypeTracker old, CXClassType parentType) {
+    private VariableTypeTracker(VariableTypeTracker old, CXClassType parentType) {
         this(old);
         
-        TypeTracker typeTracker = classTrackers.getOrDefault(parentType, null);
-        if(typeTracker == null) throw new ClassNotDefinedError();
+        VariableTypeTracker variableTypeTracker = classTrackers.getOrDefault(parentType, null);
+        if(variableTypeTracker == null) throw new ClassNotDefinedError();
         
-        demoteEntries(internalFieldEntries, typeTracker.internalFieldEntries);
-        demoteEntries(internalMethodEntries, typeTracker.internalMethodEntries);
+        demoteEntries(internalFieldEntries, variableTypeTracker.internalFieldEntries);
+        demoteEntries(internalMethodEntries, variableTypeTracker.internalMethodEntries);
         
-        internalConstructors.addAll(typeTracker.internalConstructors);
+        internalConstructors.addAll(variableTypeTracker.internalConstructors);
     }
     
     /**
@@ -245,20 +245,20 @@ public class TypeTracker {
         }
     }
     
-    public TypeTracker createInnerTypeTracker() {
-        return new TypeTracker(this);
+    public VariableTypeTracker createInnerTypeTracker() {
+        return new VariableTypeTracker(this);
     }
     
-    public TypeTracker createInnerTypeTracker(CXClassType owner) {
-        TypeTracker typeTracker;
+    public VariableTypeTracker createInnerTypeTracker(CXClassType owner) {
+        VariableTypeTracker variableTypeTracker;
         if(owner.getParent() != null) {
-            typeTracker = new TypeTracker(this, owner.getParent());
+            variableTypeTracker = new VariableTypeTracker(this, owner.getParent());
         } else {
-            typeTracker = new TypeTracker(this);
+            variableTypeTracker = new VariableTypeTracker(this);
         }
         //typeTracker.addEntry("this", new PointerType(owner));
-        classTrackers.put(owner, typeTracker);
-        return typeTracker;
+        classTrackers.put(owner, variableTypeTracker);
+        return variableTypeTracker;
     }
     
     public boolean entryExists(String name) {
@@ -504,7 +504,7 @@ public class TypeTracker {
         return null;
     }
     
-    public static TypeTracker getTracker(CXClassType cxClassType) {
+    public static VariableTypeTracker getTracker(CXClassType cxClassType) {
         return classTrackers.get(cxClassType);
     }
     

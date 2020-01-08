@@ -62,6 +62,10 @@ public abstract class AbstractCompiler {
         else printWriter.print(s.getImage());
     }
     
+    protected void setPrintWriter(PrintWriter printWriter) {
+        this.printWriter = printWriter;
+    }
+    
     public void print(Object obj) {
         printWriter.print(obj);
     }

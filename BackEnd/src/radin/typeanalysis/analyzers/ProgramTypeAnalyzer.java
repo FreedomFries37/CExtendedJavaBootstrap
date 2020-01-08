@@ -80,6 +80,8 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 }
             } else if(child.getASTType() == ASTNodeType.typedef) {
                 child.setType(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
+            } else if(child.getASTType() == ASTNodeType.top_level_decs) {
+                if(!determineTypes(child)) return false;
             }
             
             

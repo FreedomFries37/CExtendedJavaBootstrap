@@ -1,5 +1,6 @@
 package radin.core.semantics;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.exceptions.*;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.*;
@@ -104,11 +105,11 @@ public class TypeEnvironment {
         namespaceTree.addNamespace(this.currentNamespace);
     }
     
-    public void addTemp(String identifier) {
-        
+    public void addTemp(Token tok) {
+        String identifier = tok.getImage();
         CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, identifier);
         if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return;
-        CXDelayedTypeDefinition delayedTypeDefinition = new CXDelayedTypeDefinition(cxIdentifier, this);
+        CXDelayedTypeDefinition delayedTypeDefinition = new CXDelayedTypeDefinition(cxIdentifier, tok, this);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
     }
     
@@ -206,38 +207,84 @@ public class TypeEnvironment {
         return type;
     }
     
-    public CXType getType(CXIdentifier namespacedTypename) {
-        if(namespacedTypename.getParentNamespace() == null) return getType(namespacedTypename.getIdentifier());
+    /**
+     * Gets the type given a CXIdentifier
+     * @param namespacedTypename a CXIdentifier. If the parent of the CXIdentifier is null, its treated as if its a call
+     *                           to {@link TypeEnvironment#getType(String, Token)}
+     * @param corresponding
+     * @return the CXType
+     * @throws TypeDoesNotExist
+     */
+    public CXType getType(CXIdentifier namespacedTypename, Token corresponding) {
+        if(namespacedTypename.getParentNamespace() == null) return getType(namespacedTypename.getIdentifier(), corresponding);
+        
+        List<CXType> output = new LinkedList<>();
+    
+        for (CXIdentifier namespace : namespaceTree.getNamespaces(currentNamespace, namespacedTypename.getParentNamespace())) {
+            for (CXCompoundType cxCompoundType : namespaceTree.getTypesForNamespace(namespace)) {
+                if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(namespacedTypename.getIdentifier())) {
+                    output.add(cxCompoundType);
+                }
+            }
+        }
+        
+        /*
         CXIdentifier certainNamespace = namespaceTree.getNamespace(currentNamespace, namespacedTypename.getParentNamespace());
         for (CXCompoundType cxCompoundType : namespaceTree.getTypesForNamespace(certainNamespace)) {
             if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(namespacedTypename.getIdentifier())) {
                 return cxCompoundType;
             }
         }
+  
+         */
         
-        throw new TypeDoesNotExist(new CXIdentifier(certainNamespace, namespacedTypename.getIdentifier()).toString());
+        if(output.size() > 1) throw new AmbiguousIdentifierError(corresponding, output);
+        else if(output.size() == 1) return output.get(0);
+        
+        throw new TypeDoesNotExist(new CXIdentifier(namespacedTypename.getParentNamespace(), namespacedTypename.getIdentifier()).toString());
     }
     
-    public CXType getType(String typenameImage) {
+    public CXType getType(String typenameImage, Token tok) {
+        CXType output = null;
         if(typeDefinitions.containsKey(typenameImage)) {
-            return typeDefinitions.get(typenameImage);
+            output = typeDefinitions.get(typenameImage);
         }
-        CXType output;
-        if((output = getTempType(currentNamespace, typenameImage)) != null) {
-            return output;
+        CXType temp;
+        if((temp = getTempType(currentNamespace, typenameImage)) != null) {
+            if(output != null) throw new AmbiguousIdentifierError(tok, Arrays.asList(temp, output));
+            output = temp;
         }
         List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(currentNamespace);
         if(typesForNamespace == null) {
             throw new TypeDoesNotExist(typenameImage);
         }
+        List<CXType> possibilities = new LinkedList<>();
         for (CXCompoundType cxCompoundType : typesForNamespace) {
+    
             if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(typenameImage))
-                return cxCompoundType;
+                possibilities.add(cxCompoundType);
         }
-        if(typedefExists(typenameImage)) {
-            return typeDefinitions.get(typenameImage);
+        
+    
+        if(output != null && possibilities.size() > 0) {
+            if(output instanceof CXDelayedTypeDefinition && possibilities.size() == 1 && possibilities.get(0) instanceof CXClassType) {
+                if(((CXDelayedTypeDefinition) output).getIdentifier().equals(((CXClassType) possibilities.get(0)).getTypeNameIdentifier())) {
+                    return possibilities.get(0);
+                }
+            }
+        
+            possibilities.add(output);
+            throw new AmbiguousIdentifierError(tok, possibilities);
+        } else if(possibilities.size() > 1) {
+            throw new AmbiguousIdentifierError(tok, possibilities);
+        } else if(possibilities.size() == 1) {
+            output = possibilities.get(0);
         }
-        throw new TypeDoesNotExist(typenameImage);
+    
+        
+        if(output == null)
+            throw new TypeDoesNotExist(typenameImage);
+        return output;
     }
     
     public CXType getType(AbstractSyntaxNode ast) throws InvalidPrimitiveException {
@@ -261,6 +308,7 @@ public class TypeEnvironment {
             if((output = getTempType(namespace, image)) != null) {
                 return output;
             }
+            /*
             CXIdentifier certainNamespace = namespaceTree.getNamespace(currentNamespace, namespace);
     
             
@@ -270,12 +318,16 @@ public class TypeEnvironment {
                 }
             }
             
-            throw new TypeDoesNotExist(new CXIdentifier(namespace, image).toString());
+             */
+            CXIdentifier objectIdentifier = new CXIdentifier(namespace, image);
+            return getType(objectIdentifier, node.getToken());
+            
+            //throw new TypeDoesNotExist(new CXIdentifier(namespace, image).toString());
         }
         
         if(ast.getType().equals(ASTNodeType.typename)) {
             String image = ast.getToken().getImage();
-            return getType(image);
+            return getType(image, ast.getToken());
         }
         
         if(ast.getType().equals(ASTNodeType.pointer_type)) {
@@ -469,11 +521,15 @@ public class TypeEnvironment {
             CXClassType cxClassType;
             if(ast.hasChild(ASTNodeType.inherit)) {
                 
-                String image = ast.getChild(ASTNodeType.inherit)
-                        .getChild(ASTNodeType.typename).getToken().getImage();
-                CXClassType parent = ((CXClassType) getNamedCompoundType(image));
-                
-                
+               
+                CXClassType parent;
+                try {
+                    parent = (CXClassType) getType(ast.getChild(ASTNodeType.inherit).getChild(0));
+                } catch (InvalidPrimitiveException e) {
+                    return null;
+                }
+    
+    
                 cxClassType = new CXClassType(identifier, parent, fieldDeclarations, methods, new LinkedList<>(), this);
                 
                 
@@ -487,20 +543,14 @@ public class TypeEnvironment {
                 if(dec.hasChild(ASTNodeType.sequence)) {
                     
                     AbstractSyntaxNode priorAST = dec.getChild(2);
-                    CXConstructor prior;
-                    if(priorAST.getType().equals(ASTNodeType._super)) {
-                        
-                        prior = cxClassType.getParent().getConstructor(params.getChildList().size());
-                    } else if(priorAST.getType().equals(ASTNodeType.id)) {
-                        prior = cxClassType.getConstructor(params.getChildList().size());
-                    } else throw new UnsupportedOperationException();
+                   
                     
                     constructors.add(
-                            createConstructor(visibilityIterator.next(), cxClassType, params, compound, prior)
+                            createConstructor(visibilityIterator.next(), cxClassType, params, compound, dec)
                     );
                 } else {
                     constructors.add(
-                            createConstructor(visibilityIterator.next(), cxClassType, params, compound, null)
+                            createConstructor(visibilityIterator.next(), cxClassType, params, compound, dec)
                     );
                 }
             }
@@ -626,10 +676,10 @@ public class TypeEnvironment {
     }
     
     private CXConstructor createConstructor(Visibility visibility, CXClassType parent, AbstractSyntaxNode params,
-                                            AbstractSyntaxNode compound, CXConstructor prior) {
+                                            AbstractSyntaxNode compound, AbstractSyntaxNode corresponding) {
         List<CXParameter> parameters = createParameters(params);
         
-        return new CXConstructor(parent, visibility, parameters, compound);
+        return new CXConstructor(parent, visibility, parameters, compound, corresponding);
     }
     
     private List<CXParameter> createParameters(AbstractSyntaxNode ast) {

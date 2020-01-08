@@ -1,7 +1,6 @@
 package radin.compilation.microcompilers;
 
 import radin.compilation.AbstractCompiler;
-import radin.compilation.AbstractIndentedOutputCompiler;
 import radin.compilation.tags.TypeDefHelperTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
@@ -139,7 +138,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                     CXClassType cxClass = (CXClassType) ((TypeAbstractSyntaxNode) topLevelDeclaration.getASTNode()).getCxType();
                 
                     ClassCompiler classCompiler =
-                            new ClassCompiler(getPrintWriter(), 0, cxClass);
+                            new ClassCompiler(getPrintWriter(), 0, cxClass, topLevelDeclaration);
                 
                     if(!classCompiler.compile()) return false;
                     break;

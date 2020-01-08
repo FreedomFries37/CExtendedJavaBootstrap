@@ -93,7 +93,7 @@ public class CXMethod implements CXEquivalent {
     }
     public List<CXParameter> getParametersExpanded() {
         LinkedList<CXParameter> cxParameters = new LinkedList<>(getParameters());
-        cxParameters.add(new CXParameter(new PointerType(CXPrimitiveType.VOID), methodThisParameterName));
+        cxParameters.add(0, new CXParameter(new PointerType(CXPrimitiveType.VOID), methodThisParameterName));
         return cxParameters;
     }
     
@@ -128,9 +128,9 @@ public class CXMethod implements CXEquivalent {
         StringBuilder output = new StringBuilder();
         output.append(returnType.generateCDefinition(getCFunctionName()));
         output.append('(');
-        if(parameters.size() > 0) {
+        if(getParametersExpanded().size() > 0) {
             boolean first = true;
-            for (CXParameter parameter : parameters) {
+            for (CXParameter parameter : getParametersExpanded()) {
                 if (first) first = false;
                 else output.append(", ");
                 
@@ -150,18 +150,19 @@ public class CXMethod implements CXEquivalent {
     
     public String getCFunctionName() {
         int hash = getParameterMangle().hashCode();
-        hash += parent.getTypeNameIdentifier().hashCode();
+        if(parent != null)
+            hash += parent.getTypeNameIdentifier().hashCode();
         hash += name.hashCode();
         hash = Math.abs(hash);
         return name.generateCDefinitionNoHash() + hash;
     }
     
     public String getCMethodName() {
-        return name.generateCDefinition() + "_" + getParameterMangle();
+        return getCFunctionName();
     }
     
     public String methodCall(String thisValue, String sequence) {
-        return getCMethodName() + "(" + thisValue + "," + sequence + ")";
+        return getCMethodName() + "(" + thisValue + ", " + sequence + ")";
     }
     
     public String methodCall(String thisValue) {
@@ -173,7 +174,7 @@ public class CXMethod implements CXEquivalent {
     }
     
     public String methodAsFunctionCall(String thisValue, String sequence) {
-        return getCFunctionName() + "(" + thisValue + "," + sequence + ")";
+        return getCFunctionName() + "(" + thisValue + ", " + sequence + ")";
     }
     
     
@@ -215,28 +216,30 @@ public class CXMethod implements CXEquivalent {
                         .replace("*", "p")).collect(Collectors.joining());
     }
     
-    public CXMethod createSuperMethod(CXClassType child_class, String vtablename) {
+    public CXMethod createSuperMethod(CXClassType child_class, String vtablename, CXMethod replacement) {
+        String replacementName = replacement.getCFunctionName();
         
-        
-        String name = "super_" + this.getName();
+        String name = "super_" + this.getCFunctionName();
         
         AbstractSyntaxNode oldDec = new AbstractSyntaxNode(ASTNodeType.declarations,
                 new TypeAbstractSyntaxNode(
                         ASTNodeType.declaration,
-                        getFunctionPointer(),
+                        replacement.getFunctionPointer(),
                         new AbstractSyntaxNode(
                                 ASTNodeType.id,
                                 new Token(TokenType.t_id, "old")
                         )
                 ));
         AbstractSyntaxNode fieldGet = new AbstractSyntaxNode(ASTNodeType.field_get,
-                new AbstractSyntaxNode(ASTNodeType.field_get,
-                        new AbstractSyntaxNode(ASTNodeType.indirection,
-                                thisAST()
-                        ),
-                        variableAST("vtable")
+                new AbstractSyntaxNode(ASTNodeType.indirection,
+                        new AbstractSyntaxNode(ASTNodeType.field_get,
+                                new AbstractSyntaxNode(ASTNodeType.indirection,
+                                        thisAST()
+                                ),
+                                variableAST("vtable")
+                        )
                 ),
-                variableAST(getName())
+                variableAST(replacementName)
         );
         AbstractSyntaxNode saveOld = new AbstractSyntaxNode(
                 ASTNodeType.assignment,
@@ -253,15 +256,9 @@ public class CXMethod implements CXEquivalent {
                 new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
                 variableAST(getCFunctionName())
         );
-        AbstractSyntaxNode output =new AbstractSyntaxNode(ASTNodeType.declarations,
-                new TypeAbstractSyntaxNode(
-                        ASTNodeType.declaration,
-                        returnType,
-                        variableAST("output")
-                )
-        );
+       
         List<AbstractSyntaxNode> superMethodCallParameters = new LinkedList<>();
-        for (CXParameter parameter : parameters) {
+        for (CXParameter parameter : getParametersExpanded()) {
             superMethodCallParameters.add(variableAST(parameter.getName()));
         }
         AbstractSyntaxNode sequenceNode = new AbstractSyntaxNode(ASTNodeType.sequence, superMethodCallParameters);
@@ -271,27 +268,45 @@ public class CXMethod implements CXEquivalent {
                 variableAST(vtablename),
                 sequenceNode
         );
-        AbstractSyntaxNode saveOutput = new AbstractSyntaxNode(
-                ASTNodeType.assignment,
-                variableAST("output"),
-                new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
-                superMethodCall
-        );
         AbstractSyntaxNode returnFunction = new AbstractSyntaxNode(
                 ASTNodeType.assignment,
                 fieldGet,
                 new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
                 variableAST("old")
         );
-        AbstractSyntaxNode returnOutput = new AbstractSyntaxNode(
-                ASTNodeType._return,
-                variableAST("old")
-        );
-        AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, oldDec, saveOld,
-                reassign, output, saveOutput,
-                returnFunction, returnOutput);
-        
-        return new CXMethod(child_class, Visibility._private, name, false, returnType, parameters, compound);
+        if(returnType != CXPrimitiveType.VOID) {
+            AbstractSyntaxNode output =new AbstractSyntaxNode(ASTNodeType.declarations,
+                    new TypeAbstractSyntaxNode(
+                            ASTNodeType.declaration,
+                            returnType,
+                            variableAST("output")
+                    )
+            );
+            AbstractSyntaxNode saveOutput = new AbstractSyntaxNode(
+                    ASTNodeType.assignment,
+                    variableAST("output"),
+                    new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
+                    superMethodCall
+            );
+           
+            AbstractSyntaxNode returnOutput = new AbstractSyntaxNode(
+                    ASTNodeType._return,
+                    variableAST("output")
+            );
+            AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, oldDec, saveOld,
+                    reassign, output, saveOutput,
+                    returnFunction, returnOutput);
+    
+    
+            return new CXMethod(child_class, Visibility._private, name, false, returnType, parameters, compound);
+        } else {
+            
+            AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, oldDec, saveOld,
+                    reassign, superMethodCall,
+                    returnFunction);
+    
+            return new CXMethod(child_class, Visibility._private, name, false, returnType, parameters, compound);
+        }
     }
     
     private AbstractSyntaxNode thisAST() {
@@ -301,59 +316,66 @@ public class CXMethod implements CXEquivalent {
         );
     }
     
-    private AbstractSyntaxNode variableAST(String id) {
+    public static AbstractSyntaxNode variableAST(String id) {
         return new AbstractSyntaxNode(
                 ASTNodeType.id,
                 new Token(TokenType.t_id, id)
         );
     }
     
+    @Override
+    public String toString() {
+        return returnType.toString() + " " + getCFunctionName() + " (" +
+                getParametersExpanded().stream().map(CXParameter::toString).collect(Collectors.joining(" ,"))
+                + ")";
+    }
+    
     protected void fixMethodBody() {
-        AbstractSyntaxNode define = new AbstractSyntaxNode(ASTNodeType.declarations,
-                new TypeAbstractSyntaxNode(
-                        ASTNodeType.declaration,
-                        new PointerType(parent),
-                        new AbstractSyntaxNode(
-                                ASTNodeType.id,
-                                new Token(TokenType.t_id, "this")
-                        )
-                )
-        );
-        AbstractSyntaxNode cast = new AbstractSyntaxNode(
-                ASTNodeType.assignment,
-                new AbstractSyntaxNode(
-                        ASTNodeType.id,
-                        new Token(TokenType.t_id, "this")
-                ),
-                new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
-                new TypeAbstractSyntaxNode(
-                        ASTNodeType.cast,
-                        new PointerType(parent),
-                        new AbstractSyntaxNode(
-                                ASTNodeType.id,
-                                new Token(TokenType.t_id, "__this")
-                        )
-                )
-        );
-        if(parent.getParent() != null) {
-        
-            AbstractSyntaxNode defineS = new AbstractSyntaxNode(ASTNodeType.declarations,
+        if(parent != null) {
+            AbstractSyntaxNode define = new AbstractSyntaxNode(ASTNodeType.declarations,
                     new TypeAbstractSyntaxNode(
                             ASTNodeType.declaration,
                             new PointerType(parent),
-                            variableAST("super")
+                            new AbstractSyntaxNode(
+                                    ASTNodeType.id,
+                                    new Token(TokenType.t_id, "this")
+                            )
                     )
             );
-            AbstractSyntaxNode assignS = new AbstractSyntaxNode(
+            AbstractSyntaxNode cast = new AbstractSyntaxNode(
                     ASTNodeType.assignment,
-                    variableAST("super"),
+                    new AbstractSyntaxNode(
+                            ASTNodeType.id,
+                            new Token(TokenType.t_id, "this")
+                    ),
                     new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
-                    variableAST("this")
+                    new TypeAbstractSyntaxNode(
+                            ASTNodeType.cast,
+                            new PointerType(parent),
+                            new AbstractSyntaxNode(
+                                    ASTNodeType.id,
+                                    new Token(TokenType.t_id, "__this")
+                            )
+                    )
             );
-            this.methodBody = new AbstractSyntaxNode(this.methodBody, true,define, cast, defineS, assignS);
-        }
-        else this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast);
+            if (parent.getParent() != null) {
         
+                AbstractSyntaxNode defineS = new AbstractSyntaxNode(ASTNodeType.declarations,
+                        new TypeAbstractSyntaxNode(
+                                ASTNodeType.declaration,
+                                new PointerType(parent),
+                                variableAST("super")
+                        )
+                );
+                AbstractSyntaxNode assignS = new AbstractSyntaxNode(
+                        ASTNodeType.assignment,
+                        variableAST("super"),
+                        new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
+                        variableAST("this")
+                );
+                this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast, defineS, assignS);
+            } else this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast);
+        }
         
         
         

@@ -73,6 +73,10 @@ public class ErrorReader {
             boolean errorPrinted = false;
     
             for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {
+                if(errorInformation.getToken() == null) {
+                    System.out.println(errorInformation.getInfo());
+                    continue;
+                }
                 LineHolder lineInfo = lines.get(errorInformation.getToken().getLineNumber() - 1);
                 
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {

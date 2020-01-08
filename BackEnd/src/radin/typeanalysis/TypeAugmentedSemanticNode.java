@@ -281,4 +281,14 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         if(deepestFailureNode == null) return null;
         return deepestFailureNode.findFirstToken();
     }
+    
+    public TypeAugmentedSemanticNode findFromASTNode(AbstractSyntaxNode node) {
+        if(this.getASTNode().equals(node)) return this;
+        for (TypeAugmentedSemanticNode child : children) {
+            TypeAugmentedSemanticNode output = child.findFromASTNode(node);
+            if(output != null) return output;
+        }
+        
+        return null;
+    }
 }

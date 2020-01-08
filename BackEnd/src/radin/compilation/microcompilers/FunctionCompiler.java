@@ -25,7 +25,6 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
     }
     
     public boolean compile() {
-        println();
         print(returnType.generateCDefinition(name));
         print("(");
         boolean first= true;
@@ -39,7 +38,7 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
         CompoundStatementCompiler compoundStatementCompiler = new CompoundStatementCompiler(getPrintWriter(),
                 getIndent() + 1);
         if(compoundStatement == null) throw new IncorrectlyMissingCompoundStatement();
-        compoundStatementCompiler.compile(compoundStatement);
+        if(!compoundStatementCompiler.compile(compoundStatement)) return false;
         println("}");
         println();
         return true;

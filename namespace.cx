@@ -11,6 +11,9 @@ in std {
 
 		virtual int hashcode();
 		virtual int equals(object* other);
+		int equals(int i) {
+			return 0;
+		}
 	};
 
 	in ko class object {
@@ -26,8 +29,7 @@ in std {
     };
 }
 
-in ko
-class object {
+in ko class object {
 	private std::object other;
 
 };
@@ -39,33 +41,13 @@ int main() {
 		return 0;
 }
 
-in std int foo() {
-	std::ko::object o;
+in std
+int foo() {
+	object* o; // Should be an ambiguous reference
+	object* j = new object("hello");
+
 
 	return 1;
 }
-
-
-implement std::object {
-	int hashcode() {
-			return (int) this;
-	}
-
-
-
-	int equals(std::object* other) {
-		return this == other;
-	}
-}
-
-	int hello() {
-		return -1;
-	}
-
-
-void main() {
-	// std::object* o = new std::object("hello");
-}
-
 
 

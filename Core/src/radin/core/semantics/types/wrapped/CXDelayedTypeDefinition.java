@@ -7,11 +7,10 @@ import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 
-import java.util.List;
-
 public class CXDelayedTypeDefinition extends CXType implements ICXWrapper {
     
     private CXIdentifier identifier;
+    private Token corresponding;
     private TypeEnvironment environment;
     
     private CXType actual;
@@ -23,14 +22,19 @@ public class CXDelayedTypeDefinition extends CXType implements ICXWrapper {
         }
     }
     
-    public CXDelayedTypeDefinition(CXIdentifier identifier, TypeEnvironment environment) {
+    public CXDelayedTypeDefinition(CXIdentifier identifier, Token corresponding, TypeEnvironment environment) {
         this.identifier = identifier;
+        this.corresponding = corresponding;
         this.environment = environment;
+    }
+    
+    public CXIdentifier getIdentifier() {
+        return identifier;
     }
     
     public boolean update() {
         try {
-            CXType type = environment.getType(identifier);
+            CXType type = environment.getType(identifier, corresponding);
             if(type == this) return false;
             if(type == null) return false;
             actual = type;
