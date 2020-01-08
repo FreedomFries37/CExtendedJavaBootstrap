@@ -28,6 +28,7 @@ import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.errors.*;
 import radin.typeanalysis.errors.IllegalAccessError;
 
+import java.awt.*;
 import java.util.regex.Pattern;
 
 public class ExpressionTypeAnalyzer extends TypeAnalyzer {
@@ -400,7 +401,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         
         if(node.getASTType() == ASTNodeType.constructor_call) {
             assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
-            CXType constructedType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+            CXType constructedType = ((PointerType) ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType()).getSubType();
             
             assert constructedType instanceof CXClassType;
             SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(node.getASTChild(ASTNodeType.sequence));

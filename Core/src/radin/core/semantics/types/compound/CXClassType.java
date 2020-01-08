@@ -6,6 +6,7 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
+import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
 import radin.utility.Pair;
 import radin.utility.Reference;
 import radin.core.semantics.TypeEnvironment;
@@ -593,7 +594,9 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public CXType getTypeIndirection() {
-        return new CXDelayedTypeDefinition(getTypeNameIdentifier(), null, environment);
+        return this;
+        //return new CXDynamicTypeDefinition()
+        //return new CXDelayedTypeDefinition(getTypeNameIdentifier(), null, environment);
     }
     
 }

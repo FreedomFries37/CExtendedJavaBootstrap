@@ -72,7 +72,7 @@ class cat : animals::domesticated {
 
 int main() {
 
-	animals::animal* griff = new animals::dog("The Griff");
+	animals::animal griff = new animals::dog("The Griff");
 
 	griff->says();
 	println("");
@@ -80,7 +80,7 @@ int main() {
 	println("");
 
 
-	animals::domesticated* myCat = new cat("jeff");
+	animals::domesticated myCat = new cat("jeff");
 	myCat->says();
 
 	return 0;

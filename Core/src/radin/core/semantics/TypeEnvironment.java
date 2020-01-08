@@ -16,7 +16,9 @@ import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
 import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.semantics.types.wrapped.PointerType;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class TypeEnvironment {
     
@@ -241,7 +243,7 @@ public class TypeEnvironment {
          */
         
         if(output.size() > 1) throw new AmbiguousIdentifierError(corresponding, output);
-        else if(output.size() == 1) return output.get(0);
+        else if(output.size() == 1) return new PointerType(output.get(0));
         
         throw new TypeDoesNotExist(new CXIdentifier(namespacedTypename.getParentNamespace(), namespacedTypename.getIdentifier()).toString());
     }
@@ -271,7 +273,7 @@ public class TypeEnvironment {
         if(output != null && possibilities.size() > 0) {
             if(output instanceof CXDelayedTypeDefinition && possibilities.size() == 1 && possibilities.get(0) instanceof CXClassType) {
                 if(((CXDelayedTypeDefinition) output).getIdentifier().equals(((CXClassType) possibilities.get(0)).getTypeNameIdentifier())) {
-                    return possibilities.get(0);
+                    return new PointerType(possibilities.get(0));
                 }
             }
         
@@ -280,7 +282,7 @@ public class TypeEnvironment {
         } else if(possibilities.size() > 1) {
             throw new AmbiguousIdentifierError(tok, possibilities);
         } else if(possibilities.size() == 1) {
-            output = possibilities.get(0);
+            output = new PointerType(possibilities.get(0));
         }
     
         
@@ -526,7 +528,7 @@ public class TypeEnvironment {
                
                 CXClassType parent;
                 try {
-                    parent = (CXClassType) getType(ast.getChild(ASTNodeType.inherit).getChild(0));
+                    parent = (CXClassType) ((PointerType) getType(ast.getChild(ASTNodeType.inherit).getChild(0))).getSubType();
                 } catch (InvalidPrimitiveException e) {
                     return null;
                 }

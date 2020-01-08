@@ -7,15 +7,15 @@
 
 ### Table of Contents
 
-1. [Basics](#Basics)
-2. [Main Additions to C](#Main additions to C)
-    1. [Classes](#Classes)
-    2. [Namespaces](#Namespaces)
-3. [Future Plans](#Future Plans)
-    - [Jodin Compiler written in Jodin](#Jodin Compiler written in Jodin)
-    - [Finely Tuned Importing](#Finely Tuned Importing)
-4. [Code Examples](#Code Examples)
-4. [Experimental Features](#Experimental Features)
+1. Basics
+2. Main Additions to C
+    1. Classes
+    2. Namespaces
+3. Future Plans
+    - Jodin Compiler written in Jodin
+    - Finely Tuned Importing
+4. Code Examples
+4. Experimental Features
     
 
 ### Basics
