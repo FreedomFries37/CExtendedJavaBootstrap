@@ -3,6 +3,7 @@ package radin.compilation.microcompilers;
 import radin.compilation.AbstractIndentedOutputCompiler;
 import radin.compilation.tags.ArrayWithSizeTag;
 import radin.compilation.tags.BasicCompilationTag;
+import radin.compilation.tags.MultiDimensionalArrayWithSizeTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.TypeAbstractSyntaxNode;
@@ -46,6 +47,16 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                                 ArrayWithSizeTag compilationTag = child.getCompilationTag(ArrayWithSizeTag.class);
                                 String size = expressionCompiler.compileToString(compilationTag.getExpression());
                                 s = s.replace("$REPLACE ME$", size);
+                            } else if(child.containsCompilationTag(MultiDimensionalArrayWithSizeTag.class)) {
+                                MultiDimensionalArrayWithSizeTag tag =
+                                        child.getCompilationTag(MultiDimensionalArrayWithSizeTag.class);
+                                for (int i = 0; i < tag.getExpressions().size(); i++) {
+                                    TypeAugmentedSemanticNode augmentedSemanticNode = tag.getExpressions().get(i);
+                                    String size = expressionCompiler.compileToString(augmentedSemanticNode);
+                                    if(size == null) return false;
+                                    String replace = String.format("$REPLACE ME %d$", i);
+                                    s = s.replace(replace, size);
+                                }
                             }
                             print(s);
                             break;

@@ -6,6 +6,10 @@ import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 public class ArrayType extends AbstractCXPrimitiveType implements ICXWrapper {
 
     private CXType baseType;
@@ -40,8 +44,51 @@ public class ArrayType extends AbstractCXPrimitiveType implements ICXWrapper {
     
     @Override
     public String generateCDefinition(String identifier) {
+        if(baseType instanceof ArrayType || baseType instanceof ICXWrapper && ((ICXWrapper) baseType).getWrappedType() instanceof ArrayType) {
+            ArrayType next;
+            if(baseType instanceof ArrayType) {
+                next = ((ArrayType) baseType);
+            } else {
+                next = ((ArrayType) ((ICXWrapper) baseType).getWrappedType());
+            }
+            if(size != null) {
+                return this.generateCDefinition(next, identifier, 0);
+            }
+            return this.generateCDefinition(next, identifier, 0);
+        }
+        
         if(size != null) {
             return baseType.generateCDefinition() + " " + identifier + "[" + "$REPLACE ME$" + "]";
+        }
+        return baseType.generateCDefinition() + " " + identifier + "[]";
+    }
+    
+    /**
+     *
+     * @param identifier
+     * @param nthDimension the dimension of the array
+     * @return
+     */
+    private String generateCDefinition(ArrayType baseType, String identifier, int nthDimension) {
+        String replaceMe = String.format("$REPLACE ME %d$", nthDimension);
+        
+        if(baseType.baseType instanceof ArrayType || baseType.baseType instanceof ICXWrapper && ((ICXWrapper) baseType.baseType).getWrappedType() instanceof ArrayType) {
+            if(size != null) {
+                return baseType.generateCDefinition((ArrayType) baseType.baseType, identifier, nthDimension + 1) +
+                        "[" + replaceMe + "]";
+            }
+            return  baseType.generateCDefinition((ArrayType) baseType.baseType, identifier, nthDimension) + "[]";
+        }
+        
+        if(size != null) {
+            return baseType.generateCDefinition(identifier, nthDimension + 1) + "[" + replaceMe+ "]";
+        }
+        return baseType.generateCDefinition(identifier, nthDimension) + "[]";
+    }
+    
+    private String generateCDefinition(String identifier, int nthDimension) {
+        if(size != null) {
+            return baseType.generateCDefinition() + " " + identifier + "[" + "$REPLACE ME " + nthDimension +"$" + "]";
         }
         return baseType.generateCDefinition() + " " + identifier + "[]";
     }
@@ -69,6 +116,32 @@ public class ArrayType extends AbstractCXPrimitiveType implements ICXWrapper {
     @Override
     public CXType getWrappedType() {
         return getBaseType();
+    }
+    
+    public List<AbstractSyntaxNode> getSizes() {
+        LinkedList<AbstractSyntaxNode> output = new LinkedList<>();
+        if(size != null) output.add(size);
+        if(baseType instanceof ArrayType || baseType instanceof ICXWrapper && ((ICXWrapper) baseType).getWrappedType() instanceof ArrayType) {
+            if(baseType instanceof ArrayType) {
+                output.addAll(((ArrayType) baseType).getSizes());
+            } else {
+                output.addAll(((ArrayType) ((ICXWrapper) baseType).getWrappedType()).getSizes());
+            }
+        }
+        
+        return output;
+    }
+    
+    public int getDimensions() {
+        int output = 1;
+        if(baseType instanceof ArrayType || baseType instanceof ICXWrapper && ((ICXWrapper) baseType).getWrappedType() instanceof ArrayType) {
+            if(baseType instanceof ArrayType) {
+                output += ((ArrayType) baseType).getDimensions();
+            } else {
+                output += ((ArrayType) ((ICXWrapper) baseType).getWrappedType()).getDimensions();
+            }
+        }
+        return output;
     }
     
     @Override

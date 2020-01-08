@@ -1,7 +1,9 @@
 package radin.typeanalysis.analyzers;
 
+import radin.compilation.tags.AbstractCompilationTag;
 import radin.compilation.tags.ArrayWithSizeTag;
 import radin.compilation.tags.BasicCompilationTag;
+import radin.compilation.tags.MultiDimensionalArrayWithSizeTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
@@ -51,18 +53,38 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 }
                 
                 if(declarationType instanceof ArrayType) {
-                    AbstractSyntaxNode size = ((ArrayType) declarationType).getSize();
-                    if(size != null) {
-                        ArrayWithSizeTag tag = new ArrayWithSizeTag(size, getEnvironment());
+                    if(((ArrayType) declarationType).getSizes().size() == 1) {
+                        AbstractSyntaxNode size = ((ArrayType) declarationType).getSize();
+                        if (size != null) {
+                            ArrayWithSizeTag tag = new ArrayWithSizeTag(size, getEnvironment());
+                            declaration.addCompilationTag(tag);
+                            if (tag.isConstant()) {
+                                declaration.addCompilationTag(BasicCompilationTag.CONSTANT_SIZE);
+                            } else {
+                                ExpressionTypeAnalyzer typeAnalyzer = new ExpressionTypeAnalyzer(tag.getExpression());
+                                if (!determineTypes(typeAnalyzer)) {
+                                    setIsFailurePoint(declaration);
+                                    return false;
+                                }
+                            }
+                        }
+                    } else {
+                        List<AbstractSyntaxNode> sizes = ((ArrayType) declarationType).getSizes();
+                        int dimension = ((ArrayType) declarationType).getDimensions();
+                        MultiDimensionalArrayWithSizeTag tag =
+                                new MultiDimensionalArrayWithSizeTag(dimension, sizes, getEnvironment());
                         declaration.addCompilationTag(tag);
-                        if(tag.isConstant()) {
+                        if (tag.isConstant()) {
                             declaration.addCompilationTag(BasicCompilationTag.CONSTANT_SIZE);
                         } else {
-                            ExpressionTypeAnalyzer typeAnalyzer = new ExpressionTypeAnalyzer(tag.getExpression());
-                            if(!determineTypes(typeAnalyzer)) {
-                                setIsFailurePoint(declaration);
-                                return false;
+                            for (TypeAugmentedSemanticNode expression : tag.getExpressions()) {
+                                ExpressionTypeAnalyzer typeAnalyzer = new ExpressionTypeAnalyzer(expression);
+                                if (!determineTypes(typeAnalyzer)) {
+                                    setIsFailurePoint(declaration);
+                                    return false;
+                                }
                             }
+                           
                         }
                     }
                 }

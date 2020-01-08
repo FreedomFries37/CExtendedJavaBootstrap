@@ -7,21 +7,23 @@ import radin.typeanalysis.TypeAugmentedSemanticNode;
 import radin.typeanalysis.TypeAugmentedSemanticTree;
 import radin.typeanalysis.analyzers.ExpressionTypeAnalyzer;
 
-public class ArrayWithSizeTag extends AbstractCompilationTag {
+import java.util.Collections;
+
+public class ArrayWithSizeTag extends MultiDimensionalArrayWithSizeTag {
     
-    private TypeAugmentedSemanticNode expression;
+    
     
     public ArrayWithSizeTag(AbstractSyntaxNode expression, TypeEnvironment environment) {
-        super("ARRAY SIZE", ASTNodeType.declaration);
-        this.expression = new TypeAugmentedSemanticTree(expression, environment).getHead();
+        super(1, Collections.singletonList(expression), environment);
+        
     }
     
     public TypeAugmentedSemanticNode getExpression() {
-        return expression;
+        return getExpressions().get(0);
     }
     
     public boolean isConstant() {
-        ExpressionTypeAnalyzer typeAnalyzer = new ExpressionTypeAnalyzer(expression);
+        ExpressionTypeAnalyzer typeAnalyzer = new ExpressionTypeAnalyzer(getExpression());
         if(!typeAnalyzer.determineTypes()) return false;
         return !typeAnalyzer.hasErrors();
     }

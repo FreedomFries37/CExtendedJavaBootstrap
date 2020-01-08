@@ -96,8 +96,13 @@ int main() {
 	animals::animal infoLoss = *griff;
 	infoLoss.says();
 
+	animals::animal* array2D[4][6];
+	array2D[2][1] = griff;
+	array2D[2][1]->says();
+
+
 	animals::dog* typeSafety = (animals::dog*) &infoLoss;
-	typeSafety->says();
+	typeSafety->says(); // CAUSES SEGFAULT
 
 	return 0;
 }

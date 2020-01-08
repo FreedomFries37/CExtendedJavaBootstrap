@@ -310,6 +310,9 @@ int main() {
     dogs[0].vtable->says115909444(&dogs[0]);
     struct class_animals_animal2086640357 infoLoss = (*griff);
     infoLoss.vtable->says115909444(&infoLoss);
+    struct class_animals_animal2086640357* array2D[4][6];
+    array2D[2][1] = griff;
+    (*array2D[2][1]).vtable->says115909444(array2D[2][1]);
     struct class_animals_dog795110875* typeSafety = (struct class_animals_dog795110875*) &(infoLoss);
     (*typeSafety).vtable->says115909444(typeSafety);
     return 0;

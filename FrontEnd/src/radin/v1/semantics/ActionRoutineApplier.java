@@ -429,7 +429,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             
                             CXType type = environment.getType(typename);
                             AbstractSyntaxNode args = getCatNode("ArgsList").getSynthesized();
-    
+                            
                             TypeAbstractSyntaxNode synthesized = new TypeAbstractSyntaxNode(ASTNodeType.constructor_call, type, args);
                             synthesized.setToken(node.getLeafNode(TokenType.t_new).getToken());
                             node.setSynthesized(
@@ -887,9 +887,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                     directDeclaratorTail.getChild(0).getType() == ASTNodeType.declaration && directDeclaratorTail.getChild(1).getType() == ASTNodeType.parameter_list) {
                                 
                                 if(((TypeAbstractSyntaxNode) directDeclaratorTail.getChild(0)).getCxType().is(new PointerType(directDeclaratorTail.getCxType()), environment)) {
-                                
+                                    
                                     // this a function pointer
-    
+                                    
                                     System.out.println("function pointer");
                                     List<CXType> parameters = new LinkedList<>();
                                     for (AbstractSyntaxNode abstractSyntaxNode : directDeclaratorTail.getChild(1).getChildList()) {
@@ -899,7 +899,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                     
                                     CXType functionPointerType = new CXFunctionPointer(directDeclaratorTail.getCxType()
                                             , parameters);
-    
+                                    
                                     AbstractSyntaxNode id = directDeclaratorTail.getChild(0).getChild(0);
                                     node.setSynthesized(
                                             new TypeAbstractSyntaxNode(ASTNodeType.declaration, functionPointerType,
@@ -907,14 +907,14 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                     );
                                     
                                     return true;
-    
+                                    
                                 }
                             }
                             
                             
                         }
                         node.setSynthesized(
-                                    directDeclaratorTail
+                                directDeclaratorTail
                         );
                         
                         return true;
@@ -926,46 +926,60 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             //node.printTreeForm();
                             if(node.firstIs(TokenType.t_lpar)) {
                                 AbstractSyntaxNode parameterTypeList;
-                                if(node.getDirectChildren().size() == 2)
+                                if(node.getDirectChildren().size() == 3)
                                     parameterTypeList = node.getChild(1).getSynthesized();
                                 else parameterTypeList = new AbstractSyntaxNode(ASTNodeType.parameter_list);
                                 
-                                node.setSynthesized(
+                                
+                                node.getCategoryNode("DirectDeclaratorTail", 2).setInherit(
                                         new TypeAbstractSyntaxNode(
                                                 ASTNodeType.function_description,
                                                 type,
                                                 node.getInherit(1),
                                                 parameterTypeList
-                                        )
+                                        ),
+                                        0
                                 );
-                                
+                                node.getCategoryNode("DirectDeclaratorTail", 2).setInherit(node.getInherit(1), 1);
+                                node.setSynthesized(node.getCategoryNode("DirectDeclaratorTail", 2).getSynthesized());
                             } else if(node.firstIs(TokenType.t_lbrac)) {
                                 CXType newType;
                                 AbstractSyntaxNode expression = AbstractSyntaxNode.EMPTY;
+                                
+                                
                                 if(node.hasChildCategory("Expression")) {
                                     expression = node.getCategoryNode("Expression").getSynthesized();
                                     newType = new ArrayType(type, expression);
                                 } else {
                                     newType = new ArrayType(type);
                                 }
-                                node.setSynthesized(
+                                
+                                node.getCategoryNode("DirectDeclaratorTail", 2).setInherit(
                                         new TypeAbstractSyntaxNode(
                                                 ASTNodeType.declaration,
                                                 newType,
                                                 node.getInherit(1),
                                                 expression
-                                        )
+                                        ),
+                                        0
                                 );
+                                node.getCategoryNode("DirectDeclaratorTail", 2).setInherit(node.getInherit(1), 1);
+                                node.setSynthesized(node.getCategoryNode("DirectDeclaratorTail", 2).getSynthesized());
                             } else
                                 return false;
                         } else {
-                            node.setSynthesized(
-                                    new TypeAbstractSyntaxNode(
-                                            ASTNodeType.declaration,
-                                            type,
-                                            node.getInherit(1)
-                                    )
-                            );
+                            if(node.getInherit(0).getType() == ASTNodeType.declaration || node.getInherit(0).getType() == ASTNodeType.function_description)
+                                node.setSynthesized(
+                                        node.getInherit(0)
+                                );
+                            else
+                                node.setSynthesized(
+                                        new TypeAbstractSyntaxNode(
+                                                ASTNodeType.declaration,
+                                                type,
+                                                node.getInherit(1)
+                                        )
+                                );
                         }
                         
                         return true;
@@ -1146,9 +1160,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             node.setSynthesized(specifiers);
                             return true;
                         }
-                       
+                        
                         declarator.setInherit(specifiers);
-    
+                        
                         AbstractSyntaxNode declaratorSynthesized = declarator.getSynthesized();
                         
                         node.setSynthesized(
@@ -1160,10 +1174,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     case "ClassDeclaration": {
                         
                         AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
-    
+                        
                         // environment.addTypeDefinition(new CXCompoundTypeNameIndirection
                         // (CXCompoundTypeNameIndirection.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
-    
+                        
                         environment.addTemp(node.getLeafNode(TokenType.t_id).getToken());
                         
                         AbstractSyntaxNode declarations = getCatNode("ClassDeclarationList").getSynthesized();
@@ -1206,7 +1220,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         } else {
                             visibility = new AbstractSyntaxNode(ASTNodeType.visibility, new Token(TokenType.t_internal));
                         }
-    
+                        
                         System.out.println(node.getAllChildren());
                         AbstractSyntaxNode inner;
                         if(node.hasChildCategory("Declaration")) {
@@ -1244,7 +1258,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         node.setSynthesized(
                                 new AbstractSyntaxNode(ASTNodeType.class_level_declaration, visibility, inner)
                         );
-    
+                        
                         return true;
                     }
                     case "ConstructorDefinition": {
@@ -1257,7 +1271,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         if(node.hasChildCategory("ArgsList")) {
                             AbstractSyntaxNode priorAST = node.getChild(2).getSynthesized();
                             AbstractSyntaxNode argsAST = node.getCategoryNode("ArgsList").getSynthesized();
-    
+                            
                             node.setSynthesized(
                                     new TypeAbstractSyntaxNode(ASTNodeType.constructor_definition, type, typename,
                                             parameterList, priorAST, argsAST, compoundStatement)
@@ -1326,11 +1340,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             String EntryCategory = "Implementation";
                             String HeadCatName = "ImplementList";
                             String TailCatName = "ImplementListTail";
-    
+                            
                             AbstractSyntaxNode[] array = foldList(node.getCategoryNode("ImplementList"), EntryCategory,
                                     HeadCatName, TailCatName, implementing);
-    
-    
+                            
+                            
                             node.setSynthesized(
                                     new TypeAbstractSyntaxNode(ASTNodeType.implement_single, namespacedType, array)
                             );

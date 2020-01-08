@@ -1610,6 +1610,7 @@ public class Parser extends BasicParser {
                 if(!consume(TokenType.t_rpar)) {
                     return false;
                 }
+                if(!parseDirectDeclaratorTail(child)) return false;
                 break;
             }
             case t_lbrac: {
