@@ -42,7 +42,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             CXStructType vTable = cxClassType.getVTable();
             getCurrentTracker().addBasicCompoundType(vTable);
             getCurrentTracker().addPrivateField(cxClassType, getCompilationSettings().getvTableName(),
-                    vTable);
+                    new PointerType(vTable));
         
             getCurrentTracker().addVariable("__this", new PointerType(CXPrimitiveType.VOID));
         
@@ -55,7 +55,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                     getEnvironment()).getHead();
             CompoundStatementTypeAnalyzer compoundStatementTypeAnalyzer = new CompoundStatementTypeAnalyzer(tree,
                     generatedSuper.getReturnType(), false);
-            tree.printTreeForm();
+            //tree.printTreeForm();
             /* // TODO: implement type checking for super methods. Currently have to be non type checked
             if(!determineTypes(compoundStatementTypeAnalyzer)) {
                 tree.printTreeForm();

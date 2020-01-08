@@ -4,8 +4,10 @@ import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXCompoundType;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class NamespaceTree {
 
@@ -64,6 +66,24 @@ public class NamespaceTree {
             if(child.shorthand.equals(path.getIdentifier())) return child.identifier;
         }
         return null;
+    }
+    
+    public Set<CXIdentifier> getNamespaces(CXIdentifier currentNamespace, CXIdentifier path) {
+        Set<CXIdentifier> output = new HashSet<>();
+        if(namespaceExists(path)) output.add(path);
+        if(namespaceExists(currentNamespace)) {
+            if (path == null) output.add(currentNamespace);
+            else {
+                Set<CXIdentifier> parents = getNamespaces(currentNamespace, path.getParentNamespace());
+                for (CXIdentifier parent : parents) {
+                    for (Node child : getNode(parent).children) {
+                        if (child.shorthand.equals(path.getIdentifier())) output.add(child.identifier);
+                    }
+                }
+                
+            }
+        }
+        return output;
     }
     
     /**

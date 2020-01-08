@@ -29,10 +29,33 @@ public class FileCompiler extends AbstractCompiler {
         super(new PrintWriter(file));
     }
     
+    private String preamble;
+    
+    public String getPreamble() {
+        return preamble;
+    }
+    
+    public void setPreamble(String preamble) {
+        this.preamble = preamble;
+    }
+    
     @Override
     public boolean compile(TypeAugmentedSemanticNode node) {
-        TopLevelDeclarationCompiler topLevelDeclarationCompiler = new TopLevelDeclarationCompiler(getPrintWriter());
-        if(!topLevelDeclarationCompiler.compile(node)) return false;
+        if(preamble != null) {
+            println(preamble);
+            println();
+        }
+        try {
+            TopLevelDeclarationCompiler topLevelDeclarationCompiler = new TopLevelDeclarationCompiler(getPrintWriter());
+            topLevelDeclarationCompiler.compile(node);
+            
+        }catch (Throwable t) {
+            t.printStackTrace();
+            flush();
+            close();
+            return false;
+        }
+        
         flush();
         close();
         return true;

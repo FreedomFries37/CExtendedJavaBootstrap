@@ -1164,7 +1164,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         // environment.addTypeDefinition(new CXCompoundTypeNameIndirection
                         // (CXCompoundTypeNameIndirection.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
     
-                        environment.addTemp(name.getToken().getImage());
+                        environment.addTemp(node.getLeafNode(TokenType.t_id).getToken());
                         
                         AbstractSyntaxNode declarations = getCatNode("ClassDeclarationList").getSynthesized();
                         
@@ -1172,7 +1172,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         AbstractSyntaxNode classDefinition;
                         if(node.hasChildCategory("Inherit")) {
                             AbstractSyntaxNode inherit = new AbstractSyntaxNode(ASTNodeType.inherit,
-                                    getCatNode("Inherit").getLeafNode(TokenType.t_typename).getSynthesized());
+                                    getCatNode("Inherit").getChild(0).getSynthesized());
                             classDefinition =
                                     new AbstractSyntaxNode(ASTNodeType.class_type_definition, name, inherit, declarations);
                         } else {

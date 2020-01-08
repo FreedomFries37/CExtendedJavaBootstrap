@@ -3,16 +3,20 @@ package radin.core.semantics.types.methods;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.wrapped.PointerType;
 
 import java.util.List;
 
 public class CXConstructor extends CXMethod {
     
     private CXConstructor priorConstructor;
+    private AbstractSyntaxNode correspondingASTNode;
     
     public CXConstructor(CXClassType parent, Visibility visibility, List<CXParameter> parameters,
-                         AbstractSyntaxNode methodBody) {
-        super(parent, visibility, createConstructorName(parent, parameters), false, parent, parameters, methodBody);
+                         AbstractSyntaxNode methodBody, AbstractSyntaxNode correspondingASTNode) {
+        super(parent, visibility, createConstructorName(parent, parameters), false, new PointerType(parent), parameters,
+                methodBody);
+        this.correspondingASTNode = correspondingASTNode;
     }
     
     public CXConstructor getPriorConstructor() {
@@ -26,10 +30,18 @@ public class CXConstructor extends CXMethod {
     private static String createConstructorName(CXClassType parent, List<CXParameter> parameters) {
         
         
-        return "initialize_" + parent.getCTypeName() + "_" + getParameterMangle(parameters);
+        return "construct_" + parent.getTypeNameIdentifier().generateCDefinitionNoHash() + Math.abs(parameters.hashCode()) + '_';
         
     }
     
+    public AbstractSyntaxNode getCorrespondingASTNode() {
+        return correspondingASTNode;
+    }
     
-    
+    @Override
+    public String toString() {
+        return getCFunctionName() + "{" +
+                "priorConstructor=" + priorConstructor +
+                '}';
+    }
 }

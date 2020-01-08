@@ -17,7 +17,7 @@ import java.util.*;
 public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCollector {
 
    
-    private Stack<TypeTracker> trackerStack;
+    private Stack<VariableTypeTracker> trackerStack;
     private TypeAugmentedSemanticNode tree;
     
     private static TypeEnvironment environment;
@@ -66,13 +66,13 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
         errors = new LinkedList<>();
         
         if(environment != null && environment.typedefExists("boolean")) {
-            trackerStack.push(new TypeTracker(environment));
+            trackerStack.push(new VariableTypeTracker(environment));
             CXType booleanType = environment.getTypeDefinition("boolean");
             
             getCurrentTracker().addFixedFunction("true", new ConstantType(booleanType));
             getCurrentTracker().addFixedFunction("false", new ConstantType(booleanType));
         } else {
-            trackerStack.push(new TypeTracker(new TypeEnvironment()));
+            trackerStack.push(new VariableTypeTracker(new TypeEnvironment()));
         }
     }
     
@@ -85,26 +85,26 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
     }
     
     @Override
-    public TypeTracker getCurrentTracker() {
+    public VariableTypeTracker getCurrentTracker() {
         return trackerStack.peek();
     }
     
     @Override
     public void typeTrackingClosure() {
-        TypeTracker next = trackerStack.peek().createInnerTypeTracker();
+        VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker();
         trackerStack.push(next);
     }
     
     @Override
     public void typeTrackingClosure(CXClassType classType) {
-        TypeTracker next = trackerStack.peek().createInnerTypeTracker(classType);
+        VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker(classType);
         trackerStack.push(next);
     }
     
     @Override
     public void typeTrackingClosureLoad(CXClassType cxClassType) {
-        if(!TypeTracker.trackerPresent(cxClassType)) typeTrackingClosure();
-        trackerStack.push(TypeTracker.getTracker(cxClassType));
+        if(!VariableTypeTracker.trackerPresent(cxClassType)) typeTrackingClosure();
+        trackerStack.push(VariableTypeTracker.getTracker(cxClassType));
     }
     
     @Override
@@ -125,12 +125,14 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
         }catch (AbstractCompilationError compilationError) {
             setIsFailurePoint(tree);
             errors.add(compilationError);
+            //tree.printTreeForm();
             return false;
         } catch (Error e) {
             setIsFailurePoint(tree);
             Token closestToken = tree.findFailureToken();
             CompilationError error = new CompilationError(e.getMessage(), closestToken);
             errors.add(error);
+            //tree.printTreeForm();
             return false;
         }
     }

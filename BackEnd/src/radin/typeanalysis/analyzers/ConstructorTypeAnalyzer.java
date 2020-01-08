@@ -1,6 +1,7 @@
 package radin.typeanalysis.analyzers;
 
 import radin.compilation.tags.PriorConstructorTag;
+import radin.core.AbstractTree;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.wrapped.PointerType;
@@ -72,9 +73,10 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
     
             CXConstructor priorConstructor = priorType.getConstructor(parameterTypeList);
             CXConstructor currentConstructor = owner.getConstructor(new ParameterTypeList(parametersTypes));
+    
             
             currentConstructor.setPriorConstructor(priorConstructor);
-            node.addCompilationTag(new PriorConstructorTag(priorConstructor));
+            node.addCompilationTag(new PriorConstructorTag(priorConstructor, node.getASTChild(ASTNodeType.sequence)));
         }
     
         TypeAugmentedSemanticNode compoundStatement = node.getASTChild(ASTNodeType.compound_statement);

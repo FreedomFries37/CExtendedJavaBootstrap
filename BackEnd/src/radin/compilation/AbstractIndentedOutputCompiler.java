@@ -30,5 +30,6 @@ public abstract class AbstractIndentedOutputCompiler extends AbstractCompiler {
     
     protected void setIndent(int indent) {
         this.indent = indent;
+       
     }
 }

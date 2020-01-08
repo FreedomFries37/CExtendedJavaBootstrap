@@ -1,0 +1,72 @@
+void print(char* name);
+void println(char* name);
+
+in animals {
+	class animal {
+		private char* species;
+		private int numberOfLegs;
+
+		public animal(char* species, int numberOfLegs) {
+			this->species = species;
+			this->numberOfLegs = numberOfLegs;
+		}
+
+		public int getNumberOfLegs() {
+			return this->numberOfLegs;
+		}
+
+		virtual public void says() {
+			print(this->species);
+			print(" says ");
+		}
+	};
+
+	class quadAnimal : animal {
+
+		public quadAnimal(char* name) : super(name, 4) {}
+
+		virtual public void says() {
+			super->says();
+			print("I have 4 legs!");
+        }
+	};
+
+	class domesticated : quadAnimal {
+		private char* name;
+
+		public domesticated(char* name, char* species) : super(species) {
+			this->name = name;
+		}
+
+		public char* getName() {
+			return this->name;
+		}
+
+	};
+
+	class dog : domesticated {
+
+
+
+		public dog(char* name) : super(name, "dog") { }
+
+		public dog() : this("unknown") { }
+
+		virtual public void says() {
+			print(this->getName());
+			print(" the ");
+			super->says();
+			print(", also ARF");
+		}
+	};
+}
+
+
+int main() {
+
+	animals::animal* griff = new animals::dog("The Griff");
+
+	griff->says();
+
+	return 0;
+}

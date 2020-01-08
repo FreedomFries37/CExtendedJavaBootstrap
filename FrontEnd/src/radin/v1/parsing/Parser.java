@@ -1946,7 +1946,10 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("Inherit");
         
         if(!consume(TokenType.t_colon)) return false;
-        if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) return error("Not a proper typename for inherit");
+        if(!consumeAndAddAsLeaf(TokenType.t_typename, child)) {
+            if(!parseTypeName(child))
+                return error("Not a proper typename for inherit");
+        }
         
         parent.addChild(child);
         return true;

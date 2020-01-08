@@ -8,7 +8,7 @@ public interface ITypeAnalyzer {
     void typeTrackingClosure(CXClassType classType);
     void typeTrackingClosureLoad(CXClassType cxClassType);
     
-    TypeTracker getCurrentTracker();
+    VariableTypeTracker getCurrentTracker();
     
     void releaseTrackingClosure();
     

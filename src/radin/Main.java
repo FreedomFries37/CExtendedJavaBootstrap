@@ -155,6 +155,8 @@ public class Main {
     
     
                         FileCompiler compiler = new FileCompiler(output);
+                        compiler.setPreamble("#include <stdlib.h>\n" + "void print(char* name);\n" +
+                                "void println(char* name);\n");
                         System.out.println("compiler.compile(tasTree.getHead()) = " + compiler.compile(tasTree.getHead()));
                     }
                 } catch (Error e) {

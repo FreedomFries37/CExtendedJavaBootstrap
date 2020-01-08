@@ -4,6 +4,7 @@ import radin.compilation.tags.BasicCompilationTag;
 import radin.compilation.tags.ConstructorCallTag;
 import radin.compilation.tags.MethodCallTag;
 import radin.compilation.tags.SuperCallTag;
+import radin.core.semantics.exceptions.IncorrectParameterTypesError;
 import radin.utility.Reference;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
@@ -244,6 +245,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
              */
             if(!determineTypes(node.getChild(0))) return false;
             
+            SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(node.getASTChild(ASTNodeType.sequence));
+            if(!determineTypes(sequenceTypeAnalyzer)) return false;
+            
             assert node.getChild(0).getCXType() instanceof CXFunctionPointer;
             CXFunctionPointer cxType = (CXFunctionPointer) node.getChild(0).getCXType();
             node.setType(cxType.getReturnType());
@@ -304,6 +308,23 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     isSuperCall = true;
                 }
             }
+    
+            String name = node.getChild(1).getToken().getImage();
+    
+            TypeAugmentedSemanticNode sequenceNode = node.getASTChild(ASTNodeType.sequence);
+            SequenceTypeAnalyzer analyzer = new SequenceTypeAnalyzer(sequenceNode);
+    
+            if(!determineTypes(analyzer)) return false;
+    
+            ParameterTypeList typeList = new ParameterTypeList(analyzer.getCollectedTypes());
+            
+            if(objectInteraction.getCXType() instanceof CXFunctionPointer) {
+                CXFunctionPointer fp = (CXFunctionPointer) objectInteraction.getCXType();
+                if(!typeList.equals(fp.getParameterTypeList(), getEnvironment())) throw new IncorrectParameterTypesError();
+                
+                node.setType(fp.getReturnType());
+                return true;
+            }
             
             
             CXType cxClass;
@@ -314,14 +335,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             }
             
             //assert cxClass instanceof CXClassType;
-            String name = node.getChild(1).getToken().getImage();
-            
-            TypeAugmentedSemanticNode sequenceNode = node.getASTChild(ASTNodeType.sequence);
-            SequenceTypeAnalyzer analyzer = new SequenceTypeAnalyzer(sequenceNode);
-            
-            if(!determineTypes(analyzer)) return false;
-            
-            ParameterTypeList typeList = new ParameterTypeList(analyzer.getCollectedTypes());
+           
             
             
             if(!(cxClass instanceof CXClassType) || !getCurrentTracker().methodVisible(((CXClassType) cxClass), name,
