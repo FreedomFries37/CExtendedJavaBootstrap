@@ -154,11 +154,20 @@ public class CXMethod implements CXEquivalent {
             hash += parent.getTypeNameIdentifier().hashCode();
         hash += name.hashCode();
         hash = Math.abs(hash);
-        return name.generateCDefinitionNoHash() + hash;
+        String prefix = name.generateCDefinitionNoHash();
+        
+        return prefix + hash;
     }
     
     public String getCMethodName() {
-        return getCFunctionName();
+        
+        int hash = getParameterMangle().hashCode();
+        hash += name.getIdentifier().hashCode();
+        hash = Math.abs(hash);
+        String prefix = name.getIdentifier();
+        return prefix + hash;
+        
+        
     }
     
     public String methodCall(String thisValue, String sequence) {
@@ -217,7 +226,7 @@ public class CXMethod implements CXEquivalent {
     }
     
     public CXMethod createSuperMethod(CXClassType child_class, String vtablename, CXMethod replacement) {
-        String replacementName = replacement.getCFunctionName();
+        String replacementName = replacement.getCMethodName();
         
         String name = "super_" + this.getCFunctionName();
         
@@ -256,7 +265,7 @@ public class CXMethod implements CXEquivalent {
                 new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
                 variableAST(getCFunctionName())
         );
-       
+        
         List<AbstractSyntaxNode> superMethodCallParameters = new LinkedList<>();
         for (CXParameter parameter : getParametersExpanded()) {
             superMethodCallParameters.add(variableAST(parameter.getName()));
@@ -288,7 +297,7 @@ public class CXMethod implements CXEquivalent {
                     new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
                     superMethodCall
             );
-           
+            
             AbstractSyntaxNode returnOutput = new AbstractSyntaxNode(
                     ASTNodeType._return,
                     variableAST("output")
@@ -296,15 +305,15 @@ public class CXMethod implements CXEquivalent {
             AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, oldDec, saveOld,
                     reassign, output, saveOutput,
                     returnFunction, returnOutput);
-    
-    
+            
+            
             return new CXMethod(child_class, Visibility._private, name, false, returnType, parameters, compound);
         } else {
             
             AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, oldDec, saveOld,
                     reassign, superMethodCall,
                     returnFunction);
-    
+            
             return new CXMethod(child_class, Visibility._private, name, false, returnType, parameters, compound);
         }
     }
@@ -359,7 +368,7 @@ public class CXMethod implements CXEquivalent {
                     )
             );
             if (parent.getParent() != null) {
-        
+                
                 AbstractSyntaxNode defineS = new AbstractSyntaxNode(ASTNodeType.declarations,
                         new TypeAbstractSyntaxNode(
                                 ASTNodeType.declaration,

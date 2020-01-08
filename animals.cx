@@ -42,6 +42,12 @@ in animals {
 			return this->name;
 		}
 
+		virtual public void says() {
+			print(this->getName());
+			print(" the ");
+			super->says();
+			print(", also ARF");
+		}
 	};
 
 	class dog : domesticated {
@@ -50,14 +56,18 @@ in animals {
 
 		public dog() : this("unknown") { }
 
-		virtual public void says() {
-			print(this->getName());
-			print(" the ");
-			super->says();
-			print(", also ARF");
-		}
+
 	};
 }
+
+class cat : animals::domesticated {
+
+	public cat(char* name) : super(name, "cat") {}
+
+	virtual public void says() {
+		println("I'm a cat, shove off");
+	}
+};
 
 
 int main() {
@@ -65,6 +75,29 @@ int main() {
 	animals::animal* griff = new animals::dog("The Griff");
 
 	griff->says();
+	println("");
+	griff->says();
+	println("");
+
+	animals::animal* animals[2];
+
+	animals::domesticated* myCat = new cat("jeff");
+
+	myCat->says();
+
+	animals[0] = myCat;
+	animals[1] = griff;
+	animals[0]->says();
+
+	animals::dog dogs[2];
+	dogs[0] = *(animals::dog*) griff;
+	dogs[0].says();
+
+	animals::animal infoLoss = *griff;
+	infoLoss.says();
+
+	animals::dog* typeSafety = (animals::dog*) &infoLoss;
+	typeSafety->says();
 
 	return 0;
 }

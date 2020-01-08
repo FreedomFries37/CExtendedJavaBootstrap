@@ -1575,7 +1575,7 @@ public class Parser extends BasicParser {
         
         switch (getCurrentType()) {
             case t_id: {
-                if(isTypeName(getCurrent().getImage())) return error("Can't use typename as identifier");
+                if(isTypeName(getCurrent().getImage())) return error("Can't use typename as identifier", true);
                 consumeAndAddAsLeaf(child);
                 break;
             }

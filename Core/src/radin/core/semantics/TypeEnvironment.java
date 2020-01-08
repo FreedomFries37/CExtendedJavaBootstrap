@@ -80,6 +80,8 @@ public class TypeEnvironment {
     
     private boolean standardBooleanDefined;
     
+    
+    
     static {
         primitives = new HashSet<>();
         primitives.addAll(Arrays.asList("char",
@@ -534,7 +536,7 @@ public class TypeEnvironment {
                 
                 
             }
-            else cxClassType = new CXClassType(identifier, fieldDeclarations, methods, new LinkedList<>(), this);
+            else cxClassType = new CXClassType(identifier, null, fieldDeclarations, methods, new LinkedList<>(), this);
             
             Iterator<Visibility> visibilityIterator = constructorVisibilities.iterator();
             for (AbstractSyntaxNode dec: constructorDefinitions) {

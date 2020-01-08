@@ -11,6 +11,7 @@ import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.CXMethod;
+import radin.core.semantics.types.wrapped.ArrayType;
 import radin.core.semantics.types.wrapped.PointerType;
 import radin.typeanalysis.TypeAugmentedSemanticNode;
 
@@ -164,33 +165,44 @@ public class ExpressionCompiler extends AbstractCompiler {
                 }
                 
                 MethodCallTag methodCallTag = node.getCompilationTag(MethodCallTag.class);
-    
-    
+                
+                
                 objectInteractionImage = compileToString(caller); // save for later use
                 if (objectInteractionImage == null) return false;
-               
+                
                 String callingOnString;
                 if(node.getChild(0).containsCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE)) {
                     callingOnString = objectInteractionImage;
                 } else {
                     
                     print(objectInteractionImage);
-    
-    
+                    
+                    
                     if (!needToGetReference) {
                         TypeAugmentedSemanticNode ptr = caller;
                         while (ptr.getASTType() != ASTNodeType.id) {
                             ptr = ptr.getChild(0);
                         }
+                        
+                        if(ptr.getCXType() instanceof ArrayType) {
+                            CXType type = ptr.getCXType();
+                            while (type instanceof ArrayType) {
+                                ptr = ptr.getParent();
+                                type = ptr.getCXType();
+                            }
+                        }
+                        
+                        
                         callingOnString = compileToString(ptr); // save for later use
                         if (callingOnString == null) return false;
                         if (!(ptr.getCXType() instanceof PointerType))
                             callingOnString = "&" + callingOnString;
-        
+                        
                         CXType type = ptr.getCXType();
                         while (type instanceof PointerType && ((PointerType) type).getSubType() instanceof PointerType) {
                             callingOnString = "*" + callingOnString;
                             type = ((PointerType) type).getSubType();
+                            
                         }
                     } else {
                         callingOnString = "&" + objectInteractionImage;
@@ -235,7 +247,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                     
                     if(!(caller.getCXType() instanceof CXFunctionPointer)) return true;
                     int size = ((CXFunctionPointer) caller.getCXType()).getParameterTypeList().getSize();
-    
+                    
                     
                     print("(");
                     if(sequenceLength == size - 1) {
@@ -293,9 +305,9 @@ public class ExpressionCompiler extends AbstractCompiler {
                 TypeAugmentedSemanticNode sequence = node.getASTChild(ASTNodeType.sequence);
                 String sequenceString = compileToString(sequence);
                 if(sequenceString == null) return false;
-    
+                
                 CXClassType classType = compilationTag.getConstructor().getParent();
-    
+                
                 CXMethod initMethod = classType.getInitMethod();
                 String initCall = initMethod.methodAsFunctionCall("");
                 String fullCall;

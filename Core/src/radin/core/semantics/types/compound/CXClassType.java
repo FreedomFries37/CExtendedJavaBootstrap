@@ -170,11 +170,6 @@ public class CXClassType extends CXCompoundType {
         if(initMethod == null) {
             List<AbstractSyntaxNode> children = new LinkedList<>();
             
-            StringBuilder initMethodBody = new StringBuilder("" +
-                    "$TYPE* output = malloc(sizeof($TYPE));" +
-                    "$VTABLE_TYPE* vtable = malloc(sizeof($VTABLE_TYPE));" +
-                    "output->vtable = vtable" +
-                    "vtable->offset = 0;");
             AbstractSyntaxNode vtable = new AbstractSyntaxNode(
                     ASTNodeType.indirection,
                     CXMethod.variableAST("vtable")
@@ -190,10 +185,11 @@ public class CXClassType extends CXCompoundType {
             AbstractSyntaxNode outputSet = assign(
                     CXMethod.variableAST("output"),
                     new AbstractSyntaxNode(ASTNodeType.id,
-                            new Token(TokenType.t_id, "malloc" + "(sizeof(struct " + this.getCTypeName() + "))"))
+                            new Token(TokenType.t_id, "calloc" + "(1, sizeof(struct " + this.getCTypeName() + "))"))
             );
             children.add(outputSet);
-    
+            
+            
             AbstractSyntaxNode vtableDec = new AbstractSyntaxNode(ASTNodeType.declarations,
                     new TypeAbstractSyntaxNode(
                             ASTNodeType.declaration,
@@ -222,26 +218,28 @@ public class CXClassType extends CXCompoundType {
                     new Token(TokenType.t_literal, "0"))));
             
             for (CXMethod cxMethod : virtualMethodOrder) {
-                AbstractSyntaxNode method = CXMethod.variableAST(cxMethod.getCFunctionName());
+                AbstractSyntaxNode method = CXMethod.variableAST(cxMethod.getCMethodName());
+                AbstractSyntaxNode function = CXMethod.variableAST(cxMethod.getCFunctionName());
                 AbstractSyntaxNode fieldGet = new AbstractSyntaxNode(ASTNodeType.field_get,
                         vtable,
                         method);
                 
-                children.add(assign(fieldGet, method));
+                children.add(assign(fieldGet, function));
                 
                 
                 
                 // initMethodBody.append("vtable->").append(cxMethod.getCFunctionName()).append(" = ").append(cxMethod
                 // .getCFunctionName()).append(";");
             }
-    
+            
             for (CXMethod cxMethod : getAllConcreteMethods()) {
-                AbstractSyntaxNode method = CXMethod.variableAST(cxMethod.getCFunctionName());
+                AbstractSyntaxNode method = CXMethod.variableAST(cxMethod.getCMethodName());
+                AbstractSyntaxNode function = CXMethod.variableAST(cxMethod.getCFunctionName());
                 AbstractSyntaxNode fieldGet = new AbstractSyntaxNode(ASTNodeType.field_get,
                         new AbstractSyntaxNode(ASTNodeType.indirection, CXMethod.variableAST("output")),
                         method);
-    
-                children.add(assign(fieldGet, method));
+                
+                children.add(assign(fieldGet, function));
             }
     
             /*
@@ -254,8 +252,6 @@ public class CXClassType extends CXCompoundType {
             children.add(new AbstractSyntaxNode(ASTNodeType._return, CXMethod.variableAST("output")));
             
             
-            String finishedInitMethodBody = initMethodBody.toString().replace("$TYPE", "struct" + this.getCTypeName())
-                    .replace("$VTABLE_TYPE", "struct " + getVTableName());
             
             
             AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, children);
@@ -488,7 +484,7 @@ public class CXClassType extends CXCompoundType {
     
     public FieldDeclaration convertToFieldDeclaration(CXMethod method) {
         CXType type = method.getFunctionPointer();
-        return new FieldDeclaration(type, method.getCFunctionName());
+        return new FieldDeclaration(type, method.getCMethodName());
     }
     
     
