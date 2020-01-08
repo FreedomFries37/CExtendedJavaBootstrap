@@ -1,50 +1,22 @@
-int bleh();
 
 in std {
-	class object {
-		private object o;
-		private char* name;
-
-		public object(char* name) {
-			this->name = name;
-		}
-
-		virtual int hashcode();
-		virtual int equals(object* other);
-		int equals(int i) {
-			return 0;
-		}
-	};
-
 	in ko class object {
-    		private object o;
     		private char* name;
 
     		public object(char* name) {
     			this->name = name;
     		}
-
-    		virtual int hashcode();
-    		virtual int equals(object* other);
     };
 }
 
 in ko class object {
-	private std::object other;
-
+	private int hello;
 };
-
-
-int main() {
-		std::object id;
-
-		return 0;
-}
 
 in std
 int foo() {
-	object* o; // Should be an ambiguous reference
-	object* j = new object("hello");
+	ko::object* o; // Should be an ambiguous reference
+	std::ko::object* j = new std::ko::object("hello");
 
 
 	return 1;
