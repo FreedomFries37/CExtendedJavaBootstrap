@@ -3,7 +3,7 @@ package radin.core.semantics.types.methods;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
-import radin.core.semantics.types.wrapped.PointerType;
+import radin.core.semantics.types.primitives.PointerType;
 
 import java.util.List;
 

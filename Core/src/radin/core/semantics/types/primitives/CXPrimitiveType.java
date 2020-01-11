@@ -1,8 +1,8 @@
 package radin.core.semantics.types.primitives;
 
+import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.wrapped.ConstantType;
 
 public class CXPrimitiveType extends AbstractCXPrimitiveType {
     enum Primitives {

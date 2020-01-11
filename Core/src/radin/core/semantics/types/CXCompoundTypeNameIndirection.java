@@ -1,7 +1,7 @@
 package radin.core.semantics.types;
 
-import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.TypeDoesNotExist;
+import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXCompoundType;
 
 public class CXCompoundTypeNameIndirection extends CXType {

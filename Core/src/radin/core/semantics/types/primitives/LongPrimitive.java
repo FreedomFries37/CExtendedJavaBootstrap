@@ -1,7 +1,7 @@
 package radin.core.semantics.types.primitives;
 
-import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
+import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 
 public class LongPrimitive extends AbstractCXPrimitiveType {

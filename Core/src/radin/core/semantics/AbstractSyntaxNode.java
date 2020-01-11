@@ -1,9 +1,9 @@
 package radin.core.semantics;
 
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
 import radin.core.AbstractTree;
 import radin.core.lexical.Token;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
 
 import java.util.*;
 
@@ -13,6 +13,8 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
     private Token token;
     private List<AbstractSyntaxNode> childList;
     private List<String> hints;
+    
+    private AbstractSyntaxNode compilationTags;
     
     public static final AbstractSyntaxNode EMPTY;
     
@@ -88,7 +90,13 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
         return new ArrayList<>(childList);
     }
     
+    public AbstractSyntaxNode getCompilationTags() {
+        return compilationTags;
+    }
     
+    public void setCompilationTags(AbstractSyntaxNode compilationTags) {
+        this.compilationTags = compilationTags;
+    }
     
     public ASTNodeType getType() {
         return type;

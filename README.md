@@ -117,7 +117,7 @@ so you could still refer to it using `animals::mammals::Dolphin` within the `in 
 >that there could be multiple classes being referred to by a path, the compiler will spit out an error, like so:
 >In namespace.cx:
 >```
->radin.core.semantics.types.AmbiguousIdentifierError: Ambiguous Identifier
+>AmbiguousIdentifierError: Ambiguous Identifier
 >    |
 > 18 |     ko::object* o; // Should be an ambiguous reference
 >    |            ^_________________________________________________ Could be CXClass ko::object or CXClass std::ko::object

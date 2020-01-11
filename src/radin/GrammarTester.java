@@ -1,13 +1,10 @@
 package radin;
 
+import radin.core.output.core.input.frontend.v2.parsing.structure.*;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
-import radin.utility.Pair;
-import radin.v2.lexing.BasicLexer;
-import radin.v2.parsing.grammars.ExpressionGrammar;
-import radin.v2.parsing.grammars.StandardCGrammar;
-import radin.v2.parsing.grammars.TestGrammar;
-import radin.v2.parsing.structure.*;
+import radin.core.output.core.input.frontend.v2.lexing.BasicLexer;
+import radin.core.output.core.input.frontend.v2.parsing.grammars.StandardCGrammar;
 
 import java.util.Map;
 import java.util.Set;

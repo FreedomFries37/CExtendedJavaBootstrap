@@ -5,10 +5,10 @@ import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.*;
-import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
+import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
-import radin.core.semantics.types.wrapped.PointerType;
+import radin.core.semantics.types.primitives.PointerType;
 
 
 import java.util.LinkedList;

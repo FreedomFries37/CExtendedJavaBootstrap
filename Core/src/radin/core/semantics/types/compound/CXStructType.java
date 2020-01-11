@@ -1,7 +1,7 @@
 package radin.core.semantics.types.compound;
 
-import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
+import radin.core.semantics.types.CXType;
 
 import java.util.List;
 

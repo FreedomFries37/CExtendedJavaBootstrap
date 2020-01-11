@@ -1,7 +1,6 @@
 package radin.core.semantics.types.compound;
 
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.methods.CXMethod;
 
 public class IncompatibleReturnTypeError extends Error {
     

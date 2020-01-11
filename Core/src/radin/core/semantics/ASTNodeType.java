@@ -1,8 +1,6 @@
 package radin.core.semantics;
 
 public enum ASTNodeType {
-    reserved("reserved"),
-    _void("void"),
     operator("op"),
     binop("binop"),
     uniop("uniop"),
@@ -17,7 +15,6 @@ public enum ASTNodeType {
     string("string"),
     sequence("sequence"),
     typename("type"),
-    object_interaction("object_interact"),
     parameter_list("params"),
     function_call("func_call"),
     method_call("method_call"),
@@ -27,10 +24,8 @@ public enum ASTNodeType {
     do_while_cond("do_while"),
     for_cond("for"),
     _return("return"),
-    statement("statement"),
     function_definition("func_dec"),
     basic_compound_type_dec("struct/union_dec"),
-    inheritence("inheritence"),
     specifiers("specifiers"),
     specifier("specifier"),
     qualifier("qualifier"),
@@ -41,10 +36,8 @@ public enum ASTNodeType {
     class_type_declaration("class_declaration"),
     class_type_name("class_type_name"),
     compound_type_reference("compound_type_reference"),
-    class_type_reference("class_type_reference"),
     typedef("typedef"),
     top_level_decs("top_level_decs"),
-    interactable("interactable"),
     indirection("indirection"),
     addressof("address_of"),
     cast("cast"),
@@ -52,7 +45,6 @@ public enum ASTNodeType {
     array_type("[]"),
     pointer_type("*"),
     abstract_declarator("abstract_declarator"),
-    declarator("declarator"),
     struct("struct"),
     union("union"),
     _class("class"),
@@ -62,7 +54,6 @@ public enum ASTNodeType {
     initialized_declaration("initialized_declaration"),
     compound_statement("compound_statement"),
     sizeof("sizeof"),
-    _new("new"),
     constructor_call("constructor_call"),
     function_description("function_description"),
     visibility("visibility"),
@@ -75,8 +66,12 @@ public enum ASTNodeType {
     implement_block("implement_block"),
     implement_single("implement_single"),
     implementing("implementing"),
-    using_as("using_as"),
-    _import("import")
+    using("using"),
+    _import("import"),
+    compilation_tag("compilation_tag"),
+    compilation_tag_list("compilation_tag_list"),
+    constructor_description("constructor_description"),
+    typeid("typeid")
     ;
     
     

@@ -73,7 +73,6 @@ class cat : animals::domesticated {
 int main() {
 
 	animals::animal griff = new animals::dog("The Griff");
-
 	griff->says();
 	println("");
 	griff->says();
@@ -82,6 +81,9 @@ int main() {
 
 	animals::domesticated myCat = new cat("jeff");
 	myCat->says();
+
+	animals::dog dg = (animals::dog) griff;
+	int legs = dg->getNumberOfLegs();
 
 	return 0;
 }
