@@ -299,22 +299,10 @@ int main() {
     println("");
     (*griff).vtable->says115909444(griff);
     println("");
-    struct class_animals_animal2086640357* animals[2];
     struct class_animals_domesticated1052043033* myCat = construct_cat858242370_255719862(class_cat98262_init803422325(), "jeff");
     (*myCat).vtable->says115909444(myCat);
-    animals[0] = myCat;
-    animals[1] = griff;
-    (*animals[0]).vtable->says115909444(animals[0]);
-    struct class_animals_dog795110875 dogs[2];
-    dogs[0] = (*(struct class_animals_dog795110875*) griff);
-    dogs[0].vtable->says115909444(&dogs[0]);
-    struct class_animals_animal2086640357 infoLoss = (*griff);
-    infoLoss.vtable->says115909444(&infoLoss);
-    struct class_animals_animal2086640357* array2D[4][6];
-    array2D[2][1] = griff;
-    (*array2D[2][1]).vtable->says115909444(array2D[2][1]);
-    struct class_animals_dog795110875* typeSafety = (struct class_animals_dog795110875*) &(infoLoss);
-    (*typeSafety).vtable->says115909444(typeSafety);
+    struct class_animals_dog795110875* dg = (struct class_animals_dog795110875*) griff;
+    int legs = (*dg).getNumberOfLegs1629143273(dg);
     return 0;
 }
 

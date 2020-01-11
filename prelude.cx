@@ -1,0 +1,34 @@
+#include "prelude.h"
+
+void print(std::String o) {
+	print(o->getCStr());
+}
+void println(std::String o) {
+	println(o->getCStr());
+}
+
+void __main(int argc, std::String args[]);
+
+int main(int argc, char* argv[]) {
+
+	std::String args[argc - 1];
+	for(int i = 1; i < argc; ++i) {
+		args[i - 1] = new std::String(argv[i]);
+	}
+	__main(argc-1, args);
+	for(int i = 1; i < argc; ++i) {
+    		args[i - 1]->drop();
+    }
+	return 0;
+}
+
+void __main(int argc, std::String args[]) {
+	std::String total = new std::String();
+	int first = 0;
+	for(int i = 0; i < argc; ++i) {
+		if(first) first = 0;
+		else total->concat(", ");
+    	total = total->concat(args[i]);
+    }
+	println(total);
+}

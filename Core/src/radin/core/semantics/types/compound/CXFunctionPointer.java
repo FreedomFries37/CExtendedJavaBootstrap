@@ -1,12 +1,12 @@
 package radin.core.semantics.types.compound;
 
+import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class CXFunctionPointer extends AbstractCXPrimitiveType {
@@ -22,7 +22,7 @@ public class CXFunctionPointer extends AbstractCXPrimitiveType {
     
     public CXFunctionPointer(CXType returnType) {
         this.returnType = returnType;
-        parameterTypes = Arrays.asList(CXPrimitiveType.VOID);
+        parameterTypes = Collections.singletonList(CXPrimitiveType.VOID);
     }
     
     public List<CXType> getParameterTypes() {

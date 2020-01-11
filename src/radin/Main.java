@@ -1,21 +1,24 @@
 package radin;
 
-import radin.compilation.AbstractCompiler;
-import radin.compilation.FileCompiler;
-import radin.core.frontend.FrontEndUnit;
-import radin.core.frontend.Tokenizer;
-import radin.utility.CompilationSettings;
-import radin.utility.ICompilationSettings;
+import radin.core.chaining.ToolChainFactory;
+import radin.core.output.backend.compilation.AbstractCompiler;
+import radin.core.output.backend.compilation.FileCompiler;
+import radin.core.output.core.input.frontend.v1.lexing.PreprocessingLexer;
+import radin.core.output.core.input.frontend.v1.parsing.ParseNode;
+import radin.core.output.core.input.frontend.v1.parsing.Parser;
 import radin.core.lexical.Token;
+import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.input.FrontEndUnit;
+import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
+import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
+import radin.core.input.Tokenizer;
+import radin.core.output.typeanalysis.TypeAnalyzer;
+import radin.core.utility.CompilationSettings;
+import radin.core.utility.ICompilationSettings;
 import radin.core.semantics.TypeEnvironment;
-import radin.v1.lexing.PreprocessingLexer;
-import radin.v1.parsing.ParseNode;
-import radin.v1.parsing.Parser;
-import radin.v1.semantics.ActionRoutineApplier;
-import radin.typeanalysis.TypeAnalyzer;
-import radin.typeanalysis.TypeAugmentedSemanticTree;
-import radin.typeanalysis.analyzers.ProgramTypeAnalyzer;
+import radin.core.output.core.input.frontend.v1.semantics.ActionRoutineApplier;
+
 
 import java.io.*;
 
@@ -42,10 +45,10 @@ public class Main {
         if(args.length > 0) {
             filename = args[0];
         }
-    
+        
         StringBuilder text = new StringBuilder();
         try {
-    
+            
             BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
             
             String line;
@@ -66,12 +69,12 @@ public class Main {
         }
         
         String outputFile = filename.replace(".cx", ".c");
-    
+        
         CompilationSettings compilationSettings = new CompilationSettings();
         compilationSettings.setShowErrorStackTrace(false);
         compilationSettings.setReduceIndirection(false);
         setCompilationSettings(compilationSettings);
-    
+        
         String fullText = text.toString().replace("\t", " ".repeat(compilationSettings.getTabSize()));
         /*
         Lexer lex = new Lexer(filename, fullText);
@@ -113,22 +116,48 @@ public class Main {
         boolean b = applier.enactActionRoutine(program);
         
          */
+        
+        
+        
+        
         PreprocessingLexer lex = new PreprocessingLexer(filename, fullText);
         Parser parser = new Parser();
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
-    
+        
         FrontEndUnit<Token, ParseNode, AbstractSyntaxNode> frontEndUnit = new FrontEndUnit<>(lex, parser, applier);
     
-        AbstractSyntaxNode build = frontEndUnit.build();
     
+        ToolChainFactory.ToolChainHead<AbstractSyntaxNode> abstractSyntaxNodeToolChainHead = ToolChainFactory.compilerProducer(frontEndUnit);
+        ToolChainFactory.ToolChainLink<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
+                (AbstractSyntaxNode o) -> new TypeAugmentedSemanticTree(o, environment).getHead()
+        );
+        ToolChainFactory.ToolChainLink<Void, TypeAugmentedSemanticNode> chain =
+                abstractSyntaxNodeToolChainHead.chain_to(function);
+        
+    
+    
+        AbstractSyntaxNode build = frontEndUnit.build();
+        
         if(build != null) {
             try {
                 build.printTreeForm();
                 //System.out.println(applier.getSuccessOrder());
                 //System.out.println(completed.getRepresentation());
                 
-                System.out.println("applier.noTypeErrors() = " + applier.noTypeErrors());
+                boolean typeErrors = applier.noTypeErrors();
+                System.out.println("applier.noTypeErrors() = " + typeErrors);
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
                 
                 TypeAnalyzer.setEnvironment(environment);
                 
@@ -148,12 +177,12 @@ public class Main {
                                 analyzer.getErrors());
                         errorReader.readErrors();
                     } else {
-    
-    
+                        
+                        
                         File output = new File(outputFile);
                         output.createNewFile();
-    
-    
+                        
+                        
                         FileCompiler compiler = new FileCompiler(output);
                         compiler.setPreamble("#include <stdlib.h>\n" + "void print(char* name);\n" +
                                 "void println(char* name);\n");

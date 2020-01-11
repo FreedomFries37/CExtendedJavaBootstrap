@@ -1,8 +1,8 @@
 package radin.core.semantics;
 
+import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.compound.CXCompoundType;
 
 import java.util.HashSet;
 import java.util.LinkedList;

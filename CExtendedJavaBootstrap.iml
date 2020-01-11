@@ -10,5 +10,8 @@
     <orderEntry type="module" module-name="BackEnd" />
     <orderEntry type="module" module-name="FrontEnd" />
     <orderEntry type="module" module-name="Core" />
+    <orderEntry type="module" module-name="MidAnalysis" />
+    <orderEntry type="module" module-name="Input" />
+    <orderEntry type="module" module-name="Output" />
   </component>
 </module>

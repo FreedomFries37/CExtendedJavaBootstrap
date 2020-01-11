@@ -72,7 +72,9 @@ public enum TokenType {
     t_sizeof("sizeof"),
     t_internal("internal"),
     t_in("in"),
-    t_implement("implement");
+    t_implement("implement"),
+    t_using("using"),
+    t_typeid("typeid");
     
     private String str;
     

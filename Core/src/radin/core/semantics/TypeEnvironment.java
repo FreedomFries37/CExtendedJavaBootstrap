@@ -1,20 +1,27 @@
 package radin.core.semantics;
 
+import radin.core.annotations.AnnotationManager;
 import radin.core.lexical.Token;
+import radin.core.lexical.TokenType;
 import radin.core.semantics.exceptions.*;
 import radin.core.semantics.types.*;
-import radin.core.semantics.types.compound.*;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.compound.CXStructType;
+import radin.core.semantics.types.compound.CXUnionType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;
+import radin.core.semantics.types.wrapped.ConstantType;
+import radin.core.utility.Pair;
 import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.LongPrimitive;
 import radin.core.semantics.types.primitives.UnsignedPrimitive;
 import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
 import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
-import radin.core.semantics.types.wrapped.ConstantType;
-import radin.core.semantics.types.wrapped.PointerType;
+import radin.core.semantics.types.primitives.PointerType;
+
 
 import java.util.*;
 
@@ -29,6 +36,17 @@ public class TypeEnvironment {
     
     private HashSet<CXCompoundTypeNameIndirection> lateBoundReferences;
     
+    private AnnotationManager<CXClassType> classTargetManger;
+    
+    private CXClassType defaultInheritance = null;
+    
+    public void setDefaultInheritance(CXClassType defaultInheritance) {
+        this.defaultInheritance = defaultInheritance;
+    }
+    
+    public AnnotationManager<CXClassType> getClassTargetManger() {
+        return classTargetManger;
+    }
     
     private CXIdentifier currentNamespace = null;
     private NamespaceTree namespaceTree = new NamespaceTree();
@@ -100,6 +118,9 @@ public class TypeEnvironment {
         
         standardBooleanDefined = false;
         delayedTypeDefinitionHashMap = new HashMap<>();
+        classTargetManger = AnnotationManager.createTargeted(
+                new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
+        );
     }
     
     public void pushNamespace(String identifier) {
@@ -107,12 +128,13 @@ public class TypeEnvironment {
         namespaceTree.addNamespace(this.currentNamespace);
     }
     
-    public void addTemp(Token tok) {
+    public CXType addTemp(Token tok) {
         String identifier = tok.getImage();
         CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, identifier);
-        if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return;
+        if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
         CXDelayedTypeDefinition delayedTypeDefinition = new CXDelayedTypeDefinition(cxIdentifier, tok, this);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
+        return getTempType(cxIdentifier);
     }
     
     public CXDelayedTypeDefinition getTempType(String identifier) {
@@ -189,7 +211,7 @@ public class TypeEnvironment {
         return 0;
     }
     
-    public CXType addTypeDefinition(AbstractSyntaxNode typeAST, String name) throws InvalidPrimitiveException{
+    public CXType addTypeDefinition(AbstractSyntaxNode typeAST, String name) throws InvalidPrimitiveException {
         if(primitives.contains(name)) throw new PrimitiveTypeDefinitionError(name);
         if(name.equals("void")) throw new VoidTypeError();
         if(typeDefinitions.containsKey(name)) throw new TypeDefinitionAlreadyExistsError(name);
@@ -241,7 +263,7 @@ public class TypeEnvironment {
          */
         
         if(output.size() > 1) throw new AmbiguousIdentifierError(corresponding, output);
-        else if(output.size() == 1) return output.get(0);
+        else if(output.size() == 1) return new PointerType(output.get(0));
         
         throw new TypeDoesNotExist(new CXIdentifier(namespacedTypename.getParentNamespace(), namespacedTypename.getIdentifier()).toString());
     }
@@ -271,7 +293,7 @@ public class TypeEnvironment {
         if(output != null && possibilities.size() > 0) {
             if(output instanceof CXDelayedTypeDefinition && possibilities.size() == 1 && possibilities.get(0) instanceof CXClassType) {
                 if(((CXDelayedTypeDefinition) output).getIdentifier().equals(((CXClassType) possibilities.get(0)).getTypeNameIdentifier())) {
-                    return possibilities.get(0);
+                    return new PointerType(possibilities.get(0));
                 }
             }
         
@@ -280,7 +302,7 @@ public class TypeEnvironment {
         } else if(possibilities.size() > 1) {
             throw new AmbiguousIdentifierError(tok, possibilities);
         } else if(possibilities.size() == 1) {
-            output = possibilities.get(0);
+            output = new PointerType(possibilities.get(0));
         }
     
         
@@ -402,9 +424,7 @@ public class TypeEnvironment {
                             break;
                         }
                         case _class: {
-                            type = CXCompoundTypeNameIndirection.CompoundType._class;
-                            addTypeDef = true;
-                            break;
+                            return addTemp(name.getToken());
                         }
                         default:
                             throw new UnsupportedOperationException();
@@ -526,7 +546,7 @@ public class TypeEnvironment {
                
                 CXClassType parent;
                 try {
-                    parent = (CXClassType) getType(ast.getChild(ASTNodeType.inherit).getChild(0));
+                    parent = (CXClassType) ((PointerType) getType(ast.getChild(ASTNodeType.inherit).getChild(0))).getSubType();
                 } catch (InvalidPrimitiveException e) {
                     return null;
                 }
@@ -536,7 +556,10 @@ public class TypeEnvironment {
                 
                 
             }
-            else cxClassType = new CXClassType(identifier, null, fieldDeclarations, methods, new LinkedList<>(), this);
+            else {
+                cxClassType = new CXClassType(identifier, defaultInheritance, fieldDeclarations, methods,
+                        new LinkedList<>(), this);
+            }
             
             Iterator<Visibility> visibilityIterator = constructorVisibilities.iterator();
             for (AbstractSyntaxNode dec: constructorDefinitions) {
@@ -727,12 +750,19 @@ public class TypeEnvironment {
      * @return whether they can be used
      */
     public boolean is(CXType o1, CXType o2) {
-        
+        /*
         if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
             return is(o1, ((ConstantType) o2).getSubtype());
         }
         if(o2 instanceof CXDynamicTypeDefinition) {
             return is(o1, ((CXDynamicTypeDefinition) o2).getOriginal());
+        }
+  
+         */
+        if(!(o1 instanceof ICXWrapper) && o2 instanceof ICXWrapper) {
+            return is(o1, ((ICXWrapper) o2).getWrappedType());
+        } else if(o1 instanceof ICXWrapper && o2 instanceof ICXWrapper) {
+            return is(((ICXWrapper) o1).getWrappedType(), o2);
         }
         return o1.is(o2,this);
     }

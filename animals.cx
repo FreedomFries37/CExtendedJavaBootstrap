@@ -72,37 +72,18 @@ class cat : animals::domesticated {
 
 int main() {
 
-	animals::animal* griff = new animals::dog("The Griff");
-
+	animals::animal griff = new animals::dog("The Griff");
 	griff->says();
 	println("");
 	griff->says();
 	println("");
 
-	animals::animal* animals[2];
 
-	animals::domesticated* myCat = new cat("jeff");
-
+	animals::domesticated myCat = new cat("jeff");
 	myCat->says();
 
-	animals[0] = myCat;
-	animals[1] = griff;
-	animals[0]->says();
-
-	animals::dog dogs[2];
-	dogs[0] = *(animals::dog*) griff;
-	dogs[0].says();
-
-	animals::animal infoLoss = *griff;
-	infoLoss.says();
-
-	animals::animal* array2D[4][6];
-	array2D[2][1] = griff;
-	array2D[2][1]->says();
-
-
-	animals::dog* typeSafety = (animals::dog*) &infoLoss;
-	typeSafety->says(); // CAUSES SEGFAULT
+	animals::dog dg = (animals::dog) griff;
+	int legs = dg->getNumberOfLegs();
 
 	return 0;
 }

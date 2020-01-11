@@ -4,20 +4,18 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
-import radin.core.semantics.types.*;
-import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
-import radin.utility.Pair;
-import radin.utility.Reference;
-import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
 import radin.core.semantics.exceptions.RedeclareError;
-import radin.core.semantics.types.wrapped.PointerType;
+import radin.core.semantics.types.*;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
+import radin.core.utility.Pair;
+import radin.core.utility.Reference;
+import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.primitives.PointerType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 public class CXClassType extends CXCompoundType {
@@ -335,6 +333,8 @@ public class CXClassType extends CXCompoundType {
         throw new IncorrectParameterTypesError();
     }
     
+    
+    
     public CXConstructor getConstructor(int length) {
         for (CXConstructor constructor : constructors) {
             if(constructor.getParameterTypes().size() == length + 1) return constructor;
@@ -566,6 +566,8 @@ public class CXClassType extends CXCompoundType {
                 "\treturn malloc(sizeof(" + getStructName() + "));\n}";
     }
     
+    
+    
     private String createNewFunctionDeclaration() {
         return getStructName() + "* new_" + getCTypeName() + "();\n";
     }
@@ -593,7 +595,9 @@ public class CXClassType extends CXCompoundType {
     
     @Override
     public CXType getTypeIndirection() {
-        return new CXDelayedTypeDefinition(getTypeNameIdentifier(), null, environment);
+        return this;
+        //return new CXDynamicTypeDefinition()
+        //return new CXDelayedTypeDefinition(getTypeNameIdentifier(), null, environment);
     }
     
 }
