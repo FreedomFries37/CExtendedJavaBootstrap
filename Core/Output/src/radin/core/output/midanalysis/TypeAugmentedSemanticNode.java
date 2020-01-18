@@ -101,7 +101,7 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         child.setParent(this);
     }
     
-    public void addAllChildren(List<TypeAugmentedSemanticNode> children) {
+    public void addAllChildren(List<? extends TypeAugmentedSemanticNode> children) {
         children.forEach(this::addChild);
     }
     

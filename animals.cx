@@ -81,6 +81,7 @@ int main() {
 
 	animals::domesticated myCat = new cat("jeff");
 	myCat->says();
+	print(myCat->getName());
 
 	animals::dog dg = (animals::dog) griff;
 	int legs = dg->getNumberOfLegs();

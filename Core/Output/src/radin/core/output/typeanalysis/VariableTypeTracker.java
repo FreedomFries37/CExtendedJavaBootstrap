@@ -213,7 +213,45 @@ public class VariableTypeTracker {
         privateFieldEntries = new HashMap<>();
         demoteEntries(privateFieldEntries, old.privateFieldEntries);
         demoteEntries(privateFieldEntries, old.privateMethodEntries);
-        privateConstructors = new HashSet<>();
+        privateConstructors = new HashSet<>(old.privateConstructors);
+    }
+    
+    private VariableTypeTracker(VariableTypeTracker old, VariableTypeTracker old2) {
+        environment = old.environment;
+        trackingTypes = new HashSet<>(old.trackingTypes);
+        trackingTypes.addAll(old2.trackingTypes);
+        variableEntries = new HashMap<>();
+        demoteEntries(variableEntries, old.variableEntries);
+        demoteEntries(variableEntries, old2.variableEntries);
+        
+        functionEntries = old.functionEntries;
+        functionEntries.putAll(old2.functionEntries);
+        
+        publicMethodEntries = old.publicMethodEntries;
+        publicMethodEntries.putAll(old2.publicMethodEntries);
+        publicFieldEntries = old.publicFieldEntries;
+        publicFieldEntries.putAll(old2.publicFieldEntries);
+        publicConstructors = old.publicConstructors;
+        publicConstructors.addAll(old2.publicConstructors);
+        
+        internalFieldEntries = new HashMap<>();
+        internalMethodEntries = new HashMap<>();
+        demoteEntries(internalFieldEntries, old.internalFieldEntries);
+        demoteEntries(internalMethodEntries, old.internalMethodEntries);
+        demoteEntries(internalFieldEntries, old2.internalFieldEntries);
+        demoteEntries(internalMethodEntries, old2.internalMethodEntries);
+        internalConstructors = new HashSet<>(old.internalConstructors);
+        internalConstructors.addAll(old2.internalConstructors);
+        
+        
+        privateMethodEntries = new HashMap<>();
+        privateFieldEntries = new HashMap<>();
+        demoteEntries(privateFieldEntries, old.privateFieldEntries);
+        demoteEntries(privateFieldEntries, old.privateMethodEntries);
+        demoteEntries(privateFieldEntries, old2.privateFieldEntries);
+        demoteEntries(privateFieldEntries, old2.privateMethodEntries);
+        privateConstructors = new HashSet<>(old.privateConstructors);
+        privateConstructors.addAll(old2.privateConstructors);
     }
     
     private VariableTypeTracker(VariableTypeTracker old, CXClassType parentType) {
@@ -259,6 +297,10 @@ public class VariableTypeTracker {
         //typeTracker.addEntry("this", new PointerType(owner));
         classTrackers.put(owner, variableTypeTracker);
         return variableTypeTracker;
+    }
+    
+    public VariableTypeTracker createInnerTypeTrackerLoad(CXClassType owner) {
+        return new VariableTypeTracker(this, classTrackers.getOrDefault(owner, new VariableTypeTracker(environment)));
     }
     
     public boolean entryExists(String name) {

@@ -13,6 +13,7 @@ import radin.core.semantics.types.primitives.PointerType;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CXMethod implements CXEquivalent {
@@ -28,7 +29,7 @@ public class CXMethod implements CXEquivalent {
     private List<CXParameter> parameters;
     private AbstractSyntaxNode methodBody;
     
-    private boolean fixedMethodBody;
+   
     
     public CXMethod(CXClassType parent, Visibility visibility, String name, boolean isVirtual, CXType returnType, List<CXParameter> parameters,
                     AbstractSyntaxNode methodBody) {
@@ -41,7 +42,6 @@ public class CXMethod implements CXEquivalent {
         
         
         this.methodBody = methodBody;
-        fixedMethodBody = false;
     }
     
     
@@ -98,10 +98,6 @@ public class CXMethod implements CXEquivalent {
     }
     
     public AbstractSyntaxNode getMethodBody() {
-        if(methodBody == null) return null;
-        if(!fixedMethodBody) {
-            fixMethodBody();
-        }
         return methodBody;
     }
     
@@ -126,7 +122,7 @@ public class CXMethod implements CXEquivalent {
     @Override
     public String generateCDeclaration() {
         StringBuilder output = new StringBuilder();
-        output.append(returnType.generateCDefinition(getCFunctionName()));
+        output.append(returnType.generateCDeclaration(getCFunctionName()));
         output.append('(');
         if(getParametersExpanded().size() > 0) {
             boolean first = true;
@@ -192,7 +188,7 @@ public class CXMethod implements CXEquivalent {
     @Override
     public String generateCDefinition() {
         StringBuilder output = new StringBuilder();
-        output.append(returnType.generateCDefinition(getCFunctionName()));
+        output.append(returnType.generateCDeclaration(getCFunctionName()));
         output.append('(');
         boolean first = true;
         for (CXParameter parameter : parameters) {
@@ -338,57 +334,21 @@ public class CXMethod implements CXEquivalent {
                 getParametersExpanded().stream().map(CXParameter::toString).collect(Collectors.joining(" ,"))
                 + ")";
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CXMethod cxMethod = (CXMethod) o;
+        return isVirtual == cxMethod.isVirtual &&
+                Objects.equals(parent, cxMethod.parent) &&
+                visibility == cxMethod.visibility &&
+                returnType.equals(cxMethod.returnType) &&
+                name.equals(cxMethod.name) &&
+                parameters.equals(cxMethod.parameters);
+    }
     
-    protected void fixMethodBody() {
-        if(parent != null) {
-            AbstractSyntaxNode define = new AbstractSyntaxNode(ASTNodeType.declarations,
-                    new TypeAbstractSyntaxNode(
-                            ASTNodeType.declaration,
-                            new PointerType(parent),
-                            new AbstractSyntaxNode(
-                                    ASTNodeType.id,
-                                    new Token(TokenType.t_id, "this")
-                            )
-                    )
-            );
-            AbstractSyntaxNode cast = new AbstractSyntaxNode(
-                    ASTNodeType.assignment,
-                    new AbstractSyntaxNode(
-                            ASTNodeType.id,
-                            new Token(TokenType.t_id, "this")
-                    ),
-                    new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
-                    new TypeAbstractSyntaxNode(
-                            ASTNodeType.cast,
-                            new PointerType(parent),
-                            new AbstractSyntaxNode(
-                                    ASTNodeType.id,
-                                    new Token(TokenType.t_id, "__this")
-                            )
-                    )
-            );
-            if (parent.getParent() != null) {
-                
-                AbstractSyntaxNode defineS = new AbstractSyntaxNode(ASTNodeType.declarations,
-                        new TypeAbstractSyntaxNode(
-                                ASTNodeType.declaration,
-                                new PointerType(parent),
-                                variableAST("super")
-                        )
-                );
-                AbstractSyntaxNode assignS = new AbstractSyntaxNode(
-                        ASTNodeType.assignment,
-                        variableAST("super"),
-                        new AbstractSyntaxNode(ASTNodeType.assignment_type, new Token(TokenType.t_assign)),
-                        variableAST("this")
-                );
-                this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast, defineS, assignS);
-            } else this.methodBody = new AbstractSyntaxNode(this.methodBody, true, define, cast);
-        }
-        
-        
-        
-        
-        fixedMethodBody = true;
+    @Override
+    public int hashCode() {
+        return Objects.hash(parent, visibility, isVirtual, returnType, name, parameters);
     }
 }

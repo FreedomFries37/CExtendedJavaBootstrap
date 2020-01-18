@@ -1,5 +1,6 @@
 package radin.core.output.midanalysis.typeanalysis.analyzers;
 
+import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.typeanalysis.errors.IncorrectReturnTypeError;
@@ -40,16 +41,16 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
         
         for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
             typeTrackingClosure();
-        
+            
             CXStructType vTable = cxClassType.getVTable();
             getCurrentTracker().addBasicCompoundType(vTable);
             getCurrentTracker().addPrivateField(cxClassType, getCompilationSettings().getvTableName(),
                     new PointerType(vTable));
-        
+            
             getCurrentTracker().addVariable("__this", new PointerType(CXPrimitiveType.VOID));
-        
-        
-        
+            
+            
+            
             for (CXParameter parameter : generatedSuper.getParameters()) {
                 getCurrentTracker().addVariable(parameter.getName(), parameter.getType());
             }
@@ -68,21 +69,21 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             getMethods().put(generatedSuper, tree);
             releaseTrackingClosure();
         }
-    
-        typeTrackingClosure(cxClassType);
-    
         
-    
+        typeTrackingClosure(cxClassType);
+        
+        
+        
         List<TypeAugmentedSemanticNode> decs = node.getAllChildren(ASTNodeType.class_level_declaration);
         // STEP 1 -> set up fields and methods in tracker
         for (TypeAugmentedSemanticNode clsLevelDec : decs) {
             
-    
+            
             Visibility visibility =
                     getVisibility(clsLevelDec.getASTChild(ASTNodeType.visibility).getToken());
             
             if(clsLevelDec.hasASTChild(ASTNodeType.declarations)) {
-    
+                
                 TypeAugmentedSemanticNode fields = clsLevelDec.getASTChild(ASTNodeType.declarations);
                 DeclarationsAnalyzer fieldAnalyzers = new DeclarationsAnalyzer(
                         fields,
@@ -96,11 +97,13 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 
                 
                 
-            } else if(clsLevelDec.hasASTChild(ASTNodeType.function_definition)) {
-                assert clsLevelDec.getASTChild(ASTNodeType.function_definition).getASTNode() instanceof TypeAbstractSyntaxNode;
+            } else if(clsLevelDec.hasASTChild(ASTNodeType.function_definition) || clsLevelDec.hasASTChild(ASTNodeType.function_description)) {
+                ASTNodeType astType = clsLevelDec.getASTChild(ASTNodeType.function_definition) == null ?
+                        ASTNodeType.function_description : ASTNodeType.function_definition;
+                
                 TypeAbstractSyntaxNode astNode =
-                        ((TypeAbstractSyntaxNode) clsLevelDec.getASTChild(ASTNodeType.function_definition).getASTNode());
-    
+                        ((TypeAbstractSyntaxNode) clsLevelDec.getASTChild(astType).getASTNode());
+                
                 CXType returnType = astNode.getCxType();
                 String name = astNode.getChild(ASTNodeType.id).getToken().getImage();
                 List<CXType> parameterTypes = new LinkedList<>();
@@ -111,13 +114,14 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 }
                 
                 
-    
+                
                 CXFunctionPointer type = new CXFunctionPointer(returnType,
                         parameterTypes);
-                clsLevelDec.getASTChild(ASTNodeType.function_definition).setType(type);
-    
+                clsLevelDec.getASTChild(astType).setType(type);
+                
                 boolean isVirtual  = astNode.hasChild(ASTNodeType._virtual);
                 ParameterTypeList parameterTypeList = type.getParameterTypeList();
+                
                 if(isVirtual && getCurrentTracker().methodVisible(cxClassType, name, parameterTypeList)) {
                     CXType virtType = getCurrentTracker().getMethodType(cxClassType, name, parameterTypeList);
                     if(!is(returnType, virtType)) {
@@ -125,10 +129,10 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                         throw new IncorrectReturnTypeError(virtType, returnType);
                     }
                 } else {
-    
-    
+                    
+                    
                     assert visibility != null;
-    
+                    
                     switch (visibility) {
                         case _public: {
                             getCurrentTracker().addPublicMethod(cxClassType, name, returnType,
@@ -145,10 +149,15 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                         }
                     }
                 }
-                
+                if(astType == ASTNodeType.function_definition) {
+                    CXMethod method = cxClassType.getMethod(name, parameterTypeList, null);
+                    MethodTASNTracker.getInstance().add(method,
+                            clsLevelDec.getASTChild(ASTNodeType.function_definition)
+                                    .getASTChild(ASTNodeType.compound_statement));
+                }
             } else if(clsLevelDec.hasASTChild(ASTNodeType.constructor_definition)) {
                 TypeAugmentedSemanticNode def = clsLevelDec.getASTChild(ASTNodeType.constructor_definition);
-    
+                
                 List<CXType> parameterTypes = new LinkedList<>();
                 for (AbstractSyntaxNode abstractSyntaxNode :
                         def.getASTChild(ASTNodeType.parameter_list).getASTNode().getChildList()) {
@@ -164,7 +173,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 }
                 
                 getCurrentTracker().addConstructor(visibility, cxClassType, typeList);
-            
+                
             }
         }
         
@@ -174,8 +183,9 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             FunctionTypeAnalyzer analyzer = new FunctionTypeAnalyzer(function, cxClassType);
             
             if(!determineTypes(analyzer)) return false;
+            
         }
-    
+        
         List<TypeAugmentedSemanticNode> constructors = node.getAllChildren(ASTNodeType.constructor_definition);
         for (TypeAugmentedSemanticNode constructor : constructors) {
             ConstructorTypeAnalyzer analyzer = new ConstructorTypeAnalyzer(constructor, cxClassType);
@@ -183,8 +193,32 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(analyzer)) return false;
         }
         
-        
+        for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
+            AbstractSyntaxNode methodBody = generatedSuper.getMethodBody();
+            TypeAugmentedSemanticNode tree =
+                    new TypeAugmentedSemanticTree(methodBody, cxClassType.getEnvironment()).getHead();
+            typeTrackingClosure();
+            getCurrentTracker().addVariable("this", cxClassType.toPointer());
+            getCurrentTracker().addVariable("__this", cxClassType.toPointer());
     
+            CXStructType vTable = cxClassType.getVTable();
+            if(!getCurrentTracker().isTracking(vTable)) {
+                getCurrentTracker().addBasicCompoundType(vTable);
+                getCurrentTracker().addIsTracking(vTable);
+            }
+            getCurrentTracker().addPrivateField(cxClassType, "vtable", vTable.toPointer());
+            for (CXMethod cxMethod : cxClassType.getParent().getVirtualMethodsOrder()) {
+                getCurrentTracker().addVariable(cxMethod.getCFunctionName(), cxMethod.getFunctionPointer());
+            }
+            CompoundStatementTypeAnalyzer analyzer = new CompoundStatementTypeAnalyzer(tree,
+                    generatedSuper.getReturnType(), false);
+            if(!determineTypes(analyzer)) return false;
+            releaseTrackingClosure();
+    
+            MethodTASNTracker.getInstance().add(generatedSuper, tree);
+        }
+        
+        
         releaseTrackingClosure();
         return true;
     }

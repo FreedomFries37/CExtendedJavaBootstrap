@@ -25,7 +25,7 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
     }
     
     public boolean compile() {
-        print(returnType.generateCDefinition(name));
+        print(returnType.generateCDeclaration(name));
         print("(");
         boolean first= true;
         for (CXParameter parameter : parameters) {
@@ -44,4 +44,19 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
         return true;
     }
     
+    protected String getName() {
+        return name;
+    }
+    
+    protected CXType getReturnType() {
+        return returnType;
+    }
+    
+    protected List<CXParameter> getParameters() {
+        return parameters;
+    }
+    
+    protected TypeAugmentedSemanticNode getCompoundStatement() {
+        return compoundStatement;
+    }
 }

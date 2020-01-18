@@ -3,54 +3,12 @@ package radin.core.semantics.types.compound;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.ICXCompoundType;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class CXCompoundType extends ICXCompoundType {
-
-    public static class FieldDeclaration {
-        private CXType type;
-        private String name;
-    
-        public FieldDeclaration(CXType type, String name) {
-            this.type = type;
-            this.name = name;
-        }
-    
-        public CXType getType() {
-            return type;
-        }
-    
-        public String getName() {
-            return name;
-        }
-    
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-        
-            FieldDeclaration that = (FieldDeclaration) o;
-        
-            if (!type.equals(that.type)) return false;
-            return name.equals(that.name);
-        }
-    
-        @Override
-        public String toString() {
-            return getType().generateCDefinition(name);
-        }
-    
-        @Override
-        public int hashCode() {
-            int result = type.hashCode();
-            result = 31 * result + name.hashCode();
-            return result;
-        }
-    }
+public abstract class CXCompoundType extends CXType implements ICXCompoundType {
     
     private List<FieldDeclaration> fields;
     private CXIdentifier typeName;
@@ -81,21 +39,28 @@ public abstract class CXCompoundType extends ICXCompoundType {
     }
     
     
+    @Override
+    public boolean isPrimitive() {
+        return false;
+    }
     
     
-    
+    @Override
     public List<FieldDeclaration> getFields() {
         return fields;
     }
     
+    @Override
     public String getTypeName() {
         return typeName.toString();
     }
     
+    @Override
     public String getCTypeName() {
         return typeName.generateCDefinition();
     }
     
+    @Override
     public CXIdentifier getTypeNameIdentifier() {
         return typeName;
     }

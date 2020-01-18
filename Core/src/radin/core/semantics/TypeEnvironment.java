@@ -2,7 +2,6 @@ package radin.core.semantics;
 
 import radin.core.annotations.AnnotationManager;
 import radin.core.lexical.Token;
-import radin.core.lexical.TokenType;
 import radin.core.semantics.exceptions.*;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.CXClassType;
@@ -12,14 +11,12 @@ import radin.core.semantics.types.compound.CXUnionType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;
-import radin.core.semantics.types.wrapped.ConstantType;
+import radin.core.semantics.types.wrapped.*;
 import radin.core.utility.Pair;
 import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.LongPrimitive;
 import radin.core.semantics.types.primitives.UnsignedPrimitive;
-import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
-import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
 import radin.core.semantics.types.primitives.PointerType;
 
 
@@ -32,7 +29,7 @@ public class TypeEnvironment {
     private HashMap<String, CXCompoundType> namedCompoundTypesMap;
     
     private HashSet<CXClassType> createdClasses;
-    private HashMap<CXIdentifier, CXDelayedTypeDefinition> delayedTypeDefinitionHashMap;
+    private HashMap<CXIdentifier, CXMappedType> delayedTypeDefinitionHashMap;
     
     private HashSet<CXCompoundTypeNameIndirection> lateBoundReferences;
     
@@ -137,11 +134,20 @@ public class TypeEnvironment {
         return getTempType(cxIdentifier);
     }
     
-    public CXDelayedTypeDefinition getTempType(String identifier) {
+    public CXType addDeferred(Token tok) {
+        String identifier = tok.getImage();
+        CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, identifier);
+        if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
+        CXDeferredClassDefinition delayedTypeDefinition = new CXDeferredClassDefinition(tok, this, cxIdentifier);
+        delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
+        return getTempType(cxIdentifier);
+    }
+    
+    public CXMappedType getTempType(String identifier) {
         return getTempType(new CXIdentifier(currentNamespace, identifier));
     }
     
-    public CXDelayedTypeDefinition getTempType(CXIdentifier identifier) {
+    public CXMappedType getTempType(CXIdentifier identifier) {
         CXIdentifier parent;
         
         if(identifier.getParentNamespace() != null)
@@ -151,7 +157,7 @@ public class TypeEnvironment {
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
-    public CXDelayedTypeDefinition getTempType(CXIdentifier namespace, String identifier) {
+    public CXMappedType getTempType(CXIdentifier namespace, String identifier) {
         
         CXIdentifier actual = new CXIdentifier(namespace, identifier);
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
@@ -424,7 +430,7 @@ public class TypeEnvironment {
                             break;
                         }
                         case _class: {
-                            return addTemp(name.getToken());
+                            return addDeferred(name.getToken());
                         }
                         default:
                             throw new UnsupportedOperationException();

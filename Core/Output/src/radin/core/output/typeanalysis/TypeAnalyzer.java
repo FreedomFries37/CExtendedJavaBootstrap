@@ -5,9 +5,9 @@ import radin.core.errorhandling.CompilationError;
 import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.errorhandling.RecoverableCompilationError;
 import radin.core.lexical.Token;
+import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
@@ -15,13 +15,11 @@ import radin.core.utility.ICompilationSettings;
 
 import java.util.*;
 
-public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCollector {
-
-   
-    private Stack<VariableTypeTracker> trackerStack;
+public abstract class TypeAnalyzer extends ScopedTypeTracker implements ICompilationErrorCollector {
+    
+    
     private TypeAugmentedSemanticNode tree;
     
-    private static TypeEnvironment environment;
     private static ICompilationSettings compilationSettings;
     private List<AbstractCompilationError> errors;
     
@@ -62,13 +60,13 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
     }
     
     public TypeAnalyzer(TypeAugmentedSemanticNode tree) {
+        super();
         this.tree = tree;
-        trackerStack = new Stack<>();
         errors = new LinkedList<>();
         
-        if(environment != null && environment.typedefExists("boolean")) {
-            trackerStack.push(new VariableTypeTracker(environment));
-            CXType booleanType = environment.getTypeDefinition("boolean");
+        if(getEnvironment() != null && getEnvironment().typedefExists("boolean")) {
+            trackerStack.push(new VariableTypeTracker(getEnvironment()));
+            CXType booleanType = getEnvironment().getTypeDefinition("boolean");
             
             getCurrentTracker().addFixedFunction("true", new ConstantType(booleanType));
             getCurrentTracker().addFixedFunction("false", new ConstantType(booleanType));
@@ -77,44 +75,8 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
         }
     }
     
-    public static TypeEnvironment getEnvironment() {
-        return environment;
-    }
     
-    public static void setEnvironment(TypeEnvironment environment) {
-        TypeAnalyzer.environment = environment;
-    }
     
-    @Override
-    public VariableTypeTracker getCurrentTracker() {
-        return trackerStack.peek();
-    }
-    
-    @Override
-    public void typeTrackingClosure() {
-        VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker();
-        trackerStack.push(next);
-    }
-    
-    @Override
-    public void typeTrackingClosure(CXClassType classType) {
-        VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker(classType);
-        trackerStack.push(next);
-    }
-    
-    @Override
-    public void typeTrackingClosureLoad(CXClassType cxClassType) {
-        if(!VariableTypeTracker.trackerPresent(cxClassType)) typeTrackingClosure();
-        trackerStack.push(VariableTypeTracker.getTracker(cxClassType));
-    }
-    
-    @Override
-    public void releaseTrackingClosure() {
-        trackerStack.pop();
-        getCurrentTracker().removeParentlessStructFields();
-    }
-    
-    @Override
     public boolean determineTypes() {
         try {
             return determineTypes(tree);
@@ -157,7 +119,7 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
      * @return whether they can be used
      */
     protected static boolean is(CXType o1, CXType o2) {
-        return environment.is(o1, o2);
+        return getEnvironment().is(o1, o2);
     }
     
     /**
@@ -169,10 +131,9 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
      * @return whether they can be used
      */
     protected static boolean strictIs(CXType o1, CXType o2) {
-        return environment.isStrict(o1, o2);
+        return getEnvironment().isStrict(o1, o2);
     }
     
-    @Override
     public abstract boolean determineTypes(TypeAugmentedSemanticNode node);
     
     public <T extends TypeAnalyzer> boolean determineTypes(T other) {
@@ -180,6 +141,8 @@ public abstract class TypeAnalyzer implements ITypeAnalyzer, ICompilationErrorCo
         ((TypeAnalyzer) other).errors = errors;
         return other.determineTypes();
     }
+    
+    
     
     protected void setIsFailurePoint(TypeAugmentedSemanticNode node) {
         node.setFailurePoint(true);

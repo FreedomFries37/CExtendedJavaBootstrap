@@ -17,24 +17,24 @@ void* NULL = (void*) 0;
 
 class node {
 	void* value;
-	private node* next;
+	private node next;
 
 	public node(void* value) {
 		this->value = value;
 		this->next = NULL;
 	}
 
-	node* getNext() {
+	node getNext() {
 		return this->next;
 	}
 
-	void setNext(node* other) {
+	void setNext(node other) {
 		this->next = other->next;
 	}
 
-	node* get_nth(int n) {
+	node get_nth(int n) {
 		int count;
-		node* ptr = this, *output;
+		node ptr = this, output;
 		int saw = n;
 		for(count = 0; count < n; count++) {
 			ptr = this->next;
@@ -45,7 +45,7 @@ class node {
     }
 
 	virtual public unsigned long* getHashCode() {
-		return NULL;
+		return (unsigned long*) 0;
 	}
 };
 

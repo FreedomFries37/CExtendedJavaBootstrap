@@ -32,7 +32,7 @@ public class ConstructorCompiler extends AbstractIndentedOutputSingleOutputCompi
     @Override
     public boolean compile() {
         println();
-        print(constructor.getReturnType().generateCDefinition(constructor.getCFunctionName()));
+        print(constructor.getReturnType().generateCDeclaration(constructor.getCFunctionName()));
         print("(");
         boolean first= true;
         String firstParamName = "";
@@ -64,7 +64,7 @@ public class ConstructorCompiler extends AbstractIndentedOutputSingleOutputCompi
         }
         setIndent(getIndent() + 1);
         PointerType pointerType = new PointerType(constructor.getParent());
-        print(pointerType.generateCDefinition("this"));
+        print(pointerType.generateCDeclaration("this"));
         print(" = (");
         print(pointerType.generateCDefinition());
         print(") ");

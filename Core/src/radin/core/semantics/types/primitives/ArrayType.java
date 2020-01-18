@@ -38,7 +38,7 @@ public class ArrayType extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         if(baseType instanceof ArrayType || baseType instanceof ICXWrapper && ((ICXWrapper) baseType).getWrappedType() instanceof ArrayType) {
             ArrayType next;
             if(baseType instanceof ArrayType) {

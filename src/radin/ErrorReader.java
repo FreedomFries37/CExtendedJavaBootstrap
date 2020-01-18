@@ -77,7 +77,9 @@ public class ErrorReader {
                     System.out.println(errorInformation.getInfo());
                     continue;
                 }
-                LineHolder lineInfo = lines.get(errorInformation.getToken().getLineNumber() - 1);
+                int i = errorInformation.getToken().getLineNumber() - 1;
+                if( i < 0) i = 0;
+                LineHolder lineInfo = lines.get(i);
                 
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
                     if (!lineInfo.fileName.equals(outputedFileName)) {

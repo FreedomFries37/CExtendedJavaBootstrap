@@ -5,10 +5,13 @@ import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.tags.TypeDefHelperTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.TypeAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.CXParameter;
+import radin.core.semantics.types.primitives.PointerType;
 
 import java.io.PrintWriter;
 import java.util.LinkedList;
@@ -36,7 +39,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                         originalType = topLevelDeclaration.getCXType();
                     }
                     print(originalType
-                            .generateCDefinition(
+                            .generateCDeclaration(
                                     topLevelDeclaration.getASTChild(ASTNodeType.id).getToken().getImage()
                             )
                     );
@@ -77,13 +80,18 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                     TypeAbstractSyntaxNode astNode =
                             ((TypeAbstractSyntaxNode) child.getASTNode());
                     CXType type;
-                    if(astType == ASTNodeType.specifier && !astNode.getCxType().isPrimitive()) {
+                    CXType cxType = astNode.getCxType();
+                    if(cxType instanceof ICXWrapper) cxType = ((ICXWrapper) cxType).getWrappedType();
+                    if(cxType instanceof PointerType && ((PointerType) cxType).getSubType() instanceof CXCompoundType) {
+                        cxType = ((PointerType) cxType).getSubType();
+                    }
+                    if(astType == ASTNodeType.specifier && !cxType.isPrimitive()) {
                         if (child.containsCompilationTag(TypeDefHelperTag.class)) {
                             TypeDefHelperTag compilationTag =
                                     child.getCompilationTag(TypeDefHelperTag.class);
                             type = compilationTag.getOriginalType();
                         } else {
-                            type = astNode.getCxType();
+                            type = cxType;
                         }
                     
                         print(type.generateCDefinition());
@@ -98,13 +106,13 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                         switch (child.getASTType()) {
                             case declaration: {
                                 String varName = child.getChild(0).getToken().getImage();
-                                print(type.generateCDefinition(varName));
+                                print(type.generateCDeclaration(varName));
                                 break;
                             }
                             case initialized_declaration: {
                                 ExpressionCompiler expressionCompiler = new ExpressionCompiler(getPrintWriter());
                                 String varName = child.getASTChild(ASTNodeType.declaration).getChild(0).getToken().getImage();
-                                print(type.generateCDefinition(varName));
+                                print(type.generateCDeclaration(varName));
                                 print(" = ");
                                 if(!expressionCompiler.compile(child.getChild(1))) return false;
                                 break;
@@ -113,7 +121,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                                 type = ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType();
                                 TypeAugmentedSemanticNode id = child.getChild(0);
                                 String funcName = id.getToken().getImage();
-                                print(type.generateCDefinition(funcName));
+                                print(type.generateCDeclaration(funcName));
                                 print("(");
                                 assert id.getCXType() instanceof CXFunctionPointer;
                                 boolean first = true;
@@ -145,6 +153,13 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                 }
                 case top_level_decs: {
                     if(!compile(topLevelDeclaration)) return false;
+                    break;
+                }
+                case implement: {
+                    ImplementCompiler implementCompiler = new ImplementCompiler(getPrintWriter(), 0,
+                            topLevelDeclaration);
+                    
+                    if(!implementCompiler.compile()) return false;
                     break;
                 }
                 default:

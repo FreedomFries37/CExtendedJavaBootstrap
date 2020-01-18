@@ -80,7 +80,7 @@ public class CXFunctionPointer extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         StringBuilder parameters = new StringBuilder();
         boolean first = true;
         for (CXType parameterType : parameterTypes) {

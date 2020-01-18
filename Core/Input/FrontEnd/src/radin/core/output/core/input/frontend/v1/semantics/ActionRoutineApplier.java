@@ -1378,7 +1378,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             AbstractSyntaxNode implementation = implementationCat.getSynthesized();
                             
                             node.setSynthesized(
-                                    new TypeAbstractSyntaxNode(ASTNodeType.implement_single,
+                                    new TypeAbstractSyntaxNode(ASTNodeType.implement,
                                             namespacedType,
                                             implementation
                                     )
@@ -1393,7 +1393,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             
                             
                             node.setSynthesized(
-                                    new TypeAbstractSyntaxNode(ASTNodeType.implement_single, namespacedType, array)
+                                    new TypeAbstractSyntaxNode(ASTNodeType.implement, namespacedType, array)
                             );
                         }
                         

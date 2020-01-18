@@ -35,7 +35,7 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
     abstract protected String getSpecifier();
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         
         StringBuilder builder = new StringBuilder();
         getBaseStruct(builder);
@@ -53,7 +53,7 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
         builder.append(" {\n");
         for (FieldDeclaration field : getFields()) {
             builder.append("\t");
-            builder.append(field.getType().generateCDefinition(field.getName()));
+            builder.append(field.getType().generateCDeclaration(field.getName()));
             builder.append(";\n");
         }
         builder.append("}");

@@ -21,7 +21,7 @@ public class CXParameter {
     
     @Override
     public String toString() {
-        return type.generateCDefinition(name);
+        return type.generateCDeclaration(name);
     }
     
     public String getName() {

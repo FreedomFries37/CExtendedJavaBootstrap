@@ -1219,7 +1219,10 @@ public class Parser extends BasicParser {
             case t_literal:
             case t_id:
             case t_string:
-            case t_sizeof:{
+            case t_sizeof:
+            case t_new:
+            case t_super:
+            case t_typeid:{
                 if(!parseExpression(output)) return false;
                 if(!parseArgsListTail(output)) return false;
                 break;

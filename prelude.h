@@ -1,33 +1,52 @@
 in std class ClassInfo;
 in std class String;
 
-typedef unsigned long size_t;
-void* malloc(size_t sz);
+
+void* malloc(unsigned int sz);
 void free(void* ptr);
 
-void print(char* o);
-void println(char* o);
-void print(std::String o);
-void println(std::String o);
+void print(const char* c);
+void println(const char* c);
+void print_s(std::String o);
+void println_s(std::String o);
+
+public <T> T inc(T o) {
+	if((int) o == 0) return o;
+	++o->references;
+	return o;
+}
+
+public <T> T dec(T o) {
+	if((int) o == 0) return o;
+	--o->references;
+	if(o->references <= 0) {
+		o->drop();
+		return (T) 0;
+	}
+	return o;
+}
 
 in std {
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
 
 		private ClassInfo info;
-		private long references; // if using garbage collection
+		public long references; // if using garbage collection
 
 		public Object();
 
-		virtual public int hashcode() {
-			return 1;
-		}
+		virtual public int hashcode();
 		virtual public int equals(Object other) {
-			return 1;
+			return this->hashcode() == other->hashcode();
 		}
 		virtual public void drop() {
-
+			free(this);
 		}
+
+
+
+		virtual public String toString();
+
 		public ClassInfo getClassInfo() {
 			return this->info;
 		}
@@ -39,9 +58,13 @@ in std {
 		private int classHash;
 
 		private ClassInfo(String name, ClassInfo parent, int classHash);
+
+		public String getName() {
+			return this->name;
+		}
 	};
 
-	class String {
+	class String{
 		char* backingPtr;
 		int length;
 
@@ -60,12 +83,8 @@ in std {
 		public String() : this ("") { }
 
 		virtual public void drop() {
-			super->drop();
 			free(this->backingPtr);
-		}
-
-		public String concat(char* other) {
-			return this->concat(new String(other));
+			super->drop();
 		}
 
 		public String concat(String other) {
@@ -75,11 +94,20 @@ in std {
 			}
 
 			for(int i = 0; i < other->length; i++) {
-				next[i + other->length] = (char) other->backingPtr[i];
+				next[i + this->length] = (char) other->backingPtr[i];
 			}
 
-			return new String(next);
+			next[this->length + other->length] = '\0';
+			String output = new String(next);
+			free(next);
+			return output;
 		}
+
+		public String concat(char* other) {
+			return this->concat(new String(other));
+		}
+
+
 
 
 		public const char* getCStr() {

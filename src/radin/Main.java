@@ -7,6 +7,7 @@ import radin.core.output.core.input.frontend.v1.lexing.PreprocessingLexer;
 import radin.core.output.core.input.frontend.v1.parsing.ParseNode;
 import radin.core.output.core.input.frontend.v1.parsing.Parser;
 import radin.core.lexical.Token;
+import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.input.FrontEndUnit;
@@ -159,7 +160,7 @@ public class Main {
                 
                 
                 
-                TypeAnalyzer.setEnvironment(environment);
+                ScopedTypeTracker.setEnvironment(environment);
                 
                 
                 TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(build, environment);
@@ -184,8 +185,7 @@ public class Main {
                         
                         
                         FileCompiler compiler = new FileCompiler(output);
-                        compiler.setPreamble("#include <stdlib.h>\n" + "void print(char* name);\n" +
-                                "void println(char* name);\n");
+                        compiler.setPreamble("");
                         System.out.println("compiler.compile(tasTree.getHead()) = " + compiler.compile(tasTree.getHead()));
                     }
                 } catch (Error e) {

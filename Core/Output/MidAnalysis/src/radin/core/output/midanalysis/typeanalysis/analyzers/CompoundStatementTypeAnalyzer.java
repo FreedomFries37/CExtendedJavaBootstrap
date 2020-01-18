@@ -141,7 +141,7 @@ public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
             if(isReturns()) throw new UnreachableCodeError();
             
-                StatementAnalyzer analyzer = new StatementAnalyzer(child,returnType);
+            StatementAnalyzer analyzer = new StatementAnalyzer(child,returnType);
             
             
             

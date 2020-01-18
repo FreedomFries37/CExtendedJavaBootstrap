@@ -3,6 +3,7 @@ package radin.core.semantics.types;
 import radin.core.semantics.exceptions.TypeDoesNotExist;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.compound.ICXCompoundType;
 
 public class CXCompoundTypeNameIndirection extends CXType {
     
@@ -42,7 +43,7 @@ public class CXCompoundTypeNameIndirection extends CXType {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         return generateCDefinition() + " " + identifier;
     }
     

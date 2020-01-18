@@ -18,20 +18,7 @@ import radin.core.semantics.types.primitives.CXPrimitiveType;
 
 import java.util.*;
 
-public class CXClassType extends CXCompoundType {
-    
-    public static class ClassFieldDeclaration extends FieldDeclaration {
-        private Visibility visibility;
-        
-        public ClassFieldDeclaration(CXType type, String name, Visibility visibility) {
-            super(type, name);
-            this.visibility = visibility;
-        }
-        
-        public Visibility getVisibility() {
-            return visibility;
-        }
-    }
+public class CXClassType extends CXCompoundType implements ICXClassType {
     
     private CXClassType parent;
     
@@ -55,6 +42,7 @@ public class CXClassType extends CXCompoundType {
         
     }
     
+    @Override
     public TypeEnvironment getEnvironment() {
         return environment;
     }
@@ -142,6 +130,7 @@ public class CXClassType extends CXCompoundType {
         }
     }
     
+    @Override
     public void addConstructors(List<CXConstructor> constructors) {
         this.constructors.addAll(constructors);
         for (CXConstructor constructor : constructors) {
@@ -149,10 +138,12 @@ public class CXClassType extends CXCompoundType {
         }
     }
     
+    @Override
     public void setEnvironment(TypeEnvironment environment) {
         this.environment = environment;
     }
     
+    @Override
     public CXStructType getVTable() {
         String name = getVTableName();
         List<FieldDeclaration> methods = new LinkedList<>();
@@ -164,6 +155,7 @@ public class CXClassType extends CXCompoundType {
         return new CXStructType(name, methods);
     }
     
+    @Override
     public CXMethod getInitMethod() {
         if(initMethod == null) {
             List<AbstractSyntaxNode> children = new LinkedList<>();
@@ -303,18 +295,22 @@ public class CXClassType extends CXCompoundType {
         return "struct " + getCTypeName();
     }
     
+    @Override
     public List<CXMethod> getVirtualMethodsOrder() {
         return virtualMethodOrder;
     }
     
+    @Override
     public List<CXMethod> getConcreteMethodsOrder() {
         return concreteMethodsOrder;
     }
     
+    @Override
     public List<CXConstructor> getConstructors() {
         return constructors;
     }
     
+    @Override
     public CXConstructor getConstructor(List<CXType> parameters, TypeEnvironment environment) {
         for (CXConstructor constructor : constructors) {
             
@@ -335,6 +331,7 @@ public class CXClassType extends CXCompoundType {
     
     
     
+    @Override
     public CXConstructor getConstructor(int length) {
         for (CXConstructor constructor : constructors) {
             if(constructor.getParameterTypes().size() == length + 1) return constructor;
@@ -342,6 +339,7 @@ public class CXClassType extends CXCompoundType {
         return null;
     }
     
+    @Override
     public CXConstructor getConstructor(ParameterTypeList parameterTypeList) {
         for (CXConstructor constructor : constructors) {
             if(parameterTypeList.equals(constructor.getParameterTypeList(), environment)) return constructor;
@@ -349,20 +347,22 @@ public class CXClassType extends CXCompoundType {
         return null;
     }
     
+    @Override
     public CXMethod getMethod(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
         CXMethod output = getVirtualMethod(name, parameterTypeList);
         if(output != null) {
-            isVirtual.setValue(true);
+            if(isVirtual != null) isVirtual.setValue(true);
             return output;
         }
         CXMethod concreteMethod = getConcreteMethod(name, parameterTypeList);
         if(concreteMethod != null) {
-            isVirtual.setValue(false);
+            if(isVirtual != null) isVirtual.setValue(false);
             return concreteMethod;
         }
         return null;
     }
     
+    @Override
     public void generateSuperMethods(String vtablename) {
         generatedSupers = new LinkedList<>();
         for (Pair<CXMethod,CXMethod> methods : supersToCreate) {
@@ -370,6 +370,7 @@ public class CXClassType extends CXCompoundType {
         }
     }
     
+    @Override
     public CXMethod getSuperMethod(String name, ParameterTypeList typeList) {
         if(generatedSupers == null) return null;
         for (CXMethod generatedSuper : generatedSupers) {
@@ -380,6 +381,7 @@ public class CXClassType extends CXCompoundType {
         return null;
     }
     
+    @Override
     public boolean isVirtual(String name, ParameterTypeList typeList) {
         Reference<Boolean> output = new Reference<>();
         CXMethod method = getMethod(name, typeList, output);
@@ -413,6 +415,7 @@ public class CXClassType extends CXCompoundType {
             this.environment =e;
         }
     }
+    @Override
     public CXStructType getStructEquivalent() {
         return getStructEquivalent(environment);
     }
@@ -466,6 +469,7 @@ public class CXClassType extends CXCompoundType {
         return builder.toString();
     }
     
+    @Override
     public List<CXMethod> getGeneratedSupers() {
         return generatedSupers;
     }
@@ -522,9 +526,10 @@ public class CXClassType extends CXCompoundType {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         return generateCDefinition() + " " + identifier;
     }
+    
     
     public CXClassType getParent() {
         return parent;
