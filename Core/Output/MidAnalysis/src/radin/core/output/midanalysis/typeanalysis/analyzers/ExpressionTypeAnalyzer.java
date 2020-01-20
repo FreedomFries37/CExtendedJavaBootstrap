@@ -446,8 +446,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(base instanceof ICXWrapper) {
                 base = ((ICXWrapper) base).getWrappedType();
             }
-            CXType constructedType =
-                    ((PointerType) base).getSubType();
+            CXType constructedType = ((PointerType) base).getSubType();
             
             assert constructedType instanceof CXClassType;
             SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(node.getASTChild(ASTNodeType.sequence));

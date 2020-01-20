@@ -14,10 +14,17 @@ public class Parser extends BasicParser {
     private Stack<HashSet<String>> typedefStack;
     private Stack<HashSet<String>> compoundTypesStack;
     
-    public Parser(String... types) {
+    @Override
+    public void reset() {
+        typedefed = new HashSet<>();
+        compoundTypeNames = new HashSet<>();
+        typedefStack = new Stack<>();
+        compoundTypesStack = new Stack<>();
+    }
+    
+    public Parser() {
         super();
         typedefed = new HashSet<>();
-        typedefed.addAll(Arrays.asList(types));
         compoundTypeNames = new HashSet<>();
         typedefStack = new Stack<>();
         compoundTypesStack = new Stack<>();

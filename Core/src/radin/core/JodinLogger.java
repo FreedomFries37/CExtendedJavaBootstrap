@@ -289,12 +289,12 @@ public class JodinLogger {
         boolean first = true;
         for (StackTraceElement stackTraceElement : thrown.getStackTrace()) {
             if(first) {
-                fine("\tat " + stackTraceElement.toString());
+                finer("\tat " + stackTraceElement.toString());
                 first = false;
             }
-            else finer("\tat " + stackTraceElement.toString());
+            else finest("\tat " + stackTraceElement.toString());
         }
-        fine("");
+        finer("");
     }
     
     public void severe(Supplier<String> msgSupplier) {

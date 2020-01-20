@@ -53,9 +53,9 @@ public class ArrayType extends AbstractCXPrimitiveType {
         }
         
         if(size != null) {
-            return baseType.generateCDefinition() + " " + identifier + "[" + "$REPLACE ME$" + "]";
+            return baseType.generateCDeclaration() + " " + identifier + "[" + "$REPLACE ME$" + "]";
         }
-        return baseType.generateCDefinition() + " " + identifier + "[]";
+        return baseType.generateCDeclaration() + " " + identifier + "[]";
     }
     
     /**

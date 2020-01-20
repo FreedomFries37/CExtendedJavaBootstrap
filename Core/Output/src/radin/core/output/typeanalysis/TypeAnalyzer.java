@@ -169,6 +169,8 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     protected void setIsFailurePoint(TypeAugmentedSemanticNode node) {
         node.setFailurePoint(true);
         ICompilationSettings.debugLog.severe(node.findFirstToken().info());
-        ICompilationSettings.debugLog.finest("\n" + node.toTreeForm());
+        try {
+            ICompilationSettings.debugLog.finest("\n" + node.toTreeForm());
+        } catch (Error unused) {}
     }
 }

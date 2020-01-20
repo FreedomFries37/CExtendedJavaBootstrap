@@ -1,5 +1,6 @@
 package radin.core.semantics.types.wrapped;
 
+import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
@@ -10,6 +11,7 @@ import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.primitives.PointerType;
 
+import javax.imageio.plugins.tiff.ExifInteroperabilityTagSet;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -99,19 +101,26 @@ public class CXDeferredClassDefinition extends CXMappedType {
     @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
         update();
-        if(actual == null) return super.getTypeRedirection(e);
+        if(actual == null) return temp.toPointer().getTypeRedirection(e);
         return getWrappedType().getTypeRedirection(e);
     }
     
     @Override
     public CXType getWrappedType() {
-        if(actual == null) return temp;
+        if(actual == null) return temp.toPointer();
         return actual;
+    }
+    
+    private class IllegalUsingDeferredTypeWithoutDefinition extends AbstractCompilationError {
+        public IllegalUsingDeferredTypeWithoutDefinition() {
+            super("CXClass " + temp + " not defined, but attempting to access",
+                    identifier.getIdentifier(), "deferred here");
+        }
     }
     
     @Override
     public String generateCDefinition() {
         if(actual != null) return actual.generateCDefinition();
-        throw new UnsupportedOperationException();
+        throw new IllegalUsingDeferredTypeWithoutDefinition();
     }
 }

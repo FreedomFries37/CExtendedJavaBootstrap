@@ -5,6 +5,7 @@ import radin.core.utility.ICompilationSettings;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,8 +69,7 @@ public class ErrorReader {
         String outputedFileName = null;
         for (AbstractCompilationError error : errors) {
             // System.out.println(error.getError());
-            ICompilationSettings.debugLog.warning(error.getClass().getSimpleName() + ":" + error.getMessage());
-    
+            ICompilationSettings.debugLog.warning(error.getClass().getSimpleName() + ": " + error.getMessage());
     
             List<AbstractCompilationError.ErrorInformation> infoMessages = new LinkedList<>();
             LineHolder lineHolderCurrent = null;
@@ -90,6 +90,7 @@ public class ErrorReader {
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
                     if (!lineInfo.fileName.equals(outputedFileName)) {
                         System.out.printf("In %s:\n", lineHolderCurrent.fileName);
+                        ICompilationSettings.debugLog.finer(String.format("In %s:", lineHolderCurrent.fileName));
                         outputedFileName = lineInfo.fileName;
                     }
                     
@@ -107,6 +108,7 @@ public class ErrorReader {
                         firstLine = false;
                     } else {
                         System.out.println(repeat + "|" );
+                        ICompilationSettings.debugLog.finer(repeat + "|" );
                     }
                     repeat = printError(lineHolderCurrent, infoMessages);
                     infoMessages.clear();
@@ -121,16 +123,22 @@ public class ErrorReader {
             if(lineHolderCurrent != null) {
                 if (!lineHolderCurrent.fileName.equals(outputedFileName)) {
                     System.out.printf("In %s:\n", lineHolderCurrent.fileName);
+                    ICompilationSettings.debugLog.finer(String.format("In %s:", lineHolderCurrent.fileName));
                     outputedFileName = lineHolderCurrent.fileName;
                 }
                 if(!errorPrinted) {
-                    if (!settings.isShowErrorStackTrace())
+                    if (!settings.isShowErrorStackTrace()) {
                         System.out.println(error.toString());
-                    else
+                        // ICompilationSettings.debugLog.finer(error.toString());
+                    }
+                    else {
                         error.printStackTrace(System.out);
+                        error.printStackTrace(ICompilationSettings.debugLog.divertOutput(Level.FINER, System.out));
+                    }
                 }
                 if(!firstLine) {
                     System.out.println(repeat + "|" );
+                    ICompilationSettings.debugLog.finer(repeat + "|" );
                 }
                 printError(lineHolderCurrent, infoMessages);
             }
@@ -156,7 +164,11 @@ public class ErrorReader {
         
         String repeat = " ".repeat(lineNumberDigits + 1);
         System.out.println(repeat + "|" );
+        ICompilationSettings.debugLog.finer(repeat + "|" );
+        
         System.out.println(lineHolder.lineNumber + " | " + lineHolder.contents);
+        ICompilationSettings.debugLog.finer(lineHolder.lineNumber + " | " + lineHolder.contents);
+        
         List<Integer> columns = new LinkedList<>();
         for (AbstractCompilationError.ErrorInformation information : informations) {
             int imageLength = information.getToken().getRepresentation().length();
@@ -167,9 +179,14 @@ public class ErrorReader {
         boolean first = true;
         for (int i = informations.size() - 1; i >= 0; i--) {
             if(!first) {
-                System.out.println(repeat + "|" + errorAt(-1, maxSize, null, columns, first));
+                var log = repeat + "|" + errorAt(-1, maxSize, null, columns, first);
+                System.out.println(log);
+                ICompilationSettings.debugLog.finer(log);
             }
-            System.out.println(repeat + "|" + errorAt(columns.get(i), maxSize, informations.get(i).getInfo(), columns, first));
+            var log = repeat + "|" + errorAt(columns.get(i), maxSize, informations.get(i).getInfo(), columns
+                    , first);
+            ICompilationSettings.debugLog.finer(log);
+            System.out.println(log);
             columns.remove(i);
             if(first) first = false;
             

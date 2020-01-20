@@ -1,5 +1,4 @@
-void print(char* name);
-void println(char* name);
+#include "prelude.h"
 
 in animals {
 	class animal {
@@ -69,22 +68,3 @@ class cat : animals::domesticated {
 	}
 };
 
-
-int main() {
-
-	animals::animal griff = new animals::dog("The Griff");
-	griff->says();
-	println("");
-	griff->says();
-	println("");
-
-
-	animals::domesticated myCat = new cat("jeff");
-	myCat->says();
-	print(myCat->getName());
-
-	animals::dog dg = (animals::dog) griff;
-	int legs = dg->getNumberOfLegs();
-
-	return 0;
-}

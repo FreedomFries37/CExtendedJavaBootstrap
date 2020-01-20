@@ -39,20 +39,14 @@ in std {
 		public Object();
 
 		virtual public int hashcode();
-		virtual public int equals(Object other) {
-			return this->hashcode() == other->hashcode();
-		}
-		virtual public void drop() {
-			free(this);
-		}
+		virtual public int equals(Object other);
+		virtual public void drop();
 
 
 
 		virtual public String toString();
 
-		public ClassInfo getClass() {
-			return this->info;
-		}
+		public ClassInfo getClass();
 
 
 	};
@@ -64,9 +58,7 @@ in std {
 
 		private ClassInfo(String name, ClassInfo parent, int classHash);
 
-		public String getName() {
-			return this->name;
-		}
+		public String getName();
 
 		public int is(Object o);
 
@@ -78,51 +70,17 @@ in std {
 		char* backingPtr;
 		int length;
 
-		public String(const char* bp) {
-			const char* ptr = bp;
-			for(; *ptr != '\0'; ptr++) {
-				++this->length;
-			}
-			this->backingPtr = malloc(sizeof(char) * (this->length + 1));
-			this->backingPtr[this->length] = '\0';
-			for(int i = 0; i < this->length; i++) {
-				this->backingPtr[i] = (char) bp[i];
-			}
-		}
+		public String(const char* bp);
 
-		public String() : this ("") { }
+		public String();
 
-		virtual public void drop() {
-			free(this->backingPtr);
-			super->drop();
-		}
+		virtual public void drop();
 
-		public String concat(String other) {
-			char* next = (char*) malloc(sizeof(char) * (this->length + other->length + 1));
-			for(int i = 0; i < this->length; i++) {
-				next[i] = (char) this->backingPtr[i];
-			}
+		public String concat(String other);
 
-			for(int i = 0; i < other->length; i++) {
-				next[i + this->length] = (char) other->backingPtr[i];
-			}
+		public String concat(char* other);
 
-			next[this->length + other->length] = '\0';
-			String output = new String(next);
-			free(next);
-			return output;
-		}
-
-		public String concat(char* other) {
-			return this->concat(new String(other));
-		}
-
-
-
-
-		public const char* getCStr() {
-			return this->backingPtr;
-		}
+		public const char* getCStr();
     };
 
 }

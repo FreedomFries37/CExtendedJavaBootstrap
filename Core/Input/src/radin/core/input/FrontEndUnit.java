@@ -60,8 +60,9 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
     }
     
     @Override
-    public void setInputString() {
-    
+    public void reset() {
+        lexer.reset();
+        parser.reset();
     }
     
     @Override

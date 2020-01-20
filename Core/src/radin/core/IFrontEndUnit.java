@@ -8,5 +8,5 @@ public interface IFrontEndUnit<S> extends ICompilerProducer<S> {
     
     TypeEnvironment getEnvironment();
     String getUsedString();
-    void setInputString();
+    void reset();
 }

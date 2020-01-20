@@ -17,17 +17,24 @@ public class ToolChainFactory {
         
         public <O> ToolChainLink<T, O> chain_to(ToolChainLink<? super R, O> next) {
             next.errors = this.errors;
-            return new ChainLink<>(this, next);
+            var troChainLink = new ChainLink<T, R, O>(this, next);
+            troChainLink.errors = this.errors;
+            return troChainLink;
         }
     
         public <I> ToolChainLink<I, R> chain_from(ToolChainLink<? super I, ? extends T> prev) {
-            this.errors = prev.errors;
+            prev.errors = this.errors;
             return new ChainLink<>(prev, this);
         }
     
         @Override
         public List<AbstractCompilationError> getErrors() {
             return errors;
+        }
+        
+        @Override
+        public void clearErrors() {
+            errors.clear();
         }
     
         @Override
@@ -63,6 +70,12 @@ public class ToolChainFactory {
         @Override
         public <I> ToolChainLink<I, R> chain_from(ToolChainLink<? super I, ? extends Void> prev) {
             throw new UnsupportedOperationException();
+        }
+    
+        @Override
+        public void clearErrors() {
+            head.clearErrors();
+            chain.clearErrors();
         }
     
         @Override
@@ -117,6 +130,12 @@ public class ToolChainFactory {
             M invoke = front.invoke(input);
             return back.invoke(invoke);
         }
+    
+        @Override
+        public void clearErrors() {
+            front.clearErrors();
+            back.clearErrors();
+        }
     }
     
     private static class CompilerFunctionLink <T, R> extends ToolChainLink<T, R> {
@@ -134,6 +153,7 @@ public class ToolChainFactory {
             errors.addAll(part.getErrors());
             return invoke;
         }
+        
     }
     
     private static class CompilerProducerLink <R> extends ToolChainHead<R>  {
@@ -155,6 +175,8 @@ public class ToolChainFactory {
             errors.addAll(part.getErrors());
             return invoke;
         }
+    
+        
     }
     
     private static class InPlaceCompilerLink <T> extends ToolChainLink<T, T> {
@@ -168,9 +190,18 @@ public class ToolChainFactory {
         public T invoke(T input) {
             ICompilationSettings.debugLog.info("Running Compiler analyzer " + part.getClass().getSimpleName());
             part.setHead(input);
-            if(!part.invoke()) return null;
+            if(!part.invoke()) {
+                errors.addAll(part.getErrors());
+                return null;
+            }
             errors.addAll(part.getErrors());
             return input;
+        }
+    
+        @Override
+        public void clearErrors() {
+            super.clearErrors();
+            part.getErrors().clear();
         }
     }
     
