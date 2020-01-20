@@ -1,7 +1,7 @@
 in std class ClassInfo;
 in std class String;
 
-
+typedef unsigned long class_id;
 void* malloc(unsigned int sz);
 void* calloc(unsigned int num, unsigned int sz);
 void free(void* ptr);
@@ -10,6 +10,9 @@ void print(const char* c);
 void println(const char* c);
 void print_s(std::String o);
 void println_s(std::String o);
+
+
+
 
 /*
 public <T> T inc(T o) {
@@ -30,6 +33,8 @@ public <T> T dec(T o) {
 */
 
 in std {
+	ClassInfo getClass(class_id id);
+
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
 

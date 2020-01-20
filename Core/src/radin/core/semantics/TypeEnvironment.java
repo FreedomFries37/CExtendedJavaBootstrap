@@ -143,10 +143,12 @@ public class TypeEnvironment {
         if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
         CXDeferredClassDefinition delayedTypeDefinition = new CXDeferredClassDefinition(tok, this, cxIdentifier);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
+        ICompilationSettings.debugLog.finest("Added deferred type " + delayedTypeDefinition);
         return getTempType(cxIdentifier);
     }
     
     public CXMappedType getTempType(String identifier) {
+        ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
         return getTempType(new CXIdentifier(currentNamespace, new Token(t_id, identifier)));
     }
     
@@ -156,13 +158,18 @@ public class TypeEnvironment {
         if(identifier.getParentNamespace() != null)
             parent = namespaceTree.getNamespace(currentNamespace, identifier.getParentNamespace());
         else parent = currentNamespace;
+        ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
         CXIdentifier actual = new CXIdentifier(parent, identifier.getIdentifier());
+        ICompilationSettings.debugLog.finest("Rectified to " + actual);
+    
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
     public CXMappedType getTempType(CXIdentifier namespace, Token identifier) {
         
         CXIdentifier actual = new CXIdentifier(namespace,  identifier);
+        ICompilationSettings.debugLog.finest("Getting temp type " + actual);
+    
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
@@ -279,9 +286,10 @@ public class TypeEnvironment {
     }
     
     public CXType getType(Token typenameImage, Token tok) {
+        ICompilationSettings.debugLog.entering("TypeEnvironment", String.format("getType(%s, %s)", typenameImage, tok));
         CXType output = null;
-        if(typeDefinitions.containsKey(typenameImage)) {
-            output = typeDefinitions.get(typenameImage);
+        if(typeDefinitions.containsKey(typenameImage.getImage())) {
+            output = typeDefinitions.get(typenameImage.getImage());
         }
         CXType temp;
         if((temp = getTempType(currentNamespace, typenameImage)) != null) {

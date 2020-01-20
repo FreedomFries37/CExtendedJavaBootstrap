@@ -156,6 +156,10 @@ public class Parser extends BasicParser {
                 if(!parseImplement(child)) return false;
                 break;
             }
+            case t_using: {
+                if(!parseUsing(child)) return false;
+                break;
+            }
             default:
                 return error("Not a valid top level declaration");
         }
@@ -205,6 +209,32 @@ public class Parser extends BasicParser {
         } else {
             if (!parseImplementation(child)) return false;
         }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseUsing(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Using");
+    
+        if(!consume(t_using)) {
+            return false;
+        }
+        if(!parseNamespace(child)) return false;
+        if(match(t_assign)) {
+            if(!parseAlias(child)) return false;
+        }
+        if(!consume(t_semic)) return error("Missing semi-colon");
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseAlias(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Alias");
+        
+        if(!consume(t_assign)) return false;
+        if(!consumeAndAddAsLeaf(t_id, child)) return error("Need if");
         
         parent.addChild(child);
         return true;
@@ -1324,6 +1354,18 @@ public class Parser extends BasicParser {
                 break;
             default:
                 return error("Not a valid type");
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseNamespace(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Namespace");
+        
+        if(!consumeAndAddAsLeaf(t_id, child)) return false;
+        if(consumeAndAddAsLeaf(t_namespace, child)) {
+            if(!parseNamespace(child)) return false;
         }
         
         parent.addChild(child);

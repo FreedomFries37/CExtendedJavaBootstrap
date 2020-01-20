@@ -1454,6 +1454,42 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         
                         return true;
                     }
+                    case "Using": {
+                        AbstractSyntaxNode find = getCatNode("Namespace").getSynthesized();
+                        CXType type = environment.getType(find);
+                        if(node.hasChildCategory("Alias")) {
+                            AbstractSyntaxNode alias = getCatNode("Alias").getSynthesized();
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.using, type, find, alias)
+                            );
+                        } else {
+                            node.setSynthesized(
+                                    new TypeAbstractSyntaxNode(ASTNodeType.using, type, find)
+                            );
+                        }
+                        return true;
+                    }
+                    case "Namespace": {
+                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        
+                        if(node.hasChildCategory("Namespace")) {
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.namespaced, id));
+                        } else {
+                            AbstractSyntaxNode next = getCatNode("Namespace", 2).getSynthesized();
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.namespaced, id, next)
+                            );
+                        }
+                        
+                        return true;
+                    }
+                    case "Alias": {
+                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.alias, id)
+                        );
+                        return true;
+                    }
                     default:
                         error("No Action Routine for " + node.getCategory());
                         cont = false;

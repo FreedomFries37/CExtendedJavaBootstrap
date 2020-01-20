@@ -1,5 +1,6 @@
 struct class_std_ClassInfo324399139;
 struct class_std_String817305134;
+typedef unsigned long int class_id;
 void* malloc(unsigned int);
 void* calloc(unsigned int, unsigned int);
 void free(void*);
@@ -7,6 +8,7 @@ void print(const char*);
 void println(const char*);
 void print_s(struct class_std_String817305134*);
 void println_s(struct class_std_String817305134*);
+struct class_std_ClassInfo324399139* getClass(class_id);
 struct class_std_Object685922652;
 
 struct class_std_Object685922652_vtable {
@@ -80,7 +82,7 @@ void std_Object_drop2012253719(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 int std_ClassInfo_equals913183526(void*, struct class_std_ClassInfo324399139*);
 
-struct class_std_ClassInfo324399139* construct_std_ClassInfo1798510245_746826879(void*, struct class_std_String817305134*, struct class_std_ClassInfo324399139*, int);
+struct class_std_ClassInfo324399139* construct_std_ClassInfo977452419_60530725(void*, struct class_std_String817305134*, struct class_std_ClassInfo324399139*, int);
 
 static struct class_std_ClassInfo324399139* class_std_ClassInfo324399139_init1711871859() {
     struct class_std_ClassInfo324399139* output;
@@ -149,7 +151,7 @@ int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
 void std_String_drop2102981591(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 
-struct class_std_String817305134* construct_std_String1076770779_1333810398(void*, const char*);
+struct class_std_String817305134* construct_std_String502800975_1985466301(void*, const char*);
 struct class_std_String817305134* construct_std_String1_2128077333(void*);
 
 static struct class_std_String817305134* class_std_String817305134_init1324446555() {
@@ -215,7 +217,7 @@ void std_Object_drop2012253719(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 void animals_animal_says2137608702(void*);
 
-struct class_animals_animal413556389* construct_animals_animal1016102095_2059466806(void*, char*, int);
+struct class_animals_animal413556389* construct_animals_animal1795196733_2098888252(void*, char*, int);
 
 static struct class_animals_animal413556389* class_animals_animal413556389_init2063304608() {
     struct class_animals_animal413556389* output;
@@ -247,7 +249,7 @@ int animals_animal_getNumberOfLegs412305877(void* __this) {
 
 
 
-struct class_animals_animal413556389* construct_animals_animal1016102095_2059466806(void* __this, char* species, int numberOfLegs) {
+struct class_animals_animal413556389* construct_animals_animal1795196733_2098888252(void* __this, char* species, int numberOfLegs) {
     struct class_animals_animal413556389* this = (struct class_animals_animal413556389*) __this;
     (*this).species = species;
     (*this).numberOfLegs = numberOfLegs;
@@ -288,7 +290,7 @@ void std_Object_drop2012253719(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 void animals_quadAnimal_says1804481250(void*);
 
-struct class_animals_quadAnimal2147359436* construct_animals_quadAnimal1519736196_1246740908(void*, char*);
+struct class_animals_quadAnimal2147359436* construct_animals_quadAnimal2039810377_556304428(void*, char*);
 
 static struct class_animals_quadAnimal2147359436* class_animals_quadAnimal2147359436_init1502385461() {
     struct class_animals_quadAnimal2147359436* output;
@@ -313,8 +315,8 @@ static struct class_animals_quadAnimal2147359436* class_animals_quadAnimal214735
 
 
 
-struct class_animals_quadAnimal2147359436* construct_animals_quadAnimal1519736196_1246740908(void* __this, char* name) {
-    construct_animals_animal1016102095_2059466806(__this, name, 4);
+struct class_animals_quadAnimal2147359436* construct_animals_quadAnimal2039810377_556304428(void* __this, char* name) {
+    construct_animals_animal1795196733_2098888252(__this, name, 4);
     struct class_animals_quadAnimal2147359436* this = (struct class_animals_quadAnimal2147359436*) __this;
     return this;
 }
@@ -366,7 +368,7 @@ void std_Object_drop2012253719(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 void animals_domesticated_says884984702(void*);
 
-struct class_animals_domesticated621040935* construct_animals_domesticated1769396895_741983931(void*, char*, char*);
+struct class_animals_domesticated621040935* construct_animals_domesticated2012084223_1571021036(void*, char*, char*);
 
 static struct class_animals_domesticated621040935* class_animals_domesticated621040935_init1611550172() {
     struct class_animals_domesticated621040935* output;
@@ -400,8 +402,8 @@ char* animals_domesticated_getName963816037(void* __this) {
 
 
 
-struct class_animals_domesticated621040935* construct_animals_domesticated1769396895_741983931(void* __this, char* name, char* species) {
-    construct_animals_quadAnimal1519736196_1246740908(__this, species);
+struct class_animals_domesticated621040935* construct_animals_domesticated2012084223_1571021036(void* __this, char* name, char* species) {
+    construct_animals_quadAnimal2039810377_556304428(__this, species);
     struct class_animals_domesticated621040935* this = (struct class_animals_domesticated621040935*) __this;
     (*this).name = name;
     return this;
@@ -455,7 +457,7 @@ void std_Object_drop2012253719(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 void animals_domesticated_says884984702(void*);
 
-struct class_animals_dog1826772453* construct_animals_dog2143437148_1266269529(void*, char*);
+struct class_animals_dog1826772453* construct_animals_dog1891502666_1448182602(void*, char*);
 struct class_animals_dog1826772453* construct_animals_dog1_533279943(void*);
 
 static struct class_animals_dog1826772453* class_animals_dog1826772453_init1975796817() {
@@ -483,15 +485,15 @@ static struct class_animals_dog1826772453* class_animals_dog1826772453_init19757
 
 
 
-struct class_animals_dog1826772453* construct_animals_dog2143437148_1266269529(void* __this, char* name) {
-    construct_animals_domesticated1769396895_741983931(__this, name, );
+struct class_animals_dog1826772453* construct_animals_dog1891502666_1448182602(void* __this, char* name) {
+    construct_animals_domesticated2012084223_1571021036(__this, name, );
     struct class_animals_dog1826772453* this = (struct class_animals_dog1826772453*) __this;
     return this;
 }
 
 
 struct class_animals_dog1826772453* construct_animals_dog1_533279943(void* __this) {
-    construct_animals_dog2143437148_1266269529(__this, );
+    construct_animals_dog1891502666_1448182602(__this, );
     struct class_animals_dog1826772453* this = (struct class_animals_dog1826772453*) __this;
     return this;
 }
@@ -524,7 +526,7 @@ void std_Object_drop2012253719(void*);
 struct class_std_String817305134* std_Object_toString502699366(void*);
 void cat_says138516450(void*);
 
-struct class_cat1692644852* construct_cat260840956_1823163445(void*, char*);
+struct class_cat1692644852* construct_cat557023598_144823107(void*, char*);
 
 static struct class_cat1692644852* class_cat1692644852_init1716779587() {
     struct class_cat1692644852* output;
@@ -551,8 +553,8 @@ static struct class_cat1692644852* class_cat1692644852_init1716779587() {
 
 
 
-struct class_cat1692644852* construct_cat260840956_1823163445(void* __this, char* name) {
-    construct_animals_domesticated1769396895_741983931(__this, name, );
+struct class_cat1692644852* construct_cat557023598_144823107(void* __this, char* name) {
+    construct_animals_domesticated2012084223_1571021036(__this, name, );
     struct class_cat1692644852* this = (struct class_cat1692644852*) __this;
     return this;
 }
