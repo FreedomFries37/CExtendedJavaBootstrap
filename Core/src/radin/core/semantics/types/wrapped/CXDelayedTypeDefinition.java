@@ -48,6 +48,12 @@ public class CXDelayedTypeDefinition extends CXMappedType {
     }
     
     @Override
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        if(!update()) throw new BadDelayedTypeAccessError();
+        return getWrappedType().getTypeRedirection(e);
+    }
+    
+    @Override
     public String generateCDefinition() {
         if(!update()) throw new BadDelayedTypeAccessError();
         return getWrappedType().generateCDefinition();

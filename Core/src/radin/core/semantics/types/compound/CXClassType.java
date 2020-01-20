@@ -10,6 +10,7 @@ import radin.core.semantics.types.*;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
+import radin.core.semantics.types.wrapped.CXMappedType;
 import radin.core.utility.Pair;
 import radin.core.utility.Reference;
 import radin.core.semantics.TypeEnvironment;
@@ -79,50 +80,55 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             if(isAlreadyDefined(field.getName())) throw new RedeclareError(field.getName());
             visibilityMap.put(field.getName(), field.getVisibility());
         }
-        List<String> virtualMethodsAlreadyExplored = new LinkedList<>();
+        List<Pair<String, ParameterTypeList>> virtualMethodsAlreadyExplored = new LinkedList<>();
         for (CXMethod method : methods) {
             
             
-            method.setIdentifier(new CXIdentifier(typename, method.getName()));
+            Token identifier = method.getName().getIdentifier();
+            method.setIdentifier(new CXIdentifier(typename, identifier));
             
             
             if(method.isVirtual()) {
-                if(virtualMethodsAlreadyExplored.contains(method.getName())) {
-                    throw new RedeclareError(method.getName());
+                if(virtualMethodsAlreadyExplored.contains(new Pair<>(method.getIdentifierName(), method.getParameterTypeList()))) {
+                    throw new RedeclareError(method.getIdentifierName());
                 }
                 
-                if(isVirtual(method.getName(), method.getParameterTypeList())) {
+                if(isVirtualStrict(method.getIdentifierName(), method.getParameterTypeList())) {
                     boolean changed = false;
                     for (int i = 0; i < virtualMethodOrder.size(); i++) {
                         CXMethod oldMethod = virtualMethodOrder.get(i);
-                        if(oldMethod.getName().equals(method.getName()) &&
-                                environment.isStrict(oldMethod.getReturnType(), method.getReturnType()) &&
-                                oldMethod.getParameterTypes().equals(method.getParameterTypes())) {
+                        if(oldMethod.getIdentifierName().equals(method.getIdentifierName()) &&
+                                oldMethod.getReturnType().is(method.getReturnType(), environment) &&
+                                oldMethod.getParameterTypeList().equalsExact(method.getParameterTypeList(), environment)) {
                             supersToCreate.add(new Pair<>(oldMethod, method));
                             virtualMethodOrder.set(i, method);
                             if(oldMethod.getVisibility() != method.getVisibility()) {
-                                visibilityMap.replace(method.getName(), method.getVisibility());
+                                visibilityMap.replace(method.getIdentifierName(), method.getVisibility());
                             }
                             changed = true;
                             break;
                         }
                     }
                     if(!changed) {
-                        CXType returnType = getVirtualMethod(method.getName(), method.getParameterTypeList()).getReturnType();
-                        throw new IncompatibleReturnTypeError(method.getName(), returnType, method.getReturnType());
+                        CXMethod virtualMethod = getVirtualMethod(identifier, method.getParameterTypeList());
+                        if(virtualMethod == null) throw new AmbiguousMethodCallError(identifier, new LinkedList<>(),
+                                new LinkedList<>());
+                        CXType returnType =
+                                virtualMethod.getReturnType();
+                        throw new IncompatibleReturnTypeError(method.getIdentifierName(), returnType, method.getReturnType());
                     }
                 } else {
-                    if(isAlreadyDefined(method.getName(), method.getParameterTypes())) {
-                        throw new RedeclareError(method.getName());
+                    if(isAlreadyDefined(method.getIdentifierName(), method.getParameterTypes())) {
+                        throw new RedeclareError(method.getIdentifierName());
                     }
                     virtualMethodOrder.add(method);
-                    visibilityMap.put(method.getName(), method.getVisibility());
+                    visibilityMap.put(method.getIdentifierName(), method.getVisibility());
                 }
-                virtualMethodsAlreadyExplored.add(method.getName());
+                virtualMethodsAlreadyExplored.add(new Pair(method.getIdentifierName(), method.getParameterTypeList()));
                 
             } else {
-                if(isAlreadyDefined(method.getName(), method.getParameterTypes())) {
-                    throw new RedeclareError(method.getName());
+                if(isAlreadyDefined(method.getIdentifierName(), method.getParameterTypes())) {
+                    throw new RedeclareError(method.getIdentifierName());
                 }
                 
                 concreteMethodsOrder.add(method);
@@ -134,7 +140,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public void addConstructors(List<CXConstructor> constructors) {
         this.constructors.addAll(constructors);
         for (CXConstructor constructor : constructors) {
-            visibilityMap.put(constructor.getName(), constructor.getVisibility());
+            visibilityMap.put(constructor.getIdentifierName(), constructor.getVisibility());
         }
     }
     
@@ -152,7 +158,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             methods.add(convertToFieldDeclaration(cxMethod));
         }
         
-        return new CXStructType(name, methods);
+        return new CXStructType(new Token(TokenType.t_id, name), methods);
     }
     
     @Override
@@ -221,23 +227,47 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
                 // initMethodBody.append("vtable->").append(cxMethod.getCFunctionName()).append(" = ").append(cxMethod
                 // .getCFunctionName()).append(";");
             }
-            
+            AbstractSyntaxNode output = new AbstractSyntaxNode(ASTNodeType.indirection, CXMethod.variableAST("output"));
             for (CXMethod cxMethod : getAllConcreteMethods()) {
                 AbstractSyntaxNode method = CXMethod.variableAST(cxMethod.getCMethodName());
                 AbstractSyntaxNode function = CXMethod.variableAST(cxMethod.getCFunctionName());
+                
                 AbstractSyntaxNode fieldGet = new AbstractSyntaxNode(ASTNodeType.field_get,
-                        new AbstractSyntaxNode(ASTNodeType.indirection, CXMethod.variableAST("output")),
+                        output,
                         method);
                 
                 children.add(assign(fieldGet, function));
             }
-    
-            /*
-            for (FieldDeclaration field : getFields()) {
-                initMethodBody.append("output->").append(field.getName()).append(" = {0};");
+            
+            
+            for (FieldDeclaration field : getAllFields()) {
+                AbstractSyntaxNode var = CXMethod.variableAST(field.getName());
+                AbstractSyntaxNode fieldGet = new AbstractSyntaxNode(ASTNodeType.field_get,
+                        output,
+                        var);
+                AbstractSyntaxNode assignment;
+                CXType type = field.getType();
+                if(type instanceof ICXWrapper) {
+                    type = ((ICXWrapper) type).getWrappedType();
+                }
+                if(getTypeName().equals("std::ClassInfo") &&
+                        field.getName().equals("info") && type instanceof PointerType &&
+                        ((PointerType) type).getSubType() instanceof CXClassType &&
+                        ((CXClassType) ((PointerType) type).getSubType()).getTypeName().equals("std::ClassInfo")) {
+                    assignment = CXMethod.variableAST("output");
+                } else {
+                    assignment = new TypeAbstractSyntaxNode(
+                            ASTNodeType.cast,
+                            field.getType(),
+                            new AbstractSyntaxNode(ASTNodeType.id, new Token(TokenType.t_id, "{0}")
+                            )
+                    );
+                }
+                children.add(assign(fieldGet, assignment));
+                // initMethodBody.append("output->").append(field.getName()).append(" = {0};");
             }
             
-             */
+            
             
             children.add(new AbstractSyntaxNode(ASTNodeType._return, CXMethod.variableAST("output")));
             
@@ -246,11 +276,21 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             
             AbstractSyntaxNode compound = new AbstractSyntaxNode(ASTNodeType.compound_statement, children);
             //compound.printTreeForm();
-            initMethod =  new CXMethod(null, Visibility._public, getCTypeName() + "_init", false, new PointerType(this),
+            initMethod =  new CXMethod(null, Visibility._public, new Token(TokenType.t_id, getCTypeName() + "_init"),
+                    false,
+                    new PointerType(this),
                     new LinkedList<>(), compound);
         }
         
         return initMethod;
+    }
+    
+    
+    public List<FieldDeclaration> getAllFields() {
+        List<FieldDeclaration> output = new LinkedList<>();
+        if(parent != null) output.addAll(parent.getAllFields());
+        output.addAll(getFields());
+        return output;
     }
     
     public List<CXMethod> getAllConcreteMethods() {
@@ -348,13 +388,27 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     }
     
     @Override
-    public CXMethod getMethod(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+    public CXMethod getMethod(Token name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
         CXMethod output = getVirtualMethod(name, parameterTypeList);
         if(output != null) {
             if(isVirtual != null) isVirtual.setValue(true);
             return output;
         }
         CXMethod concreteMethod = getConcreteMethod(name, parameterTypeList);
+        if(concreteMethod != null) {
+            if(isVirtual != null) isVirtual.setValue(false);
+            return concreteMethod;
+        }
+        return null;
+    }
+    
+    public CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+        CXMethod output = getVirtualMethodStrict(name, parameterTypeList);
+        if(output != null) {
+            if(isVirtual != null) isVirtual.setValue(true);
+            return output;
+        }
+        CXMethod concreteMethod = getConcreteMethodStrict(name, parameterTypeList);
         if(concreteMethod != null) {
             if(isVirtual != null) isVirtual.setValue(false);
             return concreteMethod;
@@ -374,7 +428,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public CXMethod getSuperMethod(String name, ParameterTypeList typeList) {
         if(generatedSupers == null) return null;
         for (CXMethod generatedSuper : generatedSupers) {
-            if(generatedSuper.getName().contains(name) && typeList.equals(generatedSuper.getParameterTypeList(),
+            if(generatedSuper.getIdentifierName().contains(name) && typeList.equals(generatedSuper.getParameterTypeList(),
                     environment)) return generatedSuper;
         }
         
@@ -382,15 +436,39 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     }
     
     @Override
-    public boolean isVirtual(String name, ParameterTypeList typeList) {
+    public boolean isVirtual(Token name, ParameterTypeList typeList) {
         Reference<Boolean> output = new Reference<>();
         CXMethod method = getMethod(name, typeList, output);
         return method != null && output.getValue();
     }
     
-    private CXMethod getVirtualMethod(String name, ParameterTypeList parameterTypeList) {
+    public boolean isVirtualStrict(String name, ParameterTypeList typeList) {
+        Reference<Boolean> output = new Reference<>();
+        CXMethod method = getMethodStrict(name, typeList, output);
+        return method != null && output.getValue();
+    }
+    private CXMethod getVirtualMethod(Token name, ParameterTypeList parameterTypeList) {
+        return getVirtualMethod(name, parameterTypeList, new LinkedList<>());
+    }
+    private CXMethod getVirtualMethod(Token name, ParameterTypeList parameterTypeList, List<Token> tokens) {
+        List<CXMethod> options = new LinkedList<>();
         for (CXMethod cxMethod : virtualMethodOrder) {
-            if(cxMethod.getName().equals(name) && parameterTypeList.equals(cxMethod.getParameterTypeList(),
+            if(cxMethod.getIdentifierName().equals(name.getImage()) && parameterTypeList.equals(cxMethod.getParameterTypeList(),
+                    environment)) {
+                if(parameterTypeList.equalsExact(cxMethod.getParameterTypeList(), environment)) {
+                    return cxMethod;
+                }
+                options.add(cxMethod);
+            }
+        }
+        if(options.size() == 0) return null;
+        if(options.size() >= 2) throw new AmbiguousMethodCallError(name, options, tokens);
+        return options.get(0);
+    }
+    
+    private CXMethod getConcreteMethod(Token name, ParameterTypeList parameterTypeList) {
+        for (CXMethod cxMethod : getAllConcreteMethods()) {
+            if(cxMethod.getIdentifierName().equals(name.getImage()) && parameterTypeList.equals(cxMethod.getParameterTypeList(),
                     environment)) {
                 return cxMethod;
             }
@@ -398,9 +476,20 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return null;
     }
     
-    private CXMethod getConcreteMethod(String name, ParameterTypeList parameterTypeList) {
+    private CXMethod getVirtualMethodStrict(String name, ParameterTypeList parameterTypeList) {
+        for (CXMethod cxMethod : virtualMethodOrder) {
+            if(cxMethod.getIdentifierName().equals(name) && parameterTypeList.equalsExact(cxMethod.getParameterTypeList(),
+                    environment)) {
+                return cxMethod;
+            }
+        }
+        return null;
+    }
+    
+    private CXMethod getConcreteMethodStrict(String name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : getAllConcreteMethods()) {
-            if(cxMethod.getName().equals(name) && parameterTypeList.equals(cxMethod.getParameterTypeList(), environment)) {
+            if(cxMethod.getIdentifierName().equals(name) && parameterTypeList.equalsExact(cxMethod.getParameterTypeList(),
+                    environment)) {
                 return cxMethod;
             }
         }
@@ -441,11 +530,12 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             }
         }
         
-        return new CXStructType(getCTypeName(), fieldDeclarations);
+        return new CXStructType(new Token(TokenType.t_id, getCTypeName()), fieldDeclarations);
     }
     
     public CXType getCTypeIndirection() {
-        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType.struct, getCTypeName());
+        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType.struct,
+                new Token(TokenType.t_typename, getCTypeName()));
     }
     
     
@@ -510,7 +600,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     
     private boolean isExistingVirtualMethod(String name) {
         for (CXMethod cxMethod : virtualMethodOrder) {
-            if(cxMethod.getName().equals(name)) return true;
+            if(cxMethod.getIdentifierName().equals(name)) return true;
         }
         return false;
     }
@@ -593,7 +683,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             return visibilityMap.containsKey(name);
         }
         for (CXMethod cxMethod : concreteMethodsOrder) {
-            if(cxMethod.getName().equals(name) && cxMethod.getParameterTypes().equals(types)) return true;
+            if(cxMethod.getIdentifierName().equals(name) && cxMethod.getParameterTypes().equals(types)) return true;
         }
         return false;
     }

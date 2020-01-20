@@ -1,9 +1,11 @@
 package radin.core.semantics.generics;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXStructType;
 import radin.core.semantics.types.compound.ICXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
@@ -95,7 +97,7 @@ public class CXGenericTypeInstance extends CXType implements ICXClassType {
     }
     
     @Override
-    public CXMethod getMethod(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+    public CXMethod getMethod(Token name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
         return null;
     }
     
@@ -110,7 +112,7 @@ public class CXGenericTypeInstance extends CXType implements ICXClassType {
     }
     
     @Override
-    public boolean isVirtual(String name, ParameterTypeList typeList) {
+    public boolean isVirtual(Token name, ParameterTypeList typeList) {
         return false;
     }
     
@@ -131,6 +133,26 @@ public class CXGenericTypeInstance extends CXType implements ICXClassType {
     
     @Override
     public CXIdentifier getTypeNameIdentifier() {
+        return null;
+    }
+    
+    @Override
+    public CXStructType getVTable() {
+        return null;
+    }
+    
+    @Override
+    public CXMethod getInitMethod() {
+        return null;
+    }
+    
+    @Override
+    public CXStructType getStructEquivalent() {
+        return null;
+    }
+    
+    @Override
+    public List<CXMethod> getGeneratedSupers() {
         return null;
     }
 }

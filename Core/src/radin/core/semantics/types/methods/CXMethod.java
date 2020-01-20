@@ -31,7 +31,8 @@ public class CXMethod implements CXEquivalent {
     
    
     
-    public CXMethod(CXClassType parent, Visibility visibility, String name, boolean isVirtual, CXType returnType, List<CXParameter> parameters,
+    public CXMethod(CXClassType parent, Visibility visibility, Token name, boolean isVirtual, CXType returnType,
+                    List<CXParameter> parameters,
                     AbstractSyntaxNode methodBody) {
         this.parent = parent;
         this.visibility = visibility;
@@ -62,11 +63,13 @@ public class CXMethod implements CXEquivalent {
         return visibility;
     }
     
-    public String getName() {
-        return name.getIdentifier();
+    public String getIdentifierName() {
+        return name.getIdentifierString();
     }
     
-    
+    public CXIdentifier getName() {
+        return name;
+    }
     
     public boolean isVirtual() {
         return isVirtual;
@@ -158,9 +161,9 @@ public class CXMethod implements CXEquivalent {
     public String getCMethodName() {
         
         int hash = getParameterMangle().hashCode();
-        hash += name.getIdentifier().hashCode();
+        hash += name.getIdentifierString().hashCode();
         hash = Math.abs(hash);
-        String prefix = name.getIdentifier();
+        String prefix = name.getIdentifierString();
         return prefix + hash;
         
         
@@ -224,7 +227,7 @@ public class CXMethod implements CXEquivalent {
     public CXMethod createSuperMethod(CXClassType child_class, String vtablename, CXMethod replacement) {
         String replacementName = replacement.getCMethodName();
         
-        String name = "super_" + this.getCFunctionName();
+        Token name = variableAST("super_" + this.getCFunctionName()).getToken();
         
         AbstractSyntaxNode oldDec = new AbstractSyntaxNode(ASTNodeType.declarations,
                 new TypeAbstractSyntaxNode(
@@ -331,7 +334,8 @@ public class CXMethod implements CXEquivalent {
     @Override
     public String toString() {
         return returnType.toString() + " " + getCFunctionName() + " (" +
-                getParametersExpanded().stream().map(CXParameter::toString).collect(Collectors.joining(" ,"))
+                getParameters().stream().map(CXParameter::getType).map(CXType::toString).collect(Collectors.joining("," +
+                        " "))
                 + ")";
     }
     @Override

@@ -6,14 +6,14 @@ import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.typeanalysis.errors.ClassNotDefinedError;
 import radin.core.output.typeanalysis.errors.IdentifierDoesNotExistError;
 import radin.core.output.typeanalysis.errors.RedeclarationError;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class VariableTypeTracker {
     
@@ -212,7 +212,7 @@ public class VariableTypeTracker {
         privateMethodEntries = new HashMap<>();
         privateFieldEntries = new HashMap<>();
         demoteEntries(privateFieldEntries, old.privateFieldEntries);
-        demoteEntries(privateFieldEntries, old.privateMethodEntries);
+        demoteEntries(privateMethodEntries, old.privateMethodEntries);
         privateConstructors = new HashSet<>(old.privateConstructors);
     }
     
@@ -416,6 +416,14 @@ public class VariableTypeTracker {
         
     }
     
+    public Set<String> allMethodsAvailable() {
+        Set<String> output = new HashSet<>();
+        output.addAll(publicMethodEntries.keySet().stream().map(o -> o.name).collect(Collectors.toList()));
+        output.addAll(internalMethodEntries.keySet().stream().map(o -> o.name).collect(Collectors.toList()));
+        output.addAll(privateMethodEntries.keySet().stream().map(o -> o.name).collect(Collectors.toList()));
+        return output;
+    }
+    
     public void addIsTracking(CXCompoundType type) {
         trackingTypes.add(type);
     }
@@ -498,7 +506,7 @@ public class VariableTypeTracker {
     
     
     public void addCompoundTypeMethodEntry(CXCompoundType parent, String name, CXType type, ParameterTypeList typeList,
-                                           HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {
+                                           HashMap<CompoundDeclarationKey, TypeTrackerEntry> methodEntries) {
         CompoundDeclarationKey key = new MethodKey(parent, name, typeList);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
         
@@ -507,7 +515,7 @@ public class VariableTypeTracker {
             System.out.println(((CXClassType) parent).classInfo());
             throw new RedeclareError(name);
         }
-        publicMethodEntries.put(key, typeTrackerEntry);
+        methodEntries.put(key, typeTrackerEntry);
         
     }
     

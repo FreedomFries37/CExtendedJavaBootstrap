@@ -12,6 +12,7 @@ import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;
 import radin.core.semantics.types.wrapped.*;
+import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Pair;
 import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
@@ -21,6 +22,8 @@ import radin.core.semantics.types.primitives.PointerType;
 
 
 import java.util.*;
+
+import static radin.core.lexical.TokenType.t_id;
 
 public class TypeEnvironment {
     
@@ -120,14 +123,14 @@ public class TypeEnvironment {
         );
     }
     
-    public void pushNamespace(String identifier) {
+    public void pushNamespace(Token identifier) {
         this.currentNamespace = new CXIdentifier(this.currentNamespace, identifier);
         namespaceTree.addNamespace(this.currentNamespace);
     }
     
     public CXType addTemp(Token tok) {
         String identifier = tok.getImage();
-        CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, identifier);
+        CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, tok);
         if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
         CXDelayedTypeDefinition delayedTypeDefinition = new CXDelayedTypeDefinition(cxIdentifier, tok, this);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
@@ -136,7 +139,7 @@ public class TypeEnvironment {
     
     public CXType addDeferred(Token tok) {
         String identifier = tok.getImage();
-        CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, identifier);
+        CXIdentifier cxIdentifier = new CXIdentifier(currentNamespace, tok);
         if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
         CXDeferredClassDefinition delayedTypeDefinition = new CXDeferredClassDefinition(tok, this, cxIdentifier);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
@@ -144,7 +147,7 @@ public class TypeEnvironment {
     }
     
     public CXMappedType getTempType(String identifier) {
-        return getTempType(new CXIdentifier(currentNamespace, identifier));
+        return getTempType(new CXIdentifier(currentNamespace, new Token(t_id, identifier)));
     }
     
     public CXMappedType getTempType(CXIdentifier identifier) {
@@ -157,9 +160,9 @@ public class TypeEnvironment {
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
-    public CXMappedType getTempType(CXIdentifier namespace, String identifier) {
+    public CXMappedType getTempType(CXIdentifier namespace, Token identifier) {
         
-        CXIdentifier actual = new CXIdentifier(namespace, identifier);
+        CXIdentifier actual = new CXIdentifier(namespace,  identifier);
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
@@ -240,19 +243,20 @@ public class TypeEnvironment {
     /**
      * Gets the type given a CXIdentifier
      * @param namespacedTypename a CXIdentifier. If the parent of the CXIdentifier is null, its treated as if its a call
-     *                           to {@link TypeEnvironment#getType(String, Token)}
+     *                           to {@link TypeEnvironment#getType(Token, Token)}
      * @param corresponding
      * @return the CXType
      * @throws TypeDoesNotExist
      */
     public CXType getType(CXIdentifier namespacedTypename, Token corresponding) {
-        if(namespacedTypename.getParentNamespace() == null) return getType(namespacedTypename.getIdentifier(), corresponding);
+        if(namespacedTypename.getParentNamespace() == null) return getType(namespacedTypename.getIdentifier(),
+                corresponding);
         
         List<CXType> output = new LinkedList<>();
     
         for (CXIdentifier namespace : namespaceTree.getNamespaces(currentNamespace, namespacedTypename.getParentNamespace())) {
             for (CXCompoundType cxCompoundType : namespaceTree.getTypesForNamespace(namespace)) {
-                if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(namespacedTypename.getIdentifier())) {
+                if(cxCompoundType.getTypeNameIdentifier().getIdentifierString().equals(namespacedTypename.getIdentifierString())) {
                     output.add(cxCompoundType);
                 }
             }
@@ -274,7 +278,7 @@ public class TypeEnvironment {
         throw new TypeDoesNotExist(new CXIdentifier(namespacedTypename.getParentNamespace(), namespacedTypename.getIdentifier()).toString());
     }
     
-    public CXType getType(String typenameImage, Token tok) {
+    public CXType getType(Token typenameImage, Token tok) {
         CXType output = null;
         if(typeDefinitions.containsKey(typenameImage)) {
             output = typeDefinitions.get(typenameImage);
@@ -286,7 +290,7 @@ public class TypeEnvironment {
         }
         List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(currentNamespace);
         if(typesForNamespace == null) {
-            throw new TypeDoesNotExist(typenameImage);
+            throw new TypeDoesNotExist(typenameImage.getImage());
         }
         List<CXType> possibilities = new LinkedList<>();
         for (CXCompoundType cxCompoundType : typesForNamespace) {
@@ -313,7 +317,7 @@ public class TypeEnvironment {
     
         
         if(output == null)
-            throw new TypeDoesNotExist(typenameImage);
+            throw new TypeDoesNotExist(typenameImage.getImage());
         return output;
     }
     
@@ -330,11 +334,11 @@ public class TypeEnvironment {
             AbstractSyntaxNode node = ast;
             CXIdentifier namespace = null;
             while (node.getType() == ASTNodeType.namespaced) {
-                namespace = new CXIdentifier(namespace, node.getChild(0).getToken().getImage());
+                namespace = new CXIdentifier(namespace, node.getChild(0).getToken());
                 node = node.getChild(1);
             }
             CXType output;
-            String image = node.getToken().getImage();
+            Token image = node.getToken();
             if((output = getTempType(namespace, image)) != null) {
                 return output;
             }
@@ -357,7 +361,7 @@ public class TypeEnvironment {
         
         if(ast.getType().equals(ASTNodeType.typename)) {
             String image = ast.getToken().getImage();
-            return getType(image, ast.getToken());
+            return getType(ast.getToken(), ast.getToken());
         }
         
         if(ast.getType().equals(ASTNodeType.pointer_type)) {
@@ -414,9 +418,9 @@ public class TypeEnvironment {
                 return createType(ast.getChild(ASTNodeType.basic_compound_type_dec), null);
             } else if(ast.hasChild(ASTNodeType.compound_type_reference)) {
                 AbstractSyntaxNode name = ast.getChild(ASTNodeType.compound_type_reference).getChild(ASTNodeType.id);
-                String image = name.getToken().getImage();
-                if(namedCompoundTypeExists(image)) {
-                    return getNamedCompoundType(image);
+                Token image = name.getToken();
+                if(namedCompoundTypeExists(image.getImage())) {
+                    return getNamedCompoundType(image.getImage());
                 } else {
                     CXCompoundTypeNameIndirection.CompoundType type;
                     boolean addTypeDef = false;
@@ -438,7 +442,7 @@ public class TypeEnvironment {
                     CXCompoundTypeNameIndirection CXCompoundTypeNameIndirection = new CXCompoundTypeNameIndirection(type, image);
                     lateBoundReferences.add(CXCompoundTypeNameIndirection);
                     if(addTypeDef) {
-                        addTypeDefinition(CXCompoundTypeNameIndirection, image);
+                        addTypeDefinition(CXCompoundTypeNameIndirection, image.getImage());
                     }
                     return CXCompoundTypeNameIndirection;
                 }
@@ -477,7 +481,7 @@ public class TypeEnvironment {
     private CXCompoundType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
         
         AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
-        String name = nameAST != null? nameAST.getToken().getImage() : null;
+        Token name = nameAST != null? nameAST.getToken() : null;
         boolean isAnonymous = name == null;
         CXCompoundType output;
         if(ast.getType().equals(ASTNodeType.basic_compound_type_dec)) {
@@ -592,6 +596,9 @@ public class TypeEnvironment {
             cxClassType.addConstructors(constructors);
             createdClasses.add(cxClassType);
             cxClassType.setEnvironment(this);
+    
+            ICompilationSettings.debugLog.info("Created new class " + cxClassType.getTypeNameIdentifier()
+                + (cxClassType.getParent() != null ? " : " + cxClassType.getParent().getTypeNameIdentifier() : ""));
             
             
             List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(namespace);
@@ -698,7 +705,7 @@ public class TypeEnvironment {
         TypeAbstractSyntaxNode typedAST = (TypeAbstractSyntaxNode) ast;
         
         CXType returnType = typedAST.getCxType();
-        String name = ast.getChild(ASTNodeType.id).getToken().getImage();
+        Token name = ast.getChild(ASTNodeType.id).getToken();
         AbstractSyntaxNode after = ast.getChild(ASTNodeType.compound_statement);
         
         List<CXParameter> parameters = createParameters(ast.getChild(ASTNodeType.parameter_list));
@@ -770,6 +777,7 @@ public class TypeEnvironment {
         } else if(o1 instanceof ICXWrapper && o2 instanceof ICXWrapper) {
             return is(((ICXWrapper) o1).getWrappedType(), o2);
         }
+        
         return o1.is(o2,this);
     }
     
@@ -784,10 +792,12 @@ public class TypeEnvironment {
     public boolean isStrict(CXType o1, CXType o2) {
         
         if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
-            return is(o1, ((ConstantType) o2).getSubtype());
+            return isStrict(o1, ((ConstantType) o2).getSubtype());
         }
-        if(o2 instanceof CXDynamicTypeDefinition) {
-            return is(o1, ((CXDynamicTypeDefinition) o2).getOriginal());
+        if(!(o1 instanceof ICXWrapper) && o2 instanceof ICXWrapper) {
+            return isStrict(o1, ((ICXWrapper) o2).getWrappedType());
+        } else if(o1 instanceof ICXWrapper && o2 instanceof ICXWrapper) {
+            return isStrict(((ICXWrapper) o1).getWrappedType(), o2);
         }
         return o1.is(o2,this, true);
     }

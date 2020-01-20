@@ -1,8 +1,10 @@
 package radin.core.output.midanalysis;
 
+
 import radin.core.output.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.utility.ICompilationSettings;
 
 import java.util.Stack;
 
@@ -26,17 +28,21 @@ public abstract class ScopedTypeTracker {
     public void typeTrackingClosure() {
         VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker();
         trackerStack.push(next);
+        ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size()));
     }
     
     public void typeTrackingClosure(CXClassType classType) {
         VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker(classType);
         trackerStack.push(next);
+        ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size()+ " " + "#".repeat(trackerStack.size()) + "    Inheriting from " + classType + " scope");
     }
     
     public void typeTrackingClosureLoad(CXClassType cxClassType) {
         if(!VariableTypeTracker.trackerPresent(cxClassType)) typeTrackingClosure();
         VariableTypeTracker next = trackerStack.peek().createInnerTypeTrackerLoad(cxClassType);
         trackerStack.push(next);
+        ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size())
+        + "    Loading into " + cxClassType + " scope");
     }
     
     public static TypeEnvironment getEnvironment() {
@@ -58,6 +64,7 @@ public abstract class ScopedTypeTracker {
     public void releaseTrackingClosure() {
         trackerStack.pop();
         getCurrentTracker().removeParentlessStructFields();
+        ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size()));
     }
     
     

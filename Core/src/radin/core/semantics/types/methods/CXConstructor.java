@@ -1,5 +1,7 @@
 package radin.core.semantics.types.methods;
 
+import radin.core.lexical.Token;
+import radin.core.lexical.TokenType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
@@ -14,7 +16,8 @@ public class CXConstructor extends CXMethod {
     
     public CXConstructor(CXClassType parent, Visibility visibility, List<CXParameter> parameters,
                          AbstractSyntaxNode methodBody, AbstractSyntaxNode correspondingASTNode) {
-        super(parent, visibility, createConstructorName(parent, parameters), false, new PointerType(parent), parameters,
+        super(parent, visibility, createConstructorName(parent, parameters, correspondingASTNode), false, new PointerType(parent),
+                parameters,
                 methodBody);
         this.correspondingASTNode = correspondingASTNode;
     }
@@ -27,10 +30,13 @@ public class CXConstructor extends CXMethod {
         this.priorConstructor = priorConstructor;
     }
     
-    private static String createConstructorName(CXClassType parent, List<CXParameter> parameters) {
-        
-        
-        return "construct_" + parent.getTypeNameIdentifier().generateCDefinitionNoHash() + Math.abs(parameters.hashCode()) + '_';
+    private static Token createConstructorName(CXClassType parent, List<CXParameter> parameters, AbstractSyntaxNode corresponding) {
+        Token corr = corresponding.getChild(0).getToken();
+        return new Token(TokenType.t_id,
+                "construct_" + parent.getTypeNameIdentifier().generateCDefinitionNoHash() + Math.abs(parameters.hashCode()) + '_').addColumnAndLineNumber(
+                corr.getColumn(),
+                corr.getLineNumber()
+        );
         
     }
     

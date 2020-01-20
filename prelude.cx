@@ -24,11 +24,11 @@ int main(int argc, char* argv[]) {
 
 	std::String args[argc - 1];
 	for(int i = 1; i < argc; ++i) {
-		args[i - 1] = inc<std::String>(new std::String(argv[i]));
+		args[i - 1] = new std::String(argv[i]);
 	}
 	_main(argc-1, args);
 	for(int i = 1; i < argc; ++i) {
-    		dec<std::String>(args[i - 1]);
+    		args[i - 1]->drop();
     }
 	return 0;
 }

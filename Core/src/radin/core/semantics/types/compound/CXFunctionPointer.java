@@ -8,6 +8,7 @@ import radin.core.semantics.types.primitives.CXPrimitiveType;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CXFunctionPointer extends AbstractCXPrimitiveType {
     
@@ -67,6 +68,12 @@ public class CXFunctionPointer extends AbstractCXPrimitiveType {
     
     public CXType getReturnType() {
         return returnType;
+    }
+    
+    @Override
+    public String toString() {
+        return returnType.toString() + " (*) (" + parameterTypes.stream().map(CXType::toString).collect(Collectors.joining(
+                ", ")) + ")";
     }
     
     @Override

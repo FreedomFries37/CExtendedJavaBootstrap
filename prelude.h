@@ -3,6 +3,7 @@ in std class String;
 
 
 void* malloc(unsigned int sz);
+void* calloc(unsigned int num, unsigned int sz);
 void free(void* ptr);
 
 void print(const char* c);
@@ -10,12 +11,13 @@ void println(const char* c);
 void print_s(std::String o);
 void println_s(std::String o);
 
+/*
 public <T> T inc(T o) {
 	if((int) o == 0) return o;
 	++o->references;
 	return o;
 }
-
+`
 public <T> T dec(T o) {
 	if((int) o == 0) return o;
 	--o->references;
@@ -25,6 +27,7 @@ public <T> T dec(T o) {
 	}
 	return o;
 }
+*/
 
 in std {
 	[setAsDefaultInheritance]
@@ -47,9 +50,11 @@ in std {
 
 		virtual public String toString();
 
-		public ClassInfo getClassInfo() {
+		public ClassInfo getClass() {
 			return this->info;
 		}
+
+
 	};
 
 	class ClassInfo {
@@ -62,6 +67,11 @@ in std {
 		public String getName() {
 			return this->name;
 		}
+
+		public int is(Object o);
+
+		virtual public int equals(Object other);
+		virtual public int equals(ClassInfo other);
 	};
 
 	class String{

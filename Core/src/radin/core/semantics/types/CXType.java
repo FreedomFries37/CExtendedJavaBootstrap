@@ -46,4 +46,10 @@ public abstract class CXType implements CXEquivalent {
     final public PointerType toPointer() {
         return new PointerType(this);
     }
+    
+    public boolean isExact(CXType other, TypeEnvironment e) {
+        boolean leftLTE = e.isStrict(this, other);
+        boolean rightLTE = e.isStrict(other, this);
+        return leftLTE && rightLTE;
+    }
 }

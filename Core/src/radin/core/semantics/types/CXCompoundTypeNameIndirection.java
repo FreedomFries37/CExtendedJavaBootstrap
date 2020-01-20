@@ -1,5 +1,7 @@
 package radin.core.semantics.types;
 
+import radin.core.lexical.Token;
+import radin.core.lexical.TokenType;
 import radin.core.semantics.exceptions.TypeDoesNotExist;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXCompoundType;
@@ -21,7 +23,7 @@ public class CXCompoundTypeNameIndirection extends CXType {
     private CompoundType compoundType;
     private CXIdentifier typename;
     
-    public CXCompoundTypeNameIndirection(CompoundType compoundType, String typename) {
+    public CXCompoundTypeNameIndirection(CompoundType compoundType, Token typename) {
         this.compoundType = compoundType;
         this.typename = new CXIdentifier(typename, false);
     }
@@ -50,21 +52,21 @@ public class CXCompoundTypeNameIndirection extends CXType {
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof ICXCompoundType || other instanceof CXCompoundTypeNameIndirection)) return false;
-        CXCompoundType namedCompoundType = e.getNamedCompoundType(typename.getIdentifier());
+        CXCompoundType namedCompoundType = e.getNamedCompoundType(typename.getIdentifierString());
         if(other instanceof ICXCompoundType) {
             if(namedCompoundType == null){
                 return false;
             }
             return e.is(namedCompoundType, other);
         } else {
-            if(!e.namedCompoundTypeExists(((CXCompoundTypeNameIndirection) other).typename.getIdentifier())) {
+            if(!e.namedCompoundTypeExists(((CXCompoundTypeNameIndirection) other).typename.getIdentifierString())) {
                 if(this.compoundType == ((CXCompoundTypeNameIndirection) other).compoundType && this.typename.equals(((CXCompoundTypeNameIndirection) other).typename)) {
                     return true;
                 }
-                throw new TypeDoesNotExist(((CXCompoundTypeNameIndirection) other).typename.getIdentifier());
+                throw new TypeDoesNotExist(((CXCompoundTypeNameIndirection) other).typename.getIdentifierString());
             }
             return e.is(namedCompoundType,
-                    e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename.getIdentifier()));
+                    e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename.getIdentifierString()));
             //return namedCompoundType.is(e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename), e);
         }
     }
@@ -79,7 +81,7 @@ public class CXCompoundTypeNameIndirection extends CXType {
     
     @Override
     public boolean isValid(TypeEnvironment e) {
-        return e.namedCompoundTypeExists(typename.getIdentifier());
+        return e.namedCompoundTypeExists(typename.getIdentifierString());
     }
     
     @Override
@@ -89,18 +91,18 @@ public class CXCompoundTypeNameIndirection extends CXType {
     
     @Override
     public long getDataSize(TypeEnvironment e) {
-        return e.getNamedCompoundType(typename.getIdentifier()).getDataSize(e);
+        return e.getNamedCompoundType(typename.getIdentifierString()).getDataSize(e);
     }
     
     @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
-        return e.getNamedCompoundType(typename.getIdentifier());
+        return e.getNamedCompoundType(typename.getIdentifierString());
     }
     
     @Override
     public CXType getCTypeIndirection() {
         if(compoundType.equals(CompoundType._class)) return new CXCompoundTypeNameIndirection(CompoundType.struct,
-            "class_" + typename);
+            new Token(TokenType.t_id, "class_" + typename.getIdentifierString()));
         return new CXCompoundTypeNameIndirection(compoundType, typename);
     }
 }

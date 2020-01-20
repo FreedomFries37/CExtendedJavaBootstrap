@@ -22,6 +22,8 @@ import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.core.input.ISemanticAnalyzer;
 import radin.core.output.core.input.frontend.v1.InheritMissingError;
+import radin.core.semantics.types.wrapped.CXDeferredClassDefinition;
+import radin.core.utility.ICompilationSettings;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -44,6 +46,13 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     private List<AbstractSyntaxNode> successOrder;
     
     private TypeEnvironment environment;
+    
+    private long runCount = 0;
+    
+    @Override
+    public TypeEnvironment getEnvironment() {
+        return environment;
+    }
     
     public ActionRoutineApplier() {
         catNodeStack = new Stack<>();
@@ -85,6 +94,16 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
         return false;
     }
     
+    @Override
+    public long getRunCount() {
+        return runCount;
+    }
+    
+    @Override
+    public void resetRunCount() {
+        runCount = 0;
+    }
+    
     public List<AbstractCompilationError> getErrors() {
         List<AbstractCompilationError> output = new LinkedList<>(getStringErrors());
         output.addAll(errors);
@@ -92,6 +111,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     }
     
     public boolean enactActionRoutine(ParseNode node) {
+        ++runCount;
         try {
             if(node instanceof LeafNode) {
                 boolean b = enactActionRoutine((LeafNode) node);
@@ -107,7 +127,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 stringErrors.push(null);
                 boolean b = enactActionRoutine(catNode);
                 if(!b) {
-                    System.out.println("Failed to enact action routine for " +
+                    System.err.println("Failed to enact action routine for " +
                             String.format("%-30s", node) +
                             (node.hasChildren()? "(CHILDREN = " + ((CategoryNode) node).getAllChildren() + ")" : "") +
                             (stringErrors.peek() == null ? "" : String.format("  %60s", "Error: " + stringErrors.peek())));
@@ -773,7 +793,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                 nameAST
                         );
                         AbstractSyntaxNode outer = new AbstractSyntaxNode(ASTNodeType.specifier, specifierInner);
-                        CXType type = environment.getType(outer);
+                        CXDeferredClassDefinition type = ((CXDeferredClassDefinition) environment.getType(outer));
+                        ICompilationSettings.debugLog.info("Added deferred type for " + type.getIdentifier().fullInfo());
                         node.setSynthesized(
                                 new TypeAbstractSyntaxNode(ASTNodeType.specifier, type, specifierInner)
                         );
@@ -908,7 +929,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                     
                                     // this a function pointer
                                     
-                                    System.out.println("function pointer");
+                                    // System.out.println("function pointer");
                                     List<CXType> parameters = new LinkedList<>();
                                     for (AbstractSyntaxNode abstractSyntaxNode : directDeclaratorTail.getChild(1).getChildList()) {
                                         assert abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
@@ -938,7 +959,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "DirectDeclaratorTail": {
-                        System.out.println(node.getAllChildren());
+                        // System.out.println(node.getAllChildren());
                         CXType type = environment.getType(node.getInherit(0));
                         if(node.hasChildren()) {
                             //node.printTreeForm();
@@ -1064,7 +1085,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     case "IterationStatement": {
                         AbstractSyntaxNode statement = getCatNode("Statement").getSynthesized();
                         
-                        System.out.println(node.getAllChildren());
+                        // System.out.println(node.getAllChildren());
                         if(node.firstIs(TokenType.t_for)) {
                             AbstractSyntaxNode first, second, third = AbstractSyntaxNode.EMPTY;
                             if(node.hasChildCategory("Declaration")) {
@@ -1128,7 +1149,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "SelectionStatement": {
                         if(node.firstIs(TokenType.t_if)) {
-                            System.out.println(node.getAllChildren());
+                            // System.out.println(node.getAllChildren());
                             
                             AbstractSyntaxNode topExpression = getCatNode("TopExpression").getSynthesized();
                             AbstractSyntaxNode ifYes = getCatNode("Statement", 1).getSynthesized();
@@ -1265,7 +1286,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             visibility = new AbstractSyntaxNode(ASTNodeType.visibility, new Token(TokenType.t_internal));
                         }
                         
-                        System.out.println(node.getAllChildren());
+                        // System.out.println(node.getAllChildren());
                         AbstractSyntaxNode inner;
                         if(node.hasChildCategory("Declaration")) {
                             inner = getCatNode("Declaration").getSynthesized();
@@ -1332,7 +1353,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "InIdentifier": {
-                        String id = node.getLeafNode(TokenType.t_id).getToken().getImage();
+                        Token id = node.getLeafNode(TokenType.t_id).getToken();
                         boolean push = false;
                         try{
                             node.setSynthesized(
@@ -1352,7 +1373,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "NamespacedType": {
-                        System.out.println(node.getDirectChildren());
+                        // System.out.println(node.getDirectChildren());
                         
                         if(node.hasChildToken(TokenType.t_typename)) {
                             node.setSynthesized(node.getLeafNode(TokenType.t_typename).getSynthesized());
@@ -1447,10 +1468,14 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 }
                 cont = false;
             }catch ( InvalidPrimitiveException | TypeDoesNotExist e) {
+                ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
+                ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);
                 error(e.getMessage());
                 cont = false;
             }catch (AbstractCompilationError e) {
                 errors.add(e);
+                ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
+                ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);
                 cont = false;
             }
         }

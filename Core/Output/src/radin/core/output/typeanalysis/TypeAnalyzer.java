@@ -1,5 +1,7 @@
 package radin.core.output.typeanalysis;
 
+import com.sun.tools.javac.Main;
+import radin.core.chaining.IInPlaceCompilerAnalyzer;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
 import radin.core.errorhandling.ICompilationErrorCollector;
@@ -15,7 +17,7 @@ import radin.core.utility.ICompilationSettings;
 
 import java.util.*;
 
-public abstract class TypeAnalyzer extends ScopedTypeTracker implements ICompilationErrorCollector {
+public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlaceCompilerAnalyzer<TypeAugmentedSemanticNode> {
     
     
     private TypeAugmentedSemanticNode tree;
@@ -75,7 +77,15 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements ICompila
         }
     }
     
+    @Override
+    public void setHead(TypeAugmentedSemanticNode object) {
+        tree = object;
+    }
     
+    @Override
+    public boolean invoke() {
+        return determineTypes();
+    }
     
     public boolean determineTypes() {
         try {
@@ -84,17 +94,29 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements ICompila
             Token closestToken = tree.findFailureToken();
             CompilationError error = new CompilationError(e, closestToken);
             errors.add(error);
+            ICompilationSettings.debugLog.throwing(getClass().getName(),  "TypeAnalyzer(TypeAugmentedSemanticNode " +
+                    "tree)", e);
+            // ICompilationSettings.debugLog.warning(error.getClass().getSimpleName() + ": " + error.getMessage());
+    
             return true;
         }catch (AbstractCompilationError compilationError) {
             setIsFailurePoint(tree);
             errors.add(compilationError);
             //tree.printTreeForm();
+            ICompilationSettings.debugLog.throwing(getClass().getName(),  "TypeAnalyzer(TypeAugmentedSemanticNode " +
+                    "tree)", compilationError);
+            // ICompilationSettings.debugLog.warning(compilationError.getClass().getSimpleName() + ": " +
+            // compilationError.getMessage());
             return false;
         } catch (Error e) {
             setIsFailurePoint(tree);
             Token closestToken = tree.findFailureToken();
             CompilationError error = new CompilationError(e.getMessage(), closestToken);
             errors.add(error);
+            ICompilationSettings.debugLog.throwing(getClass().getName(),  "TypeAnalyzer(TypeAugmentedSemanticNode " +
+                    "tree)", e);
+            // ICompilationSettings.debugLog.warning(e.getClass().getSimpleName() + ": " + e.getMessage());
+    
             //tree.printTreeForm();
             return false;
         }
@@ -146,5 +168,7 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements ICompila
     
     protected void setIsFailurePoint(TypeAugmentedSemanticNode node) {
         node.setFailurePoint(true);
+        ICompilationSettings.debugLog.severe(node.findFirstToken().info());
+        ICompilationSettings.debugLog.finest("\n" + node.toTreeForm());
     }
 }

@@ -1,5 +1,6 @@
 package radin.core.output.midanalysis.typeanalysis.analyzers;
 
+import radin.core.lexical.Token;
 import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
@@ -19,6 +20,7 @@ import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.typeanalysis.errors.RedeclarationError;
+import radin.core.utility.ICompilationSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -105,12 +107,21 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                         ((TypeAbstractSyntaxNode) clsLevelDec.getASTChild(astType).getASTNode());
                 
                 CXType returnType = astNode.getCxType();
-                String name = astNode.getChild(ASTNodeType.id).getToken().getImage();
+                Token name = astNode.getChild(ASTNodeType.id).getToken();
                 List<CXType> parameterTypes = new LinkedList<>();
+                /*
                 for (AbstractSyntaxNode abstractSyntaxNode : astNode.getChild(ASTNodeType.parameter_list)) {
                     assert  abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
                     CXType paramType = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
                     parameterTypes.add(paramType);
+                }
+               
+                 */
+                for (TypeAugmentedSemanticNode child :
+                        clsLevelDec.getASTChild(astType).getASTChild(ASTNodeType.parameter_list).getChildren()) {
+                    CXType paramType = ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType();
+                    parameterTypes.add(paramType);
+                    child.setType(paramType);
                 }
                 
                 
@@ -122,8 +133,8 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 boolean isVirtual  = astNode.hasChild(ASTNodeType._virtual);
                 ParameterTypeList parameterTypeList = type.getParameterTypeList();
                 
-                if(isVirtual && getCurrentTracker().methodVisible(cxClassType, name, parameterTypeList)) {
-                    CXType virtType = getCurrentTracker().getMethodType(cxClassType, name, parameterTypeList);
+                if(isVirtual && getCurrentTracker().methodVisible(cxClassType, name.getImage(), parameterTypeList)) {
+                    CXType virtType = getCurrentTracker().getMethodType(cxClassType, name.getImage(), parameterTypeList);
                     if(!is(returnType, virtType)) {
                         
                         throw new IncorrectReturnTypeError(virtType, returnType);
@@ -132,19 +143,20 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                     
                     
                     assert visibility != null;
-                    
+                    ICompilationSettings.debugLog.finest("Added " + visibility.toString() + " " + returnType.generateCDeclaration(name.getImage()) + parameterTypeList);
                     switch (visibility) {
                         case _public: {
-                            getCurrentTracker().addPublicMethod(cxClassType, name, returnType,
+                            
+                            getCurrentTracker().addPublicMethod(cxClassType, name.getImage(), returnType,
                                     parameterTypeList);
                             break;
                         }
                         case internal: {
-                            getCurrentTracker().addInternalMethod(cxClassType, name, returnType, parameterTypeList);
+                            getCurrentTracker().addInternalMethod(cxClassType, name.getImage(), returnType, parameterTypeList);
                             break;
                         }
                         case _private: {
-                            getCurrentTracker().addPrivateMethod(cxClassType, name, returnType, parameterTypeList);
+                            getCurrentTracker().addPrivateMethod(cxClassType, name.getImage(), returnType, parameterTypeList);
                             break;
                         }
                     }
@@ -194,12 +206,17 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
         }
         
         for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
+            ICompilationSettings.debugLog.info("Generated Super: " + generatedSuper.toString());
             AbstractSyntaxNode methodBody = generatedSuper.getMethodBody();
             TypeAugmentedSemanticNode tree =
                     new TypeAugmentedSemanticTree(methodBody, cxClassType.getEnvironment()).getHead();
             typeTrackingClosure();
             getCurrentTracker().addVariable("this", cxClassType.toPointer());
-            getCurrentTracker().addVariable("__this", cxClassType.toPointer());
+            
+    
+            for (CXParameter cxParameter : generatedSuper.getParametersExpanded()) {
+                getCurrentTracker().addVariable(cxParameter.getName(), cxParameter.getType());
+            }
     
             CXStructType vTable = cxClassType.getVTable();
             if(!getCurrentTracker().isTracking(vTable)) {
@@ -210,9 +227,14 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             for (CXMethod cxMethod : cxClassType.getParent().getVirtualMethodsOrder()) {
                 getCurrentTracker().addVariable(cxMethod.getCFunctionName(), cxMethod.getFunctionPointer());
             }
+            
             CompoundStatementTypeAnalyzer analyzer = new CompoundStatementTypeAnalyzer(tree,
                     generatedSuper.getReturnType(), false);
-            if(!determineTypes(analyzer)) return false;
+            if(!determineTypes(analyzer)) {
+                ICompilationSettings.debugLog.severe("Generated super method incorrectly formed");
+                ICompilationSettings.debugLog.severe("Super: " + generatedSuper.getCFunctionName());
+                return false;
+            }
             releaseTrackingClosure();
     
             MethodTASNTracker.getInstance().add(generatedSuper, tree);

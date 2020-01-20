@@ -19,6 +19,7 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public void setOptimizationLevel(int value) {
+        debugLog.config("Optimization Level = " + value);
         optimizationLevel = value;
     }
     
@@ -29,11 +30,13 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public boolean getUseStackTrace() {
+        
         return useStackTrace;
     }
     
     @Override
     public void setUseStackTrace(boolean value) {
+        debugLog.config("Use Stack Trace = " + value);
         useStackTrace = value;
     }
     
@@ -44,6 +47,7 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public void setUseTryCatch(boolean value) {
+        debugLog.config("Use Try/Catch blocks = " + value);
         useTryCatch = value;
     }
     
@@ -54,6 +58,7 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public void setAutoCreateStrings(boolean value) {
+        debugLog.config("String literals are std::String objects = " + value);
         createStrings = value;
     }
     
@@ -72,16 +77,19 @@ public class CompilationSettings implements ICompilationSettings {
     }
     
     public void setvTableName(String vTableName) {
+        debugLog.config("vtable field name = " + vTableName);
         this.vTableName = vTableName;
     }
     
     @Override
     public boolean isReduceIndirection() {
+        
         return reduceIndirection;
     }
     
     @Override
     public void setReduceIndirection(boolean reduceIndirection) {
+        debugLog.config("Reduce indirection = " + reduceIndirection);
         this.reduceIndirection = reduceIndirection;
     }
     
@@ -92,6 +100,7 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public void setShowErrorStackTrace(boolean showErrorStackTrace) {
+        debugLog.config("Show error stack trace in Action Routine Applier = " + reduceIndirection);
         this.showErrorStackTrace = showErrorStackTrace;
     }
     
@@ -102,6 +111,7 @@ public class CompilationSettings implements ICompilationSettings {
     
     @Override
     public void setTabSize(int tabSize) {
+        debugLog.config("default tab = \"" + " ".repeat(tabSize) + "\"");
         this.tabSize = tabSize;
     }
 }

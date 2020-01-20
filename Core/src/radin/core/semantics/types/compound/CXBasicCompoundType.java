@@ -1,5 +1,6 @@
 package radin.core.semantics.types.compound;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
@@ -16,11 +17,11 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
         super(f1, fields);
     }
     
-    public CXBasicCompoundType(String name, List<FieldDeclaration> fields) {
+    public CXBasicCompoundType(Token name, List<FieldDeclaration> fields) {
         super(new CXIdentifier(name, false), fields);
     }
     
-    public CXBasicCompoundType(String name, FieldDeclaration f1, FieldDeclaration... fields) {
+    public CXBasicCompoundType(Token name, FieldDeclaration f1, FieldDeclaration... fields) {
         super(new CXIdentifier(name, false), f1, fields);
     }
     

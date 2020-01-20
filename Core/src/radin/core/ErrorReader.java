@@ -1,6 +1,7 @@
-package radin;
+package radin.core;
 
 import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.utility.ICompilationSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +10,11 @@ import java.util.regex.Pattern;
 
 public class ErrorReader {
     
-   
+    private static ICompilationSettings settings;
+    
+    public static void setSettings(ICompilationSettings settings) {
+        ErrorReader.settings = settings;
+    }
     
     private static class LineHolder {
         public final String fileName;
@@ -63,8 +68,9 @@ public class ErrorReader {
         String outputedFileName = null;
         for (AbstractCompilationError error : errors) {
             // System.out.println(error.getError());
-            
-            
+            ICompilationSettings.debugLog.warning(error.getClass().getSimpleName() + ":" + error.getMessage());
+    
+    
             List<AbstractCompilationError.ErrorInformation> infoMessages = new LinkedList<>();
             LineHolder lineHolderCurrent = null;
             int maxSize = 0;
@@ -88,7 +94,7 @@ public class ErrorReader {
                     }
                     
                     if(!errorPrinted) {
-                        if (!Main.getSettings().isShowErrorStackTrace())
+                        if (!settings.isShowErrorStackTrace())
                             System.out.println(error.toString());
                         else
                             error.printStackTrace(System.out);
@@ -118,7 +124,7 @@ public class ErrorReader {
                     outputedFileName = lineHolderCurrent.fileName;
                 }
                 if(!errorPrinted) {
-                    if (!Main.getSettings().isShowErrorStackTrace())
+                    if (!settings.isShowErrorStackTrace())
                         System.out.println(error.toString());
                     else
                         error.printStackTrace(System.out);

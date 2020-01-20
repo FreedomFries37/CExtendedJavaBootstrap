@@ -1,7 +1,11 @@
 package radin.core.utility;
 
 
+import radin.core.JodinLogger;
+
 import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public interface ICompilationSettings {
     
@@ -11,19 +15,22 @@ public interface ICompilationSettings {
      */
     default void setExperimental(boolean value) {
         if(value) {
+            debugLog.warning("Using Experimental Settings are not guaranteed to work properly, and can potentially be" +
+                    " very inefficient");
             try {
                 for (Method declaredMethod : ICompilationSettings.class.getDeclaredMethods()) {
                     if (declaredMethod.isAnnotationPresent(ExperimentalSetting.class)) {
                         ExperimentalSetting annotation = declaredMethod.getAnnotation(ExperimentalSetting.class);
+                        debugLog.warning("Using experimental setting for " + declaredMethod.getName());
                         if (annotation.useBooleanValue()) {
                             boolean val = annotation.defaultBooleanUseSetting();
-                            declaredMethod.invoke(val);
+                            declaredMethod.invoke(this, val);
                         } else if(annotation.useIntegerValue()) {
                             int val = annotation.defaultIntUseSetting();
-                            declaredMethod.invoke(val);
+                            declaredMethod.invoke(this, val);
                         } else if(annotation.useStringValue()) {
                             String val = annotation.defaultStringUseSetting();
-                            declaredMethod.invoke(val);
+                            declaredMethod.invoke(this, val);
                         }
             
                     }
@@ -46,7 +53,7 @@ public interface ICompilationSettings {
      * All function calls now run through a stack
      * @return
      */
-    @ExperimentalSetting
+    @ExperimentalSetting(useBooleanValue = true)
     void setUseStackTrace(boolean value);
     boolean getUseStackTrace();
     
@@ -54,7 +61,7 @@ public interface ICompilationSettings {
      * Compile with added option of try/catch blocks
      * @param value
      */
-    @ExperimentalSetting
+    @ExperimentalSetting(useBooleanValue = true)
     void setUseTryCatch(boolean value);
     boolean getUseTryCatch();
     
@@ -62,7 +69,7 @@ public interface ICompilationSettings {
      * string literals are automatically turned into string objects
      * @param value
      */
-    @ExperimentalSetting
+    @ExperimentalSetting(useBooleanValue = true)
     void setAutoCreateStrings(boolean value);
     boolean autoCreateStrings();
     
@@ -99,4 +106,10 @@ public interface ICompilationSettings {
     int getTabSize();
     
     void setTabSize(int tabSize);
+    
+    JodinLogger debugLog = new JodinLogger("debug.log");
+    
+    default void setLogLevel(Level logLevel) {
+        debugLog.setLevel(logLevel);
+    }
 }

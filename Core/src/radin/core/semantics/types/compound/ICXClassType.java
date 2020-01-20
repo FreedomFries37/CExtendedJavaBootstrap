@@ -1,5 +1,6 @@
 package radin.core.semantics.types.compound;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Visibility;
@@ -34,13 +35,13 @@ public interface ICXClassType extends ICXCompoundType {
     
     CXConstructor getConstructor(ParameterTypeList parameterTypeList);
     
-    CXMethod getMethod(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual);
+    CXMethod getMethod(Token name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual);
     
     void generateSuperMethods(String vtablename);
     
     CXMethod getSuperMethod(String name, ParameterTypeList typeList);
     
-    boolean isVirtual(String name, ParameterTypeList typeList);
+    boolean isVirtual(Token name, ParameterTypeList typeList);
     
     CXStructType getStructEquivalent();
     

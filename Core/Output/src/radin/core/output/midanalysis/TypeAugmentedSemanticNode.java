@@ -197,7 +197,7 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
             else output = astNode.toString() + " -> " + type.toString() + " [R]";
         }
         if(!compilationTags.isEmpty())
-            output += "  compilation radin.tags: " + compilationTags;
+            output += "  compilation tags: " + compilationTags;
         return output;
     }
     

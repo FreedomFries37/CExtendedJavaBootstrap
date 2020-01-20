@@ -4,9 +4,11 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
+import radin.core.semantics.types.primitives.PointerType;
 
 import java.util.LinkedList;
 import java.util.Objects;
@@ -26,6 +28,10 @@ public class CXDeferredClassDefinition extends CXMappedType {
     @Override
     protected CXType getType() {
         return environment.getType(identifier, corresponding);
+    }
+    
+    public CXIdentifier getIdentifier() {
+        return identifier;
     }
     
     @Override
@@ -64,6 +70,16 @@ public class CXDeferredClassDefinition extends CXMappedType {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
+        
+        if(other instanceof ICXWrapper) {
+            return is(((ICXWrapper) other).getWrappedType(), e, strictPrimitiveEquality);
+        }
+        
+        if(other instanceof PointerType && ((PointerType) other).getSubType() instanceof CXClassType) {
+            CXClassType subType = (CXClassType) ((PointerType) other).getSubType();
+            return temp.getTypeNameIdentifier().equals(subType.getTypeNameIdentifier());
+        }
+        
         update();
         if(actual != null) {
             if(strictPrimitiveEquality) {
@@ -80,7 +96,12 @@ public class CXDeferredClassDefinition extends CXMappedType {
         return getWrappedType().toString();
     }
     
-    
+    @Override
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        update();
+        if(actual == null) return super.getTypeRedirection(e);
+        return getWrappedType().getTypeRedirection(e);
+    }
     
     @Override
     public CXType getWrappedType() {

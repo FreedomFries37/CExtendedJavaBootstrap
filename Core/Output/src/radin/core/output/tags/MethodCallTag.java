@@ -18,6 +18,6 @@ public class MethodCallTag extends AbstractCompilationTag {
     
     @Override
     public String toString() {
-        return super.toString() + " " + method.getCFunctionName();
+        return super.toString() + " " + method.toString();
     }
 }

@@ -18,6 +18,6 @@ public class ConstructorCallTag extends AbstractCompilationTag{
     
     @Override
     public String toString() {
-        return constructor.getParent().toString() + " " + super.toString() + " " + constructor.getName();
+        return constructor.getParent().toString() + " " + super.toString() + " " + constructor.getIdentifierName();
     }
 }

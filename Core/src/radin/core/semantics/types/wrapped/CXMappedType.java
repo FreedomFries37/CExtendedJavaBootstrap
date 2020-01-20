@@ -5,6 +5,7 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
+import radin.core.utility.ICompilationSettings;
 
 public abstract class CXMappedType extends CXType implements ICXWrapper {
     
@@ -19,11 +20,14 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
     }
     
     public boolean update() {
+        if(actual != null) return true;
         try {
+            String old = toString();
             CXType type = getType();
             if(type == this) return false;
             if(type == null) return false;
             actual = type;
+            ICompilationSettings.debugLog.info(old + " updated to " + actual);
             return true;
         }catch (TypeNotPresentException e) {
             return false;

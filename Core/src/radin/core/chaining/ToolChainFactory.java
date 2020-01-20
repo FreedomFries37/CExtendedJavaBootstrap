@@ -1,8 +1,9 @@
 package radin.core.chaining;
 
 import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.utility.ICompilationSettings;
 
-import javax.naming.OperationNotSupportedException;
+import java.lang.reflect.TypeVariable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
@@ -27,6 +28,11 @@ public class ToolChainFactory {
         @Override
         public List<AbstractCompilationError> getErrors() {
             return errors;
+        }
+    
+        @Override
+        public String toString() {
+            return getClass().getSimpleName();
         }
     }
     
@@ -74,6 +80,7 @@ public class ToolChainFactory {
     
         @Override
         public T invoke(T input) {
+            ICompilationSettings.debugLog.info("Running Identity link");
             return input;
         }
     
@@ -90,6 +97,7 @@ public class ToolChainFactory {
     
         @Override
         public R invoke(T input) {
+            ICompilationSettings.debugLog.info("Running function link");
             return function.apply(input);
         }
     }
@@ -105,6 +113,7 @@ public class ToolChainFactory {
     
         @Override
         public R invoke(T input) {
+            ICompilationSettings.debugLog.info("Running link from " + front + " to " + back);
             M invoke = front.invoke(input);
             return back.invoke(invoke);
         }
@@ -119,7 +128,9 @@ public class ToolChainFactory {
     
         @Override
         public R invoke(T input) {
+            ICompilationSettings.debugLog.info("Running Compiler function on " + part.getClass().getSimpleName());
             R invoke = part.invoke(input);
+            
             errors.addAll(part.getErrors());
             return invoke;
         }
@@ -139,9 +150,27 @@ public class ToolChainFactory {
     
         
         public R invoke() {
+            ICompilationSettings.debugLog.info("Running Compiler producer " + part.getClass().getSimpleName());
             R invoke = part.invoke();
             errors.addAll(part.getErrors());
             return invoke;
+        }
+    }
+    
+    private static class InPlaceCompilerLink <T> extends ToolChainLink<T, T> {
+        private IInPlaceCompilerAnalyzer<? super T> part;
+    
+        public InPlaceCompilerLink(IInPlaceCompilerAnalyzer<? super T> part) {
+            this.part = part;
+        }
+    
+        @Override
+        public T invoke(T input) {
+            ICompilationSettings.debugLog.info("Running Compiler analyzer " + part.getClass().getSimpleName());
+            part.setHead(input);
+            if(!part.invoke()) return null;
+            errors.addAll(part.getErrors());
+            return input;
         }
     }
     
@@ -153,6 +182,10 @@ public class ToolChainFactory {
     
     public static <T, R> ToolChainLink<T, R> function(Function<? super T, ? extends R> function) {
         return new FunctionLink<>(function);
+    }
+    
+    public static <T> ToolChainLink<T, T> compilerAnalyzer(IInPlaceCompilerAnalyzer<T> analyzer) {
+        return new InPlaceCompilerLink<>(analyzer);
     }
     
     public static <T, R> ToolChainLink<T, R> compilerFunction(ICompilerFunction<? super T, ? extends R> part) {

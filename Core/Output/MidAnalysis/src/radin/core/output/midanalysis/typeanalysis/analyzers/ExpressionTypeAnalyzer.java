@@ -26,6 +26,7 @@ import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
 import radin.core.semantics.types.wrapped.ConstantType;
+import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Reference;
 
 import java.util.regex.Pattern;
@@ -78,7 +79,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         
         if(node.getASTNode().getType() == ASTNodeType.id) {
             String image = node.getToken().getImage();
-            if(!getCurrentTracker().variableExists(image)) throw new IdentifierDoesNotExistError(image);
+            if(!getCurrentTracker().variableExists(image)) {
+                throw new IdentifierDoesNotExistError(image);
+            }
             CXType type = getCurrentTracker().getType(image);
             if(type instanceof CXDynamicTypeDefinition) {
                 type = ((CXDynamicTypeDefinition) type).getOriginal();
@@ -345,7 +348,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 }
             }
     
-            String name = node.getChild(1).getToken().getImage();
+            Token name = node.getChild(1).getToken();
     
             TypeAugmentedSemanticNode sequenceNode = node.getASTChild(ASTNodeType.sequence);
             SequenceTypeAnalyzer analyzer = new SequenceTypeAnalyzer(sequenceNode);
@@ -374,21 +377,24 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
            
             
             
-            if(!(cxClass instanceof CXClassType) || !getCurrentTracker().methodVisible(((CXClassType) cxClass), name,
+            if(!(cxClass instanceof CXClassType) || !getCurrentTracker().methodVisible(((CXClassType) cxClass),
+                    name.getImage(),
                     typeList)) {
-                if(getCurrentTracker().fieldVisible((CXCompoundType) cxClass, name)) {
+                if(getCurrentTracker().fieldVisible((CXCompoundType) cxClass, name.getImage())) {
                     node.addCompilationTag(BasicCompilationTag.COMPILE_AS_FIELD_GET);
                     
-                    assert getCurrentTracker().getFieldType((CXCompoundType) cxClass, name) instanceof CXFunctionPointer;
+                    assert getCurrentTracker().getFieldType((CXCompoundType) cxClass, name.getImage()) instanceof CXFunctionPointer;
                     node.setType(((CXFunctionPointer) getCurrentTracker().getFieldType((CXCompoundType) cxClass,
-                            name)).getReturnType());
+                            name.getImage())).getReturnType());
                     
                     return true;
                 }
-                throw new IllegalAccessError(cxClass, name, typeList);
+                ICompilationSettings.debugLog.finer("Couldn't find methods with name " + name.getImage());
+                ICompilationSettings.debugLog.finest("Available options = " + getCurrentTracker().allMethodsAvailable());
+                throw new IllegalAccessError(cxClass, name.getImage(), typeList);
             }
             
-            CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name, typeList);
+            CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name.getImage(), typeList);
             if(nextType == null) throw new IllegalAccessError();
             
             if(!isSuperCall) {
@@ -400,7 +406,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 
                 node.addCompilationTag(new MethodCallTag(method));
             } else {
-                CXMethod superMethod = ((CXClassType) cxClass).getSuperMethod(name, typeList);
+                CXMethod superMethod = ((CXClassType) cxClass).getSuperMethod(name.getImage(), typeList);
                 if(superMethod != null)
                     node.addCompilationTag(new SuperCallTag(superMethod));
             }

@@ -1,5 +1,6 @@
 package radin;
 
+import radin.core.ErrorReader;
 import radin.core.chaining.ToolChainFactory;
 import radin.core.output.backend.compilation.AbstractCompiler;
 import radin.core.output.backend.compilation.FileCompiler;
@@ -22,6 +23,9 @@ import radin.core.output.core.input.frontend.v1.semantics.ActionRoutineApplier;
 
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
 
 public class Main {
     
@@ -31,6 +35,7 @@ public class Main {
         return settings;
     }
     
+    
     public static void setCompilationSettings(ICompilationSettings settings) {
         Main.settings = settings;
         TypeAnalyzer.setCompilationSettings(settings);
@@ -38,8 +43,28 @@ public class Main {
         Tokenizer.setCompilationSettings(settings);
     }
     
-    public static void main(String[] args) {
-        System.out.println("Testing out lexer");
+    public static void main(String[] args) throws FileNotFoundException {
+        CompilationSettings compilationSettings = new CompilationSettings();
+        compilationSettings.setShowErrorStackTrace(false);
+        compilationSettings.setReduceIndirection(false);
+        setCompilationSettings(compilationSettings);
+        getSettings().setLogLevel(Level.FINER);
+        
+        
+        System.setErr(ICompilationSettings.debugLog.divertOutput(Level.SEVERE, System.err));
+        if(System.getenv().containsKey("DEBUG")) {
+            String debug = System.getenv("DEBUG");
+            boolean val = Boolean.parseBoolean(debug);
+            if(!val) {
+                System.setOut(ICompilationSettings.debugLog.divertOutput(Level.INFO, System.out));
+            }
+            
+        }
+    
+        List<String> strings = Arrays.asList(args);
+        if(strings.contains("-E")) {// experimental
+            compilationSettings.setExperimental(true);
+        }
         
         String filename = "classTest.cx";
         
@@ -71,10 +96,7 @@ public class Main {
         
         String outputFile = filename.replace(".cx", ".c");
         
-        CompilationSettings compilationSettings = new CompilationSettings();
-        compilationSettings.setShowErrorStackTrace(false);
-        compilationSettings.setReduceIndirection(false);
-        setCompilationSettings(compilationSettings);
+        
         
         String fullText = text.toString().replace("\t", " ".repeat(compilationSettings.getTabSize()));
         /*
@@ -131,7 +153,7 @@ public class Main {
     
         ToolChainFactory.ToolChainHead<AbstractSyntaxNode> abstractSyntaxNodeToolChainHead = ToolChainFactory.compilerProducer(frontEndUnit);
         ToolChainFactory.ToolChainLink<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
-                (AbstractSyntaxNode o) -> new TypeAugmentedSemanticTree(o, environment).getHead()
+                (AbstractSyntaxNode o) -> TypeAugmentedSemanticTree.convertAST(o, environment)
         );
         ToolChainFactory.ToolChainLink<Void, TypeAugmentedSemanticNode> chain =
                 abstractSyntaxNodeToolChainHead.chain_to(function);
@@ -139,10 +161,15 @@ public class Main {
     
     
         AbstractSyntaxNode build = frontEndUnit.build();
-        
+        ICompilationSettings.debugLog.info("Building completed");
+        ICompilationSettings.debugLog.info("Created Abstract Syntax Tree of depth " + build.getDepth() + " with a " +
+                "total of " + build.getTotalNodes() + " nodes");
+        ICompilationSettings.debugLog.info("Builder run count: " + applier.getRunCount());
+    
+    
         if(build != null) {
             try {
-                build.printTreeForm();
+                // build.printTreeForm();
                 //System.out.println(applier.getSuccessOrder());
                 //System.out.println(completed.getRepresentation());
                 
@@ -164,7 +191,7 @@ public class Main {
                 
                 
                 TypeAugmentedSemanticTree tasTree = new TypeAugmentedSemanticTree(build, environment);
-                tasTree.printTreeForm();
+                // tasTree.printTreeForm();
                 
                 ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer(tasTree.getHead());
                 try{
@@ -187,6 +214,10 @@ public class Main {
                         FileCompiler compiler = new FileCompiler(output);
                         compiler.setPreamble("");
                         System.out.println("compiler.compile(tasTree.getHead()) = " + compiler.compile(tasTree.getHead()));
+                        ICompilationSettings.debugLog.info("File " + filename + " compiled");
+                        
+                        ICompilationSettings.debugLog.info("Outputting compiled file as " + outputFile);
+                        ICompilationSettings.debugLog.info(outputFile + " size = " + ((double) output.length() / 1028) + " kB");
                     }
                 } catch (Error e) {
                     tasTree.printTreeForm();

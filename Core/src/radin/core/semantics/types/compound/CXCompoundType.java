@@ -50,6 +50,9 @@ public abstract class CXCompoundType extends CXType implements ICXCompoundType {
         return fields;
     }
     
+   
+    
+    
     @Override
     public String getTypeName() {
         return typeName.toString();

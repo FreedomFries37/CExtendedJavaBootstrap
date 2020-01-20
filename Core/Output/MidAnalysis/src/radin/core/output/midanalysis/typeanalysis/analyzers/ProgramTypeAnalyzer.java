@@ -22,6 +22,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
         assert program.getType() == ASTNodeType.top_level_decs;
     }
     
+    
     public ProgramTypeAnalyzer(TypeAugmentedSemanticNode tree) {
         super(tree);
     }
