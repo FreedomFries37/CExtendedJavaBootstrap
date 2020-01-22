@@ -1,108 +1,108 @@
-struct class_std_ClassInfo324399139;
-struct class_std_String817305134;
+struct class_std_ClassInfo804771843;
+struct class_std_String1297677838;
 typedef unsigned long int class_id;
 void* malloc(unsigned int);
 void* calloc(unsigned int, unsigned int);
 void free(void*);
 void print(const char*);
 void println(const char*);
-void print_s(struct class_std_String817305134*);
-void println_s(struct class_std_String817305134*);
-struct class_std_ClassInfo324399139* getClass(class_id);
-struct class_std_Object685922652;
+void print_s(struct class_std_String1297677838*);
+void println_s(struct class_std_String1297677838*);
+struct class_std_ClassInfo804771843* getClass(class_id);
+struct class_std_Object1166295356;
 
-struct class_std_Object685922652_vtable {
+struct class_std_Object1166295356_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 };
-struct class_std_Object685922652 {
-	struct class_std_Object685922652_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_std_Object1166295356 {
+	struct class_std_Object1166295356_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 };
 
-struct class_std_ClassInfo324399139* std_Object_getClass64777540(void*);
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
+struct class_std_ClassInfo804771843* std_Object_getClass247095813(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
 
-struct class_std_Object685922652* construct_std_Object1_330993863(void*);
+struct class_std_Object1166295356* construct_std_Object1_1857976346(void*);
 
-static struct class_std_Object685922652* class_std_Object685922652_init577347010() {
-    struct class_std_Object685922652* output;
-    output = calloc(1, sizeof(struct class_std_Object685922652));
-    struct class_std_Object685922652_vtable* vtable;
-    vtable = malloc(sizeof(struct class_std_Object685922652_vtable));
+static struct class_std_Object1166295356* class_std_Object1166295356_init635364512() {
+    struct class_std_Object1166295356* output;
+    output = calloc(1, sizeof(struct class_std_Object1166295356));
+    struct class_std_Object1166295356_vtable* vtable;
+    vtable = malloc(sizeof(struct class_std_Object1166295356_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     return output;
 }
 
 
 
-struct class_std_ClassInfo324399139;
+struct class_std_ClassInfo804771843;
 
-struct class_std_ClassInfo324399139_vtable {
+struct class_std_ClassInfo804771843_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
-	int (*equals1724766376) (void*, struct class_std_ClassInfo324399139*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
+	int (*equals747249249) (void*, struct class_std_ClassInfo804771843*);
 };
-struct class_std_ClassInfo324399139 {
-	struct class_std_ClassInfo324399139_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_std_ClassInfo804771843 {
+	struct class_std_ClassInfo804771843_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
-	struct class_std_String817305134* name;
-	struct class_std_ClassInfo324399139* parent;
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
+	struct class_std_String1297677838* name;
+	struct class_std_ClassInfo804771843* parent;
 	int classHash;
-	struct class_std_String817305134* (*getName37078109) (void*);
-	int (*is1945757216) (void*, struct class_std_Object685922652*);
+	struct class_std_String1297677838* (*getName37078109) (void*);
+	int (*is960111935) (void*, struct class_std_Object1166295356*);
 };
 
-struct class_std_String817305134* std_ClassInfo_getName774504741(void*);
-int std_ClassInfo_is1537627230(void*, struct class_std_Object685922652*);
-int std_Object_hashcode1866695947(void*);
-int std_ClassInfo_equals242140915(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
-int std_ClassInfo_equals913183526(void*, struct class_std_ClassInfo324399139*);
+struct class_std_String1297677838* std_ClassInfo_getName956823014(void*);
+int std_ClassInfo_is1954013058(void*, struct class_std_Object1166295356*);
+int std_Object_hashcode2049014220(void*);
+int std_ClassInfo_equals1045467923(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
+int std_ClassInfo_equals1741150372(void*, struct class_std_ClassInfo804771843*);
 
-struct class_std_ClassInfo324399139* construct_std_ClassInfo977452419_60530725(void*, struct class_std_String817305134*, struct class_std_ClassInfo324399139*, int);
+struct class_std_ClassInfo804771843* construct_std_ClassInfo1202830901_1447135283(void*, struct class_std_String1297677838*, struct class_std_ClassInfo804771843*, int);
 
-static struct class_std_ClassInfo324399139* class_std_ClassInfo324399139_init1711871859() {
-    struct class_std_ClassInfo324399139* output;
-    output = calloc(1, sizeof(struct class_std_ClassInfo324399139));
-    struct class_std_ClassInfo324399139_vtable* vtable;
-    vtable = malloc(sizeof(struct class_std_ClassInfo324399139_vtable));
+static struct class_std_ClassInfo804771843* class_std_ClassInfo804771843_init501931049() {
+    struct class_std_ClassInfo804771843* output;
+    output = calloc(1, sizeof(struct class_std_ClassInfo804771843));
+    struct class_std_ClassInfo804771843_vtable* vtable;
+    vtable = malloc(sizeof(struct class_std_ClassInfo804771843_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_ClassInfo_equals242140915;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*vtable).equals1724766376 = std_ClassInfo_equals913183526;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).getName37078109 = std_ClassInfo_getName774504741;
-    (*output).is1945757216 = std_ClassInfo_is1537627230;
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_ClassInfo_equals1045467923;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*vtable).equals747249249 = std_ClassInfo_equals1741150372;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).getName37078109 = std_ClassInfo_getName956823014;
+    (*output).is960111935 = std_ClassInfo_is1954013058;
     (*output).info = output;
     (*output).references = (long int) {0};
-    (*output).name = (struct class_std_String817305134*) {0};
-    (*output).parent = (struct class_std_ClassInfo324399139*) {0};
+    (*output).name = (struct class_std_String1297677838*) {0};
+    (*output).parent = (struct class_std_ClassInfo804771843*) {0};
     (*output).classHash = (int) {0};
     return output;
 }
@@ -110,66 +110,66 @@ static struct class_std_ClassInfo324399139* class_std_ClassInfo324399139_init171
 
 
 
-static int super_std_Object_equals10740085571792730991(void* __this, struct class_std_Object685922652* other) {
-    struct class_std_ClassInfo324399139* this = __this;
-    struct class_std_Object685922652* super = __this;
-    int (*old) (void*, struct class_std_Object685922652*);
-    old = (*(*this).vtable).equals1053723765;
-    (*(*this).vtable).equals1053723765 = std_Object_equals1074008557;
+static int super_std_Object_equals270681549558247374(void* __this, struct class_std_Object1166295356* other) {
+    struct class_std_ClassInfo804771843* this = __this;
+    struct class_std_Object1166295356* super = __this;
+    int (*old) (void*, struct class_std_Object1166295356*);
+    old = (*(*this).vtable).equals2039369046;
+    (*(*this).vtable).equals2039369046 = std_Object_equals270681549;
     int output;
-    output = (*(*this).vtable).equals1053723765(__this, other);
-    (*(*this).vtable).equals1053723765 = old;
+    output = (*(*this).vtable).equals2039369046(__this, other);
+    (*(*this).vtable).equals2039369046 = old;
     return output;
 }
 
-struct class_std_String817305134;
+struct class_std_String1297677838;
 
-struct class_std_String817305134_vtable {
+struct class_std_String1297677838_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 };
-struct class_std_String817305134 {
-	struct class_std_String817305134_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_std_String1297677838 {
+	struct class_std_String1297677838_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 	char* backingPtr;
 	int length;
-	struct class_std_String817305134* (*concat180943281) (void*, struct class_std_String817305134*);
-	struct class_std_String817305134* (*concat1663899886) (void*, char*);
+	struct class_std_String1297677838* (*concat1339931399) (void*, struct class_std_String1297677838*);
+	struct class_std_String1297677838* (*concat1663899886) (void*, char*);
 	const char* (*getCStr36737184) (void*);
 };
 
-struct class_std_String817305134* std_String_concat2037516913(void*, struct class_std_String817305134*);
-struct class_std_String817305134* std_String_concat412607216(void*, char*);
-const char* std_String_getCStr2113244286(void*);
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_String_drop2102981591(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
+struct class_std_String1297677838* std_String_concat554257430(void*, struct class_std_String1297677838*);
+struct class_std_String1297677838* std_String_concat230288943(void*, char*);
+const char* std_String_getCStr1930926013(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_String_drop2009667432(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
 
-struct class_std_String817305134* construct_std_String502800975_1985466301(void*, const char*);
-struct class_std_String817305134* construct_std_String1_2128077333(void*);
+struct class_std_String1297677838* construct_std_String1918627717_575179913(void*, const char*);
+struct class_std_String1297677838* construct_std_String1_22080246(void*);
 
-static struct class_std_String817305134* class_std_String817305134_init1324446555() {
-    struct class_std_String817305134* output;
-    output = calloc(1, sizeof(struct class_std_String817305134));
-    struct class_std_String817305134_vtable* vtable;
-    vtable = malloc(sizeof(struct class_std_String817305134_vtable));
+static struct class_std_String1297677838* class_std_String1297677838_init231149038() {
+    struct class_std_String1297677838* output;
+    output = calloc(1, sizeof(struct class_std_String1297677838));
+    struct class_std_String1297677838_vtable* vtable;
+    vtable = malloc(sizeof(struct class_std_String1297677838_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_String_drop2102981591;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).concat180943281 = std_String_concat2037516913;
-    (*output).concat1663899886 = std_String_concat412607216;
-    (*output).getCStr36737184 = std_String_getCStr2113244286;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_String_drop2009667432;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).concat1339931399 = std_String_concat554257430;
+    (*output).concat1663899886 = std_String_concat230288943;
+    (*output).getCStr36737184 = std_String_getCStr1930926013;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     (*output).backingPtr = (char*) {0};
     (*output).length = (int) {0};
@@ -180,133 +180,133 @@ static struct class_std_String817305134* class_std_String817305134_init132444655
 
 
 
-static void super_std_Object_drop2012253719393698245(void* __this) {
-    struct class_std_String817305134* this = __this;
-    struct class_std_Object685922652* super = __this;
+static void super_std_Object_drop21003953041501769405(void* __this) {
+    struct class_std_String1297677838* this = __this;
+    struct class_std_Object1166295356* super = __this;
     void (*old) (void*);
     old = (*(*this).vtable).drop115478603;
-    (*(*this).vtable).drop115478603 = std_Object_drop2012253719;
+    (*(*this).vtable).drop115478603 = std_Object_drop2100395304;
     (*(*this).vtable).drop115478603(__this);
     (*(*this).vtable).drop115478603 = old;
 }
 
-struct class_animals_animal413556389;
+struct class_animals_animal893929093;
 
-struct class_animals_animal413556389_vtable {
+struct class_animals_animal893929093_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 	void (*says115909444) (void*);
 };
-struct class_animals_animal413556389 {
-	struct class_animals_animal413556389_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_animals_animal893929093 {
+	struct class_animals_animal893929093_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 	char* species;
 	int numberOfLegs;
 	int (*getNumberOfLegs1629143273) (void*);
 };
 
-int animals_animal_getNumberOfLegs412305877(void*);
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
-void animals_animal_says2137608702(void*);
+int animals_animal_getNumberOfLegs229987604(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
+void animals_animal_says1975040321(void*);
 
-struct class_animals_animal413556389* construct_animals_animal1795196733_2098888252(void*, char*, int);
+struct class_animals_animal893929093* construct_animals_animal1909502372_273961694(void*, char*, int);
 
-static struct class_animals_animal413556389* class_animals_animal413556389_init2063304608() {
-    struct class_animals_animal413556389* output;
-    output = calloc(1, sizeof(struct class_animals_animal413556389));
-    struct class_animals_animal413556389_vtable* vtable;
-    vtable = malloc(sizeof(struct class_animals_animal413556389_vtable));
+static struct class_animals_animal893929093* class_animals_animal893929093_init33990921() {
+    struct class_animals_animal893929093* output;
+    output = calloc(1, sizeof(struct class_animals_animal893929093));
+    struct class_animals_animal893929093_vtable* vtable;
+    vtable = malloc(sizeof(struct class_animals_animal893929093_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*vtable).says115909444 = animals_animal_says2137608702;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs412305877;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*vtable).says115909444 = animals_animal_says1975040321;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs229987604;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     (*output).species = (char*) {0};
     (*output).numberOfLegs = (int) {0};
     return output;
 }
 
-int animals_animal_getNumberOfLegs412305877(void* __this) {
-    struct class_animals_animal413556389* this = __this;
-    struct class_std_Object685922652* super = __this;
+int animals_animal_getNumberOfLegs229987604(void* __this) {
+    struct class_animals_animal893929093* this = __this;
+    struct class_std_Object1166295356* super = __this;
     return (*this).numberOfLegs;
 }
 
 
 
 
-struct class_animals_animal413556389* construct_animals_animal1795196733_2098888252(void* __this, char* species, int numberOfLegs) {
-    struct class_animals_animal413556389* this = (struct class_animals_animal413556389*) __this;
+struct class_animals_animal893929093* construct_animals_animal1909502372_273961694(void* __this, char* species, int numberOfLegs) {
+    struct class_animals_animal893929093* this = (struct class_animals_animal893929093*) __this;
     (*this).species = species;
     (*this).numberOfLegs = numberOfLegs;
     return this;
 }
 
-void animals_animal_says2137608702(void* __this) {
-    struct class_animals_animal413556389* this = __this;
-    struct class_std_Object685922652* super = __this;
+void animals_animal_says1975040321(void* __this) {
+    struct class_animals_animal893929093* this = __this;
+    struct class_std_Object1166295356* super = __this;
     print((*this).species);
     print();
 }
 
 
-struct class_animals_quadAnimal2147359436;
+struct class_animals_quadAnimal1667235156;
 
-struct class_animals_quadAnimal2147359436_vtable {
+struct class_animals_quadAnimal1667235156_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 	void (*says115909444) (void*);
 };
-struct class_animals_quadAnimal2147359436 {
-	struct class_animals_quadAnimal2147359436_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_animals_quadAnimal1667235156 {
+	struct class_animals_quadAnimal1667235156_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 	char* species;
 	int numberOfLegs;
 	int (*getNumberOfLegs1629143273) (void*);
 };
 
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
-void animals_quadAnimal_says1804481250(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
+void animals_quadAnimal_says1622162977(void*);
 
-struct class_animals_quadAnimal2147359436* construct_animals_quadAnimal2039810377_556304428(void*, char*);
+struct class_animals_quadAnimal1667235156* construct_animals_quadAnimal1792845141_491929247(void*, char*);
 
-static struct class_animals_quadAnimal2147359436* class_animals_quadAnimal2147359436_init1502385461() {
-    struct class_animals_quadAnimal2147359436* output;
-    output = calloc(1, sizeof(struct class_animals_quadAnimal2147359436));
-    struct class_animals_quadAnimal2147359436_vtable* vtable;
-    vtable = malloc(sizeof(struct class_animals_quadAnimal2147359436_vtable));
+static struct class_animals_quadAnimal1667235156* class_animals_quadAnimal1667235156_init177264178() {
+    struct class_animals_quadAnimal1667235156* output;
+    output = calloc(1, sizeof(struct class_animals_quadAnimal1667235156));
+    struct class_animals_quadAnimal1667235156_vtable* vtable;
+    vtable = malloc(sizeof(struct class_animals_quadAnimal1667235156_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*vtable).says115909444 = animals_quadAnimal_says1804481250;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs412305877;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*vtable).says115909444 = animals_quadAnimal_says1622162977;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs229987604;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     (*output).species = (char*) {0};
     (*output).numberOfLegs = (int) {0};
@@ -315,45 +315,45 @@ static struct class_animals_quadAnimal2147359436* class_animals_quadAnimal214735
 
 
 
-struct class_animals_quadAnimal2147359436* construct_animals_quadAnimal2039810377_556304428(void* __this, char* name) {
-    construct_animals_animal1795196733_2098888252(__this, name, 4);
-    struct class_animals_quadAnimal2147359436* this = (struct class_animals_quadAnimal2147359436*) __this;
+struct class_animals_quadAnimal1667235156* construct_animals_quadAnimal1792845141_491929247(void* __this, char* name) {
+    construct_animals_animal1909502372_273961694(__this, name, 4);
+    struct class_animals_quadAnimal1667235156* this = (struct class_animals_quadAnimal1667235156*) __this;
     return this;
 }
 
-static void super_animals_animal_says2137608702909154717(void* __this) {
-    struct class_animals_quadAnimal2147359436* this = __this;
-    struct class_animals_animal413556389* super = __this;
+static void super_animals_animal_says1975040321551565808(void* __this) {
+    struct class_animals_quadAnimal1667235156* this = __this;
+    struct class_animals_animal893929093* super = __this;
     void (*old) (void*);
     old = (*(*this).vtable).says115909444;
-    (*(*this).vtable).says115909444 = animals_animal_says2137608702;
+    (*(*this).vtable).says115909444 = animals_animal_says1975040321;
     (*(*this).vtable).says115909444(__this);
     (*(*this).vtable).says115909444 = old;
 }
 
-void animals_quadAnimal_says1804481250(void* __this) {
-    struct class_animals_quadAnimal2147359436* this = __this;
-    struct class_animals_animal413556389* super = __this;
-    super_animals_animal_says2137608702909154717(super);
+void animals_quadAnimal_says1622162977(void* __this) {
+    struct class_animals_quadAnimal1667235156* this = __this;
+    struct class_animals_animal893929093* super = __this;
+    super_animals_animal_says1975040321551565808(super);
     print();
 }
 
 
-struct class_animals_domesticated621040935;
+struct class_animals_domesticated140668231;
 
-struct class_animals_domesticated621040935_vtable {
+struct class_animals_domesticated140668231_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 	void (*says115909444) (void*);
 };
-struct class_animals_domesticated621040935 {
-	struct class_animals_domesticated621040935_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_animals_domesticated140668231 {
+	struct class_animals_domesticated140668231_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 	char* species;
 	int numberOfLegs;
 	int (*getNumberOfLegs1629143273) (void*);
@@ -361,31 +361,31 @@ struct class_animals_domesticated621040935 {
 	char* (*getName37078109) (void*);
 };
 
-char* animals_domesticated_getName963816037(void*);
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
-void animals_domesticated_says884984702(void*);
+char* animals_domesticated_getName1146134310(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
+void animals_domesticated_says1067302975(void*);
 
-struct class_animals_domesticated621040935* construct_animals_domesticated2012084223_1571021036(void*, char*, char*);
+struct class_animals_domesticated140668231* construct_animals_domesticated1580395670_364277771(void*, char*, char*);
 
-static struct class_animals_domesticated621040935* class_animals_domesticated621040935_init1611550172() {
-    struct class_animals_domesticated621040935* output;
-    output = calloc(1, sizeof(struct class_animals_domesticated621040935));
-    struct class_animals_domesticated621040935_vtable* vtable;
-    vtable = malloc(sizeof(struct class_animals_domesticated621040935_vtable));
+static struct class_animals_domesticated140668231* class_animals_domesticated140668231_init1762842846() {
+    struct class_animals_domesticated140668231* output;
+    output = calloc(1, sizeof(struct class_animals_domesticated140668231));
+    struct class_animals_domesticated140668231_vtable* vtable;
+    vtable = malloc(sizeof(struct class_animals_domesticated140668231_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*vtable).says115909444 = animals_domesticated_says884984702;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs412305877;
-    (*output).getName37078109 = animals_domesticated_getName963816037;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*vtable).says115909444 = animals_domesticated_says1067302975;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs229987604;
+    (*output).getName37078109 = animals_domesticated_getName1146134310;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     (*output).species = (char*) {0};
     (*output).numberOfLegs = (int) {0};
@@ -393,57 +393,57 @@ static struct class_animals_domesticated621040935* class_animals_domesticated621
     return output;
 }
 
-char* animals_domesticated_getName963816037(void* __this) {
-    struct class_animals_domesticated621040935* this = __this;
-    struct class_animals_quadAnimal2147359436* super = __this;
+char* animals_domesticated_getName1146134310(void* __this) {
+    struct class_animals_domesticated140668231* this = __this;
+    struct class_animals_quadAnimal1667235156* super = __this;
     return (*this).name;
 }
 
 
 
 
-struct class_animals_domesticated621040935* construct_animals_domesticated2012084223_1571021036(void* __this, char* name, char* species) {
-    construct_animals_quadAnimal2039810377_556304428(__this, species);
-    struct class_animals_domesticated621040935* this = (struct class_animals_domesticated621040935*) __this;
+struct class_animals_domesticated140668231* construct_animals_domesticated1580395670_364277771(void* __this, char* name, char* species) {
+    construct_animals_quadAnimal1792845141_491929247(__this, species);
+    struct class_animals_domesticated140668231* this = (struct class_animals_domesticated140668231*) __this;
     (*this).name = name;
     return this;
 }
 
-static void super_animals_quadAnimal_says1804481250401238282(void* __this) {
-    struct class_animals_domesticated621040935* this = __this;
-    struct class_animals_quadAnimal2147359436* super = __this;
+static void super_animals_quadAnimal_says16221629771647351461(void* __this) {
+    struct class_animals_domesticated140668231* this = __this;
+    struct class_animals_quadAnimal1667235156* super = __this;
     void (*old) (void*);
     old = (*(*this).vtable).says115909444;
-    (*(*this).vtable).says115909444 = animals_quadAnimal_says1804481250;
+    (*(*this).vtable).says115909444 = animals_quadAnimal_says1622162977;
     (*(*this).vtable).says115909444(__this);
     (*(*this).vtable).says115909444 = old;
 }
 
-void animals_domesticated_says884984702(void* __this) {
-    struct class_animals_domesticated621040935* this = __this;
-    struct class_animals_quadAnimal2147359436* super = __this;
+void animals_domesticated_says1067302975(void* __this) {
+    struct class_animals_domesticated140668231* this = __this;
+    struct class_animals_quadAnimal1667235156* super = __this;
     print((*this).getName37078109(this));
     print();
-    super_animals_quadAnimal_says1804481250401238282(super);
+    super_animals_quadAnimal_says16221629771647351461(super);
     print();
 }
 
 
-struct class_animals_dog1826772453;
+struct class_animals_dog1987822139;
 
-struct class_animals_dog1826772453_vtable {
+struct class_animals_dog1987822139_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 	void (*says115909444) (void*);
 };
-struct class_animals_dog1826772453 {
-	struct class_animals_dog1826772453_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_animals_dog1987822139 {
+	struct class_animals_dog1987822139_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 	char* species;
 	int numberOfLegs;
 	int (*getNumberOfLegs1629143273) (void*);
@@ -451,31 +451,31 @@ struct class_animals_dog1826772453 {
 	char* (*getName37078109) (void*);
 };
 
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
-void animals_domesticated_says884984702(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
+void animals_domesticated_says1067302975(void*);
 
-struct class_animals_dog1826772453* construct_animals_dog1891502666_1448182602(void*, char*);
-struct class_animals_dog1826772453* construct_animals_dog1_533279943(void*);
+struct class_animals_dog1987822139* construct_animals_dog627185362_1113340593(void*, char*);
+struct class_animals_dog1987822139* construct_animals_dog1_1572717144(void*);
 
-static struct class_animals_dog1826772453* class_animals_dog1826772453_init1975796817() {
-    struct class_animals_dog1826772453* output;
-    output = calloc(1, sizeof(struct class_animals_dog1826772453));
-    struct class_animals_dog1826772453_vtable* vtable;
-    vtable = malloc(sizeof(struct class_animals_dog1826772453_vtable));
+static struct class_animals_dog1987822139* class_animals_dog1987822139_init1886552747() {
+    struct class_animals_dog1987822139* output;
+    output = calloc(1, sizeof(struct class_animals_dog1987822139));
+    struct class_animals_dog1987822139_vtable* vtable;
+    vtable = malloc(sizeof(struct class_animals_dog1987822139_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*vtable).says115909444 = animals_domesticated_says884984702;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs412305877;
-    (*output).getName37078109 = animals_domesticated_getName963816037;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*vtable).says115909444 = animals_domesticated_says1067302975;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs229987604;
+    (*output).getName37078109 = animals_domesticated_getName1146134310;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     (*output).species = (char*) {0};
     (*output).numberOfLegs = (int) {0};
@@ -485,34 +485,34 @@ static struct class_animals_dog1826772453* class_animals_dog1826772453_init19757
 
 
 
-struct class_animals_dog1826772453* construct_animals_dog1891502666_1448182602(void* __this, char* name) {
-    construct_animals_domesticated2012084223_1571021036(__this, name, );
-    struct class_animals_dog1826772453* this = (struct class_animals_dog1826772453*) __this;
+struct class_animals_dog1987822139* construct_animals_dog627185362_1113340593(void* __this, char* name) {
+    construct_animals_domesticated1580395670_364277771(__this, name, );
+    struct class_animals_dog1987822139* this = (struct class_animals_dog1987822139*) __this;
     return this;
 }
 
 
-struct class_animals_dog1826772453* construct_animals_dog1_533279943(void* __this) {
-    construct_animals_dog1891502666_1448182602(__this, );
-    struct class_animals_dog1826772453* this = (struct class_animals_dog1826772453*) __this;
+struct class_animals_dog1987822139* construct_animals_dog1_1572717144(void* __this) {
+    construct_animals_dog627185362_1113340593(__this, );
+    struct class_animals_dog1987822139* this = (struct class_animals_dog1987822139*) __this;
     return this;
 }
 
-struct class_cat1692644852;
+struct class_cat976698061;
 
-struct class_cat1692644852_vtable {
+struct class_cat976698061_vtable {
 	int offset;
 	int (*hashcode261036375) (void*);
-	int (*equals1053723765) (void*, struct class_std_Object685922652*);
+	int (*equals2039369046) (void*, struct class_std_Object1166295356*);
 	void (*drop115478603) (void*);
-	struct class_std_String817305134* (*toString1664535608) (void*);
+	struct class_std_String1297677838* (*toString1664535608) (void*);
 	void (*says115909444) (void*);
 };
-struct class_cat1692644852 {
-	struct class_cat1692644852_vtable* vtable;
-	struct class_std_ClassInfo324399139* info;
+struct class_cat976698061 {
+	struct class_cat976698061_vtable* vtable;
+	struct class_std_ClassInfo804771843* info;
 	long int references;
-	struct class_std_ClassInfo324399139* (*getClass2062954782) (void*);
+	struct class_std_ClassInfo804771843* (*getClass2062954782) (void*);
 	char* species;
 	int numberOfLegs;
 	int (*getNumberOfLegs1629143273) (void*);
@@ -520,30 +520,30 @@ struct class_cat1692644852 {
 	char* (*getName37078109) (void*);
 };
 
-int std_Object_hashcode1866695947(void*);
-int std_Object_equals1074008557(void*, struct class_std_Object685922652*);
-void std_Object_drop2012253719(void*);
-struct class_std_String817305134* std_Object_toString502699366(void*);
-void cat_says138516450(void*);
+int std_Object_hashcode2049014220(void*);
+int std_Object_equals270681549(void*, struct class_std_Object1166295356*);
+void std_Object_drop2100395304(void*);
+struct class_std_String1297677838* std_Object_toString320381093(void*);
+void cat_says2050453759(void*);
 
-struct class_cat1692644852* construct_cat557023598_144823107(void*, char*);
+struct class_cat976698061* construct_cat706277979_665430571(void*, char*);
 
-static struct class_cat1692644852* class_cat1692644852_init1716779587() {
-    struct class_cat1692644852* output;
-    output = calloc(1, sizeof(struct class_cat1692644852));
-    struct class_cat1692644852_vtable* vtable;
-    vtable = malloc(sizeof(struct class_cat1692644852_vtable));
+static struct class_cat976698061* class_cat976698061_init674116585() {
+    struct class_cat976698061* output;
+    output = calloc(1, sizeof(struct class_cat976698061));
+    struct class_cat976698061_vtable* vtable;
+    vtable = malloc(sizeof(struct class_cat976698061_vtable));
     (*output).vtable = vtable;
     (*vtable).offset = 0;
-    (*vtable).hashcode261036375 = std_Object_hashcode1866695947;
-    (*vtable).equals1053723765 = std_Object_equals1074008557;
-    (*vtable).drop115478603 = std_Object_drop2012253719;
-    (*vtable).toString1664535608 = std_Object_toString502699366;
-    (*vtable).says115909444 = cat_says138516450;
-    (*output).getClass2062954782 = std_Object_getClass64777540;
-    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs412305877;
-    (*output).getName37078109 = animals_domesticated_getName963816037;
-    (*output).info = (struct class_std_ClassInfo324399139*) {0};
+    (*vtable).hashcode261036375 = std_Object_hashcode2049014220;
+    (*vtable).equals2039369046 = std_Object_equals270681549;
+    (*vtable).drop115478603 = std_Object_drop2100395304;
+    (*vtable).toString1664535608 = std_Object_toString320381093;
+    (*vtable).says115909444 = cat_says2050453759;
+    (*output).getClass2062954782 = std_Object_getClass247095813;
+    (*output).getNumberOfLegs1629143273 = animals_animal_getNumberOfLegs229987604;
+    (*output).getName37078109 = animals_domesticated_getName1146134310;
+    (*output).info = (struct class_std_ClassInfo804771843*) {0};
     (*output).references = (long int) {0};
     (*output).species = (char*) {0};
     (*output).numberOfLegs = (int) {0};
@@ -553,25 +553,25 @@ static struct class_cat1692644852* class_cat1692644852_init1716779587() {
 
 
 
-struct class_cat1692644852* construct_cat557023598_144823107(void* __this, char* name) {
-    construct_animals_domesticated2012084223_1571021036(__this, name, );
-    struct class_cat1692644852* this = (struct class_cat1692644852*) __this;
+struct class_cat976698061* construct_cat706277979_665430571(void* __this, char* name) {
+    construct_animals_domesticated1580395670_364277771(__this, name, );
+    struct class_cat976698061* this = (struct class_cat976698061*) __this;
     return this;
 }
 
-static void super_animals_domesticated_says884984702397953829(void* __this) {
-    struct class_cat1692644852* this = __this;
-    struct class_animals_domesticated621040935* super = __this;
+static void super_animals_domesticated_says10673029752124510951(void* __this) {
+    struct class_cat976698061* this = __this;
+    struct class_animals_domesticated140668231* super = __this;
     void (*old) (void*);
     old = (*(*this).vtable).says115909444;
-    (*(*this).vtable).says115909444 = animals_domesticated_says884984702;
+    (*(*this).vtable).says115909444 = animals_domesticated_says1067302975;
     (*(*this).vtable).says115909444(__this);
     (*(*this).vtable).says115909444 = old;
 }
 
-void cat_says138516450(void* __this) {
-    struct class_cat1692644852* this = __this;
-    struct class_animals_domesticated621040935* super = __this;
+void cat_says2050453759(void* __this) {
+    struct class_cat976698061* this = __this;
+    struct class_animals_domesticated140668231* super = __this;
     println();
 }
 

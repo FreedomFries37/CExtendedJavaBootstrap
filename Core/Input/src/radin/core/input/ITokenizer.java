@@ -13,7 +13,7 @@ public interface ITokenizer<T> extends Iterator<T>, Iterable<T>, ICompilationErr
     
     String getInputString();
     
-    void run();
+    int run();
     
     T getFirst();
     

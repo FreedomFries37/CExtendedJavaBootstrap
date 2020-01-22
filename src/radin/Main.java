@@ -4,9 +4,9 @@ import radin.core.ErrorReader;
 import radin.core.chaining.ToolChainFactory;
 import radin.core.output.backend.compilation.AbstractCompiler;
 import radin.core.output.backend.compilation.FileCompiler;
-import radin.core.output.core.input.frontend.v1.lexing.PreprocessingLexer;
-import radin.core.output.core.input.frontend.v1.parsing.ParseNode;
-import radin.core.output.core.input.frontend.v1.parsing.Parser;
+import radin.core.input.frontend.v1.lexing.PreprocessingLexer;
+import radin.core.input.frontend.v1.parsing.ParseNode;
+import radin.core.input.frontend.v1.parsing.Parser;
 import radin.core.lexical.Token;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
@@ -19,7 +19,7 @@ import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.utility.CompilationSettings;
 import radin.core.utility.ICompilationSettings;
 import radin.core.semantics.TypeEnvironment;
-import radin.core.output.core.input.frontend.v1.semantics.ActionRoutineApplier;
+import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
 
 
 import java.io.*;
@@ -152,10 +152,10 @@ public class Main {
     
     
         ToolChainFactory.ToolChainHead<AbstractSyntaxNode> abstractSyntaxNodeToolChainHead = ToolChainFactory.compilerProducer(frontEndUnit);
-        ToolChainFactory.ToolChainLink<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
+        ToolChainFactory.ToolChainBuilder<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
                 (AbstractSyntaxNode o) -> TypeAugmentedSemanticTree.convertAST(o, environment)
         );
-        ToolChainFactory.ToolChainLink<Void, TypeAugmentedSemanticNode> chain =
+        ToolChainFactory.ToolChainBuilder<Void, TypeAugmentedSemanticNode> chain =
                 abstractSyntaxNodeToolChainHead.chain_to(function);
         
     

@@ -9,10 +9,10 @@ import radin.core.input.Tokenizer;
 import radin.core.lexical.Token;
 import radin.core.output.backend.compilation.AbstractCompiler;
 import radin.core.output.combo.MultipleFileHandler;
-import radin.core.output.core.input.frontend.v1.lexing.PreprocessingLexer;
-import radin.core.output.core.input.frontend.v1.parsing.ParseNode;
-import radin.core.output.core.input.frontend.v1.parsing.Parser;
-import radin.core.output.core.input.frontend.v1.semantics.ActionRoutineApplier;
+import radin.core.input.frontend.v1.lexing.PreprocessingLexer;
+import radin.core.input.frontend.v1.parsing.ParseNode;
+import radin.core.input.frontend.v1.parsing.Parser;
+import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
@@ -138,10 +138,10 @@ public class CompilerEntrancePoint {
             FrontEndUnit<Token, ParseNode, AbstractSyntaxNode> frontEndUnit = new FrontEndUnit<>(lex, parser, applier);
             frontEndUnits.add(frontEndUnit);
     
-            ToolChainFactory.ToolChainLink<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
+            ToolChainFactory.ToolChainBuilder<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
                     (AbstractSyntaxNode o) -> TypeAugmentedSemanticTree.convertAST(o, environment)
             );
-            ToolChainFactory.ToolChainLink<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode> compilerAnalyzer = ToolChainFactory.compilerAnalyzer(
+            ToolChainFactory.ToolChainBuilder<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode> compilerAnalyzer = ToolChainFactory.compilerAnalyzer(
                     new ProgramTypeAnalyzer((TypeAugmentedSemanticNode) null)
             );
             var chain = function.chain_to(compilerAnalyzer);

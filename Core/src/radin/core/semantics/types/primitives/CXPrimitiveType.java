@@ -4,6 +4,9 @@ import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 
+/**
+ * Represents primitive types
+ */
 public class CXPrimitiveType extends AbstractCXPrimitiveType {
     enum Primitives {
         _char("char", true , false),
@@ -24,10 +27,26 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         }
     }
     
+    /**
+     * Represents the signed integer type
+     */
     public static CXPrimitiveType INTEGER = new CXPrimitiveType(Primitives._int);
+    /**
+     * Represents the signed char type
+     */
     public static CXPrimitiveType CHAR = new CXPrimitiveType(Primitives._char);
+    /**
+     * Represents the 32-bit floating point type
+     */
     public static CXPrimitiveType FLOAT = new CXPrimitiveType(Primitives._float);
+    /**
+     * Represents the 64-bit floating point type
+     */
     public static CXPrimitiveType DOUBLE = new CXPrimitiveType(Primitives._double);
+    /**
+     * Represents a type that has 0-size in memory. Is never valid as a specifier, unless as a subtype
+     * of a {@link PointerType } instance
+     */
     public static CXPrimitiveType VOID = new CXPrimitiveType(Primitives._void);
     
     private Primitives myPrimitive;
@@ -36,6 +55,7 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         this.myPrimitive = myPrimitive;
     }
     
+    @Deprecated
     public Primitives getMyPrimitive() {
         return myPrimitive;
     }
@@ -45,7 +65,11 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         return myPrimitive.cEquivalent;
     }
     
-    
+    /**
+     *
+     * @param e the type environment to check validity
+     * @return if this type isn't a {@link CXPrimitiveType#VOID} type
+     */
     public boolean isValid(TypeEnvironment e) {
         return myPrimitive != Primitives._void;
     }
@@ -67,6 +91,12 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         return myPrimitive.hashCode();
     }
     
+    /**
+     * Gets the data size of the primitive type. This is based on the values in the
+     * {@link TypeEnvironment}
+     * @param e the type environment to check in
+     * @return data size in bytes
+     */
     public long getDataSize(TypeEnvironment e) {
         switch (myPrimitive) {
             case _int: return e.getIntSize();
@@ -89,16 +119,32 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         }
     }
     
+    /**
+     *
+     * @return if the primitive is an integral
+     */
     public boolean isIntegral() {
         return myPrimitive.integral;
     }
     
+    /**
+     *
+     * @return if the primitive is a float or a double
+     */
     public boolean isFloatingPoint() {
         return myPrimitive.floatingPoint;
     }
     
-   
     
+    /**
+     *
+     * @param other the other type
+     * @param e the type environment to check in
+     * @param strictPrimitiveEquality if false, just checks if both are primitives. If true, it checks whether the
+     *                                types are either both integrals, or both floating point primitives, and no
+     *                                other type can be "is" {@link CXPrimitiveType#VOID}
+     * @return whether this primitive is another type
+     */
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(other instanceof ConstantType) {
