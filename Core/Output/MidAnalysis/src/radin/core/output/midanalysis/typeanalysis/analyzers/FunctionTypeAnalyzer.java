@@ -9,6 +9,7 @@ import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.typeanalysis.errors.MissingReturnError;
+import radin.core.utility.ICompilationSettings;
 
 public class FunctionTypeAnalyzer extends TypeAnalyzer {
     
@@ -34,6 +35,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         CXType returnType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
         
         typeTrackingClosure();
+        ICompilationSettings.debugLog.finest("Compiling function " + node.getASTChild(ASTNodeType.id).getToken().getImage());
         if(hasOwnerType) {
             getCurrentTracker().addVariable("this", new PointerType(owner));
             if(owner instanceof CXClassType) {
@@ -45,12 +47,13 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
                 }
             }
         }
+       
         TypeAugmentedSemanticNode parameters = node.getASTChild(ASTNodeType.parameter_list);
         for (TypeAugmentedSemanticNode parameter : parameters.getAllChildren(ASTNodeType.declaration)) {
             assert parameter.getASTNode() instanceof TypeAbstractSyntaxNode;
             CXType type = ((TypeAbstractSyntaxNode) parameter.getASTNode()).getCxType();
             String name = parameter.getASTChild(ASTNodeType.id).getToken().getImage();
-            
+            ICompilationSettings.debugLog.finest("Adding " + type.generateCDeclaration(name) + " to parameters");
             getCurrentTracker().addVariable(name, type);
         }
     

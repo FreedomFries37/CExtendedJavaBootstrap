@@ -28,4 +28,6 @@ public interface IParser<T, P extends AbstractTree<? extends P>> extends ICompil
     default T getPrevious() {
         return getTokenizer().getPrevious();
     }
+    
+    void reset();
 }

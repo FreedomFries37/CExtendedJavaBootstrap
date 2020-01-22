@@ -3,6 +3,7 @@ package radin.core.output.tags;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.utility.ICompilationSettings;
 
 
 import java.util.Collections;
@@ -21,6 +22,12 @@ public class ArrayWithSizeTag extends MultiDimensionalArrayWithSizeTag {
     }
     
     public boolean isConstant() {
-        return determiner.isConstant(getExpression());
+        ICompilationSettings.debugLog.info("---------------IGNORE MOST ERRORS BELOW------------------");
+        if(!determiner.isConstant(getExpression())) {
+            ICompilationSettings.debugLog.info("---------------IGNORE MOST ERRORS ABOVE------------------");
+            return false;
+        }
+        
+        return true;
     }
 }

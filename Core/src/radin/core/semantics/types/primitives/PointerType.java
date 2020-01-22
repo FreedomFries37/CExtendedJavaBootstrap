@@ -35,7 +35,8 @@ public class PointerType extends AbstractCXPrimitiveType {
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(other instanceof AbstractCXPrimitiveType && !(other instanceof PointerType || other instanceof ArrayType)) {
             AbstractCXPrimitiveType abstractCXPrimitiveType = (AbstractCXPrimitiveType) other;
-            return abstractCXPrimitiveType.isIntegral();
+            return false;
+            // return abstractCXPrimitiveType.isIntegral();
         }
         if(!(other instanceof ArrayType || other instanceof PointerType)) {
             return false;

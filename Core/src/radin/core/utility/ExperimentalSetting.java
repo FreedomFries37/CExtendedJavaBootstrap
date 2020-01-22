@@ -19,7 +19,7 @@ public @interface ExperimentalSetting {
      *
      * @return whether to use the boolean value
      */
-    boolean useBooleanValue() default true;
+    boolean useBooleanValue() default false;
     
     int defaultIntUseSetting() default 0;
     boolean useIntegerValue() default false;

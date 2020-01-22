@@ -8,6 +8,12 @@ import radin.core.utility.ICompilationSettings;
 import java.util.LinkedList;
 import java.util.List;
 
+
+/**
+ * The abstract class any Tokenizer must inherit in order to be used
+ * @param <T> the type to output. If T extends {@link Token} then the {@link Tokenizer#getKeywordToken(String)} is
+ *           usable
+ */
 public abstract class Tokenizer<T> implements ITokenizer<T> {
     
     private static ICompilationSettings compilationSettings;
@@ -30,7 +36,16 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         this.filename = filename;
     }
     
-    public static Token getReservedToken(String image) {
+    /**
+     * Gets a token based on a image. If it's defined as a keyword, it returns a keyword token. Otherwise it returns
+     * a {@link TokenType#t_id} token
+     * @param image the input image
+     * @return the appropriate token
+     */
+    public static Token getKeywordToken(String image) {
+        if(image.startsWith("__")) {
+            return new Token(TokenType.t_reserved, image);
+        }
         switch (image) {
             case "char":
                 return new Token(TokenType.t_char);
@@ -117,27 +132,53 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         return inputString;
     }
     
+    /**
+     * Fully runs through the tokenization of a file
+     * Although a {@link IParser<T>} can be used such that tokens are lexed at parse time, this ensures there are no
+     * lexical errors before running the parser
+     * @return the amount of tokens created
+     */
     @Override
-    public void run() {
-        for (T token : this);
+    public int run() {
+        int count = 0;
+        for (T token : this){
+            ++count;
+        }
+        return count;
     }
     
+    /**
+     * Gets the first token created
+     * @return such a token
+     */
     @Override
     public T getFirst() {
         return createdTokens.get(0);
     }
     
+    /**
+     * Gets the last token created
+     * @return such a token
+     */
     @Override
     public T getLast() {
         return createdTokens.get(createdTokens.size() - 1);
     }
     
+    /**
+     * Gets the previously generated token
+     * @return such a token, or null if a token doesn't exist
+     */
     @Override
     public T getPrevious() {
         if(createdTokens.size() < 1) return null;
         return createdTokens.get(tokenIndex - 1);
     }
     
+    /**
+     * Gets the current token
+     * @return such a token, or null if a token wasn't generated
+     */
     @Override
     public T getCurrent() {
         if(createdTokens.size() == 0) return getNext();
@@ -152,11 +193,19 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         Tokenizer.compilationSettings = compilationSettings;
     }
     
+    /**
+     * Gets the current character the lexer is on
+     * @return the char. If it's the EOF, returns {@link TokenType#t_eof}
+     */
     protected char getChar() {
         if(currentIndex == getInputString().length()) return EOF;
         return getInputString().charAt(currentIndex);
     }
     
+    /**
+     * Consumes the current character, making the current character the next available character
+     * @return the current character before this method was ran.
+     */
     protected char consumeChar() {
         if(getChar() == '\n') {
             ++lineNumber;
@@ -169,11 +218,24 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         return getInputString().charAt(currentIndex++);
     }
     
+    /**
+     * Returns the next {@code count} number of characters
+     * @param count the number of characters max in the output string
+     * @return a string containing the next n characters, where n is <= {@code count} depending on the amount of
+     * characters left in the input string
+     */
     protected String getNextChars(int count) {
         int min = Math.min(getInputString().length(), currentIndex + count);
         return getInputString().substring(currentIndex, min);
     }
-    
+   
+    /**
+     * Returns the next {@code count} number of characters, then setss the current character to be one past the end of
+     * the outputted string
+     * @param count the number of characters max in the output string
+     * @return a string containing the next n characters, where n is <= {@code count} depending on the amount of
+     * characters left in the input string
+     */
     protected String consumeNextChars(int count) {
         int min = Math.min(getInputString().length(), currentIndex + count);
         String substring = getInputString().substring(currentIndex, min);
@@ -183,6 +245,12 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         return substring;
     }
     
+    /**
+     * Consumes a string if the string matches.
+     * This is implemented using {@link Tokenizer#match(String)} and {@link Tokenizer#consumeNextChars(int)}
+     * @param str the string to test
+     * @return whether it is consumed
+     */
     protected boolean consume(String str) {
         if(match(str)) {
             consumeNextChars(str.length());
@@ -191,6 +259,11 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         return false;
     }
     
+    /**
+     * Consumes a character if and only if the character is the current character
+     * @param c the character to match with
+     * @return if the character was consumed
+     */
     protected boolean consume(char c) {
         if(match(c)) {
             consumeChar();
@@ -213,6 +286,11 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         return getChar() == c;
     }
     
+    /**
+     * Checks to see if the next characters in the input string matches {@code str}.
+     * @param str the string to test
+     * @return whether it's an exact match
+     */
     protected boolean match(String str) {
         return getNextChars(str.length()).equals(str);
     }

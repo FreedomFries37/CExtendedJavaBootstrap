@@ -7,19 +7,14 @@ import java.util.Objects;
 
 public class CXIdentifier implements CXEquivalent {
     private CXIdentifier parentNamespace;
-    private String identifier;
+    private Token identifier;
     private Token corresponding;
     private boolean useHashcode;
     
-    public CXIdentifier(CXIdentifier parentNamespace, String identifier) {
-        this.parentNamespace = parentNamespace;
-        this.identifier = identifier;
-        useHashcode = true;
-    }
     
     public CXIdentifier(CXIdentifier parentNamespace, Token identifier) {
         this.parentNamespace = parentNamespace;
-        this.identifier = identifier.toString();
+        this.identifier = identifier;
         corresponding = identifier;
         useHashcode = true;
     }
@@ -29,7 +24,7 @@ public class CXIdentifier implements CXEquivalent {
         return corresponding;
     }
     
-    public CXIdentifier(String identifier, boolean useHashcode) {
+    public CXIdentifier(Token identifier, boolean useHashcode) {
         this.identifier = identifier;
         this.useHashcode = false;
     }
@@ -38,11 +33,13 @@ public class CXIdentifier implements CXEquivalent {
         return parentNamespace;
     }
     
-    public String getIdentifier() {
-        return identifier;
+    public String getIdentifierString() {
+        return identifier.getImage();
     }
     
-    
+    public Token getIdentifier() {
+        return identifier;
+    }
     
     @Override
     public boolean equals(Object o) {
@@ -53,7 +50,7 @@ public class CXIdentifier implements CXEquivalent {
         
         if (!Objects.equals(parentNamespace, that.parentNamespace))
             return false;
-        return identifier.equals(that.identifier);
+        return identifier.getImage().equals(that.identifier.getImage());
     }
     
     @Override
@@ -69,8 +66,8 @@ public class CXIdentifier implements CXEquivalent {
     
     @Override
     public String toString() {
-        if(parentNamespace == null) return identifier;
-        return parentNamespace.toString() + "::" + identifier;
+        if(parentNamespace == null) return getIdentifierString();
+        return parentNamespace.toString() + "::" + getIdentifierString();
     }
     
     @Override
@@ -83,4 +80,8 @@ public class CXIdentifier implements CXEquivalent {
         return toString().replace("::", "_");
     }
     
+    public String fullInfo() {
+        if(parentNamespace == null) return identifier.toString();
+        return parentNamespace.fullInfo() + " :: " + identifier.toString();
+    }
 }

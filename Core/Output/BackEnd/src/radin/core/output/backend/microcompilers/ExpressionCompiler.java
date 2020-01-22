@@ -8,7 +8,9 @@ import radin.core.output.tags.MethodCallTag;
 import radin.core.output.tags.SuperCallTag;
 import radin.core.lexical.Token;
 import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.CXMethod;
@@ -41,7 +43,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                 break;
             }
             case sizeof: {
-                CXType type = node.getCXType();
+                CXType type = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
                 print("sizeof(");
                 print(type.generateCDefinition());
                 print(")");
@@ -88,6 +90,9 @@ public class ExpressionCompiler extends AbstractCompiler {
             }
             case cast: {
                 CXType castType = node.getCXType();
+                if(castType == null && node.getASTNode() instanceof TypeAbstractSyntaxNode) {
+                    castType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+                }
                 TypeAugmentedSemanticNode child = node.getChild(0);
                 print("(");
                 print(castType.generateCDefinition());
@@ -157,9 +162,15 @@ public class ExpressionCompiler extends AbstractCompiler {
             }
             case method_call: {
                 TypeAugmentedSemanticNode caller = node.getChild(0);
+                boolean needToGetReference = caller.getASTType() == ASTNodeType.id;
+                if(getSettings().isReduceIndirection() && node.getChild(0).getASTType() == ASTNodeType.indirection) {
+                    caller = caller.getChild(0);
+                }
+                
+                
                 String objectInteractionImage;
                 boolean isLValueMethodCall = caller.isLValue();
-                boolean needToGetReference = caller.getASTType() == ASTNodeType.id;
+                
                 
                 String sequence = compileToString(node.getASTChild(ASTNodeType.sequence));
                 if(sequence == null) return false;
@@ -186,38 +197,55 @@ public class ExpressionCompiler extends AbstractCompiler {
                     callingOnString = objectInteractionImage;
                 } else {
                     
-                    print(objectInteractionImage);
-                    
-                    
-                    if (!needToGetReference) {
-                        TypeAugmentedSemanticNode ptr = caller;
-                        while (ptr.getASTType() != ASTNodeType.id) {
-                            ptr = ptr.getChild(0);
-                        }
+                    if(isLValueMethodCall) {
+                        print(objectInteractionImage);
                         
-                        if(ptr.getCXType() instanceof ArrayType) {
-                            CXType type = ptr.getCXType();
-                            while (type instanceof ArrayType) {
-                                ptr = ptr.getParent();
-                                type = ptr.getCXType();
+                    }
+                    if(!caller.containsCompilationTag(BasicCompilationTag.INDIRECT_FIELD_GET)) {
+                        if (!needToGetReference) {
+                            CXType firstType = methodCallTag.getMethod().getParent().toPointer();
+                            TypeAugmentedSemanticNode ptr = caller;
+                            TypeEnvironment environment = methodCallTag.getMethod().getParent().getEnvironment();
+                            while (!ptr.getCXType().is(firstType, environment)) {
+                                ptr = ptr.getChild(0);
                             }
-                        }
-                        
-                        
-                        callingOnString = compileToString(ptr); // save for later use
-                        if (callingOnString == null) return false;
-                        if (!(ptr.getCXType() instanceof PointerType))
-                            callingOnString = "&" + callingOnString;
-                        
-                        CXType type = ptr.getCXType();
-                        while (type instanceof PointerType && ((PointerType) type).getSubType() instanceof PointerType) {
-                            callingOnString = "*" + callingOnString;
-                            type = ((PointerType) type).getSubType();
                             
+                            if (ptr.getCXType() instanceof ArrayType) {
+                                CXType type = ptr.getCXType();
+                                while (type instanceof ArrayType) {
+                                    ptr = ptr.getParent();
+                                    type = ptr.getCXType();
+                                }
+                            }
+                            
+                            
+                            callingOnString = compileToString(ptr); // save for later use
+                            if (callingOnString == null) return false;
+                            if (!(ptr.getCXType() instanceof PointerType))
+                                callingOnString = "&" + callingOnString;
+                            
+                            CXType type = ptr.getCXType();
+                            while (type instanceof PointerType && ((PointerType) type).getSubType() instanceof PointerType) {
+                                callingOnString = "*" + callingOnString;
+                                type = ((PointerType) type).getSubType();
+                                
+                            }
+                        } else {
+                            callingOnString = "&" + objectInteractionImage;
                         }
                     } else {
-                        callingOnString = "&" + objectInteractionImage;
+                        callingOnString = objectInteractionImage;
                     }
+                    
+                    if(!isLValueMethodCall) {
+                        
+                        CXType firstType = methodCallTag.getMethod().getParent().toPointer();
+                        println("({");
+                        println("\t" + firstType.generateCDeclaration("__temp") +  " = " + callingOnString + ";");
+                        print("\t(*__temp)");
+                        callingOnString = "__temp";
+                    }
+                    
                 }
                 
                 if(!isLValueMethodCall && !node.getChild(0).containsCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE)) {
@@ -225,19 +253,25 @@ public class ExpressionCompiler extends AbstractCompiler {
                     
                     boolean isVirtualCall =
                             node.containsCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
+                    if(!getSettings().isReduceIndirection() || !(caller.getCXType() instanceof PointerType))
+                        print('.');
+                    else
+                        print("->");
                     
                     if (isVirtualCall) {
                         print(getSettings().getvTableName());
-                        print('.');
+                        print("->");
                     }
                     
                     
-                    if(sequence == null) return false;
                     if (sequence.isEmpty()) {
-                        print(methodCallTag.getMethod().methodAsFunctionCall(callingOnString));
+                        print(methodCallTag.getMethod().methodCall(callingOnString));
                     } else {
-                        print(methodCallTag.getMethod().methodAsFunctionCall(callingOnString, sequence));
+                        print(methodCallTag.getMethod().methodCall(callingOnString, sequence));
                     }
+                    
+                    println(";");
+                    print("})");
                 } else if(node.getChild(0).containsCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE)){
                     /*
                     TypeAugmentedSemanticNode original = node.getChild(0).getChild(0); // get constructor call
@@ -274,7 +308,11 @@ public class ExpressionCompiler extends AbstractCompiler {
                 }else {
                     boolean isVirtualCall =
                             node.containsCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
-                    print('.');
+                    if(!getSettings().isReduceIndirection())
+                        print('.');
+                    else
+                        print("->");
+                    
                     if (isVirtualCall) {
                         
                         print(getSettings().getvTableName());
@@ -298,7 +336,10 @@ public class ExpressionCompiler extends AbstractCompiler {
                 TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
                 boolean isIndirect = objectInteraction.containsCompilationTag(BasicCompilationTag.INDIRECT_FIELD_GET);
                 
-                if (!isIndirect || getSettings().isReduceIndirection()) {
+                if(!isIndirect && getSettings().isReduceIndirection()) {
+                    if(!compile(objectInteraction.getChild(0))) return false;
+                    print("->");
+                } else if (!isIndirect) {
                     if(!compile(objectInteraction)) return false;
                     print('.');
                 } else {

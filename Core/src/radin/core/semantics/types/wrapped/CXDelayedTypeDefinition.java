@@ -1,94 +1,62 @@
 package radin.core.semantics.types.wrapped;
 
-import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.ICXWrapper;
 
-public class CXDelayedTypeDefinition extends CXType implements ICXWrapper {
+public class CXDelayedTypeDefinition extends CXMappedType {
     
     private CXIdentifier identifier;
-    private Token corresponding;
-    private TypeEnvironment environment;
-    
-    private CXType actual;
-    
-    public class BadDelayedTypeAccessError extends AbstractCompilationError {
-    
-        public BadDelayedTypeAccessError() {
-            super(identifier.getCorresponding(), "This type never created");
-        }
-    }
     
     public CXDelayedTypeDefinition(CXIdentifier identifier, Token corresponding, TypeEnvironment environment) {
+        super(corresponding, environment);
         this.identifier = identifier;
-        this.corresponding = corresponding;
-        this.environment = environment;
     }
     
     public CXIdentifier getIdentifier() {
         return identifier;
     }
     
-    public boolean update() {
-        try {
-            CXType type = environment.getType(identifier, corresponding);
-            if(type == this) return false;
-            if(type == null) return false;
-            actual = type;
-            return true;
-        }catch (TypeNotPresentException e) {
-            return false;
-        }
-        
+    @Override
+    protected CXType getType() {
+        return environment.getType(identifier, corresponding);
     }
     
     @Override
     public String toString() {
-        if(actual == null) return "[DELAYED] " + identifier;
-        return actual.toString();
+        if(getWrappedType() == null) return "[DELAYED] " + identifier;
+        return getWrappedType().toString();
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         if(!update()) throw new BadDelayedTypeAccessError();
-        return actual.generateCDefinition(identifier);
+        return getWrappedType().generateCDeclaration(identifier);
     }
     
     @Override
     public boolean isValid(TypeEnvironment e) {
         if(!update()) throw new BadDelayedTypeAccessError();
-        return actual.isValid(e);
-    }
-    
-    @Override
-    public boolean isPrimitive() {
-        if(!update()) throw new BadDelayedTypeAccessError();
-        return actual.isPrimitive();
-    }
-    
-    @Override
-    public long getDataSize(TypeEnvironment e) {
-        if(!update()) throw new BadDelayedTypeAccessError();
-        return actual.getDataSize(e);
+        return getWrappedType().isValid(e);
     }
     
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!update()) throw new BadDelayedTypeAccessError();
-        return actual.is(other, e, strictPrimitiveEquality);
+        return getWrappedType().is(other, e, strictPrimitiveEquality);
+    }
+    
+    @Override
+    public CXType getTypeRedirection(TypeEnvironment e) {
+        if(!update()) throw new BadDelayedTypeAccessError();
+        return getWrappedType().getTypeRedirection(e);
     }
     
     @Override
     public String generateCDefinition() {
         if(!update()) throw new BadDelayedTypeAccessError();
-        return actual.generateCDefinition();
+        return getWrappedType().generateCDefinition();
     }
     
-    @Override
-    public CXType getWrappedType() {
-        return actual;
-    }
 }

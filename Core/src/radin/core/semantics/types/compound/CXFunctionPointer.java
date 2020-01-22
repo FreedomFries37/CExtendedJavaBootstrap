@@ -8,6 +8,7 @@ import radin.core.semantics.types.primitives.CXPrimitiveType;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CXFunctionPointer extends AbstractCXPrimitiveType {
     
@@ -70,6 +71,12 @@ public class CXFunctionPointer extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public String toString() {
+        return returnType.toString() + " (*) (" + parameterTypes.stream().map(CXType::toString).collect(Collectors.joining(
+                ", ")) + ")";
+    }
+    
+    @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof CXFunctionPointer)) return false;
         CXFunctionPointer that = (CXFunctionPointer) other;
@@ -80,7 +87,7 @@ public class CXFunctionPointer extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         StringBuilder parameters = new StringBuilder();
         boolean first = true;
         for (CXType parameterType : parameterTypes) {

@@ -53,6 +53,20 @@ public class ParameterTypeList {
         return true;
     }
     
+    public boolean equalsExact(ParameterTypeList o, TypeEnvironment environment) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        ParameterTypeList that = (ParameterTypeList) o;
+        
+        if (size != that.size) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        for (int i = 0; i < size; i++) {
+            if(!parameters[i].isExact(that.parameters[i], environment)) return false;
+        }
+        return true;
+    }
+    
     @Override
     public String toString() {
         return "{" + Arrays.toString(parameters) + "}";

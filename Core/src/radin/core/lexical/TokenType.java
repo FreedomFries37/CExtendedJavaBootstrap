@@ -74,7 +74,12 @@ public enum TokenType {
     t_in("in"),
     t_implement("implement"),
     t_using("using"),
-    t_typeid("typeid");
+    t_typeid("typeid"),
+    /**
+     * A reserved token is a token that can't be used by an input function, but the compiler can use freely
+     * This will be defined as anything staring with __
+     */
+    t_reserved("reserved");
     
     private String str;
     

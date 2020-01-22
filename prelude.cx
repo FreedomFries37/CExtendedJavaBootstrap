@@ -1,13 +1,25 @@
 #include "prelude.h"
 
-void print(std::String o) {
+
+void print_s(std::String o) {
 	print(o->getCStr());
 }
-void println(std::String o) {
+void println_s(std::String o) {
 	println(o->getCStr());
 }
 
-void __main(int argc, std::String args[]);
+
+void _main(int argc, std::String args[]);
+
+in std implement Object {
+	String toString() {
+		return this->info->getName();
+	}
+
+	int hashcode() {
+		return (int) this;
+	}
+}
 
 int main(int argc, char* argv[]) {
 
@@ -15,20 +27,10 @@ int main(int argc, char* argv[]) {
 	for(int i = 1; i < argc; ++i) {
 		args[i - 1] = new std::String(argv[i]);
 	}
-	__main(argc-1, args);
+	_main(argc-1, args);
 	for(int i = 1; i < argc; ++i) {
     		args[i - 1]->drop();
     }
 	return 0;
 }
 
-void __main(int argc, std::String args[]) {
-	std::String total = new std::String();
-	int first = 0;
-	for(int i = 0; i < argc; ++i) {
-		if(first) first = 0;
-		else total->concat(", ");
-    	total = total->concat(args[i]);
-    }
-	println(total);
-}

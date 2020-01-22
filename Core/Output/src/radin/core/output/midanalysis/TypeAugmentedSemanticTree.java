@@ -21,7 +21,7 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
         this.head = convertAST(headAST, environment);
     }
     
-    protected static TypeAugmentedSemanticNode convertAST(AbstractSyntaxNode head, TypeEnvironment e) {
+    public static TypeAugmentedSemanticNode convertAST(AbstractSyntaxNode head, TypeEnvironment e) {
         List<TypeAugmentedSemanticNode> children = new LinkedList<>();
         for (AbstractSyntaxNode abstractSyntaxNode : head.getChildList()) {
             children.add(convertAST(abstractSyntaxNode, e));

@@ -44,7 +44,8 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 assert declaration.getASTNode() instanceof TypeAbstractSyntaxNode;
                 
                 declarationType =
-                        ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+                        ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType();// .getTypeRedirection
+                // (getEnvironment());
                 
                 if(strictIs(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
                 
@@ -102,8 +103,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 // same process as prior but also checks to see if can place expression into type
                 TypeAugmentedSemanticNode subDeclaration = declaration.getASTChild(ASTNodeType.declaration);
-                declarationType =
-                        ((TypeAbstractSyntaxNode) subDeclaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+                declarationType = ((TypeAbstractSyntaxNode) subDeclaration.getASTNode()).getCxType();
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
                     declarationType =
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
@@ -115,7 +115,10 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
-                if(!determineTypes(analyzer)) return false;
+                if(!determineTypes(analyzer)) {
+                    getCurrentTracker().addVariable(name, declarationType);
+                    return false;
+                }
                 
                 if(!is(expression.getCXType(), declarationType))
                     throw new IncorrectTypeError(declarationType, expression.getCXType(),

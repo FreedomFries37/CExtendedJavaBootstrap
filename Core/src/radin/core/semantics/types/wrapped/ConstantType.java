@@ -18,8 +18,8 @@ public class ConstantType extends CXType implements ICXWrapper {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
-        return "const " + subtype.generateCDefinition(identifier);
+    public String generateCDeclaration(String identifier) {
+        return "const " + subtype.generateCDeclaration(identifier);
     }
     
     @Override

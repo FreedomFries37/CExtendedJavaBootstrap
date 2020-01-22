@@ -38,7 +38,7 @@ public class ArrayType extends AbstractCXPrimitiveType {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         if(baseType instanceof ArrayType || baseType instanceof ICXWrapper && ((ICXWrapper) baseType).getWrappedType() instanceof ArrayType) {
             ArrayType next;
             if(baseType instanceof ArrayType) {
@@ -53,9 +53,9 @@ public class ArrayType extends AbstractCXPrimitiveType {
         }
         
         if(size != null) {
-            return baseType.generateCDefinition() + " " + identifier + "[" + "$REPLACE ME$" + "]";
+            return baseType.generateCDeclaration() + " " + identifier + "[" + "$REPLACE ME$" + "]";
         }
-        return baseType.generateCDefinition() + " " + identifier + "[]";
+        return baseType.generateCDeclaration() + " " + identifier + "[]";
     }
     
     /**

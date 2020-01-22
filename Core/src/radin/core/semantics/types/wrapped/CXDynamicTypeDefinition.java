@@ -19,7 +19,7 @@ public class CXDynamicTypeDefinition extends CXType implements ICXWrapper {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         return typename + " " + identifier;
     }
     

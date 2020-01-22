@@ -18,8 +18,8 @@ public class CXNamespacedType extends CXType implements ICXWrapper {
     }
     
     @Override
-    public String generateCDefinition(String identifier) {
-        return actual.generateCDefinition(identifier);
+    public String generateCDeclaration(String identifier) {
+        return actual.generateCDeclaration(identifier);
     }
     
     @Override

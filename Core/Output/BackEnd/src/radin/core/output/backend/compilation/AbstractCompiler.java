@@ -1,14 +1,18 @@
 package radin.core.output.backend.compilation;
 
+import radin.core.chaining.ICompilerFunction;
+import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.lexical.Token;
 import radin.core.utility.ICompilationSettings;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
-public abstract class AbstractCompiler {
+public abstract class AbstractCompiler implements ICompilerFunction<TypeAugmentedSemanticNode, Boolean> {
 
     private PrintWriter printWriter;
     private static ICompilationSettings settings;
@@ -26,6 +30,16 @@ public abstract class AbstractCompiler {
     }
     
     abstract public boolean compile(TypeAugmentedSemanticNode node);
+    
+    @Override
+    public Boolean invoke(TypeAugmentedSemanticNode input) {
+        return compile(input);
+    }
+    
+    @Override
+    public List<AbstractCompilationError> getErrors() {
+        return new LinkedList<>();
+    }
     
     public String compileToString(TypeAugmentedSemanticNode node) {
         PrintWriter saved = printWriter; // temporarily change where output is directed

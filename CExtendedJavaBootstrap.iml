@@ -13,5 +13,6 @@
     <orderEntry type="module" module-name="MidAnalysis" />
     <orderEntry type="module" module-name="Input" />
     <orderEntry type="module" module-name="Output" />
+    <orderEntry type="module" module-name="Combo" />
   </component>
 </module>

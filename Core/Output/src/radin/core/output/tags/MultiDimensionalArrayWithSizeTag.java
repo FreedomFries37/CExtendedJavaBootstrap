@@ -1,10 +1,12 @@
 package radin.core.output.tags;
 
+import radin.core.ICompilationMapper;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.utility.ICompilationSettings;
 
 
 import java.util.LinkedList;
@@ -50,7 +52,12 @@ public class MultiDimensionalArrayWithSizeTag extends AbstractCompilationTag {
             if(!typeAnalyzer.determineTypes() || typeAnalyzer.hasErrors()) return false;
            
              */
-            if(!determiner.isConstant(expression)) return false;
+            ICompilationSettings.debugLog.info("---------------IGNORE MOST ERRORS BELOW------------------");
+            if(!determiner.isConstant(expression)) {
+                ICompilationSettings.debugLog.info("---------------IGNORE MOST ERRORS ABOVE------------------");
+                return false;
+            }
+            
         }
         return true;
     }

@@ -43,7 +43,7 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                     switch (child.getASTType()) {
                         case declaration: {
                             String varName = child.getChild(0).getToken().getImage();
-                            String s = type.generateCDefinition(varName);
+                            String s = type.generateCDeclaration(varName);
                             if(child.containsCompilationTag(ArrayWithSizeTag.class)) {
                                 ArrayWithSizeTag compilationTag = child.getCompilationTag(ArrayWithSizeTag.class);
                                 String size = expressionCompiler.compileToString(compilationTag.getExpression());
@@ -64,7 +64,7 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
                         }
                         case initialized_declaration: {
                             String varName = child.getASTChild(declaration).getChild(0).getToken().getImage();
-                            String s = type.generateCDefinition(varName);
+                            String s = type.generateCDeclaration(varName);
                             if(child.containsCompilationTag(ArrayWithSizeTag.class)) {
                                 ArrayWithSizeTag compilationTag = child.getCompilationTag(ArrayWithSizeTag.class);
                                 String size = expressionCompiler.compileToString(compilationTag.getExpression());

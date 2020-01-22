@@ -19,7 +19,7 @@ public abstract class AbstractCXPrimitiveType extends CXType {
     }
     
     
-    public String generateCDefinition(String identifier) {
+    public String generateCDeclaration(String identifier) {
         return generateCDefinition() + " " + identifier;
     }
     

@@ -101,7 +101,7 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
         child.setParent(this);
     }
     
-    public void addAllChildren(List<TypeAugmentedSemanticNode> children) {
+    public void addAllChildren(List<? extends TypeAugmentedSemanticNode> children) {
         children.forEach(this::addChild);
     }
     
@@ -197,7 +197,7 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
             else output = astNode.toString() + " -> " + type.toString() + " [R]";
         }
         if(!compilationTags.isEmpty())
-            output += "  compilation radin.tags: " + compilationTags;
+            output += "  compilation tags: " + compilationTags;
         return output;
     }
     

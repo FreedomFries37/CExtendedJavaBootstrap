@@ -1,36 +1,59 @@
 in std class ClassInfo;
 in std class String;
 
-typedef unsigned long size_t;
-void* malloc(size_t sz);
+typedef unsigned long class_id;
+void* malloc(unsigned int sz);
+void* calloc(unsigned int num, unsigned int sz);
 void free(void* ptr);
 
-void print(char* o);
-void println(char* o);
-void print(std::String o);
-void println(std::String o);
+void print(const char* c);
+void println(const char* c);
+void print_s(std::String o);
+void println_s(std::String o);
+
+
+
+
+/*
+public <T> T inc(T o) {
+	if((int) o == 0) return o;
+	++o->references;
+	return o;
+}
+`
+public <T> T dec(T o) {
+	if((int) o == 0) return o;
+	--o->references;
+	if(o->references <= 0) {
+		o->drop();
+		return (T) 0;
+	}
+	return o;
+}
+*/
 
 in std {
+	ClassInfo getClass(class_id id);
+
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
 
 		private ClassInfo info;
-		private long references; // if using garbage collection
+		public long references; // if using garbage collection
 
 		public Object();
 
-		virtual public int hashcode() {
-			return 1;
-		}
-		virtual public int equals(Object other) {
-			return 1;
-		}
-		virtual public void drop() {
+		virtual public int hashcode();
+		virtual public int equals(Object other);
+		virtual public void drop();
 
-		}
-		public ClassInfo getClassInfo() {
-			return this->info;
-		}
+
+
+		virtual public String toString();
+
+		public ClassInfo getClass();
+
+
 	};
 
 	class ClassInfo {
@@ -39,52 +62,30 @@ in std {
 		private int classHash;
 
 		private ClassInfo(String name, ClassInfo parent, int classHash);
+
+		public String getName();
+
+		public int is(Object o);
+
+		virtual public int equals(Object other);
+		virtual public int equals(ClassInfo other);
 	};
 
-	class String {
+	class String{
 		char* backingPtr;
 		int length;
 
-		public String(const char* bp) {
-			const char* ptr = bp;
-			for(; *ptr != '\0'; ptr++) {
-				++this->length;
-			}
-			this->backingPtr = malloc(sizeof(char) * (this->length + 1));
-			this->backingPtr[this->length] = '\0';
-			for(int i = 0; i < this->length; i++) {
-				this->backingPtr[i] = (char) bp[i];
-			}
-		}
+		public String(const char* bp);
 
-		public String() : this ("") { }
+		public String();
 
-		virtual public void drop() {
-			super->drop();
-			free(this->backingPtr);
-		}
+		virtual public void drop();
 
-		public String concat(char* other) {
-			return this->concat(new String(other));
-		}
+		public String concat(String other);
 
-		public String concat(String other) {
-			char* next = (char*) malloc(sizeof(char) * (this->length + other->length + 1));
-			for(int i = 0; i < this->length; i++) {
-				next[i] = (char) this->backingPtr[i];
-			}
+		public String concat(char* other);
 
-			for(int i = 0; i < other->length; i++) {
-				next[i + other->length] = (char) other->backingPtr[i];
-			}
-
-			return new String(next);
-		}
-
-
-		public const char* getCStr() {
-			return this->backingPtr;
-		}
+		public const char* getCStr();
     };
 
 }

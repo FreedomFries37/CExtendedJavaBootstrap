@@ -1,5 +1,6 @@
 package radin.core.semantics.types.compound;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 
@@ -15,11 +16,11 @@ public class CXUnionType extends CXBasicCompoundType {
         super(f1, fields);
     }
     
-    public CXUnionType(String name, List<FieldDeclaration> fields) {
+    public CXUnionType(Token name, List<FieldDeclaration> fields) {
         super(name, fields);
     }
     
-    public CXUnionType(String name, FieldDeclaration f1, FieldDeclaration... fields) {
+    public CXUnionType(Token name, FieldDeclaration f1, FieldDeclaration... fields) {
         super(name, f1, fields);
     }
     

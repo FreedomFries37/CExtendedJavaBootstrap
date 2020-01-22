@@ -6,14 +6,14 @@ import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.typeanalysis.errors.ClassNotDefinedError;
 import radin.core.output.typeanalysis.errors.IdentifierDoesNotExistError;
 import radin.core.output.typeanalysis.errors.RedeclarationError;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class VariableTypeTracker {
     
@@ -212,8 +212,46 @@ public class VariableTypeTracker {
         privateMethodEntries = new HashMap<>();
         privateFieldEntries = new HashMap<>();
         demoteEntries(privateFieldEntries, old.privateFieldEntries);
+        demoteEntries(privateMethodEntries, old.privateMethodEntries);
+        privateConstructors = new HashSet<>(old.privateConstructors);
+    }
+    
+    private VariableTypeTracker(VariableTypeTracker old, VariableTypeTracker old2) {
+        environment = old.environment;
+        trackingTypes = new HashSet<>(old.trackingTypes);
+        trackingTypes.addAll(old2.trackingTypes);
+        variableEntries = new HashMap<>();
+        demoteEntries(variableEntries, old.variableEntries);
+        demoteEntries(variableEntries, old2.variableEntries);
+        
+        functionEntries = old.functionEntries;
+        functionEntries.putAll(old2.functionEntries);
+        
+        publicMethodEntries = old.publicMethodEntries;
+        publicMethodEntries.putAll(old2.publicMethodEntries);
+        publicFieldEntries = old.publicFieldEntries;
+        publicFieldEntries.putAll(old2.publicFieldEntries);
+        publicConstructors = old.publicConstructors;
+        publicConstructors.addAll(old2.publicConstructors);
+        
+        internalFieldEntries = new HashMap<>();
+        internalMethodEntries = new HashMap<>();
+        demoteEntries(internalFieldEntries, old.internalFieldEntries);
+        demoteEntries(internalMethodEntries, old.internalMethodEntries);
+        demoteEntries(internalFieldEntries, old2.internalFieldEntries);
+        demoteEntries(internalMethodEntries, old2.internalMethodEntries);
+        internalConstructors = new HashSet<>(old.internalConstructors);
+        internalConstructors.addAll(old2.internalConstructors);
+        
+        
+        privateMethodEntries = new HashMap<>();
+        privateFieldEntries = new HashMap<>();
+        demoteEntries(privateFieldEntries, old.privateFieldEntries);
         demoteEntries(privateFieldEntries, old.privateMethodEntries);
-        privateConstructors = new HashSet<>();
+        demoteEntries(privateFieldEntries, old2.privateFieldEntries);
+        demoteEntries(privateFieldEntries, old2.privateMethodEntries);
+        privateConstructors = new HashSet<>(old.privateConstructors);
+        privateConstructors.addAll(old2.privateConstructors);
     }
     
     private VariableTypeTracker(VariableTypeTracker old, CXClassType parentType) {
@@ -259,6 +297,10 @@ public class VariableTypeTracker {
         //typeTracker.addEntry("this", new PointerType(owner));
         classTrackers.put(owner, variableTypeTracker);
         return variableTypeTracker;
+    }
+    
+    public VariableTypeTracker createInnerTypeTrackerLoad(CXClassType owner) {
+        return new VariableTypeTracker(this, classTrackers.getOrDefault(owner, new VariableTypeTracker(environment)));
     }
     
     public boolean entryExists(String name) {
@@ -374,6 +416,14 @@ public class VariableTypeTracker {
         
     }
     
+    public Set<String> allMethodsAvailable() {
+        Set<String> output = new HashSet<>();
+        output.addAll(publicMethodEntries.keySet().stream().map(o -> o.name).collect(Collectors.toList()));
+        output.addAll(internalMethodEntries.keySet().stream().map(o -> o.name).collect(Collectors.toList()));
+        output.addAll(privateMethodEntries.keySet().stream().map(o -> o.name).collect(Collectors.toList()));
+        return output;
+    }
+    
     public void addIsTracking(CXCompoundType type) {
         trackingTypes.add(type);
     }
@@ -456,7 +506,7 @@ public class VariableTypeTracker {
     
     
     public void addCompoundTypeMethodEntry(CXCompoundType parent, String name, CXType type, ParameterTypeList typeList,
-                                           HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {
+                                           HashMap<CompoundDeclarationKey, TypeTrackerEntry> methodEntries) {
         CompoundDeclarationKey key = new MethodKey(parent, name, typeList);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
         
@@ -465,7 +515,7 @@ public class VariableTypeTracker {
             System.out.println(((CXClassType) parent).classInfo());
             throw new RedeclareError(name);
         }
-        publicMethodEntries.put(key, typeTrackerEntry);
+        methodEntries.put(key, typeTrackerEntry);
         
     }
     

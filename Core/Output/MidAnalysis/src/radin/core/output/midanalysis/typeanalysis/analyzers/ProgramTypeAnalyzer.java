@@ -5,10 +5,12 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.semantics.types.primitives.PointerType;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +21,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
         this(new TypeAugmentedSemanticTree(program, getEnvironment()).getHead());
         assert program.getType() == ASTNodeType.top_level_decs;
     }
+    
     
     public ProgramTypeAnalyzer(TypeAugmentedSemanticNode tree) {
         super(tree);
@@ -88,6 +91,17 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                     setIsFailurePoint(child);
                     return false;
                 }
+            } else if(child.getASTType() == ASTNodeType.implement) {
+                CXClassType subType = (CXClassType) ((PointerType) ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType()).getSubType();
+                ImplementationTypeAnalyzer implementationTypeAnalyzer = new ImplementationTypeAnalyzer(child,
+                        subType);
+                
+                if(!determineTypes(implementationTypeAnalyzer)) {
+                    setIsFailurePoint(child);
+                    return false;
+                }
+                
+                
             }
             
             

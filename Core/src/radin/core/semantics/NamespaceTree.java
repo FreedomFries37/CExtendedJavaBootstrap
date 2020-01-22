@@ -63,7 +63,7 @@ public class NamespaceTree {
         CXIdentifier parent = getNamespace(currentNamespace, path.getParentNamespace());
         if(parent == null) return null;
         for (Node child : getNode(parent).children) {
-            if(child.shorthand.equals(path.getIdentifier())) return child.identifier;
+            if(child.shorthand.equals(path.getIdentifierString())) return child.identifier;
         }
         return null;
     }
@@ -77,7 +77,7 @@ public class NamespaceTree {
                 Set<CXIdentifier> parents = getNamespaces(currentNamespace, path.getParentNamespace());
                 for (CXIdentifier parent : parents) {
                     for (Node child : getNode(parent).children) {
-                        if (child.shorthand.equals(path.getIdentifier())) output.add(child.identifier);
+                        if (child.shorthand.equals(path.getIdentifierString())) output.add(child.identifier);
                     }
                 }
                 
@@ -131,13 +131,13 @@ public class NamespaceTree {
     public void addNamespace(CXIdentifier namespace) {
         if(namespaceExists(namespace)) return;
         if(namespace.getParentNamespace() == null) {
-            topNamespaces.add(new Node(namespace.getIdentifier(), namespace));
+            topNamespaces.add(new Node(namespace.getIdentifierString(), namespace));
         } else {
             if(!namespaceExists(namespace.getParentNamespace())) {
                 addNamespace(namespace.getParentNamespace());
             }
             getNode(namespace.getParentNamespace()).add(
-                    new Node(namespace.getIdentifier(), namespace)
+                    new Node(namespace.getIdentifierString(), namespace)
             );
         }
     }
