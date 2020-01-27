@@ -16,7 +16,7 @@ import java.util.List;
  */
 public abstract class Tokenizer<T> implements ITokenizer<T> {
     
-    private static ICompilationSettings compilationSettings;
+    private static ICompilationSettings<?,?,?> compilationSettings;
     protected String inputString;
     protected List<T> createdTokens;
     protected int tokenIndex;
@@ -200,7 +200,8 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
     @Override
     public T getPrevious() {
         if(createdTokens.size() < 1) return null;
-        return createdTokens.get(tokenIndex - 1);
+        int prevIndex = Math.min(tokenIndex - 1, createdTokens.size() - 1);
+        return createdTokens.get(prevIndex);
     }
     
     /**

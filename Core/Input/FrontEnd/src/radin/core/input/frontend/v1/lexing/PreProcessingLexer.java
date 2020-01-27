@@ -1,12 +1,16 @@
 package radin.core.input.frontend.v1.lexing;
 
 import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.errorhandling.CompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 
 import radin.core.input.Tokenizer;
+import radin.core.utility.ICompilationSettings;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -236,8 +240,21 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 String filename = arguments.substring(1, arguments.length() - 1);
                 boolean isLocal = arguments.charAt(0) == '"';
                 File file;
+                Token closestToken = new Token(TokenType.t_reserved, directiveString)
+                        .addColumnAndLineNumber(1, lineNumber - 1);
                 if(isLocal) {
-                    file = new File(filename);
+                    try {
+                        File localDirectory = new File(this.filename).getCanonicalFile().getParentFile();
+                        
+                        if(localDirectory == null
+                                || !localDirectory.isDirectory()) {
+                            throw new CompilationError("File does not exist", closestToken);
+                        }
+                        Path path = Paths.get(localDirectory.getPath(), filename).toRealPath();
+                        file = new File(path.toUri());
+                    } catch (IOException e) {
+                        throw new CompilationError("File does not exist", closestToken);
+                    }
                 } else {
                     throw new IllegalArgumentException();
                 }
@@ -247,8 +264,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 }
                 StringBuilder text = new StringBuilder();
                 try {
-        
-                    BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
+                    ICompilationSettings.debugLog.info("Including file " + file);
+                    BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
         
                     String line;
                     while((line = bufferedReader.readLine()) != null) {
@@ -605,7 +622,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     }
     
     public Token getNext() {
-        if (++tokenIndex == createdTokens.size()) {
+        if (++tokenIndex >= createdTokens.size()) {
             Token tok;
             try {
                 tok = singleLex();
