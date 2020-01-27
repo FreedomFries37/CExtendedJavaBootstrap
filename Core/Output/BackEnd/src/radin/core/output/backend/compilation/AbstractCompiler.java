@@ -14,27 +14,20 @@ import java.util.Locale;
 
 public abstract class AbstractCompiler implements ICompilerFunction<TypeAugmentedSemanticNode, Boolean> {
 
+    
     private PrintWriter printWriter;
-    private static ICompilationSettings settings;
-    
-    public static ICompilationSettings getSettings() {
-        return settings;
-    }
-    
-    public static void setSettings(ICompilationSettings settings) {
-        AbstractCompiler.settings = settings;
-    }
     
     public AbstractCompiler(PrintWriter printWriter) {
         this.printWriter = printWriter;
     }
     
-    abstract public boolean compile(TypeAugmentedSemanticNode node);
     
     @Override
     public Boolean invoke(TypeAugmentedSemanticNode input) {
         return compile(input);
     }
+    
+    abstract public boolean compile(TypeAugmentedSemanticNode node);
     
     @Override
     public List<AbstractCompilationError> getErrors() {
@@ -76,10 +69,6 @@ public abstract class AbstractCompiler implements ICompilerFunction<TypeAugmente
         else printWriter.print(s.getImage());
     }
     
-    protected void setPrintWriter(PrintWriter printWriter) {
-        this.printWriter = printWriter;
-    }
-    
     public void print(Object obj) {
         printWriter.print(obj);
     }
@@ -98,6 +87,10 @@ public abstract class AbstractCompiler implements ICompilerFunction<TypeAugmente
     
     public PrintWriter getPrintWriter() {
         return printWriter;
+    }
+    
+    protected void setPrintWriter(PrintWriter printWriter) {
+        this.printWriter = printWriter;
     }
     
     public PrintWriter printf(String format, Object... args) {

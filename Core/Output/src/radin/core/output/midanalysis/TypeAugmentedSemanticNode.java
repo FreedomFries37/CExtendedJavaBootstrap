@@ -3,6 +3,7 @@ package radin.core.output.midanalysis;
 import radin.core.lexical.Token;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.MeaningfulNode;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
@@ -13,7 +14,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanticNode> {
+public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSemanticNode> {
     
     private AbstractSyntaxNode astNode;
     
@@ -202,8 +203,13 @@ public class TypeAugmentedSemanticNode extends AbstractTree<TypeAugmentedSemanti
     }
     
     @Override
-    public List<? extends AbstractTree<TypeAugmentedSemanticNode>> getDirectChildren() {
+    public List<TypeAugmentedSemanticNode> getDirectChildren() {
         return getChildren();
+    }
+    
+    @Override
+    public ASTNodeType getType() {
+        return getASTType();
     }
     
     public void addCompilationTag(ICompilationTag tag) {

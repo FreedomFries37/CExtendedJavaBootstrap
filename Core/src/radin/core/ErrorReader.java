@@ -2,6 +2,7 @@ package radin.core;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,11 +12,7 @@ import java.util.regex.Pattern;
 
 public class ErrorReader {
     
-    private static ICompilationSettings settings;
-    
-    public static void setSettings(ICompilationSettings settings) {
-        ErrorReader.settings = settings;
-    }
+   
     
     private static class LineHolder {
         public final String fileName;
@@ -95,7 +92,7 @@ public class ErrorReader {
                     }
                     
                     if(!errorPrinted) {
-                        if (!settings.isShowErrorStackTrace())
+                        if (!UniversalCompilerSettings.getInstance().getSettings().isShowErrorStackTrace())
                             System.out.println(error.toString());
                         else
                             error.printStackTrace(System.out);
@@ -127,7 +124,7 @@ public class ErrorReader {
                     outputedFileName = lineHolderCurrent.fileName;
                 }
                 if(!errorPrinted) {
-                    if (!settings.isShowErrorStackTrace()) {
+                    if (!UniversalCompilerSettings.getInstance().getSettings().isShowErrorStackTrace()) {
                         System.out.println(error.toString());
                         // ICompilationSettings.debugLog.finer(error.toString());
                     }

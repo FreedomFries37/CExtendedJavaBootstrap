@@ -1,4 +1,6 @@
-in std class String;
+/*
+using std::String;
+
 void print_s(std::String o);
 void println_s(std::String o);
 
@@ -17,3 +19,4 @@ void _main(int argc, std::String args[]) {
     }
 	println_s(total);
 }
+*/

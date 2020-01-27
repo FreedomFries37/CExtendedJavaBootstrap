@@ -7,7 +7,7 @@ import radin.core.semantics.types.CXType;
 
 import java.util.*;
 
-public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
+public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
     
     private ASTNodeType type;
     private Token token;
@@ -98,10 +98,12 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
         this.compilationTags = compilationTags;
     }
     
+    @Override
     public ASTNodeType getType() {
         return type;
     }
     
+    @Override
     public Token getToken() {
         return token;
     }
@@ -204,7 +206,7 @@ public class AbstractSyntaxNode extends AbstractTree<AbstractSyntaxNode> impleme
     }
     
     @Override
-    public List<? extends AbstractTree<AbstractSyntaxNode>> getDirectChildren() {
+    public List<AbstractSyntaxNode> getDirectChildren() {
         return childList;
     }
 }

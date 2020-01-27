@@ -9,4 +9,14 @@ import radin.core.errorhandling.ICompilationErrorCollector;
  */
 public interface IToolChainHead<T> extends IToolChain<Void, T> {
     T invoke();
+    
+    @Override
+    default T invoke(Void input) {
+        return invoke();
+    }
+    
+    /**
+     * Because output doesn't depend on input, then must be able to reset if necessary
+     */
+    void reset();
 }

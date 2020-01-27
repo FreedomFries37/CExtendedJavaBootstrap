@@ -73,6 +73,16 @@ public class ToolChainFactory {
         public IToolChain<T, R> toChain() {
             return this;
         }
+    
+        @Override
+        public <V> void setVariable(String variable, V value) {
+        
+        }
+    
+        @Override
+        public <V> V getVariable(String variable) {
+            return null;
+        }
     }
     
     public static abstract class ToolChainHead<R> extends ToolChainBuilder<Void, R> {
@@ -117,6 +127,19 @@ public class ToolChainFactory {
         }
     
         @Override
+        public <V> void setVariable(String variable, V value) {
+            head.setVariable(variable, value);
+            chain.setVariable(variable, value);
+        }
+    
+        @Override
+        public <V> V getVariable(String variable) {
+            var variable1 = head.<V>getVariable(variable);
+            if(variable1 != null) return variable1;
+            return chain.getVariable(variable);
+        }
+    
+        @Override
         public R invoke(Void input) {
             return invoke();
         }
@@ -134,7 +157,6 @@ public class ToolChainFactory {
             ICompilationSettings.debugLog.info("Running Identity link");
             return input;
         }
-    
         
     }
     
@@ -174,6 +196,19 @@ public class ToolChainFactory {
             front.clearErrors();
             back.clearErrors();
         }
+    
+        @Override
+        public <V> void setVariable(String variable, V value) {
+            front.setVariable(variable, value);
+            back.setVariable(variable, value);
+        }
+    
+        @Override
+        public <V> V getVariable(String variable) {
+            var variable1 = front.<V>getVariable(variable);
+            if(variable1 != null) return variable1;
+            return back.getVariable(variable);
+        }
     }
     
     private static class CompilerFunctionBuilder <T, R> extends ToolChainBuilder<T, R> {
@@ -191,7 +226,16 @@ public class ToolChainFactory {
             errors.addAll(part.getErrors());
             return invoke;
         }
-        
+    
+        @Override
+        public <V> void setVariable(String variable, V value) {
+            part.setVariable(variable, value);
+        }
+    
+        @Override
+        public <V> V getVariable(String variable) {
+            return part.getVariable(variable);
+        }
     }
     
     private static class CompilerProducerBuilder <R> extends ToolChainHead<R>  {
@@ -214,7 +258,15 @@ public class ToolChainFactory {
             return invoke;
         }
     
-        
+        @Override
+        public <V> void setVariable(String variable, V value) {
+            part.setVariable(variable, value);
+        }
+    
+        @Override
+        public <V> V getVariable(String variable) {
+            return part.getVariable(variable);
+        }
     }
     
     private static class InPlaceCompilerBuilder <T> extends ToolChainBuilder<T, T> {
@@ -240,6 +292,16 @@ public class ToolChainFactory {
         public void clearErrors() {
             super.clearErrors();
             part.getErrors().clear();
+        }
+    
+        @Override
+        public <V> void setVariable(String variable, V value) {
+            part.setVariable(variable, value);
+        }
+    
+        @Override
+        public <V> V getVariable(String variable) {
+            return part.getVariable(variable);
         }
     }
     

@@ -11,6 +11,7 @@ import radin.core.semantics.types.compound.CXStructType;
 import radin.core.semantics.types.compound.ICXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.PrintWriter;
 
@@ -28,7 +29,7 @@ public class ClassCompiler extends AbstractIndentedOutputSingleOutputCompiler {
     
     @Override
     public boolean compile() {
-        cxClassType.generateSuperMethods(getSettings().getvTableName());
+        cxClassType.generateSuperMethods(UniversalCompilerSettings.getInstance().getSettings().getvTableName());
         CXStructType structEquivalent = cxClassType.getStructEquivalent();
         
         CXStructType vTable = cxClassType.getVTable();

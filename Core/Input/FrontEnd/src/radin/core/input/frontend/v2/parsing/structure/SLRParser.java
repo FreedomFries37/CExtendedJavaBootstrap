@@ -26,6 +26,11 @@ public class SLRParser<Input extends Token, Check> implements IParser<Input, Par
     
     }
     
+    @Override
+    public ParseNode invoke() {
+        return null;
+    }
+    
     private Map<? super Input, ? extends Check> mappingFunction;
     private ITokenizer<? extends Input> tokenizer;
     private HashMap<Pair<ParsableObject<?>, Integer>, LRActionRecord<Integer>> parseTable;

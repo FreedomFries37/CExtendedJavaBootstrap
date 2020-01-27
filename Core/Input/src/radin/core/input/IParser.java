@@ -1,11 +1,15 @@
 package radin.core.input;
 
+import radin.core.chaining.IToolChain;
+import radin.core.chaining.IToolChainHead;
 import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.AbstractTree;
 
-public interface IParser<T, P extends AbstractTree<? extends P>> extends ICompilationErrorCollector {
+public interface IParser<T, P extends AbstractTree<? extends P>> extends IToolChainHead<P> {
     void setTokenizer(ITokenizer<? extends T> t);
     P parse();
+    
+    
     
     ITokenizer<? extends T> getTokenizer();
     

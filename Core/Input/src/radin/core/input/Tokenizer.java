@@ -36,6 +36,34 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         this.filename = filename;
     }
     
+    
+    
+    @Override
+    public T invoke() {
+        return getNext();
+    }
+    
+    @Override
+    public <V> void setVariable(String variable, V value) {
+        switch (variable) {
+            case "filename": {
+                this.filename = (String) value;
+                break;
+            }
+            case "inputString": {
+                this.inputString = (String) value;
+                break;
+            }
+        }
+    }
+    
+    @Override
+    public <V> V getVariable(String variable) {
+        return null;
+    }
+    
+    
+    
     /**
      * Gets a token based on a image. If it's defined as a keyword, it returns a keyword token. Otherwise it returns
      * a {@link TokenType#t_id} token
@@ -319,5 +347,10 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
     @Override
     public void reset() {
         tokenIndex = 0;
+        createdTokens.clear();
+        tokenIndex = -1;
+        column = 1;
+        lineNumber = 1;
+        currentIndex = 0;
     }
 }
