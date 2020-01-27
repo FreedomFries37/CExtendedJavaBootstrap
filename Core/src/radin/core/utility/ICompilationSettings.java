@@ -1,13 +1,14 @@
 package radin.core.utility;
 
 
+import radin.core.IFrontEndUnit;
 import radin.core.JodinLogger;
+import radin.core.chaining.IToolChain;
 
 import java.lang.reflect.Method;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public interface ICompilationSettings {
+public interface ICompilationSettings<Front, Mid, Back> {
     
     /**
      * Use experimental settings while compiling
@@ -112,4 +113,17 @@ public interface ICompilationSettings {
     default void setLogLevel(Level logLevel) {
         debugLog.setLevel(logLevel);
     }
+    
+    
+    IFrontEndUnit<? extends Front> getFrontEndUnit();
+    
+    void setFrontEndUnit(IFrontEndUnit<? extends Front> frontEndUnit);
+    
+    IToolChain<? super Front, ? extends Mid> getMidToolChain();
+    
+    void setMidToolChain(IToolChain<? super Front, ? extends Mid> midToolChain);
+    
+    IToolChain<? super Mid, ? extends Back> getBackToolChain();
+    
+    void setBackToolChain(IToolChain<? super Mid, ? extends Back> backToolChain);
 }

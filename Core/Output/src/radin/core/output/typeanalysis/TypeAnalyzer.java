@@ -22,10 +22,12 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     
     private TypeAugmentedSemanticNode tree;
     
-    private static ICompilationSettings compilationSettings;
+    private static ICompilationSettings<?,?,?> compilationSettings;
     private List<AbstractCompilationError> errors;
     
     private static HashMap<CXMethod, TypeAugmentedSemanticNode> methods;
+    
+    
     
     private static class EmptyTypeAnalyzer extends TypeAnalyzer{
     
@@ -37,6 +39,11 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         public boolean determineTypes(TypeAugmentedSemanticNode node) {
             return false;
         }
+    
+        @Override
+        public TypeAugmentedSemanticNode invoke(TypeAugmentedSemanticNode input) {
+            return null;
+        }
     }
     
     public static TypeAnalyzer getInstance() {
@@ -47,6 +54,26 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     static {
         
         methods = new HashMap<>();
+    }
+    
+    @Override
+    public <V> void setVariable(String variable, V value) {
+        switch (variable) {
+            case "environment": {
+                setEnvironment((TypeEnvironment) value);
+                break;
+            }
+        }
+    }
+    
+    @Override
+    public <V> V getVariable(String variable) {
+        switch (variable) {
+            case "environment": {
+                return (V) getEnvironment();
+            }
+        }
+        return null;
     }
     
     public static HashMap<CXMethod, TypeAugmentedSemanticNode> getMethods() {
@@ -80,6 +107,13 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     @Override
     public void setHead(TypeAugmentedSemanticNode object) {
         tree = object;
+    }
+    
+    @Override
+    public TypeAugmentedSemanticNode invoke(TypeAugmentedSemanticNode input) {
+        setHead(input);
+        if(!determineTypes()) return null;
+        return input;
     }
     
     @Override

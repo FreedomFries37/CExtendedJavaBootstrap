@@ -1,6 +1,12 @@
 package radin.core.utility;
 
-public class CompilationSettings implements ICompilationSettings {
+import radin.core.IFrontEndUnit;
+import radin.core.chaining.IToolChain;
+import radin.core.lexical.Token;
+import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.TypeEnvironment;
+
+public class CompilationSettings<Front, Mid, Back> implements ICompilationSettings<Front, Mid, Back> {
     
     private int optimizationLevel = 0;
     private boolean useStackTrace = false;
@@ -15,6 +21,10 @@ public class CompilationSettings implements ICompilationSettings {
     private boolean showErrorStackTrace = false;
     
     private int tabSize = 4;
+    
+    private IFrontEndUnit<? extends Front> frontEndUnit;
+    private IToolChain<? super Front, ? extends Mid> midToolChain;
+    private IToolChain<? super Mid, ? extends Back> backToolChain;
     
     
     @Override
@@ -104,6 +114,7 @@ public class CompilationSettings implements ICompilationSettings {
         this.showErrorStackTrace = showErrorStackTrace;
     }
     
+    
     @Override
     public int getTabSize() {
         return tabSize;
@@ -114,4 +125,36 @@ public class CompilationSettings implements ICompilationSettings {
         debugLog.config("default tab = \"" + " ".repeat(tabSize) + "\"");
         this.tabSize = tabSize;
     }
+    
+    
+    @Override
+    public IFrontEndUnit<? extends Front> getFrontEndUnit() {
+        return frontEndUnit;
+    }
+    
+    @Override
+    public void setFrontEndUnit(IFrontEndUnit<? extends Front> frontEndUnit) {
+        this.frontEndUnit = frontEndUnit;
+    }
+    
+    @Override
+    public IToolChain<? super Front, ? extends Mid> getMidToolChain() {
+        return midToolChain;
+    }
+    
+    @Override
+    public void setMidToolChain(IToolChain<? super Front, ? extends Mid> midToolChain) {
+        this.midToolChain = midToolChain;
+    }
+    
+    @Override
+    public IToolChain<? super Mid, ? extends Back> getBackToolChain() {
+        return backToolChain;
+    }
+    
+    @Override
+    public void setBackToolChain(IToolChain<? super Mid, ? extends Back> backToolChain) {
+        this.backToolChain = backToolChain;
+    }
+    
 }

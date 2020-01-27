@@ -95,6 +95,16 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     }
     
     @Override
+    public AbstractSyntaxNode invoke(ParseNode input) {
+        if(!enactActionRoutine(input)) return null;
+        try {
+            return input.getSynthesized();
+        } catch (SynthesizedMissingException e) {
+            return null;
+        }
+    }
+    
+    @Override
     public long getRunCount() {
         return runCount;
     }
@@ -1456,7 +1466,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "Using": {
                         AbstractSyntaxNode find = getCatNode("Namespace").getSynthesized();
-                        CXType type = environment.getType(find);
+                        CXType type = null; // environment.getType(find);
                         if(node.hasChildCategory("Alias")) {
                             AbstractSyntaxNode alias = getCatNode("Alias").getSynthesized();
                             node.setSynthesized(

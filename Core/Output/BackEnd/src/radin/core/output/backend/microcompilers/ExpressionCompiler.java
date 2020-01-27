@@ -16,6 +16,7 @@ import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.semantics.types.primitives.PointerType;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.PrintWriter;
 
@@ -32,7 +33,7 @@ public class ExpressionCompiler extends AbstractCompiler {
         
         switch (node.getASTType()) {
             case string: {
-                if(getSettings().autoCreateStrings()) {
+                if(UniversalCompilerSettings.getInstance().getSettings().autoCreateStrings()) {
                     // TODO: Create auto string creation
                     break;
                 } // else go to the same process as ids and literals
@@ -163,7 +164,7 @@ public class ExpressionCompiler extends AbstractCompiler {
             case method_call: {
                 TypeAugmentedSemanticNode caller = node.getChild(0);
                 boolean needToGetReference = caller.getASTType() == ASTNodeType.id;
-                if(getSettings().isReduceIndirection() && node.getChild(0).getASTType() == ASTNodeType.indirection) {
+                if(UniversalCompilerSettings.getInstance().getSettings().isReduceIndirection() && node.getChild(0).getASTType() == ASTNodeType.indirection) {
                     caller = caller.getChild(0);
                 }
                 
@@ -253,13 +254,13 @@ public class ExpressionCompiler extends AbstractCompiler {
                     
                     boolean isVirtualCall =
                             node.containsCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
-                    if(!getSettings().isReduceIndirection() || !(caller.getCXType() instanceof PointerType))
+                    if(!UniversalCompilerSettings.getInstance().getSettings().isReduceIndirection() || !(caller.getCXType() instanceof PointerType))
                         print('.');
                     else
                         print("->");
                     
                     if (isVirtualCall) {
-                        print(getSettings().getvTableName());
+                        print(UniversalCompilerSettings.getInstance().getSettings().getvTableName());
                         print("->");
                     }
                     
@@ -308,14 +309,14 @@ public class ExpressionCompiler extends AbstractCompiler {
                 }else {
                     boolean isVirtualCall =
                             node.containsCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
-                    if(!getSettings().isReduceIndirection())
+                    if(!UniversalCompilerSettings.getInstance().getSettings().isReduceIndirection())
                         print('.');
                     else
                         print("->");
                     
                     if (isVirtualCall) {
                         
-                        print(getSettings().getvTableName());
+                        print(UniversalCompilerSettings.getInstance().getSettings().getvTableName());
                         print("->");
                     }
                     
@@ -336,7 +337,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                 TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
                 boolean isIndirect = objectInteraction.containsCompilationTag(BasicCompilationTag.INDIRECT_FIELD_GET);
                 
-                if(!isIndirect && getSettings().isReduceIndirection()) {
+                if(!isIndirect && UniversalCompilerSettings.getInstance().getSettings().isReduceIndirection()) {
                     if(!compile(objectInteraction.getChild(0))) return false;
                     print("->");
                 } else if (!isIndirect) {

@@ -7,7 +7,7 @@ import radin.core.errorhandling.ICompilationErrorCollector;
  * outputting the input, or outputting null
  * @param <T> the type to be analyzed
  */
-public interface IInPlaceCompilerAnalyzer <T> extends ICompilationErrorCollector  {
+public interface IInPlaceCompilerAnalyzer <T> extends ICompilationErrorCollector, IToolChain<T, T>  {
     
     /**
      * Sets the target of the analyzer.

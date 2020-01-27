@@ -14,7 +14,38 @@ public class FileCompiler extends AbstractCompiler {
     }
     
     public FileCompiler(File file) throws FileNotFoundException {
-        super(new PrintWriter(file));
+        super(new PrintWriter(getCreatedFile(file)));
+    }
+    
+    @Override
+    public <V> void setVariable(String variable, V value) {
+        if(variable.equals("file")) {
+            File f;
+            if(value instanceof String) {
+                f = getCreatedFile(new File((String) value));
+            } else if(value instanceof File) {
+                f = getCreatedFile((File) value);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+           
+           
+            try {
+                setPrintWriter(new PrintWriter(f));
+            } catch (FileNotFoundException ignore) {
+            }
+        }
+        
+    }
+    
+    private static File getCreatedFile(File value) {
+        var nextName = value.getName();
+        if(nextName.endsWith(".cx")) {
+            nextName = nextName.substring(0, nextName.length() - 3) + ".c";
+        } else {
+            nextName += ".c";
+        }
+        return new File(nextName);
     }
     
     private String preamble;

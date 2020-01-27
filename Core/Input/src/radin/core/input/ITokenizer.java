@@ -1,10 +1,11 @@
 package radin.core.input;
 
+import radin.core.chaining.IToolChainHead;
 import radin.core.errorhandling.ICompilationErrorCollector;
 
 import java.util.Iterator;
 
-public interface ITokenizer<T> extends Iterator<T>, Iterable<T>, ICompilationErrorCollector {
+public interface ITokenizer<T> extends Iterator<T>, Iterable<T>, IToolChainHead<T> {
     
     
     int getTokenIndex();
@@ -26,6 +27,11 @@ public interface ITokenizer<T> extends Iterator<T>, Iterable<T>, ICompilationErr
     T getNext();
     
     void reset();
+    
+    @Override
+    default T invoke(Void input) {
+        return invoke();
+    }
     
     @Override
     default boolean hasNext() {

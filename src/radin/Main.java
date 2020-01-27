@@ -2,25 +2,24 @@ package radin;
 
 import radin.core.ErrorReader;
 import radin.core.chaining.ToolChainFactory;
-import radin.core.output.backend.compilation.AbstractCompiler;
-import radin.core.output.backend.compilation.FileCompiler;
-import radin.core.input.frontend.v1.lexing.PreprocessingLexer;
+import radin.core.input.FrontEndUnit;
+import radin.core.input.IParser;
+import radin.core.input.Tokenizer;
+import radin.core.input.frontend.v1.lexing.PreProcessingLexer;
 import radin.core.input.frontend.v1.parsing.ParseNode;
 import radin.core.input.frontend.v1.parsing.Parser;
+import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
 import radin.core.lexical.Token;
+import radin.core.output.backend.compilation.FileCompiler;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
-import radin.core.semantics.AbstractSyntaxNode;
-import radin.core.input.FrontEndUnit;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
-import radin.core.input.Tokenizer;
 import radin.core.output.typeanalysis.TypeAnalyzer;
+import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.CompilationSettings;
 import radin.core.utility.ICompilationSettings;
-import radin.core.semantics.TypeEnvironment;
-import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
-
 
 import java.io.*;
 import java.util.Arrays;
@@ -31,18 +30,6 @@ public class Main {
     
     private static ICompilationSettings settings;
     
-    public static ICompilationSettings getSettings() {
-        return settings;
-    }
-    
-    
-    public static void setCompilationSettings(ICompilationSettings settings) {
-        Main.settings = settings;
-        TypeAnalyzer.setCompilationSettings(settings);
-        AbstractCompiler.setSettings(settings);
-        Tokenizer.setCompilationSettings(settings);
-    }
-    
     public static void main(String[] args) throws FileNotFoundException {
         CompilationSettings compilationSettings = new CompilationSettings();
         compilationSettings.setShowErrorStackTrace(false);
@@ -52,23 +39,23 @@ public class Main {
         
         
         System.setErr(ICompilationSettings.debugLog.divertOutput(Level.SEVERE, System.err));
-        if(System.getenv().containsKey("DEBUG")) {
+        if (System.getenv().containsKey("DEBUG")) {
             String debug = System.getenv("DEBUG");
             boolean val = Boolean.parseBoolean(debug);
-            if(!val) {
+            if (!val) {
                 System.setOut(ICompilationSettings.debugLog.divertOutput(Level.INFO, System.out));
             }
             
         }
-    
+        
         List<String> strings = Arrays.asList(args);
-        if(strings.contains("-E")) {// experimental
+        if (strings.contains("-E")) {// experimental
             compilationSettings.setExperimental(true);
         }
         
         String filename = "classTest.cx";
         
-        if(args.length > 0) {
+        if (args.length > 0) {
             filename = args[0];
         }
         
@@ -78,9 +65,9 @@ public class Main {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
             
             String line;
-            while((line = bufferedReader.readLine()) != null) {
+            while ((line = bufferedReader.readLine()) != null) {
                 
-                if(!line.endsWith("\\")) {
+                if (!line.endsWith("\\")) {
                     text.append(line);
                     text.append("\n");
                 } else {
@@ -95,7 +82,6 @@ public class Main {
         }
         
         String outputFile = filename.replace(".cx", ".c");
-        
         
         
         String fullText = text.toString().replace("\t", " ".repeat(compilationSettings.getTabSize()));
@@ -141,16 +127,14 @@ public class Main {
          */
         
         
-        
-        
-        PreprocessingLexer lex = new PreprocessingLexer(filename, fullText);
-        Parser parser = new Parser();
+        PreProcessingLexer lex = new PreProcessingLexer(filename, fullText);
+        IParser<Token, ParseNode> parser = new Parser();
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
         
         FrontEndUnit<Token, ParseNode, AbstractSyntaxNode> frontEndUnit = new FrontEndUnit<>(lex, parser, applier);
-    
-    
+        
+        
         ToolChainFactory.ToolChainHead<AbstractSyntaxNode> abstractSyntaxNodeToolChainHead = ToolChainFactory.compilerProducer(frontEndUnit);
         ToolChainFactory.ToolChainBuilder<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
                 (AbstractSyntaxNode o) -> TypeAugmentedSemanticTree.convertAST(o, environment)
@@ -158,16 +142,15 @@ public class Main {
         ToolChainFactory.ToolChainBuilder<Void, TypeAugmentedSemanticNode> chain =
                 abstractSyntaxNodeToolChainHead.chain_to(function);
         
-    
-    
+        
         AbstractSyntaxNode build = frontEndUnit.build();
         ICompilationSettings.debugLog.info("Building completed");
         ICompilationSettings.debugLog.info("Created Abstract Syntax Tree of depth " + build.getDepth() + " with a " +
                 "total of " + build.getTotalNodes() + " nodes");
         ICompilationSettings.debugLog.info("Builder run count: " + applier.getRunCount());
-    
-    
-        if(build != null) {
+        
+        
+        if (build != null) {
             try {
                 // build.printTreeForm();
                 //System.out.println(applier.getSuccessOrder());
@@ -177,16 +160,6 @@ public class Main {
                 System.out.println("applier.noTypeErrors() = " + typeErrors);
                 
                 
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
                 ScopedTypeTracker.setEnvironment(environment);
                 
                 
@@ -194,13 +167,13 @@ public class Main {
                 // tasTree.printTreeForm();
                 
                 ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer(tasTree.getHead());
-                try{
+                try {
                     boolean determineTypes = analyzer.determineTypes();
                     System.out.println("analyzer.determineTypes() = " + determineTypes);
                     tasTree.printTreeForm();
                     
                     
-                    if(!determineTypes) {
+                    if (!determineTypes) {
                         ErrorReader errorReader = new ErrorReader(filename, lex.getInputString(),
                                 analyzer.getErrors());
                         errorReader.readErrors();
@@ -241,5 +214,16 @@ public class Main {
                     frontEndUnit.getErrors());
             errorReader.readErrors();
         }
+    }
+    
+    public static ICompilationSettings getSettings() {
+        return settings;
+    }
+    
+    public static void setCompilationSettings(ICompilationSettings settings) {
+        Main.settings = settings;
+        TypeAnalyzer.setCompilationSettings(settings);
+        // AbstractCompiler.setSettings(settings);
+        Tokenizer.setCompilationSettings(settings);
     }
 }

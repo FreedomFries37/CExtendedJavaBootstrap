@@ -1,33 +1,181 @@
 package radin.core.semantics;
 
+import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.utility.ICompilationSettings;
+
 public enum ASTNodeType {
+    /**
+     * An operator
+     */
     operator("op"),
+    /**
+     * A binary operation
+     */
     binop("binop"),
+    /**
+     * A unary operation
+     */
     uniop("uniop"),
+    /**
+     * Represents a declaration of a variable.
+     * <P>
+     * Must be a {@link TypeAbstractSyntaxNode} with a {@link TypeAbstractSyntaxNode#getCxType()} equal to the
+     * declaring type
+     */
     declaration("dec"),
+    /**
+     * Assign a variable to a value
+     */
     assignment("assign"),
+    /**
+     * The type of the assignment, whether it's a normal assign or an operation assign
+     */
     assignment_type("assign_type"),
+    /**
+     * Represents a ternary operation
+     */
     ternary("?:"),
+    /**
+     * Gets the e-th value of an array
+     */
     array_reference("[E]"),
+    /**
+     * Represents a operation after a value
+     */
     postop("postop"),
+    /**
+     * Represents either a number or a character
+     */
     literal("literal"),
+    /**
+     * Represents an identifier
+     */
     id("id"),
+    /**
+     * Represents a string literal
+     *
+     * If {@link ICompilationSettings#autoCreateStrings()} is true, then the type of these objects are std::String*,
+     * otherwise they are const char*
+     */
     string("string"),
+    /**
+     * Represents a series of Expressions
+     */
     sequence("sequence"),
+    /**
+     * Represents a typename
+     */
     typename("type"),
+    /**
+     * Represents the parameter declarations of a function
+     */
     parameter_list("params"),
+    /**
+     * Represents a stand-alone function call
+     * <P>Children consists of:
+     * <ol>
+     *     <li>{@link #id}</li>
+     *     <li>{@link #sequence}</li>
+     * </ol>
+     * </P>
+     */
     function_call("func_call"),
+    /**
+     * Represents a method call on a class object
+     *
+     * <P>Children consists of:
+     * <ol>
+     *     <li>Some target object</li>
+     *     <li>{@link #id}</li>
+     *     <li>{@link #sequence}</li>
+     * </ol>
+     * </P>
+     */
     method_call("method_call"),
+    /**
+     * Represents a field get of a compound type object
+     */
     field_get("field_get"),
+    /**
+     * Represents an if statement
+     * <p>
+     * Children consist of
+     * <ol>
+     *     <li>An expression</li>
+     *     <li>A statement</li>
+     *     <li>A statement, or {@link #empty} if there's no else present</li>
+     * </ol>
+     */
     if_cond("if"),
+    /**
+     * Represents a while statment
+     * <p>
+     * Children consist of
+     * <ol>
+     *     <li>An expression</li>
+     *     <li>A statement</li>
+     * </ol>
+     */
     while_cond("while"),
+    /**
+     * Represents a do-while statement
+     * <p>
+     * Children consist of
+     * <ol>
+     *     <li>A statement</li>
+     *     <li>An expression</li>
+     * </ol>
+     */
     do_while_cond("do_while"),
+    /**
+     * Represents a for statement
+     * <p>
+     * Children consist of
+     * <ol>
+     *     <li>A statement or {@link #empty}</li>
+     *     <li>A statement or {@link #empty}</li>
+     *     <li>An expression or {@link #empty}</li>
+     *     <li>A statement</li>
+     * </ol>
+     */
     for_cond("for"),
+    /**
+     * Represents a return statement
+     * <p>
+     *     Must have a child that is either an expression or {@link #empty}.
+     *     If the child is empty, the statement is equivalent to {@code return;}
+     * </p>
+     */
     _return("return"),
-    function_definition("func_dec"),
+    /**
+     * Represents a function definition
+     * <p>
+     * Children consist of
+     * <ol>
+     *     <li>{@link #id}</li>
+     *     <li>{@link #parameter_list}</li>
+     *     <li>{@link #compound_statement}</li>
+     * </ol>
+     * <p>
+     * Must be a {@link TypeAbstractSyntaxNode} with a {@link TypeAbstractSyntaxNode#getCxType()} equal to the
+     * declaring type
+     */
+    function_definition("function_definition"),
+    /**
+     *
+     */
     basic_compound_type_dec("struct/union_dec"),
+    /**
+     * Represents a list of specifiers
+     */
     specifiers("specifiers"),
+    /**
+     * Represents a specifier (type)
+     */
     specifier("specifier"),
+    /**
+     * Represents a qualifier
+     */
     qualifier("qualifier"),
     qualifiers("qualifiers"),
     qualifiers_and_specifiers("qualifiers_and_specifiers"),

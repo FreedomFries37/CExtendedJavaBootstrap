@@ -1,6 +1,7 @@
 package radin.core.output.backend.compilation;
 
 import radin.core.output.backend.microcompilers.IndentPrintWriter;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.PrintWriter;
 
@@ -10,7 +11,7 @@ public abstract class AbstractIndentedOutputCompiler extends AbstractCompiler {
     
     
     public AbstractIndentedOutputCompiler(PrintWriter printWriter, int indent) {
-        super(new IndentPrintWriter(printWriter, indent, getSettings().getIndent()));
+        super(new IndentPrintWriter(printWriter, indent, UniversalCompilerSettings.getInstance().getSettings().getIndent()));
         this.indent = indent;
        
     }

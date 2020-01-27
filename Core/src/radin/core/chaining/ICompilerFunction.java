@@ -7,7 +7,7 @@ import radin.core.errorhandling.ICompilationErrorCollector;
  * @param <T> input type
  * @param <R> output type
  */
-public interface ICompilerFunction <T, R> extends ICompilationErrorCollector {
+public interface ICompilerFunction <T, R> extends IToolChain<T, R> {
     
     R invoke(T input);
 }

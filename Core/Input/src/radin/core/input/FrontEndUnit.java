@@ -1,10 +1,8 @@
 package radin.core.input;
 
-import radin.core.IFrontEndUnit;
-import radin.core.chaining.ICompilerFunction;
-import radin.core.chaining.ICompilerProducer;
-import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.AbstractTree;
+import radin.core.IFrontEndUnit;
+import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.ICompilationSettings;
 
@@ -16,7 +14,58 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
     IParser<? super T, ? extends P> parser;
     ISemanticAnalyzer<? super P, ? extends S> builder;
     
+    @Override
+    public <V> void setVariable(String variable, V value) {
+        var split = variable.split("\\.");
+        String unit = split[0];
+        String var = split[1];
+        switch (unit) {
+            case "lexer": {
+                lexer.setVariable(var, value);
+                break;
+            }
+            case "parser": {
+                parser.setVariable(var, value);
+                break;
+            }
+            case "builder": {
+                builder.setVariable(var, value);
+                break;
+            }
+            
+            default:
+                IFrontEndUnit.super.setVariable(variable, value);
+        }
+    }
     
+    @Override
+    public <V> V getVariable(String variable) {
+        var split = variable.split("\\.");
+        String unit = split[0];
+        String var = split[1];
+        switch (unit) {
+            case "lexer": {
+                return lexer.getVariable(var);
+            }
+            case "parser": {
+                return parser.getVariable(var);
+            }
+            case "builder": {
+                return builder.getVariable(var);
+            }
+            case "this": {
+                switch (var) {
+                    case "environment": {
+                        return (V) getEnvironment();
+                    }
+                    default:
+                        return IFrontEndUnit.super.getVariable(var);
+                }
+            }
+            default:
+                return IFrontEndUnit.super.getVariable(var);
+        }
+    }
     
     public FrontEndUnit(ITokenizer<? extends T> lexer, IParser<? super T, ? extends P> parser, ISemanticAnalyzer<? super P, ? extends S> builder) {
         this.lexer = lexer;
@@ -64,6 +113,7 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
         lexer.reset();
         parser.reset();
     }
+    
     
     @Override
     public List<AbstractCompilationError> getErrors() {

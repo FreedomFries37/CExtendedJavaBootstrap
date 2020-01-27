@@ -21,6 +21,7 @@ import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.typeanalysis.errors.RedeclarationError;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +40,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
         assert ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType() instanceof CXClassType;
         
         CXClassType cxClassType = (CXClassType) ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
-        cxClassType.generateSuperMethods(getCompilationSettings().getvTableName());
+        cxClassType.generateSuperMethods(UniversalCompilerSettings.getInstance().getSettings().getvTableName());
         
         for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
             typeTrackingClosure();

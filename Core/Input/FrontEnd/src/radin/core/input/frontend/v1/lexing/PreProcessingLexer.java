@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class PreprocessingLexer extends Tokenizer<Token> {
+public class PreProcessingLexer extends Tokenizer<Token> {
     
     
     
@@ -92,8 +92,17 @@ public class PreprocessingLexer extends Tokenizer<Token> {
     private List<AbstractCompilationError> compilationErrors;
     private int finishedIndex = -1;
     
-    public PreprocessingLexer(String filename, String inputString) {
+    public PreProcessingLexer(String filename, String inputString) {
         super(inputString, filename);
+        prevColumn = 1;
+        prevLineNumber = 1;
+        maxIndex = this.getInputString().length();
+        defines = new HashMap<>();
+        compilationErrors = new LinkedList<>();
+    }
+    
+    public PreProcessingLexer() {
+        super("", "");
         prevColumn = 1;
         prevLineNumber = 1;
         maxIndex = this.getInputString().length();

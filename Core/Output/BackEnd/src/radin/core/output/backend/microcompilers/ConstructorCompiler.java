@@ -6,6 +6,7 @@ import radin.core.output.tags.PriorConstructorTag;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXParameter;
 import radin.core.semantics.types.primitives.PointerType;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.PrintWriter;
 
@@ -89,6 +90,6 @@ public class ConstructorCompiler extends AbstractIndentedOutputSingleOutputCompi
     @Override
     protected void setIndent(int indent) {
         super.setIndent(indent);
-        setPrintWriter(new IndentPrintWriter(getPrintWriter(), getIndent(), getSettings().getIndent()));
+        setPrintWriter(new IndentPrintWriter(getPrintWriter(), getIndent(), UniversalCompilerSettings.getInstance().getSettings().getIndent()));
     }
 }

@@ -207,13 +207,23 @@ public abstract class BasicParser implements IParser<Token, ParseNode> {
         return false;
     }
     
-    protected void clearErrors() {
+    public void clearErrors() {
         tempErrors.clear();
     }
     
     @Override
     public final List<AbstractCompilationError> getErrors() {
         return allErrors;
+    }
+    
+    @Override
+    public void reset() {
+        lexer.reset();
+    }
+    
+    @Override
+    public ParseNode invoke() {
+        return parse();
     }
     
     @FunctionalInterface

@@ -286,6 +286,9 @@ public class JodinLogger {
     public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {
         base.throwing(sourceClass, sourceMethod, thrown);
         severe(thrown.toString());
+        if(thrown.getCause() != null) {
+            throwing(sourceClass, sourceMethod, thrown.getCause());
+        }
         boolean first = true;
         for (StackTraceElement stackTraceElement : thrown.getStackTrace()) {
             if(first) {

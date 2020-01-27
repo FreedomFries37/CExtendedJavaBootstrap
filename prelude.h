@@ -1,3 +1,6 @@
+#ifndef __PRELUDE_HEADER__
+#define __PRELUDE_HEADER__
+
 in std class ClassInfo;
 in std class String;
 
@@ -89,3 +92,5 @@ in std {
     };
 
 }
+
+#endif

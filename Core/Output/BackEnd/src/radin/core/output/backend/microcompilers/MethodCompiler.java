@@ -7,6 +7,7 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.PrintWriter;
 
@@ -63,6 +64,6 @@ public class MethodCompiler extends FunctionCompiler {
     @Override
     protected void setIndent(int indent) {
         super.setIndent(indent);
-        setPrintWriter(new IndentPrintWriter(getPrintWriter(), getIndent(), getSettings().getIndent()));
+        setPrintWriter(new IndentPrintWriter(getPrintWriter(), getIndent(), UniversalCompilerSettings.getInstance().getSettings().getIndent()));
     }
 }

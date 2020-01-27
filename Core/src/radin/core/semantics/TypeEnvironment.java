@@ -27,47 +27,88 @@ import static radin.core.lexical.TokenType.t_id;
 
 public class TypeEnvironment {
     
+    private final static HashSet<String> primitives;
+
+    static {
+        primitives = new HashSet<>();
+        primitives.addAll(Arrays.asList("char",
+                "short",
+                "int",
+                "long",
+                "unsigned"));
+    }
+
     private HashMap<String, CXType> typeDefinitions;
     private HashSet<CXCompoundType> namedCompoundTypes;
     private HashMap<String, CXCompoundType> namedCompoundTypesMap;
-    
     private HashSet<CXClassType> createdClasses;
     private HashMap<CXIdentifier, CXMappedType> delayedTypeDefinitionHashMap;
-    
     private HashSet<CXCompoundTypeNameIndirection> lateBoundReferences;
-    
     private AnnotationManager<CXClassType> classTargetManger;
-    
     private CXClassType defaultInheritance = null;
+    private CXIdentifier currentNamespace = null;
+    private NamespaceTree namespaceTree = new NamespaceTree();
+    private int pointerSize = 8;
+    private int charSize = 1;
+    private int intSize = 4;
+    private int floatSize = 4;
+    private int doubleSize = 4;
+    private int shortIntSize = 2;
+    private int longIntSize = 8;
+    private int longLongSize = 8;
+    private int longDoubleSize = 10;
+    private boolean standardBooleanDefined;
+    
+    public TypeEnvironment() {
+        typeDefinitions = new HashMap<>();
+        namedCompoundTypes = new HashSet<>();
+        namedCompoundTypesMap = new HashMap<>();
+        lateBoundReferences = new HashSet<>();
+        createdClasses = new HashSet<>();
+        
+        standardBooleanDefined = false;
+        delayedTypeDefinitionHashMap = new HashMap<>();
+        classTargetManger = AnnotationManager.createTargeted(
+                new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
+        );
+    }
     
     public void setDefaultInheritance(CXClassType defaultInheritance) {
         this.defaultInheritance = defaultInheritance;
+    }
+    
+    public static TypeEnvironment getStandardEnvironment() {
+        TypeEnvironment environment = new TypeEnvironment();
+        
+        
+        environment.addTypeDefinition(
+                UnsignedPrimitive.createUnsignedShort(), "boolean"
+        );
+        
+        environment.standardBooleanDefined = true;
+        
+        
+        return environment;
+    }
+    
+    public CXType addTypeDefinition(CXType type, String name) {
+        
+        typeDefinitions.put(name, type);
+        return type;
     }
     
     public AnnotationManager<CXClassType> getClassTargetManger() {
         return classTargetManger;
     }
     
-    private CXIdentifier currentNamespace = null;
-    private NamespaceTree namespaceTree = new NamespaceTree();
-    
-    private final static HashSet<String> primitives;
-    private int pointerSize = 8;
-    
-    private int charSize = 1;
-    private int intSize = 4;
-    private int floatSize = 4;
-    private int doubleSize = 4;
-    private int shortIntSize = 2;
-    
     public int getShortIntSize() {
         return shortIntSize;
     }
-    
+
     public void setShortIntSize(int shortIntSize) {
         this.shortIntSize = shortIntSize;
     }
-    
+
     public int getLongIntSize() {
         return longIntSize;
     }
@@ -92,37 +133,6 @@ public class TypeEnvironment {
         this.longDoubleSize = longDoubleSize;
     }
     
-    private int longIntSize = 8;
-    private int longLongSize = 8;
-    private int longDoubleSize = 10;
-    
-    private boolean standardBooleanDefined;
-    
-    
-    
-    static {
-        primitives = new HashSet<>();
-        primitives.addAll(Arrays.asList("char",
-                "short",
-                "int",
-                "long",
-                "unsigned"));
-    }
-    
-    public TypeEnvironment() {
-        typeDefinitions = new HashMap<>();
-        namedCompoundTypes = new HashSet<>();
-        namedCompoundTypesMap = new HashMap<>();
-        lateBoundReferences = new HashSet<>();
-        createdClasses = new HashSet<>();
-        
-        standardBooleanDefined = false;
-        delayedTypeDefinitionHashMap = new HashMap<>();
-        classTargetManger = AnnotationManager.createTargeted(
-                new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
-        );
-    }
-    
     public void pushNamespace(Token identifier) {
         this.currentNamespace = new CXIdentifier(this.currentNamespace, identifier);
         namespaceTree.addNamespace(this.currentNamespace);
@@ -135,6 +145,19 @@ public class TypeEnvironment {
         CXDelayedTypeDefinition delayedTypeDefinition = new CXDelayedTypeDefinition(cxIdentifier, tok, this);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
         return getTempType(cxIdentifier);
+    }
+    
+    public CXMappedType getTempType(CXIdentifier identifier) {
+        CXIdentifier parent;
+        
+        if(identifier.getParentNamespace() != null)
+            parent = namespaceTree.getNamespace(currentNamespace, identifier.getParentNamespace());
+        else parent = currentNamespace;
+        ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
+        CXIdentifier actual = new CXIdentifier(parent, identifier.getIdentifier());
+        ICompilationSettings.debugLog.finest("Rectified to " + actual);
+    
+        return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
     public CXType addDeferred(Token tok) {
@@ -150,19 +173,6 @@ public class TypeEnvironment {
     public CXMappedType getTempType(String identifier) {
         ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
         return getTempType(new CXIdentifier(currentNamespace, new Token(t_id, identifier)));
-    }
-    
-    public CXMappedType getTempType(CXIdentifier identifier) {
-        CXIdentifier parent;
-        
-        if(identifier.getParentNamespace() != null)
-            parent = namespaceTree.getNamespace(currentNamespace, identifier.getParentNamespace());
-        else parent = currentNamespace;
-        ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
-        CXIdentifier actual = new CXIdentifier(parent, identifier.getIdentifier());
-        ICompilationSettings.debugLog.finest("Rectified to " + actual);
-    
-        return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
     public CXMappedType getTempType(CXIdentifier namespace, Token identifier) {
@@ -239,12 +249,6 @@ public class TypeEnvironment {
     
     public CXType getTypeDefinition(String name) {
         return typeDefinitions.get(name);
-    }
-    
-    public CXType addTypeDefinition(CXType type, String name) {
-        
-        typeDefinitions.put(name, type);
-        return type;
     }
     
     /**
@@ -476,9 +480,6 @@ public class TypeEnvironment {
         
         throw new UnsupportedOperationException(ast.getType().toString());
     }
-    
-    
-    
     
     private String getSpecifier(AbstractSyntaxNode node) {
         String o1Specifier = node.getToken().getImage();
@@ -738,31 +739,6 @@ public class TypeEnvironment {
         return output;
     }
     
-    private class SpecifierComparator implements Comparator<AbstractSyntaxNode> {
-        
-        @Override
-        public int compare(AbstractSyntaxNode o1, AbstractSyntaxNode o2) {
-            String o1Specifier = o1.getToken().getImage(), o2Specifier = o2.getToken().getImage();
-            if(o1Specifier == null) o1Specifier = o1.getToken().getType().toString();
-            if(o2Specifier == null) o2Specifier = o2.getToken().getType().toString();
-            return value(o1Specifier) - value(o2Specifier);
-        }
-        
-        private int value(String name) {
-            if(isPrimitive(name)) return 1;
-            if(isModifier(name)) return modifierValue(name);
-            return 0;
-        }
-        private int modifierValue(String name) {
-            switch (name) {
-                case "long": return 2;
-                case "unsigned": return 3;
-                default: return 4;
-            }
-        }
-        
-    }
-    
     /**
      * Checks if two types are equivalent, with const stripping for going from non-const to const
      * checks if type1 <= type2
@@ -848,17 +824,28 @@ public class TypeEnvironment {
         return standardBooleanDefined;
     }
     
-    public static TypeEnvironment getStandardEnvironment() {
-        TypeEnvironment environment = new TypeEnvironment();
+    private class SpecifierComparator implements Comparator<AbstractSyntaxNode> {
         
+        @Override
+        public int compare(AbstractSyntaxNode o1, AbstractSyntaxNode o2) {
+            String o1Specifier = o1.getToken().getImage(), o2Specifier = o2.getToken().getImage();
+            if(o1Specifier == null) o1Specifier = o1.getToken().getType().toString();
+            if(o2Specifier == null) o2Specifier = o2.getToken().getType().toString();
+            return value(o1Specifier) - value(o2Specifier);
+        }
         
-        environment.addTypeDefinition(
-                UnsignedPrimitive.createUnsignedShort(), "boolean"
-        );
+        private int value(String name) {
+            if(isPrimitive(name)) return 1;
+            if(isModifier(name)) return modifierValue(name);
+            return 0;
+        }
+        private int modifierValue(String name) {
+            switch (name) {
+                case "long": return 2;
+                case "unsigned": return 3;
+                default: return 4;
+            }
+        }
         
-        environment.standardBooleanDefined = true;
-        
-        
-        return environment;
     }
 }
