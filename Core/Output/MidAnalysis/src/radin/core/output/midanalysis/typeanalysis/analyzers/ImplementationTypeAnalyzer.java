@@ -6,9 +6,8 @@ import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.typeanalysis.errors.MethodDoesNotExistError;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
-import radin.core.semantics.types.AmbiguousMethodCallError;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
@@ -41,8 +40,8 @@ public class ImplementationTypeAnalyzer extends TypeAnalyzer {
                 }
                 List<CXType> parameterTypes = new LinkedList<>();
                 for (AbstractSyntaxNode abstractSyntaxNode : child.getASTNode().getChild(ASTNodeType.parameter_list)) {
-                    assert  abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
-                    CXType paramType = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
+                    assert  abstractSyntaxNode instanceof TypedAbstractSyntaxNode;
+                    CXType paramType = ((TypedAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
                     parameterTypes.add(paramType);
                 }
     

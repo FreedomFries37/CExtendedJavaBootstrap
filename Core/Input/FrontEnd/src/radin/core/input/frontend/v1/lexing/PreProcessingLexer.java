@@ -7,6 +7,7 @@ import radin.core.lexical.TokenType;
 
 import radin.core.input.Tokenizer;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.Reference;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -87,9 +88,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         
     }
     
-    private int maxIndex;
-    private int prevColumn;
-    private int prevLineNumber;
+    private HashMap<String, Reference<Integer>> fileCurrentLineNumber;
+    private String currentFile;
     private boolean inIfStatement;
     private boolean skipToIfFalse;
     private HashMap<String, Define> defines;
@@ -98,25 +98,75 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     
     public PreProcessingLexer(String filename, String inputString) {
         super(inputString, filename);
-        prevColumn = 1;
-        prevLineNumber = 1;
-        maxIndex = this.getInputString().length();
         defines = new HashMap<>();
         compilationErrors = new LinkedList<>();
+        fileCurrentLineNumber = new HashMap<>();
+        currentFile = filename;
     }
     
     public PreProcessingLexer() {
         super("", "");
-        prevColumn = 1;
-        prevLineNumber = 1;
-        maxIndex = this.getInputString().length();
         defines = new HashMap<>();
         compilationErrors = new LinkedList<>();
+        fileCurrentLineNumber = new HashMap<>();
     }
     
     @Override
     public List<AbstractCompilationError> getErrors() {
         return compilationErrors;
+    }
+    
+    /**
+     * Consumes the current character, making the current character the next available character
+     *
+     * @return the current character before this method was ran.
+     */
+    @Override
+    protected char consumeChar() {
+        char c = super.consumeChar();
+        if(c == '\n') {
+            incrementLine();
+        }
+        return c;
+    }
+    
+    protected void incrementLine() {
+        int line = fileCurrentLineNumber.containsKey(currentFile) ?
+                fileCurrentLineNumber.get(currentFile).getValue() + 1 : 1;
+        setLine(currentFile, line);
+    }
+    
+    protected void decrementLine() {
+        fileCurrentLineNumber.get(currentFile).setValue(fileCurrentLineNumber.get(currentFile).getValue() - 1);
+    }
+    
+    protected int getLine() {
+        return fileCurrentLineNumber.get(currentFile).getValue();
+    }
+    
+    
+    protected void setLine(int lineNumber) {
+        setLine(currentFile, lineNumber);
+    }
+    
+    protected void setLine(String filename) {
+        setLine(filename, 1);
+    }
+    
+    protected void setLine(String filename, int lineNumber) {
+        currentFile = filename;
+        if(!fileCurrentLineNumber.containsKey(filename)) {
+            fileCurrentLineNumber.put(filename, new Reference<>(lineNumber));
+        } else {
+            fileCurrentLineNumber.get(currentFile).setValue(lineNumber);
+        }
+    }
+    
+    
+    @Override
+    public void setFilename(String filename) {
+        super.setFilename(filename);
+        currentFile = filename;
     }
     
     private void unconsume(String s) {
@@ -130,6 +180,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 return;
             } else if(chars[i] == '\n') {
                 lineNumber--;
+                decrementLine();
                 //column = getColumn() + 1;
             }
             
@@ -137,14 +188,18 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         column = getColumn();
     }
     
+   
+    
     private void insertString(String s) {
         inputString = getInputString().substring(0, currentIndex) + s + getInputString().substring(currentIndex);
-        maxIndex = getInputString().length();
     }
     
     private void removeString(int length) {
         inputString = getInputString().substring(0, currentIndex) + getInputString().substring(currentIndex + length);
-        maxIndex = getInputString().length();
+    }
+    
+    private void removeChar() {
+        removeString(1);
     }
     
     private void replaceString(String original, String replace) {
@@ -222,22 +277,22 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 return;
             }
             case "#else": {
-                if(!inIfStatement) throw new IllegalArgumentException();
-                skipToIfFalse = !skipToIfFalse;
+                if(inIfStatement)
+                    skipToIfFalse = !skipToIfFalse;
                 return;
             }
             case "#endif": {
-                if(!inIfStatement) throw new IllegalArgumentException();
+                // if(!inIfStatement) throw new IllegalArgumentException();
                 skipToIfFalse = false;
                 inIfStatement = false;
                 return;
             }
             case "#include": {
-                if(!(arguments.charAt(0) == arguments.charAt(arguments.length() - 1) &&
-                        (arguments.charAt(0) == '<' || arguments.charAt(0) == '"')))
+                if(!((arguments.charAt(0) == arguments.charAt(arguments.length() - 1) && arguments.charAt(0) == '"') ||
+                        (arguments.charAt(0) == '<' && arguments.charAt(arguments.length() - 1) == '>')))
                     throw new IllegalArgumentException();
-                
                 String filename = arguments.substring(1, arguments.length() - 1);
+                
                 boolean isLocal = arguments.charAt(0) == '"';
                 File file;
                 Token closestToken = new Token(TokenType.t_reserved, directiveString)
@@ -256,20 +311,44 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         throw new CompilationError("File does not exist", closestToken);
                     }
                 } else {
-                    throw new IllegalArgumentException();
+                    String jodin_include = System.getenv("JODIN_INCLUDE");
+                    String[] locations = jodin_include.split(";");
+                    file = null;
+                    for (String location : locations) {
+                        try {
+                            File dir = new File(location).getCanonicalFile();
+                            if(!dir.isDirectory()) {
+                                if(dir.getName().equals(filename)) {
+                                    file = dir;
+                                    break;
+                                }
+                            } else {
+                                Path path = Paths.get(dir.getPath(), filename);
+                                file = new File(path.toUri());
+                                if(file.exists()) {
+                                    break;
+                                } else {
+                                    file = null;
+                                }
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(location + " for include does not exist");
+                        }
+                    }
+                    
                 }
-    
-                if(!file.exists()) {
-                    throw new IllegalArgumentException();
+                
+                if(file == null || !file.exists()) {
+                    throw new CompilationError("File does not exist", closestToken);
                 }
                 StringBuilder text = new StringBuilder();
                 try {
                     ICompilationSettings.debugLog.info("Including file " + file);
                     BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-        
+                    
                     String line;
                     while((line = bufferedReader.readLine()) != null) {
-            
+                        
                         if(!line.endsWith("\\")) {
                             text.append(line);
                             text.append("\n");
@@ -278,20 +357,27 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             text.append(' ');
                         }
                     }
-        
+                    
                 } catch (IOException e) {
                     e.printStackTrace();
                     System.exit(-1);
                 }
-                int restoreLineNumber = lineNumber;
+                int restoreLineNumber = getLine();
                 String fullText = "#line " + 1 + " \""+ filename + "\"\n" + text.toString() +
                         "\n#line " + restoreLineNumber + " \""+ this.filename + "\"\n";
                 replaceString(originalString, fullText);
                 return;
             }
             case "#line": {
-                //int lineNumber = Integer.parseInt(arguments);
-                //this.lineNumber = lineNumber;
+                String[] split = arguments.split("\\s+");
+                int lineNumber = Integer.parseInt(split[0]);
+                if(split.length > 1) {
+                    String filename = split[1].substring(1, split[1].length() - 1);
+                    setLine(filename, lineNumber);
+                } else {
+                    setLine(lineNumber);
+                }
+                
                 return;
             }
             default:
@@ -302,34 +388,32 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     
     @Override
     protected Token singleLex() {
-       
+        
         
         
         while(true) {
             String image = "";
-            
-            do {
-                if (consume("//")) {
-                    while (!consume("\n")) {
+    
+            while (Character.isWhitespace(getChar()) || match("//") || match("/*") || match("#")) {
+                
+                
+                
+                while (Character.isWhitespace(getChar()) || match("//") || match("/*")) {
+                    if(Character.isWhitespace(getChar())) {
                         consumeChar();
-                    }
-                } else if (consume("/*")) {
-                    while (!consume("*/")) consumeChar();
-                }
-                //(skipToIfFalse && getChar() != '#') &&
-                while ( match(' ') || match('\n') || match('\t') || match('\r')) {
-                    consumeChar();
-                    if (consume("//")) {
-                        while (!consume('\n')) {
+                    } else if(consume("//")) {
+                        while (!consume("\n")) {
                             consumeChar();
                         }
-                    } else if (consume("/*")) {
-                        while (!consume("*/")) consumeChar();
+                    } else if(consume("/*")) {
+                        while (!consume("*/")) {
+                            consumeChar();
+                        }
                     }
                 }
                 
+                
                 if (match('#')) {
-                    if (column != 1) return null;
                     String preprocessorDirective = "";
                     while (getChar() != '\n') {
                         preprocessorDirective += consumeChar();
@@ -339,10 +423,11 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     preprocessorDirective = preprocessorDirective.replaceAll("\\s+", " ");
                     invokePreprocessorDirective(preprocessorDirective, original);
                     
-                } else if(!skipToIfFalse) break;
-                else consumeChar();
+                } else if(skipToIfFalse) {
+                    removeChar();
+                }
                 
-            } while (true);
+            }
             
             if (match('\0')) {
                 
@@ -447,10 +532,10 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
                     
                 }
-    
-    
+                
+                
                 return getKeywordToken(image);
-    
+                
             }
             
             switch (consumeChar()) {
@@ -626,7 +711,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             Token tok;
             try {
                 tok = singleLex();
-    
+                
             } catch (AbstractCompilationError e) {
                 getErrors().add(e);
                 //finishedIndex = getTokenIndex();
@@ -662,5 +747,11 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     @Override
     public Token next() {
         return getNext();
+    }
+    
+    @Override
+    public void reset() {
+        super.reset();
+        fileCurrentLineNumber = new HashMap<>();
     }
 }

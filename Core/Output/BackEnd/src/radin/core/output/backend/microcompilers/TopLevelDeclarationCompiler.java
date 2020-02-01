@@ -6,7 +6,7 @@ import radin.core.output.tags.TypeDefHelperTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -54,10 +54,10 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                 }
                 case function_definition: {
                     String name = topLevelDeclaration.getASTChild(ASTNodeType.id).getToken().getImage();
-                    CXType returnType = ((TypeAbstractSyntaxNode) topLevelDeclaration.getASTNode()).getCxType();
+                    CXType returnType = ((TypedAbstractSyntaxNode) topLevelDeclaration.getASTNode()).getCxType();
                     List<CXParameter> parameters = new LinkedList<>();
                     for (TypeAugmentedSemanticNode child : topLevelDeclaration.getASTChild(ASTNodeType.parameter_list).getChildren()) {
-                        CXType pType = ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType();
+                        CXType pType = ((TypedAbstractSyntaxNode) child.getASTNode()).getCxType();
                         String pName = child.getASTChild(ASTNodeType.id).getToken().getImage();
                     
                         parameters.add(new CXParameter(pType, pName));
@@ -77,8 +77,8 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                 case qualifiers_and_specifiers: {
                     TypeAugmentedSemanticNode child = topLevelDeclaration.getChild(0);
                     ASTNodeType astType = child.getASTType();
-                    TypeAbstractSyntaxNode astNode =
-                            ((TypeAbstractSyntaxNode) child.getASTNode());
+                    TypedAbstractSyntaxNode astNode =
+                            ((TypedAbstractSyntaxNode) child.getASTNode());
                     CXType type;
                     CXType cxType = astNode.getCxType();
                     if(cxType instanceof ICXWrapper) cxType = ((ICXWrapper) cxType).getWrappedType();
@@ -118,7 +118,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                                 break;
                             }
                             case function_description: {
-                                type = ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType();
+                                type = ((TypedAbstractSyntaxNode) child.getASTNode()).getCxType();
                                 TypeAugmentedSemanticNode id = child.getChild(0);
                                 String funcName = id.getToken().getImage();
                                 print(type.generateCDeclaration(funcName));
@@ -143,7 +143,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                     break;
                 }
                 case class_type_definition: {
-                    CXClassType cxClass = (CXClassType) ((TypeAbstractSyntaxNode) topLevelDeclaration.getASTNode()).getCxType();
+                    CXClassType cxClass = (CXClassType) ((TypedAbstractSyntaxNode) topLevelDeclaration.getASTNode()).getCxType();
                 
                     ClassCompiler classCompiler =
                             new ClassCompiler(getPrintWriter(), 0, cxClass, topLevelDeclaration);

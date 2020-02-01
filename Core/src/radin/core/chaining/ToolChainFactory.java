@@ -17,7 +17,7 @@ public class ToolChainFactory {
      * @param <T> The input type of the chain
      * @param <R> The output type that the chain
      */
-    public static abstract class ToolChainBuilder <T, R> implements IToolChain<T, R> {
+    public static abstract class ToolChainBuilder <T, R> implements IToolChain<T, R, RuntimeException> {
         protected List<AbstractCompilationError> errors = new LinkedList<>();
     
         /**
@@ -70,7 +70,7 @@ public class ToolChainFactory {
          * Makes the chain uneditable
          * @return the builder as an uneditable chain
          */
-        public IToolChain<T, R> toChain() {
+        public IToolChain<T, R, RuntimeException> toChain() {
             return this;
         }
     
@@ -100,9 +100,9 @@ public class ToolChainFactory {
     
     private static class ToolChainHeadChain<T, R> extends ToolChainBuilder<Void, R> {
         private ToolChainHead<? extends T> head;
-        private IToolChain<? super T, ? extends R> chain;
+        private IToolChain<? super T, ? extends R, RuntimeException> chain;
     
-        public ToolChainHeadChain(ToolChainHead<? extends T> head, IToolChain<? super T, ? extends R> chain) {
+        public ToolChainHeadChain(ToolChainHead<? extends T> head, IToolChain<? super T, ? extends R, RuntimeException> chain) {
             this.head = head;
             this.chain = chain;
         }
@@ -176,10 +176,10 @@ public class ToolChainFactory {
     }
     
     private static class ChainBuilder <T, M, R> extends ToolChainBuilder<T, R> {
-        private IToolChain<? super T, ? extends M> front;
-        private IToolChain<? super M, ? extends R> back;
+        private IToolChain<? super T, ? extends M, RuntimeException> front;
+        private IToolChain<? super M, ? extends R, RuntimeException> back;
     
-        public ChainBuilder(IToolChain<? super T, ? extends M> front, IToolChain<? super M, ? extends R> back) {
+        public ChainBuilder(IToolChain<? super T, ? extends M, RuntimeException> front, IToolChain<? super M, ? extends R, RuntimeException> back) {
             this.front = front;
             this.back = back;
         }
@@ -270,9 +270,9 @@ public class ToolChainFactory {
     }
     
     private static class InPlaceCompilerBuilder <T> extends ToolChainBuilder<T, T> {
-        private IInPlaceCompilerAnalyzer<? super T> part;
+        private IInPlaceCompilerAnalyzer<? super T, NoOpException> part;
     
-        public InPlaceCompilerBuilder(IInPlaceCompilerAnalyzer<? super T> part) {
+        public InPlaceCompilerBuilder(IInPlaceCompilerAnalyzer<? super T, NoOpException> part) {
             this.part = part;
         }
     
@@ -346,7 +346,7 @@ public class ToolChainFactory {
      * @param <T> the input and output types of the chain
      * @return a tool chain builder
      */
-    public static <T> ToolChainBuilder<T, T> compilerAnalyzer(IInPlaceCompilerAnalyzer<? super T> analyzer) {
+    public static <T> ToolChainBuilder<T, T> compilerAnalyzer(IInPlaceCompilerAnalyzer<? super T, NoOpException> analyzer) {
         return new InPlaceCompilerBuilder<>(analyzer);
     }
     

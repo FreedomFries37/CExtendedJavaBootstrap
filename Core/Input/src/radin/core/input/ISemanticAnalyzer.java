@@ -1,12 +1,10 @@
 package radin.core.input;
 
 import radin.core.chaining.IToolChain;
-import radin.core.chaining.IToolChainHead;
-import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.AbstractTree;
 import radin.core.semantics.TypeEnvironment;
 
-public interface ISemanticAnalyzer<P extends AbstractTree<? extends P>, S> extends IToolChain<P, S> {
+public interface ISemanticAnalyzer<P extends AbstractTree<? extends P>, S> extends IToolChain<P, S, RuntimeException> {
     
     long getRunCount();
     
@@ -15,4 +13,6 @@ public interface ISemanticAnalyzer<P extends AbstractTree<? extends P>, S> exten
     S analyze(P tree);
     
     TypeEnvironment getEnvironment();
+    
+    void reset();
 }

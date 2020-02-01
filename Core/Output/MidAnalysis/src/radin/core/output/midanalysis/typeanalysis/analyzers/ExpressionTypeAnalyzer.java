@@ -16,7 +16,7 @@ import radin.core.semantics.exceptions.IncorrectParameterTypesError;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -204,8 +204,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getType() == ASTNodeType.cast) {
-            assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
-            CXType castType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+            assert node.getASTNode() instanceof TypedAbstractSyntaxNode;
+            CXType castType = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)) {
                 setIsFailurePoint(child);
@@ -441,8 +441,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTType() == ASTNodeType.constructor_call) {
-            assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
-            CXType base = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+            assert node.getASTNode() instanceof TypedAbstractSyntaxNode;
+            CXType base = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
             if(base instanceof ICXWrapper) {
                 base = ((ICXWrapper) base).getWrappedType();
             }

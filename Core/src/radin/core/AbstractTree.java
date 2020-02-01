@@ -32,7 +32,11 @@ public abstract class AbstractTree<T extends AbstractTree<T>> {
     }
     
     public abstract List<T> postfix();
-    public abstract List<? extends AbstractTree<T>> getDirectChildren();
+    public abstract List<T> getDirectChildren();
+    
+    public void addChild(T other) {
+        getDirectChildren().add(other);
+    }
     
     public final int getDepth() {
         int maxDepth = 0;
@@ -46,6 +50,8 @@ public abstract class AbstractTree<T extends AbstractTree<T>> {
         }
         return maxDepth + 1;
     }
+    
+    
     
     public final int getTotalNodes() {
         int sum = 1;

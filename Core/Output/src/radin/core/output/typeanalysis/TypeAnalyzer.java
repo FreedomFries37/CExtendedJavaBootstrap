@@ -1,13 +1,12 @@
 package radin.core.output.typeanalysis;
 
-import com.sun.tools.javac.Main;
 import radin.core.chaining.IInPlaceCompilerAnalyzer;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
-import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.errorhandling.RecoverableCompilationError;
 import radin.core.lexical.Token;
 import radin.core.output.midanalysis.ScopedTypeTracker;
+import radin.core.output.typeanalysis.errors.MissingClassReferenceError;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.methods.CXMethod;
@@ -121,7 +120,7 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         return determineTypes();
     }
     
-    public boolean determineTypes() {
+    public boolean determineTypes()  {
         try {
             return determineTypes(tree);
         }catch (RecoverableCompilationError e) {
@@ -192,7 +191,7 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     
     public abstract boolean determineTypes(TypeAugmentedSemanticNode node);
     
-    public <T extends TypeAnalyzer> boolean determineTypes(T other) {
+    public <T extends TypeAnalyzer> boolean determineTypes(T other) throws MissingClassReferenceError {
         ((TypeAnalyzer) other).trackerStack = trackerStack;
         ((TypeAnalyzer) other).errors = errors;
         return other.determineTypes();

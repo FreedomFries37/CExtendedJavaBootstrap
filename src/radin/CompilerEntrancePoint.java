@@ -57,6 +57,10 @@ public class CompilerEntrancePoint {
                         compilationSettings.setExperimental(true);
                         break;
                     }
+                    case "-P": {
+                        compilationSettings.setOutputPostprocessingOutput(true);
+                        break;
+                    }
                     case "--debug-level": {
                         if (!argsIterator.hasNext()) {
                             System.err.println("Expected an argument");
@@ -125,7 +129,6 @@ public class CompilerEntrancePoint {
         
         List<File> files = new LinkedList<>();
         List<IFrontEndUnit<? extends AbstractSyntaxNode>> frontEndUnits = new LinkedList<>();
-        List<IToolChain<? super AbstractSyntaxNode, ? extends TypeAugmentedSemanticNode>> toolChains = new LinkedList<>();
         for (String filenamesString : filenamesStrings) {
             File f = new File(filenamesString);
             // f.setReadOnly();

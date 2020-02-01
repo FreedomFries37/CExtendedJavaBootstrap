@@ -10,7 +10,6 @@ import radin.core.semantics.types.*;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
-import radin.core.semantics.types.wrapped.CXMappedType;
 import radin.core.utility.Pair;
 import radin.core.utility.Reference;
 import radin.core.semantics.TypeEnvironment;
@@ -27,10 +26,15 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     
     private List<CXMethod> virtualMethodOrder;
     private List<CXMethod> concreteMethodsOrder;
+    /**
+     * Methods created for this class
+     */
+    private List<CXMethod> instanceMethods;
     private List<CXConstructor> constructors;
     
     private List<Pair<CXMethod, CXMethod>> supersToCreate;
     private List<CXMethod> generatedSupers;
+   
     
     private CXMethod initMethod;
     
@@ -43,17 +47,14 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         
     }
     
-    @Override
-    public TypeEnvironment getEnvironment() {
-        return environment;
-    }
-    
     public CXClassType(CXIdentifier typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
         super(typename, new LinkedList<>(declarations));
         this.environment = e;
         sealed = false;
         this.parent = parent;
+        instanceMethods = new LinkedList<>();
+        instanceMethods.addAll(methods);
         if(parent != null) {
             this.virtualMethodOrder = new LinkedList<>(parent.virtualMethodOrder);
             visibilityMap = new HashMap<>(parent.visibilityMap);
@@ -137,6 +138,11 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     }
     
     @Override
+    public TypeEnvironment getEnvironment() {
+        return environment;
+    }
+    
+    @Override
     public void addConstructors(List<CXConstructor> constructors) {
         this.constructors.addAll(constructors);
         for (CXConstructor constructor : constructors) {
@@ -172,7 +178,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             );
             
             AbstractSyntaxNode outputDec = new AbstractSyntaxNode(ASTNodeType.declarations,
-                    new TypeAbstractSyntaxNode(
+                    new TypedAbstractSyntaxNode(
                             ASTNodeType.declaration,
                             new PointerType(this),
                             CXMethod.variableAST("output")
@@ -187,7 +193,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             
             
             AbstractSyntaxNode vtableDec = new AbstractSyntaxNode(ASTNodeType.declarations,
-                    new TypeAbstractSyntaxNode(
+                    new TypedAbstractSyntaxNode(
                             ASTNodeType.declaration,
                             new PointerType(getVTable().getTypeIndirection()),
                             CXMethod.variableAST("vtable")
@@ -256,7 +262,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
                         ((CXClassType) ((PointerType) type).getSubType()).getTypeName().equals("std::ClassInfo")) {
                     assignment = CXMethod.variableAST("output");
                 } else {
-                    assignment = new TypeAbstractSyntaxNode(
+                    assignment = new TypedAbstractSyntaxNode(
                             ASTNodeType.cast,
                             field.getType(),
                             new AbstractSyntaxNode(ASTNodeType.id, new Token(TokenType.t_id, "{0}")
@@ -283,56 +289,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         }
         
         return initMethod;
-    }
-    
-    
-    public List<FieldDeclaration> getAllFields() {
-        List<FieldDeclaration> output = new LinkedList<>();
-        if(parent != null) output.addAll(parent.getAllFields());
-        output.addAll(getFields());
-        return output;
-    }
-    
-    public List<CXMethod> getAllConcreteMethods() {
-        if(this.parent == null) return concreteMethodsOrder;
-        List<CXMethod> output = new LinkedList<>(parent.getAllConcreteMethods());
-        output.addAll(concreteMethodsOrder);
-        return output;
-    }
-    
-    private AbstractSyntaxNode assign(AbstractSyntaxNode lhs, AbstractSyntaxNode rhs) {
-        return new AbstractSyntaxNode(ASTNodeType.assignment, lhs, new AbstractSyntaxNode(ASTNodeType.assignment_type,
-                new Token(TokenType.t_assign)),
-                rhs);
-    }
-    
-    private AbstractSyntaxNode fieldGet(AbstractSyntaxNode lhs, String name) {
-        return new AbstractSyntaxNode(ASTNodeType.field_get,
-                lhs,
-                CXMethod.variableAST(name));
-    }
-    
-    public String getVTableName() {
-        return getCTypeName() + "_vtable";
-    }
-    
-    public String getCTypeName() {
-        return "class_" + super.getCTypeName();
-    }
-    
-    public boolean is(CXClassType other) {
-        return getLineage().contains(other);
-    }
-    
-    public void addVTableTypeToEnvironment(TypeEnvironment environment) {
-        CXStructType vtable = getVTable();
-        
-        environment.addNamedCompoundType(vtable);
-    }
-    
-    @Override
-    public String generateCDeclaration() {
-        return "struct " + getCTypeName();
     }
     
     @Override
@@ -369,8 +325,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         throw new IncorrectParameterTypesError();
     }
     
-    
-    
     @Override
     public CXConstructor getConstructor(int length) {
         for (CXConstructor constructor : constructors) {
@@ -395,20 +349,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             return output;
         }
         CXMethod concreteMethod = getConcreteMethod(name, parameterTypeList);
-        if(concreteMethod != null) {
-            if(isVirtual != null) isVirtual.setValue(false);
-            return concreteMethod;
-        }
-        return null;
-    }
-    
-    public CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
-        CXMethod output = getVirtualMethodStrict(name, parameterTypeList);
-        if(output != null) {
-            if(isVirtual != null) isVirtual.setValue(true);
-            return output;
-        }
-        CXMethod concreteMethod = getConcreteMethodStrict(name, parameterTypeList);
         if(concreteMethod != null) {
             if(isVirtual != null) isVirtual.setValue(false);
             return concreteMethod;
@@ -442,14 +382,136 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return method != null && output.getValue();
     }
     
+    @Override
+    public CXStructType getStructEquivalent() {
+        return getStructEquivalent(environment);
+    }
+    
+    public CXStructType getStructEquivalent(TypeEnvironment environment) {
+        
+        if(!environment.namedCompoundTypeExists(getVTableName())) {
+            addVTableTypeToEnvironment(environment);
+        }
+        
+        CXType vtableType = new PointerType(environment.getNamedCompoundType(getVTableName()).getTypeIndirection());
+        List<FieldDeclaration> fieldDeclarations = new LinkedList<>();
+        fieldDeclarations.add(
+                new FieldDeclaration(vtableType, "vtable")
+        );
+        
+        
+        for (CXClassType cxClass : getLineage()) {
+            fieldDeclarations.addAll(cxClass.getCFields(environment));
+            for (CXMethod cxMethod : cxClass.concreteMethodsOrder) {
+                fieldDeclarations.add(
+                        convertToFieldDeclaration(cxMethod)
+                );
+            }
+        }
+        
+        return new CXStructType(new Token(TokenType.t_id, getCTypeName()), fieldDeclarations);
+    }
+    
+    public String getVTableName() {
+        return getCTypeName() + "_vtable";
+    }
+    
+    public void addVTableTypeToEnvironment(TypeEnvironment environment) {
+        CXStructType vtable = getVTable();
+        
+        environment.addNamedCompoundType(vtable);
+    }
+    
+    public List<FieldDeclaration> getCFields(TypeEnvironment e) {
+        List<FieldDeclaration> output= new LinkedList<>();
+        for (FieldDeclaration field : getFields()) {
+            CXType type = field.getType();
+            CXType cIndirection = type.getCTypeIndirection();
+            output.add(
+                    new FieldDeclaration(cIndirection, field.getName())
+            );
+        }
+        return output;
+    }
+    
+    @Override
+    public List<CXMethod> getGeneratedSupers() {
+        return generatedSupers;
+    }
+    
+    public FieldDeclaration convertToFieldDeclaration(CXMethod method) {
+        CXType type = method.getFunctionPointer();
+        return new FieldDeclaration(type, method.getCMethodName());
+    }
+    
+    public List<FieldDeclaration> getAllFields() {
+        List<FieldDeclaration> output = new LinkedList<>();
+        if(parent != null) output.addAll(parent.getAllFields());
+        output.addAll(getFields());
+        return output;
+    }
+    
+    public List<CXMethod> getAllConcreteMethods() {
+        if(this.parent == null) return concreteMethodsOrder;
+        List<CXMethod> output = new LinkedList<>(parent.getAllConcreteMethods());
+        output.addAll(concreteMethodsOrder);
+        return output;
+    }
+    
+    private AbstractSyntaxNode assign(AbstractSyntaxNode lhs, AbstractSyntaxNode rhs) {
+        return new AbstractSyntaxNode(ASTNodeType.assignment, lhs, new AbstractSyntaxNode(ASTNodeType.assignment_type,
+                new Token(TokenType.t_assign)),
+                rhs);
+    }
+    
+    private AbstractSyntaxNode fieldGet(AbstractSyntaxNode lhs, String name) {
+        return new AbstractSyntaxNode(ASTNodeType.field_get,
+                lhs,
+                CXMethod.variableAST(name));
+    }
+    
+    public List<CXMethod> getInstanceMethods() {
+        return instanceMethods;
+    }
+
+    public boolean is(CXClassType other) {
+        return getLineage().contains(other);
+    }
+
+    public List<CXClassType> getLineage() {
+        List<CXClassType> output = new LinkedList<>();
+        CXClassType ptr = this;
+        while(ptr != null) {
+            output.add(0, ptr);
+            ptr = ptr.parent;
+        }
+        return output;
+    }
+    
+    public CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+        CXMethod output = getVirtualMethodStrict(name, parameterTypeList);
+        if(output != null) {
+            if(isVirtual != null) isVirtual.setValue(true);
+            return output;
+        }
+        CXMethod concreteMethod = getConcreteMethodStrict(name, parameterTypeList);
+        if(concreteMethod != null) {
+            if(isVirtual != null) isVirtual.setValue(false);
+            return concreteMethod;
+        }
+        return null;
+    }
+    
     public boolean isVirtualStrict(String name, ParameterTypeList typeList) {
         Reference<Boolean> output = new Reference<>();
         CXMethod method = getMethodStrict(name, typeList, output);
         return method != null && output.getValue();
     }
+    
     private CXMethod getVirtualMethod(Token name, ParameterTypeList parameterTypeList) {
         return getVirtualMethod(name, parameterTypeList, new LinkedList<>());
     }
+    
     private CXMethod getVirtualMethod(Token name, ParameterTypeList parameterTypeList, List<Token> tokens) {
         List<CXMethod> options = new LinkedList<>();
         for (CXMethod cxMethod : virtualMethodOrder) {
@@ -465,7 +527,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         if(options.size() >= 2) throw new AmbiguousMethodCallError(name, options, tokens);
         return options.get(0);
     }
-    
+
     private CXMethod getConcreteMethod(Token name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : getAllConcreteMethods()) {
             if(cxMethod.getIdentifierName().equals(name.getImage()) && parameterTypeList.equals(cxMethod.getParameterTypeList(),
@@ -475,7 +537,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         }
         return null;
     }
-    
+
     private CXMethod getVirtualMethodStrict(String name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : virtualMethodOrder) {
             if(cxMethod.getIdentifierName().equals(name) && parameterTypeList.equalsExact(cxMethod.getParameterTypeList(),
@@ -504,41 +566,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             this.environment =e;
         }
     }
-    @Override
-    public CXStructType getStructEquivalent() {
-        return getStructEquivalent(environment);
-    }
-    public CXStructType getStructEquivalent(TypeEnvironment environment) {
-        
-        if(!environment.namedCompoundTypeExists(getVTableName())) {
-            addVTableTypeToEnvironment(environment);
-        }
-        
-        CXType vtableType = new PointerType(environment.getNamedCompoundType(getVTableName()).getTypeIndirection());
-        List<FieldDeclaration> fieldDeclarations = new LinkedList<>();
-        fieldDeclarations.add(
-                new FieldDeclaration(vtableType, "vtable")
-        );
-        
-        
-        for (CXClassType cxClass : getLineage()) {
-            fieldDeclarations.addAll(cxClass.getCFields(environment));
-            for (CXMethod cxMethod : cxClass.concreteMethodsOrder) {
-                fieldDeclarations.add(
-                        convertToFieldDeclaration(cxMethod)
-                );
-            }
-        }
-        
-        return new CXStructType(new Token(TokenType.t_id, getCTypeName()), fieldDeclarations);
-    }
-    
-    public CXType getCTypeIndirection() {
-        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType.struct,
-                new Token(TokenType.t_typename, getCTypeName()));
-    }
-    
-    
     
     public String classInfo() {
         StringBuilder builder = new StringBuilder();
@@ -559,37 +586,8 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return builder.toString();
     }
     
-    @Override
-    public List<CXMethod> getGeneratedSupers() {
-        return generatedSupers;
-    }
-    
-    public List<FieldDeclaration> getCFields(TypeEnvironment e) {
-        List<FieldDeclaration> output= new LinkedList<>();
-        for (FieldDeclaration field : getFields()) {
-            CXType type = field.getType();
-            CXType cIndirection = type.getCTypeIndirection();
-            output.add(
-                    new FieldDeclaration(cIndirection, field.getName())
-            );
-        }
-        return output;
-    }
-    
-    public FieldDeclaration convertToFieldDeclaration(CXMethod method) {
-        CXType type = method.getFunctionPointer();
-        return new FieldDeclaration(type, method.getCMethodName());
-    }
-    
-    
-    public List<CXClassType> getLineage() {
-        List<CXClassType> output = new LinkedList<>();
-        CXClassType ptr = this;
-        while(ptr != null) {
-            output.add(0, ptr);
-            ptr = ptr.parent;
-        }
-        return output;
+    public Visibility getVisibility(String name) {
+        return visibilityMap.get(name);
     }
     
     public List<CXClassType> getReverseInheritanceOrder() {
@@ -605,12 +603,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return false;
     }
     
-    public Visibility getVisibility(String name) {
-        return visibilityMap.get(name);
-    }
-    
-    
-    
     public Set<String> getAllNames() {
         return visibilityMap.keySet();
     }
@@ -618,11 +610,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     @Override
     public String generateCDeclaration(String identifier) {
         return generateCDefinition() + " " + identifier;
-    }
-    
-    
-    public CXClassType getParent() {
-        return parent;
     }
     
     @Override
@@ -643,13 +630,42 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     }
     
     @Override
+    public CXType getTypeIndirection() {
+        return this;
+        //return new CXDynamicTypeDefinition()
+        //return new CXDelayedTypeDefinition(getTypeNameIdentifier(), null, environment);
+    }
+    
+    public CXType getCTypeIndirection() {
+        return new CXCompoundTypeNameIndirection(CXCompoundTypeNameIndirection.CompoundType.struct,
+                new Token(TokenType.t_typename, getCTypeName()));
+    }
+    
+    @Override
     public String generateCDefinition() {
         return getStructName();
     }
     
     @Override
+    public String generateCDeclaration() {
+        return "struct " + getCTypeName();
+    }
+    
+    public String getCTypeName() {
+        return "class_" + super.getCTypeName();
+    }
+    
+    @Override
     public String toString() {
         return "CXClass " + getTypeName();
+    }
+    
+    private String getStructName() {
+        return "struct " + getCTypeName();
+    }
+    
+    public CXClassType getParent() {
+        return parent;
     }
     
     private String guard() {
@@ -661,14 +677,8 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
                 "\treturn malloc(sizeof(" + getStructName() + "));\n}";
     }
     
-    
-    
     private String createNewFunctionDeclaration() {
         return getStructName() + "* new_" + getCTypeName() + "();\n";
-    }
-    
-    private String getStructName() {
-        return "struct " + getCTypeName();
     }
     
     private boolean isAlreadyDefined(String name) {
@@ -686,13 +696,6 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             if(cxMethod.getIdentifierName().equals(name) && cxMethod.getParameterTypes().equals(types)) return true;
         }
         return false;
-    }
-    
-    @Override
-    public CXType getTypeIndirection() {
-        return this;
-        //return new CXDynamicTypeDefinition()
-        //return new CXDelayedTypeDefinition(getTypeNameIdentifier(), null, environment);
     }
     
 }

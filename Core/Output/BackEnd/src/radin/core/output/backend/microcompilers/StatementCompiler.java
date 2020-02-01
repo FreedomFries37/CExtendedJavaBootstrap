@@ -7,7 +7,7 @@ import radin.core.output.tags.BasicCompilationTag;
 import radin.core.output.tags.MultiDimensionalArrayWithSizeTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 
 import java.io.PrintWriter;
 
@@ -34,8 +34,8 @@ public class StatementCompiler extends AbstractIndentedOutputCompiler {
             case declarations: {
                 
                 for (TypeAugmentedSemanticNode child : node.getChildren()) {
-                    if(child.getCXType() == null && child.getASTNode() instanceof TypeAbstractSyntaxNode) {
-                        child.setType(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
+                    if(child.getCXType() == null && child.getASTNode() instanceof TypedAbstractSyntaxNode) {
+                        child.setType(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
                     } else if(child.getCXType() == null) {
                         throw new NullPointerException();
                     }

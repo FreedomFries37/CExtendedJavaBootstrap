@@ -3,7 +3,7 @@ package radin.core.output.midanalysis.typeanalysis.analyzers;
 import radin.core.output.tags.BasicCompilationTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
@@ -27,10 +27,10 @@ public class DeclarationsAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
     
         for (TypeAugmentedSemanticNode declaration : node.getAllChildren(declarationType)) {
-            assert declaration.getASTNode() instanceof TypeAbstractSyntaxNode;
+            assert declaration.getASTNode() instanceof TypedAbstractSyntaxNode;
             
             CXType declarationType =
-                    ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+                    ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
             declaration.setType(declarationType);
             declaration.setLValue(true);
             if(declarationType instanceof CXCompoundType) {

@@ -6,7 +6,7 @@ import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -26,13 +26,13 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
         for (AbstractSyntaxNode abstractSyntaxNode : head.getChildList()) {
             children.add(convertAST(abstractSyntaxNode, e));
         }
-        if(head instanceof TypeAbstractSyntaxNode) {
-            TypeAbstractSyntaxNode typeAbstractSyntaxNode = (TypeAbstractSyntaxNode) head;
-            CXType type = typeAbstractSyntaxNode.getCxType();
+        if(head instanceof TypedAbstractSyntaxNode) {
+            TypedAbstractSyntaxNode typedAbstractSyntaxNode = (TypedAbstractSyntaxNode) head;
+            CXType type = typedAbstractSyntaxNode.getCxType();
             if(type instanceof CXCompoundTypeNameIndirection) {
                 CXType newType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) type).getTypename());
                 if(newType != null) {
-                    head = new TypeAbstractSyntaxNode(head.getType(), newType, head.getChildList());
+                    head = new TypedAbstractSyntaxNode(head.getType(), newType, head.getChildList());
                     TypeAugmentedSemanticNode output = new TypeAugmentedSemanticNode(head, children);
                     output.addCompilationTag(new TypeDefHelperTag(type));
                     return output;
@@ -48,7 +48,7 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
     }
     
     @Override
-    public List<? extends AbstractTree<TypeAugmentedSemanticNode>> getDirectChildren() {
+    public List<TypeAugmentedSemanticNode> getDirectChildren() {
         return Collections.singletonList(head);
     }
     

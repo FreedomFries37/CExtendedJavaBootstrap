@@ -52,7 +52,7 @@ public interface ICompilationSettings<Front, Mid, Back> {
     
     /**
      * All function calls now run through a stack
-     * @return
+     *
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setUseStackTrace(boolean value);
@@ -115,6 +115,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
     }
     
     
+    boolean isOutputPostprocessingOutput();
+    
+    void setOutputPostprocessingOutput(boolean outputPostprocessingOutput);
+    
     IFrontEndUnit<? extends Front> getFrontEndUnit();
     
     void setFrontEndUnit(IFrontEndUnit<? extends Front> frontEndUnit);
@@ -126,4 +130,13 @@ public interface ICompilationSettings<Front, Mid, Back> {
     IToolChain<? super Mid, ? extends Back> getBackToolChain();
     
     void setBackToolChain(IToolChain<? super Mid, ? extends Back> backToolChain);
+    
+    boolean isHideClassPrivateDeclarations();
+    
+    /**
+     * Determines when a class definition is referrred to using a {@code using} statement, if it's private and protected
+     * members are "hidden" using sized buffers.
+     */
+    @ExperimentalSetting(useBooleanValue = true)
+    void setHideClassPrivateDeclarations(boolean hideClassPrivateDeclarations);
 }

@@ -8,7 +8,6 @@ import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 import radin.core.output.tags.ICompilationTag;
-import radin.core.AbstractTree;
 
 import java.util.HashSet;
 import java.util.LinkedList;

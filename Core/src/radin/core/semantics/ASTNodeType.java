@@ -1,6 +1,6 @@
 package radin.core.semantics;
 
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.utility.ICompilationSettings;
 
 public enum ASTNodeType {
@@ -19,7 +19,7 @@ public enum ASTNodeType {
     /**
      * Represents a declaration of a variable.
      * <P>
-     * Must be a {@link TypeAbstractSyntaxNode} with a {@link TypeAbstractSyntaxNode#getCxType()} equal to the
+     * Must be a {@link TypedAbstractSyntaxNode} with a {@link TypedAbstractSyntaxNode#getCxType()} equal to the
      * declaring type
      */
     declaration("dec"),
@@ -157,7 +157,7 @@ public enum ASTNodeType {
      *     <li>{@link #compound_statement}</li>
      * </ol>
      * <p>
-     * Must be a {@link TypeAbstractSyntaxNode} with a {@link TypeAbstractSyntaxNode#getCxType()} equal to the
+     * Must be a {@link TypedAbstractSyntaxNode} with a {@link TypedAbstractSyntaxNode#getCxType()} equal to the
      * declaring type
      */
     function_definition("function_definition"),

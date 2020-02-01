@@ -3,11 +3,9 @@ package radin.core.output.combo;
 import radin.core.ErrorReader;
 import radin.core.IFrontEndUnit;
 import radin.core.chaining.IToolChain;
-import radin.core.chaining.ToolChainFactory;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
 import radin.core.errorhandling.ICompilationErrorCollector;
-import radin.core.output.backend.compilation.FileCompiler;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.AbstractSyntaxNode;
@@ -15,6 +13,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.*;
 import java.util.*;
@@ -122,6 +121,17 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     frontEndUnit.setVariable("lexer.inputString", inputString);
                     astTree = frontEndUnit.invoke();
                     inputString = frontEndUnit.getUsedString();
+                    if(UniversalCompilerSettings.getInstance().getSettings().isOutputPostprocessingOutput()){
+                        File preProcessingOutput = new File(file + ".ppo");
+                        try {
+                            FileWriter fileWriter = new FileWriter(preProcessingOutput);
+                            fileWriter.write(inputString);
+                            fileWriter.flush();
+                            fileWriter.close();
+                        } catch (IOException e) {
+                            ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " + preProcessingOutput);
+                        }
+                    }
                     if (frontEndUnit.hasErrors()) {
                         errors.addAll(frontEndUnit.getErrors());
                         return CompilationResult.Failed;

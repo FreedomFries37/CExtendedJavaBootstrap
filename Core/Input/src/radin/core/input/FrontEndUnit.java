@@ -112,6 +112,7 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
     public void reset() {
         lexer.reset();
         parser.reset();
+        builder.reset();
     }
     
     

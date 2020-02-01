@@ -1,6 +1,5 @@
 package radin.core.input.frontend.v1.parsing;
 
-import radin.core.AbstractTree;
 import radin.core.lexical.TokenType;
 import radin.core.input.frontend.v1.MissingCategoryNodeError;
 
@@ -122,7 +121,7 @@ public class CategoryNode extends ParseNode {
     }
     
     @Override
-    public List<? extends AbstractTree<ParseNode>> getDirectChildren() {
+    public List<ParseNode> getDirectChildren() {
         return getAllChildren();
     }
     

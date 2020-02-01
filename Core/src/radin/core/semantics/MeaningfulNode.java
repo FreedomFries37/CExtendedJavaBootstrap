@@ -11,7 +11,7 @@ public abstract class MeaningfulNode<T extends MeaningfulNode<T>> extends Abstra
     abstract public Token getToken();
     
     @Override
-    abstract public List<? extends MeaningfulNode<T>> getDirectChildren();
+    abstract public List<T> getDirectChildren();
     public MeaningfulNode<T> getChildWithASTType(ASTNodeType type) {
         return getChildWithASTType(type, 0);
     }
@@ -33,6 +33,8 @@ public abstract class MeaningfulNode<T extends MeaningfulNode<T>> extends Abstra
         }
         return null;
     }
+    
+    
     
     public MeaningfulNode<T> getChildAtIndex(int index) {
         return getDirectChildren().get(index);

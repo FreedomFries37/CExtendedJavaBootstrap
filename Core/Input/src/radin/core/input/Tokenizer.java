@@ -33,10 +33,13 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
         tokenIndex = -1;
         column = 1;
         lineNumber = 1;
-        this.filename = filename;
+        setFilename(filename);
     }
     
     
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
     
     @Override
     public T invoke() {
@@ -47,7 +50,7 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
     public <V> void setVariable(String variable, V value) {
         switch (variable) {
             case "filename": {
-                this.filename = (String) value;
+                setFilename((String) value);
                 break;
             }
             case "inputString": {
@@ -170,6 +173,7 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
     public int run() {
         int count = 0;
         for (T token : this){
+            if(token == null) break;
             ++count;
         }
         return count;

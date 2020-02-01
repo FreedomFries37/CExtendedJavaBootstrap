@@ -230,7 +230,7 @@ public class CXMethod implements CXEquivalent {
         Token name = variableAST("super_" + this.getCFunctionName()).getToken();
         
         AbstractSyntaxNode oldDec = new AbstractSyntaxNode(ASTNodeType.declarations,
-                new TypeAbstractSyntaxNode(
+                new TypedAbstractSyntaxNode(
                         ASTNodeType.declaration,
                         replacement.getFunctionPointer(),
                         new AbstractSyntaxNode(
@@ -284,7 +284,7 @@ public class CXMethod implements CXEquivalent {
         );
         if(returnType != CXPrimitiveType.VOID) {
             AbstractSyntaxNode output =new AbstractSyntaxNode(ASTNodeType.declarations,
-                    new TypeAbstractSyntaxNode(
+                    new TypedAbstractSyntaxNode(
                             ASTNodeType.declaration,
                             returnType,
                             variableAST("output")

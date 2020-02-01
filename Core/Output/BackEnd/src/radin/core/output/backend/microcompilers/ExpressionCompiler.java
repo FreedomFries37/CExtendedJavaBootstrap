@@ -10,7 +10,7 @@ import radin.core.lexical.Token;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.CXMethod;
@@ -44,7 +44,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                 break;
             }
             case sizeof: {
-                CXType type = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+                CXType type = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
                 print("sizeof(");
                 print(type.generateCDefinition());
                 print(")");
@@ -91,8 +91,8 @@ public class ExpressionCompiler extends AbstractCompiler {
             }
             case cast: {
                 CXType castType = node.getCXType();
-                if(castType == null && node.getASTNode() instanceof TypeAbstractSyntaxNode) {
-                    castType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+                if(castType == null && node.getASTNode() instanceof TypedAbstractSyntaxNode) {
+                    castType = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
                 }
                 TypeAugmentedSemanticNode child = node.getChild(0);
                 print("(");

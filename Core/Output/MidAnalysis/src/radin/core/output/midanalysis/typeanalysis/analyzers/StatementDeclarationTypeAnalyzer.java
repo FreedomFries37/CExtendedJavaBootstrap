@@ -10,7 +10,7 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
@@ -41,10 +41,10 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             String name;
             
             if(declaration.getASTType() == ASTNodeType.declaration) {
-                assert declaration.getASTNode() instanceof TypeAbstractSyntaxNode;
+                assert declaration.getASTNode() instanceof TypedAbstractSyntaxNode;
                 
                 declarationType =
-                        ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType();// .getTypeRedirection
+                        ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType();// .getTypeRedirection
                 // (getEnvironment());
                 
                 if(strictIs(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
@@ -103,7 +103,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 // same process as prior but also checks to see if can place expression into type
                 TypeAugmentedSemanticNode subDeclaration = declaration.getASTChild(ASTNodeType.declaration);
-                declarationType = ((TypeAbstractSyntaxNode) subDeclaration.getASTNode()).getCxType();
+                declarationType = ((TypedAbstractSyntaxNode) subDeclaration.getASTNode()).getCxType();
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
                     declarationType =
                             getEnvironment().getNamedCompoundType(((CXCompoundTypeNameIndirection) declarationType).getTypename());
@@ -130,7 +130,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
             } else if(declaration.getASTType() == ASTNodeType.function_description) {
                 declarationType =
-                        ((TypeAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
+                        ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
     
                 name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
                 
@@ -140,7 +140,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 TypeAugmentedSemanticNode astChild = declaration.getASTChild(ASTNodeType.parameter_list);
                 List<CXType> typeList = new LinkedList<>();
                 for (TypeAugmentedSemanticNode child : astChild.getChildren()) {
-                    typeList.add(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
+                    typeList.add(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
                 }
                 CXFunctionPointer pointer = new CXFunctionPointer(declarationType, typeList);
                 

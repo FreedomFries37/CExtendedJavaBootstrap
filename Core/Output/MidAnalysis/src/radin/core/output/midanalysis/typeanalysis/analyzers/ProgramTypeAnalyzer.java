@@ -4,7 +4,7 @@ import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -45,8 +45,8 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 FunctionTypeAnalyzer functionTypeAnalyzer = new FunctionTypeAnalyzer(child);
                 if(!determineTypes(functionTypeAnalyzer)) return false;
     
-                TypeAbstractSyntaxNode astNode =
-                        ((TypeAbstractSyntaxNode) child.getASTNode());
+                TypedAbstractSyntaxNode astNode =
+                        ((TypedAbstractSyntaxNode) child.getASTNode());
                 
                 String name = child.getASTChild(ASTNodeType.id).getToken().getImage();
                 CXType returnType = astNode.getCxType();
@@ -57,7 +57,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                     TypeAugmentedSemanticNode astChild = child.getASTChild(ASTNodeType.parameter_list);
                     List<CXType> typeList = new LinkedList<>();
                     for (TypeAugmentedSemanticNode param : astChild.getChildren()) {
-                        typeList.add(((TypeAbstractSyntaxNode) param.getASTNode()).getCxType());
+                        typeList.add(((TypedAbstractSyntaxNode) param.getASTNode()).getCxType());
                     }
                     CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
     
@@ -73,8 +73,8 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
             
             } else if(child.getASTType() == ASTNodeType.qualifiers_and_specifiers) {
             
-                if(child.getASTNode().getChild(0) instanceof TypeAbstractSyntaxNode) {
-                    CXType declarationType = ((TypeAbstractSyntaxNode) child.getASTNode().getChild(0)).getCxType();
+                if(child.getASTNode().getChild(0) instanceof TypedAbstractSyntaxNode) {
+                    CXType declarationType = ((TypedAbstractSyntaxNode) child.getASTNode().getChild(0)).getCxType();
     
                     if(declarationType instanceof CXCompoundType) {
                         CXCompoundType cxCompoundType = ((CXCompoundType) declarationType);
@@ -85,14 +85,14 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                     }
                 }
             } else if(child.getASTType() == ASTNodeType.typedef) {
-                child.setType(((TypeAbstractSyntaxNode) child.getASTNode()).getCxType());
+                child.setType(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
             } else if(child.getASTType() == ASTNodeType.top_level_decs) {
                 if(!determineTypes(child)) {
                     setIsFailurePoint(child);
                     return false;
                 }
             } else if(child.getASTType() == ASTNodeType.implement) {
-                CXClassType subType = (CXClassType) ((PointerType) ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType()).getSubType();
+                CXClassType subType = (CXClassType) ((PointerType) ((TypedAbstractSyntaxNode) child.getASTNode()).getCxType()).getSubType();
                 ImplementationTypeAnalyzer implementationTypeAnalyzer = new ImplementationTypeAnalyzer(child,
                         subType);
                 

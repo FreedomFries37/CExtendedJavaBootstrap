@@ -20,3 +20,7 @@ void _main(int argc, std::String args[]) {
 	println_s(total);
 }
 */
+
+#include "animals.cx"
+#include "animals.cx"
+#include "animals.cx"

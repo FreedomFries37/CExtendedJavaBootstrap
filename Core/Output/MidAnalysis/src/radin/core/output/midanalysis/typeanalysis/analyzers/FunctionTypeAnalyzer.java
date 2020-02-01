@@ -2,8 +2,8 @@ package radin.core.output.midanalysis.typeanalysis.analyzers;
 
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.primitives.PointerType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.output.typeanalysis.TypeAnalyzer;
@@ -30,9 +30,9 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         assert node.getASTType() == ASTNodeType.function_definition;
-        assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
+        assert node.getASTNode() instanceof TypedAbstractSyntaxNode;
         
-        CXType returnType = ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+        CXType returnType = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
         
         typeTrackingClosure();
         ICompilationSettings.debugLog.finest("Compiling function " + node.getASTChild(ASTNodeType.id).getToken().getImage());
@@ -50,8 +50,8 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
        
         TypeAugmentedSemanticNode parameters = node.getASTChild(ASTNodeType.parameter_list);
         for (TypeAugmentedSemanticNode parameter : parameters.getAllChildren(ASTNodeType.declaration)) {
-            assert parameter.getASTNode() instanceof TypeAbstractSyntaxNode;
-            CXType type = ((TypeAbstractSyntaxNode) parameter.getASTNode()).getCxType();
+            assert parameter.getASTNode() instanceof TypedAbstractSyntaxNode;
+            CXType type = ((TypedAbstractSyntaxNode) parameter.getASTNode()).getCxType();
             String name = parameter.getASTChild(ASTNodeType.id).getToken().getImage();
             ICompilationSettings.debugLog.finest("Adding " + type.generateCDeclaration(name) + " to parameters");
             getCurrentTracker().addVariable(name, type);

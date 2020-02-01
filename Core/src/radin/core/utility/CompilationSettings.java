@@ -2,9 +2,6 @@ package radin.core.utility;
 
 import radin.core.IFrontEndUnit;
 import radin.core.chaining.IToolChain;
-import radin.core.lexical.Token;
-import radin.core.semantics.AbstractSyntaxNode;
-import radin.core.semantics.TypeEnvironment;
 
 public class CompilationSettings<Front, Mid, Back> implements ICompilationSettings<Front, Mid, Back> {
     
@@ -20,11 +17,15 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     private boolean showErrorStackTrace = false;
     
+    private boolean outputPostprocessingOutput = false;
+    
     private int tabSize = 4;
     
     private IFrontEndUnit<? extends Front> frontEndUnit;
     private IToolChain<? super Front, ? extends Mid> midToolChain;
     private IToolChain<? super Mid, ? extends Back> backToolChain;
+    
+    private boolean hideClassPrivateDeclarations = false;
     
     
     @Override
@@ -126,6 +127,15 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
         this.tabSize = tabSize;
     }
     
+    @Override
+    public boolean isOutputPostprocessingOutput() {
+        return outputPostprocessingOutput;
+    }
+    
+    @Override
+    public void setOutputPostprocessingOutput(boolean outputPostprocessingOutput) {
+        this.outputPostprocessingOutput = outputPostprocessingOutput;
+    }
     
     @Override
     public IFrontEndUnit<? extends Front> getFrontEndUnit() {
@@ -157,4 +167,13 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
         this.backToolChain = backToolChain;
     }
     
+    @Override
+    public boolean isHideClassPrivateDeclarations() {
+        return hideClassPrivateDeclarations;
+    }
+    
+    @Override
+    public void setHideClassPrivateDeclarations(boolean hideClassPrivateDeclarations) {
+        this.hideClassPrivateDeclarations = hideClassPrivateDeclarations;
+    }
 }

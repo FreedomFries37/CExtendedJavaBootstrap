@@ -73,6 +73,25 @@ public class TypeEnvironment {
         );
     }
     
+    public void resetToNone() {
+        typeDefinitions = new HashMap<>();
+        namedCompoundTypes = new HashSet<>();
+        namedCompoundTypesMap = new HashMap<>();
+        lateBoundReferences = new HashSet<>();
+        createdClasses = new HashSet<>();
+        
+        delayedTypeDefinitionHashMap = new HashMap<>();
+        classTargetManger = AnnotationManager.createTargeted(
+                new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
+        );
+        namespaceTree = new NamespaceTree();
+        if(standardBooleanDefined) {
+            addTypeDefinition(
+                    UnsignedPrimitive.createUnsignedShort(), "boolean"
+            );
+        }
+    }
+    
     public void setDefaultInheritance(CXClassType defaultInheritance) {
         this.defaultInheritance = defaultInheritance;
     }
@@ -95,6 +114,10 @@ public class TypeEnvironment {
         
         typeDefinitions.put(name, type);
         return type;
+    }
+    
+    public void resetNamespace() {
+        currentNamespace = null;
     }
     
     public AnnotationManager<CXClassType> getClassTargetManger() {
@@ -338,8 +361,8 @@ public class TypeEnvironment {
         
         
         // ast.printTreeForm();
-        if(ast instanceof TypeAbstractSyntaxNode) {
-            return ((TypeAbstractSyntaxNode) ast).getCxType();
+        if(ast instanceof TypedAbstractSyntaxNode) {
+            return ((TypedAbstractSyntaxNode) ast).getCxType();
         }
         
         if(ast.getType().equals(ASTNodeType.namespaced)) {
@@ -667,8 +690,8 @@ public class TypeEnvironment {
      */
     private CXCompoundType.FieldDeclaration createFieldDeclaration(AbstractSyntaxNode ast) {
         CXType type;
-        if(ast instanceof TypeAbstractSyntaxNode) {
-            type = ((TypeAbstractSyntaxNode) ast).getCxType();
+        if(ast instanceof TypedAbstractSyntaxNode) {
+            type = ((TypedAbstractSyntaxNode) ast).getCxType();
         } else {
             throw new UnsupportedOperationException();
         }
@@ -694,8 +717,8 @@ public class TypeEnvironment {
     private CXClassType.ClassFieldDeclaration createClassFieldDeclaration(Visibility visibility,
                                                                           AbstractSyntaxNode ast) {
         CXType type;
-        if(ast instanceof TypeAbstractSyntaxNode) {
-            type = ((TypeAbstractSyntaxNode) ast).getCxType();
+        if(ast instanceof TypedAbstractSyntaxNode) {
+            type = ((TypedAbstractSyntaxNode) ast).getCxType();
         } else {
             throw new UnsupportedOperationException();
         }
@@ -710,8 +733,8 @@ public class TypeEnvironment {
             throw new UnsupportedOperationException();
         }
         
-        assert ast instanceof TypeAbstractSyntaxNode;
-        TypeAbstractSyntaxNode typedAST = (TypeAbstractSyntaxNode) ast;
+        assert ast instanceof TypedAbstractSyntaxNode;
+        TypedAbstractSyntaxNode typedAST = (TypedAbstractSyntaxNode) ast;
         
         CXType returnType = typedAST.getCxType();
         Token name = ast.getChild(ASTNodeType.id).getToken();
@@ -732,7 +755,7 @@ public class TypeEnvironment {
     private List<CXParameter> createParameters(AbstractSyntaxNode ast) {
         List<CXParameter> output = new LinkedList<>();
         for (AbstractSyntaxNode abstractSyntaxNode : ast.getChildList()) {
-            CXType type = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType();
+            CXType type = ((TypedAbstractSyntaxNode) abstractSyntaxNode).getCxType();
             String name = abstractSyntaxNode.getChild(ASTNodeType.id).getToken().getImage();
             output.add(new CXParameter(type, name));
         }

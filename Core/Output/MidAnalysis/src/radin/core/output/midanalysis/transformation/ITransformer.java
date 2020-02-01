@@ -1,46 +1,54 @@
 package radin.core.output.midanalysis.transformation;
 
-import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
-
 import java.util.*;
 
-public interface ITransformer {
+/**
+ *
+ * @param <T> Target type
+ * @param <R> Relevant type
+ */
+public interface ITransformer<T, R extends Collection<T>> {
+    
+    T unScopeTo(T to);
+    T unScopeTo();
+    
+    
     
     /**
      * Inserts a node at the beginning of the relevant layer
      * @param node non-null node
      * @return if the operation was successful
      */
-    boolean insertFirst(TypeAugmentedSemanticNode node);
+    boolean insertFirst(T node);
     /**
      * Inserts a list of nodes at the beginning of the relevant layer
      * @param nodes a list of nodes, where no node is null
      * @return if the operation was successful
      */
-    boolean insertFirst(List<? extends TypeAugmentedSemanticNode> nodes);
+    boolean insertFirst(List<? extends T> nodes);
     
     /**
      * Inserts a node at the end of the relevant layer
      * @param node a non-null node
      * @return if the operation was successful
      */
-    boolean insertLast(TypeAugmentedSemanticNode node);
+    boolean insertLast(T node);
     /**
      * Inserts a list of nodes at the end of the relevant layer
      * @param nodes a list of nodes, where no node is null
      * @return if the operation was successful
      */
-    boolean insertLast(List<? extends TypeAugmentedSemanticNode> nodes);
+    boolean insertLast(List<? extends T> nodes);
     
     /**
      * Inserts a node after a target node in the relevant layer
      * @param target either a node in the relevant layer or a null value. If the target is not null and is not within
      *              the layer, the operation fails. A null target value is equivalent to
-     *              {@link ITransformer#insertLast(TypeAugmentedSemanticNode)}.
+     *              {@link ITransformer#insertLast(T)}.
      * @param node a non null node
      * @return if the target was valid and the operation succeeded
      */
-    boolean insertAfter(TypeAugmentedSemanticNode target, TypeAugmentedSemanticNode node);
+    boolean insertAfter(T target, T node);
     /**
      * Inserts a node after a target node in the relevant layer
      * @param target either a node in the relevant layer or a null value. If the target is not null and is not within
@@ -49,17 +57,17 @@ public interface ITransformer {
      * @param nodes a list of nodes, where no node is null
      * @return if the target was valid and the operation succeeded
      */
-    boolean insertAfter(TypeAugmentedSemanticNode target, List<? extends TypeAugmentedSemanticNode> nodes);
+    boolean insertAfter(T target, List<? extends T> nodes);
     
     /**
      * Inserts a node after a target node in the relevant layer
      * @param target either a node in the relevant layer or a null value. If the target is not null and is not within
      *              the layer, the operation fails. A null target value is equivalent to
-     *              {@link ITransformer#insertFirst(TypeAugmentedSemanticNode)}.
+     *              {@link ITransformer#insertFirst(T)}.
      * @param node a non null node
      * @return if the target was valid and the operation succeeded
      */
-    boolean insertBefore(TypeAugmentedSemanticNode target, TypeAugmentedSemanticNode node);
+    boolean insertBefore(T target, T node);
     /**
      * Inserts a node after a target node in the relevant layer
      * @param target either a node in the relevant layer or a null value. If the target is not null and is not within
@@ -68,14 +76,14 @@ public interface ITransformer {
      * @param nodes nodes a list of nodes, where no node is null
      * @return if the target was valid and the operation succeeded
      */
-    boolean insertBefore(TypeAugmentedSemanticNode target, List<? extends TypeAugmentedSemanticNode> nodes);
+    boolean insertBefore(T target, List<? extends T> nodes);
     
     /**
      * Deletes a node from the relevant layer, returning false if the removal failed
      * @param node the node to remove, if it's null nothing happens and the operation "succeeds"
      * @return if the operation was successful
      */
-    boolean delete(TypeAugmentedSemanticNode node);
+    boolean delete(T node);
     
     /**
      * Deletes a set of nodes. If a delete fails, then entire thing fails. Doesn't guarantee that a failed operation
@@ -83,7 +91,7 @@ public interface ITransformer {
      * @param nodes the nodes to delete
      * @return
      */
-    default boolean delete(Set<? extends TypeAugmentedSemanticNode> nodes) {
+    default boolean delete(Set<? extends T> nodes) {
         return delete(nodes, false);
     }
     
@@ -94,11 +102,11 @@ public interface ITransformer {
      *                  doesn't guarantee that a failed operation means nothing was deleted
      * @return if the operation was succesful
      */
-    default boolean delete(Set<? extends TypeAugmentedSemanticNode> nodes, boolean safeDelete) {
+    default boolean delete(Set<? extends T> nodes, boolean safeDelete) {
         if(safeDelete) {
             if(!getRelevant().containsAll(nodes)) return false;
         }
-        for (TypeAugmentedSemanticNode node : nodes) {
+        for (T node : nodes) {
             if (!delete(node)) return false;
         }
         
@@ -111,8 +119,8 @@ public interface ITransformer {
      * @param node a new node to replace it with
      * @return if the operation was successful
      */
-    default boolean replace(TypeAugmentedSemanticNode target, TypeAugmentedSemanticNode node) {
-        TypeAugmentedSemanticNode prev = previous(target);
+    default boolean replace(T target, T node) {
+        T prev = previous(target);
         if(!insertAfter(prev, node)) return false;
         return delete(target);
     }
@@ -122,49 +130,55 @@ public interface ITransformer {
      * @param nodes a list of nodes to replace it with
      * @return if the operation was successful
      */
-    default boolean replace(TypeAugmentedSemanticNode target, List<? extends TypeAugmentedSemanticNode> nodes) {
-        TypeAugmentedSemanticNode prev = previous(target);
+    default boolean replace(T target, List<? extends T> nodes) {
+        T prev = previous(target);
         if(!insertAfter(prev, nodes)) return false;
         return delete(target);
     }
     
     
+    boolean encapsulate(T target, T child);
     
+    T next(T target);
+    T previous(T target);
+    R getRelevant();
     
-    default boolean encapsulate(TypeAugmentedSemanticNode target, TypeAugmentedSemanticNode child) {
-        if(!replace(target, child)) return false;
-        child.addChild(target);
-        return true;
-    }
+    /**
+     * Changes the scope somehow to be relevant to the target, and returns the old scope target
+     * @param target the new target for the scope change. How this changes the relevant layer is implementation specific
+     * @return the old target
+     */
+    T reScopeTo(T target);
     
-    TypeAugmentedSemanticNode next(TypeAugmentedSemanticNode target);
-    TypeAugmentedSemanticNode previous(TypeAugmentedSemanticNode target);
-    List<TypeAugmentedSemanticNode> getRelevant();
-    
-    default boolean encapsulate(List<? extends TypeAugmentedSemanticNode> targets, TypeAugmentedSemanticNode newParent) throws TargetsNotConsecutive {
+    default boolean encapsulate(List<? extends T> targets, T newParent) throws TargetsNotConsecutive {
         if(!getRelevant().containsAll(targets)) return false;
-        TypeAugmentedSemanticNode node = targets.get(0);
-        for (TypeAugmentedSemanticNode target : targets) {
+        T node = targets.get(0);
+        for (T target : targets) {
             if(target != node) throw new TargetsNotConsecutive();
             node = next(node);
         }
-        TypeAugmentedSemanticNode target = previous(targets.get(0));
+        T target = previous(targets.get(0));
         delete(new HashSet<>(targets));
-        newParent.addAllChildren(targets);
+        
+        // newParent.addAllChildren(targets);
         if(target == null) {
             insertFirst(newParent);
         } else {
             insertAfter(target, newParent);
         }
+        T oldScope = reScopeTo(newParent);
+        insertFirst(targets);
+        unScopeTo(oldScope);
+        
         return true;
     }
     
-    default boolean encapsulate(TypeAugmentedSemanticNode newParent,
-                                TypeAugmentedSemanticNode target1, TypeAugmentedSemanticNode... targets) throws TargetsNotConsecutive {
+    default boolean encapsulate(T newParent,
+                                T target1, T... targets) throws TargetsNotConsecutive {
         if(targets.length == 0) {
             return encapsulate(target1, newParent);
         } else {
-            List<TypeAugmentedSemanticNode> list = Arrays.asList(targets);
+            List<T> list = Arrays.asList(targets);
             list.add(0, target1);
             return encapsulate(list, newParent);
         }

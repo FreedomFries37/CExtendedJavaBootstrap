@@ -1,7 +1,6 @@
 package radin.core.semantics;
 
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
-import radin.core.AbstractTree;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.lexical.Token;
 import radin.core.semantics.types.CXType;
 
@@ -40,8 +39,8 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
         hints = typeToHints.getOrDefault(type, new LinkedList<>());
     }
     
-    public TypeAbstractSyntaxNode addType(CXType type) {
-        return new TypeAbstractSyntaxNode(this.getType(), type, childList);
+    public TypedAbstractSyntaxNode addType(CXType type) {
+        return new TypedAbstractSyntaxNode(this.getType(), type, childList);
     }
     
     public static AbstractSyntaxNode unroll(ASTNodeType type, AbstractSyntaxNode first, AbstractSyntaxNode unrolled) {
@@ -207,6 +206,11 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     
     @Override
     public List<AbstractSyntaxNode> getDirectChildren() {
+        return childList;
+    }
+    
+    @Override
+    public List<? super AbstractSyntaxNode> getMutableChildren() {
         return childList;
     }
 }

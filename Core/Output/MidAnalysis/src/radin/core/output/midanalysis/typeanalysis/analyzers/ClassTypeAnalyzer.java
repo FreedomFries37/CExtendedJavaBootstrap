@@ -2,6 +2,7 @@ package radin.core.output.midanalysis.typeanalysis.analyzers;
 
 import radin.core.lexical.Token;
 import radin.core.output.midanalysis.MethodTASNTracker;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.typeanalysis.errors.IncorrectReturnTypeError;
@@ -9,7 +10,6 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.primitives.PointerType;
-import radin.core.semantics.types.TypeAbstractSyntaxNode;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -36,10 +36,10 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
     
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
-        assert node.getASTNode() instanceof TypeAbstractSyntaxNode;
-        assert ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType() instanceof CXClassType;
+        assert node.getASTNode() instanceof TypedAbstractSyntaxNode;
+        assert ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType() instanceof CXClassType;
         
-        CXClassType cxClassType = (CXClassType) ((TypeAbstractSyntaxNode) node.getASTNode()).getCxType();
+        CXClassType cxClassType = (CXClassType) ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
         cxClassType.generateSuperMethods(UniversalCompilerSettings.getInstance().getSettings().getvTableName());
         
         for (CXMethod generatedSuper : cxClassType.getGeneratedSupers()) {
@@ -104,8 +104,8 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 ASTNodeType astType = clsLevelDec.getASTChild(ASTNodeType.function_definition) == null ?
                         ASTNodeType.function_description : ASTNodeType.function_definition;
                 
-                TypeAbstractSyntaxNode astNode =
-                        ((TypeAbstractSyntaxNode) clsLevelDec.getASTChild(astType).getASTNode());
+                TypedAbstractSyntaxNode astNode =
+                        ((TypedAbstractSyntaxNode) clsLevelDec.getASTChild(astType).getASTNode());
                 
                 CXType returnType = astNode.getCxType();
                 Token name = astNode.getChild(ASTNodeType.id).getToken();
@@ -120,7 +120,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                  */
                 for (TypeAugmentedSemanticNode child :
                         clsLevelDec.getASTChild(astType).getASTChild(ASTNodeType.parameter_list).getChildren()) {
-                    CXType paramType = ((TypeAbstractSyntaxNode) child.getASTNode()).getCxType();
+                    CXType paramType = ((TypedAbstractSyntaxNode) child.getASTNode()).getCxType();
                     parameterTypes.add(paramType);
                     child.setType(paramType);
                 }
@@ -174,8 +174,8 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 List<CXType> parameterTypes = new LinkedList<>();
                 for (AbstractSyntaxNode abstractSyntaxNode :
                         def.getASTChild(ASTNodeType.parameter_list).getASTNode().getChildList()) {
-                    assert  abstractSyntaxNode instanceof TypeAbstractSyntaxNode;
-                    CXType paramType = ((TypeAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
+                    assert  abstractSyntaxNode instanceof TypedAbstractSyntaxNode;
+                    CXType paramType = ((TypedAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
                     parameterTypes.add(paramType);
                 }
                 

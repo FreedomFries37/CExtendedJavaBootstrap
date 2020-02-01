@@ -6,30 +6,30 @@ import radin.core.semantics.AbstractSyntaxNode;
 
 import java.util.List;
 
-public class TypeAbstractSyntaxNode extends AbstractSyntaxNode {
+public class TypedAbstractSyntaxNode extends AbstractSyntaxNode {
 
     private CXType cxType;
     
-    public TypeAbstractSyntaxNode(ASTNodeType type, CXType cxType, AbstractSyntaxNode... children) {
+    public TypedAbstractSyntaxNode(ASTNodeType type, CXType cxType, AbstractSyntaxNode... children) {
         super(type, children);
         this.cxType = cxType;
     }
     
-    public TypeAbstractSyntaxNode(ASTNodeType type, CXType cxType, List<AbstractSyntaxNode> children) {
+    public TypedAbstractSyntaxNode(ASTNodeType type, CXType cxType, List<AbstractSyntaxNode> children) {
        this(type, cxType, children.toArray(new AbstractSyntaxNode[children.size()]));
     }
     
-    public TypeAbstractSyntaxNode(AbstractSyntaxNode other, CXType cxType, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
+    public TypedAbstractSyntaxNode(AbstractSyntaxNode other, CXType cxType, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
         super(other, add, additionalChildren);
         this.cxType = cxType;
     }
     
-    public TypeAbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, CXType cxType, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
+    public TypedAbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, CXType cxType, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
         super(other, addFirst, add, additionalChildren);
         this.cxType = cxType;
     }
     
-    public TypeAbstractSyntaxNode(ASTNodeType type, Token token, CXType cxType) {
+    public TypedAbstractSyntaxNode(ASTNodeType type, Token token, CXType cxType) {
         super(type, token);
         this.cxType = cxType;
     }

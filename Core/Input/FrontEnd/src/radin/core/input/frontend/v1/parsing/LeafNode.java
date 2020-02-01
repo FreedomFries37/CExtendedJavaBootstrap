@@ -1,6 +1,5 @@
 package radin.core.input.frontend.v1.parsing;
 
-import radin.core.AbstractTree;
 import radin.core.lexical.Token;
 
 import java.util.LinkedList;
@@ -25,7 +24,7 @@ public class LeafNode extends ParseNode {
     }
     
     @Override
-    public List<? extends AbstractTree<ParseNode>> getDirectChildren() {
+    public List<ParseNode> getDirectChildren() {
         return new LinkedList<>();
     }
     
