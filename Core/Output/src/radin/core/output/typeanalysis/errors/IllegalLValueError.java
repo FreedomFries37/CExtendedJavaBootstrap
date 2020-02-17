@@ -1,10 +1,11 @@
 package radin.core.output.typeanalysis.errors;
 
-import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.lexical.Token;
 
-public class IllegalLValueError extends Error {
+public class IllegalLValueError extends AbstractCompilationError {
     
-    public IllegalLValueError(TypeAugmentedSemanticNode e) {
-        super("Illegal L-Value: " + e);
+    public IllegalLValueError(Token node) {
+        super(node, "Illegal L Value");
     }
 }

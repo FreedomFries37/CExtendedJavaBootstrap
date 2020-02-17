@@ -29,7 +29,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
     
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
-    
+        typeTrackingClosure();
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
             
             
@@ -110,11 +110,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
             
         }
         
-        
-        
-        
-        
-        
+        releaseTrackingClosure();
         return true;
     }
 }

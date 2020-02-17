@@ -163,11 +163,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 stringErrors.push(null);
                 boolean b = enactActionRoutine(catNode);
                 if(!b) {
-                    System.err.println("Failed to enact action routine for " +
+                    ICompilationSettings.debugLog.finer("Failed to enact action routine for " +
                             String.format("%-30s", node) +
                             (node.hasChildren()? "(CHILDREN = " + ((CategoryNode) node).getAllChildren() + ")" : "") +
                             (stringErrors.peek() == null ? "" : String.format("  %60s", "Error: " + stringErrors.peek())));
-                    
                 } else {
                     if(!successOrder.contains(node.getSynthesized())) successOrder.add(node.getSynthesized());
                 }
@@ -446,9 +445,17 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                     new TypedAbstractSyntaxNode(ASTNodeType.sizeof, type)
                             );
                             return true;
+                        } else if(node.firstIs(TokenType.t_true)) {
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType._true)
+                            );
+                            return true;
+                        } else if(node.firstIs(TokenType.t_false)) {
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType._false));
+                            return true;
                         }
                         
-                        
+                        node.printTreeForm();
                         return error("Invalid Factor Layout: " + node.getAllChildren());
                     }
                     case "DoubleOrTail":
@@ -952,7 +959,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         
                         getCatNode("DirectDeclaratorTail").setInherit(mid, 0);
                         getCatNode("DirectDeclaratorTail").setInherit(name, 1);
-                        TypedAbstractSyntaxNode directDeclaratorTail = (TypedAbstractSyntaxNode) getCatNode("DirectDeclaratorTail").getSynthesized();;
+                        TypedAbstractSyntaxNode directDeclaratorTail = (TypedAbstractSyntaxNode) getCatNode("DirectDeclaratorTail").getSynthesized();
                         if(directDeclaratorTail.getType() == ASTNodeType.function_description) {
                             // directDeclaratorTail.printTreeForm();
                             
@@ -1251,6 +1258,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         // environment.addTypeDefinition(new CXCompoundTypeNameIndirection
                         // (CXCompoundTypeNameIndirection.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
                         
+                        ICompilationSettings.debugLog.finer("Adding temp " + node.getLeafNode(TokenType.t_id).getToken());
                         environment.addTemp(node.getLeafNode(TokenType.t_id).getToken());
                         
                         AbstractSyntaxNode declarations = getCatNode("ClassDeclarationList").getSynthesized();

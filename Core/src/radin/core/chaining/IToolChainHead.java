@@ -5,7 +5,7 @@ package radin.core.chaining;
  * Must be the first part in a chain
  * @param <T> the output type
  */
-public interface IToolChainHead<T> extends IToolChain<Void, T, RuntimeException> {
+public interface IToolChainHead<T> extends IToolChain<Void, T> {
     T invoke();
     
     @Override

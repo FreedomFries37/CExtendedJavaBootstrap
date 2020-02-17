@@ -43,6 +43,14 @@ public class ExpressionCompiler extends AbstractCompiler {
                 print(node.getToken().getImage());
                 break;
             }
+            case _true: {
+                print("(!(bool) 0)");
+                break;
+            }
+            case _false: {
+                print("((bool) 0)");
+                break;
+            }
             case sizeof: {
                 CXType type = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
                 print("sizeof(");
@@ -51,7 +59,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                 break;
             }
             case typeid: {
-                node.setFailurePoint(true);
+                node.setFailurePoint(true );
                 return false;
             }
             case uniop: {
@@ -375,6 +383,7 @@ public class ExpressionCompiler extends AbstractCompiler {
                 break;
             }
             default:
+                
                 return false;
         }
         

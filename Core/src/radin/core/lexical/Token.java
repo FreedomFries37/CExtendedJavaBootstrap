@@ -55,8 +55,8 @@ public class Token implements Comparable<Token> {
     
     @Override
     public String toString() {
-        if(image == null) return type.toString();
-        return String.format("%s[%s]", type.toString(), image);
+        if(image == null) return "@" + type.toString();
+        return String.format("@%s[%s]", type.toString(), image);
     }
     
     public String getRepresentation() {

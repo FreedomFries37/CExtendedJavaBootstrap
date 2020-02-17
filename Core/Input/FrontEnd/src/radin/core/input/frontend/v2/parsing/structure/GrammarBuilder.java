@@ -64,7 +64,7 @@ public class GrammarBuilder <T>  {
                 arr[index] = symbol((String) rh);
             } else if(rh instanceof Symbol) {
                 arr[index] = (Symbol) rh;
-            } else if(NonTerminal.class.isInstance(rh)) {
+            } else if(rh instanceof NonTerminal) {
                 arr[index] = (NonTerminal<T>) rh;
             } else {
                 arr[index] = nonTerminal((T) rh);

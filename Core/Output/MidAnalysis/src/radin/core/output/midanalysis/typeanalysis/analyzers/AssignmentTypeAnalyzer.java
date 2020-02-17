@@ -12,6 +12,7 @@ import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.typeanalysis.errors.IllegalLValueError;
 import radin.core.output.typeanalysis.errors.IncorrectTypeError;
+import radin.core.utility.ICompilationSettings;
 
 public class AssignmentTypeAnalyzer extends TypeAnalyzer {
     
@@ -30,10 +31,9 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
         if (!determineTypes(analyzer)) {
             return false;
         }
-        
-        
-        
-        
+    
+    
+        ICompilationSettings.debugLog.finest("Determining validity of assigning to a " + lhs.getCXType());
         if(lhs.getCXType() instanceof ConstantType) {
             
             if(lhs.getASTType() == ASTNodeType.id)
@@ -54,7 +54,7 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
             rhsType = rhs.getChild(0).getCXType();
         }
         
-        if(!lhs.isLValue()) throw new IllegalLValueError(lhs);
+        if(!lhs.isLValue()) throw new IllegalLValueError(node.findFirstToken().getPrevious());
     
         Token operator = node.getASTChild(ASTNodeType.assignment_type).getToken();
         if(operator.getType() != TokenType.t_assign) {

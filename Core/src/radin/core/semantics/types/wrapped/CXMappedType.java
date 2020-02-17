@@ -15,6 +15,7 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
     protected TypeEnvironment environment;
     protected CXType actual;
     
+    
     public CXMappedType(Token corresponding, TypeEnvironment environment) {
         this.corresponding = corresponding;
         this.environment = environment;
@@ -60,6 +61,11 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
     @Override
     public CXType getWrappedType() {
         return actual;
+    }
+    
+    @Override
+    public String infoDump() {
+        return toString() + " in " + environment;
     }
     
     public class BadDelayedTypeAccessError extends AbstractCompilationError {

@@ -9,14 +9,15 @@ import radin.core.lexical.TokenType;
 
 import java.util.*;
 
-public abstract class BasicParser implements IParser<Token, ParseNode> {
+public abstract class
+
+BasicParser implements IParser<Token, ParseNode> {
     
     protected enum AttemptStatus {
         PARSED,
         ROLLBACK,
-        DESYNC;
-        
-        
+        DESYNC
+    
     }
     public class IllegalAttemptStatus extends Error {}
     
@@ -34,6 +35,17 @@ public abstract class BasicParser implements IParser<Token, ParseNode> {
         tempErrors = new LinkedList<>();
         forceParse = new Stack<>();
     }
+    
+    @Override
+    public void reset() {
+        lexer.reset();
+        states.clear();
+        suppressErrors.clear();
+        allErrors.clear();
+        tempErrors.clear();
+        forceParse.clear();
+    }
+    
     
     @Override
     public void setTokenizer(ITokenizer<? extends Token> t) {
@@ -216,10 +228,7 @@ public abstract class BasicParser implements IParser<Token, ParseNode> {
         return allErrors;
     }
     
-    @Override
-    public void reset() {
-        lexer.reset();
-    }
+   
     
     @Override
     public ParseNode invoke() {

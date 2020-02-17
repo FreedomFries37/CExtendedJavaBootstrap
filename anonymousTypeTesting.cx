@@ -1,4 +1,4 @@
-
+#include "prelude.h"
 
 class shape {
 
@@ -74,7 +74,7 @@ int main() {
 
 
 
-	rectangle* r1 = new square(5.0);
+	rectangle r1 = new square(5.0);
 
 	double area = r1->get_area();
 

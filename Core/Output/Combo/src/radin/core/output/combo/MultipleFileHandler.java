@@ -8,6 +8,7 @@ import radin.core.errorhandling.CompilationError;
 import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
@@ -124,15 +125,18 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     if(UniversalCompilerSettings.getInstance().getSettings().isOutputPostprocessingOutput()){
                         File preProcessingOutput = new File(file + ".ppo");
                         try {
+                            
                             FileWriter fileWriter = new FileWriter(preProcessingOutput);
                             fileWriter.write(inputString);
                             fileWriter.flush();
+                            ICompilationSettings.debugLog.info("Created PreProcessor Output File " + preProcessingOutput.getName());
                             fileWriter.close();
                         } catch (IOException e) {
                             ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " + preProcessingOutput);
                         }
                     }
                     if (frontEndUnit.hasErrors()) {
+                        
                         errors.addAll(frontEndUnit.getErrors());
                         return CompilationResult.Failed;
                     }
@@ -146,10 +150,12 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                 
                 TypeAugmentedSemanticNode invoke;
                 if(typedTree == null) {
-                    ICompilationSettings.debugLog.finer("Setting environment");
-                    midToolChain.setVariable("environment", environment);
+                    midToolChain.reset();
+                    // ICompilationSettings.debugLog.finer("Setting environment");
+                    // midToolChain.setVariable("environment", environment);
                     ICompilationSettings.debugLog.finer("Creating Type-AST for " + file);
                     midToolChain.clearErrors();
+                    
                     invoke = midToolChain.invoke(astTree);
                 } else {
                     ICompilationSettings.debugLog.finer("Skipping creating Type-AST for " + file);
@@ -158,8 +164,10 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                 if (invoke != null) {
                     typedTree = invoke;
                     isCompleted = true;
+                    backToolChain.reset();
                     ICompilationSettings.debugLog.finer("Setting file to " + file);
                     backToolChain.setVariable("file", file);
+                    
                     backToolChain.getErrors().clear();
                     Boolean aBoolean = backToolChain.invoke(invoke);
                     if (!aBoolean || backToolChain.hasErrors()) {
@@ -169,8 +177,8 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                             
                         }
                         errors.addAll(backToolChain.getErrors());
-                        backToolChain.clearErrors();
-                        return CompilationResult.ErroredOut;
+                        // backToolChain.clearErrors();
+                        return CompilationResult.Failed;
                     }
                     return CompilationResult.Completed;
                 } else {
@@ -180,8 +188,8 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                             return CompilationResult.Failed;
                         }
                         errors.addAll(midToolChain.getErrors());
-                        midToolChain.clearErrors();
-                        return CompilationResult.ErroredOut;
+                        // midToolChain.clearErrors();
+                        return CompilationResult.Failed;
                     } else {
                         return CompilationResult.Failed;
                     }
@@ -277,7 +285,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
         
         for (File file : files) {
             
-            CompilationNode e = new CompilationNode(file, TypeEnvironment.getStandardEnvironment());
+            CompilationNode e = new CompilationNode(file, TypeAnalyzer.getEnvironment());
             nodes.add(e);
             dependencies.put(e, new LinkedList<>());
         }
@@ -349,6 +357,9 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     break;
                 case Failed: {
                     ICompilationSettings.debugLog.severe("Failed to compile " + next.getFile());
+                    for (AbstractCompilationError error : next.getErrors()) {
+                        ICompilationSettings.debugLog.throwing("MultipleFileHandler", "attemptCompile", error);
+                    }
                     failed.add(next);
                 }
                 break;

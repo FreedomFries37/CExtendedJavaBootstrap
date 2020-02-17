@@ -17,7 +17,7 @@ public class ToolChainFactory {
      * @param <T> The input type of the chain
      * @param <R> The output type that the chain
      */
-    public static abstract class ToolChainBuilder <T, R> implements IToolChain<T, R, RuntimeException> {
+    public static abstract class ToolChainBuilder <T, R> implements IToolChain<T, R> {
         protected List<AbstractCompilationError> errors = new LinkedList<>();
     
         /**
@@ -70,7 +70,7 @@ public class ToolChainFactory {
          * Makes the chain uneditable
          * @return the builder as an uneditable chain
          */
-        public IToolChain<T, R, RuntimeException> toChain() {
+        public IToolChain<T, R> toChain() {
             return this;
         }
     
@@ -100,9 +100,9 @@ public class ToolChainFactory {
     
     private static class ToolChainHeadChain<T, R> extends ToolChainBuilder<Void, R> {
         private ToolChainHead<? extends T> head;
-        private IToolChain<? super T, ? extends R, RuntimeException> chain;
+        private IToolChain<? super T, ? extends R> chain;
     
-        public ToolChainHeadChain(ToolChainHead<? extends T> head, IToolChain<? super T, ? extends R, RuntimeException> chain) {
+        public ToolChainHeadChain(ToolChainHead<? extends T> head, IToolChain<? super T, ? extends R> chain) {
             this.head = head;
             this.chain = chain;
         }
@@ -148,6 +148,12 @@ public class ToolChainFactory {
             T headOutput = head.invoke(null);
             return chain.invoke(headOutput);
         }
+    
+        @Override
+        public void reset() {
+            head.reset();
+            chain.reset();
+        }
     }
 
     private static class IdentityBuilder <T> extends ToolChainBuilder<T, T> {
@@ -157,7 +163,11 @@ public class ToolChainFactory {
             ICompilationSettings.debugLog.info("Running Identity link");
             return input;
         }
+    
+        @Override
+        public void reset() {
         
+        }
     }
     
     private static class FunctionBuilder <T, R> extends ToolChainBuilder<T, R> {
@@ -173,13 +183,18 @@ public class ToolChainFactory {
             ICompilationSettings.debugLog.info("Running function link");
             return function.apply(input);
         }
+    
+        @Override
+        public void reset() {
+        
+        }
     }
     
     private static class ChainBuilder <T, M, R> extends ToolChainBuilder<T, R> {
-        private IToolChain<? super T, ? extends M, RuntimeException> front;
-        private IToolChain<? super M, ? extends R, RuntimeException> back;
+        private IToolChain<? super T, ? extends M> front;
+        private IToolChain<? super M, ? extends R> back;
     
-        public ChainBuilder(IToolChain<? super T, ? extends M, RuntimeException> front, IToolChain<? super M, ? extends R, RuntimeException> back) {
+        public ChainBuilder(IToolChain<? super T, ? extends M> front, IToolChain<? super M, ? extends R> back) {
             this.front = front;
             this.back = back;
         }
@@ -209,6 +224,12 @@ public class ToolChainFactory {
             if(variable1 != null) return variable1;
             return back.getVariable(variable);
         }
+    
+        @Override
+        public void reset() {
+            front.reset();
+            back.reset();
+        }
     }
     
     private static class CompilerFunctionBuilder <T, R> extends ToolChainBuilder<T, R> {
@@ -235,6 +256,11 @@ public class ToolChainFactory {
         @Override
         public <V> V getVariable(String variable) {
             return part.getVariable(variable);
+        }
+    
+        @Override
+        public void reset() {
+            part.reset();
         }
     }
     
@@ -267,12 +293,17 @@ public class ToolChainFactory {
         public <V> V getVariable(String variable) {
             return part.getVariable(variable);
         }
+    
+        @Override
+        public void reset() {
+            part.reset();
+        }
     }
     
     private static class InPlaceCompilerBuilder <T> extends ToolChainBuilder<T, T> {
-        private IInPlaceCompilerAnalyzer<? super T, NoOpException> part;
+        private IInPlaceCompilerAnalyzer<? super T> part;
     
-        public InPlaceCompilerBuilder(IInPlaceCompilerAnalyzer<? super T, NoOpException> part) {
+        public InPlaceCompilerBuilder(IInPlaceCompilerAnalyzer<? super T> part) {
             this.part = part;
         }
     
@@ -302,6 +333,11 @@ public class ToolChainFactory {
         @Override
         public <V> V getVariable(String variable) {
             return part.getVariable(variable);
+        }
+    
+        @Override
+        public void reset() {
+            part.reset();
         }
     }
     
@@ -346,7 +382,7 @@ public class ToolChainFactory {
      * @param <T> the input and output types of the chain
      * @return a tool chain builder
      */
-    public static <T> ToolChainBuilder<T, T> compilerAnalyzer(IInPlaceCompilerAnalyzer<? super T, NoOpException> analyzer) {
+    public static <T> ToolChainBuilder<T, T> compilerAnalyzer(IInPlaceCompilerAnalyzer<? super T> analyzer) {
         return new InPlaceCompilerBuilder<>(analyzer);
     }
     

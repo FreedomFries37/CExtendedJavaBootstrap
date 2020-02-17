@@ -89,7 +89,7 @@ public interface ICompilationSettings<Front, Mid, Back> {
      * Set the name of the vtable field
      * @param vTableName name
      */
-    public void setvTableName(String vTableName);
+    void setvTableName(String vTableName);
     
     boolean isReduceIndirection();
     

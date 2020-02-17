@@ -75,6 +75,8 @@ public enum TokenType {
     t_implement("implement"),
     t_using("using"),
     t_typeid("typeid"),
+    t_true("true"),
+    t_false("false"),
     /**
      * A reserved token is a token that can't be used by an input function, but the compiler can use freely
      * This will be defined as anything staring with __

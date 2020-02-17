@@ -36,12 +36,12 @@ public class StatementAnalyzer extends TypeAnalyzer {
         
         if(node.getASTType() == ASTNodeType.declarations) {
             StatementDeclarationTypeAnalyzer declarationTypeAnalyzer = new StatementDeclarationTypeAnalyzer(node);
-            
-            if(!determineTypes(declarationTypeAnalyzer)) return false;
+    
+            return determineTypes(declarationTypeAnalyzer);
         }else if(node.getASTType() == ASTNodeType.assignment) {
             AssignmentTypeAnalyzer assignmentTypeAnalyzer = new AssignmentTypeAnalyzer(node);
-            
-            if(!determineTypes(assignmentTypeAnalyzer)) return false;
+    
+            return determineTypes(assignmentTypeAnalyzer);
         } else if(node.getASTType() == ASTNodeType.method_call ||
                 node.getASTType() == ASTNodeType.function_call ||
                 node.getASTType() == ASTNodeType.postop ||
@@ -49,7 +49,7 @@ public class StatementAnalyzer extends TypeAnalyzer {
                         (node.getChild(0).getToken().getType() == TokenType.t_inc ||
                                 node.getChild(0).getToken().getType() == TokenType.t_dec))) {
             ExpressionTypeAnalyzer expressionTypeAnalyzer = new ExpressionTypeAnalyzer(node);
-            if(!determineTypes(expressionTypeAnalyzer)) return false;
+            return determineTypes(expressionTypeAnalyzer);
             
             
         } else if(node.getASTType() == ASTNodeType.if_cond) {
@@ -92,7 +92,7 @@ public class StatementAnalyzer extends TypeAnalyzer {
             if(!determineTypes(expressionTypeAnalyzer)) return false;
             
             StatementAnalyzer analyzer = new StatementAnalyzer(node.getChild(1), returnType);
-            if(!determineTypes(analyzer)) return false;
+            return determineTypes(analyzer);
         } else if(node.getASTType() == ASTNodeType.do_while_cond) {
             StatementAnalyzer analyzer = new StatementAnalyzer(node.getChild(0), returnType);
             if(!determineTypes(analyzer)) return false;
@@ -102,7 +102,7 @@ public class StatementAnalyzer extends TypeAnalyzer {
             }
             
             ExpressionTypeAnalyzer expressionTypeAnalyzer = new ExpressionTypeAnalyzer(node.getChild(1));
-            if(!determineTypes(expressionTypeAnalyzer)) return false;
+            return determineTypes(expressionTypeAnalyzer);
         } else if(node.getASTType() == ASTNodeType.for_cond) {
             typeTrackingClosure();
             if(node.getChild(0).getASTNode() != AbstractSyntaxNode.EMPTY) {

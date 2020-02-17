@@ -333,7 +333,7 @@ public class CXMethod implements CXEquivalent {
     
     @Override
     public String toString() {
-        return returnType.toString() + " " + getCFunctionName() + " (" +
+        return returnType.toString() + " " + name + " (" +
                 getParameters().stream().map(CXParameter::getType).map(CXType::toString).collect(Collectors.joining("," +
                         " "))
                 + ")";

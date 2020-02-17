@@ -78,10 +78,10 @@ public class Parser extends BasicParser {
     
     @Override
     public void reset() {
-        typedefed = new HashSet<>();
-        compoundTypeNames = new HashSet<>();
-        typedefStack = new Stack<>();
-        compoundTypesStack = new Stack<>();
+        typedefed.clear();
+        compoundTypeNames.clear();
+        typedefStack.clear();
+        compoundTypesStack.clear();
     }
     
     protected Token undoTypeName(Token other) {
@@ -602,7 +602,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false: {
                 if (!parseDoubleOr(child)) return false;
                 if (!parseDoubleOrTail(child)) return false;
                 if (!parseExpressionTail(child)) return false;
@@ -649,7 +651,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseDoubleAnd(child)) return false;
                 if (!parseDoubleAndTail(child)) return false;
                 break;
@@ -695,7 +699,9 @@ public class Parser extends BasicParser {
             case t_string:
             case t_sizeof:
             case t_new:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseOr(child)) return false;
                 if (!parseOrTail(child)) return false;
                 break;
@@ -741,7 +747,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseNot(child)) return false;
                 if (!parseNotTail(child)) return false;
                 break;
@@ -787,7 +795,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseAnd(child)) return false;
                 if (!parseAndTail(child)) return false;
                 break;
@@ -833,7 +843,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseEquation(child)) return false;
                 if (!parseEquationTail(child)) return false;
                 break;
@@ -879,7 +891,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseC(child)) return false;
                 if (!parseCTail(child)) return false;
                 break;
@@ -930,7 +944,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseG(child)) return false;
                 if (!parseGTail(child)) return false;
                 break;
@@ -983,7 +999,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseT(child)) return false;
                 if (!parseTTail(child)) return false;
                 break;
@@ -1034,7 +1052,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseFactor(child)) return false;
                 if (!parseFactorTail(child)) return false;
                 break;
@@ -1083,7 +1103,9 @@ public class Parser extends BasicParser {
                 break;
             }
             case t_string:
-            case t_literal: {
+            case t_literal:
+            case t_true:
+            case t_false: {
                 consumeAndAddAsLeaf(child);
                 break;
             }
@@ -1100,7 +1122,8 @@ public class Parser extends BasicParser {
             }
             case t_id:
             case t_new:
-            case t_super: {
+            case t_super:
+                {
                 if (!parseAtom(child)) return false;
                 if (!parseAtomTail(child)) return false;
                 break;
@@ -1265,7 +1288,9 @@ public class Parser extends BasicParser {
             case t_sizeof:
             case t_new:
             case t_super:
-            case t_typeid: {
+            case t_typeid:
+            case t_true:
+            case t_false:{
                 if (!parseExpression(output)) return false;
                 if (!parseArgsListTail(output)) return false;
                 break;

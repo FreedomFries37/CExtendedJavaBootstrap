@@ -209,7 +209,6 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
         return childList;
     }
     
-    @Override
     public List<? super AbstractSyntaxNode> getMutableChildren() {
         return childList;
     }

@@ -133,6 +133,18 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
     }
     
     public TypeAugmentedSemanticNode getChild(int index) {
+        return getChild(index, ASTNodeType.syntax);
+    }
+    
+    public TypeAugmentedSemanticNode getChild(int index, ASTNodeType ignoreType) {
+        int virtualIndex = 0;
+        for (TypeAugmentedSemanticNode child : children) {
+            if (child.getASTType() != ignoreType) {
+                if(virtualIndex == index) return child;
+                
+                virtualIndex++;
+            }
+        }
         return children.get(index);
     }
     
@@ -152,6 +164,18 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
     public TypeAugmentedSemanticNode getASTChild(ASTNodeType type) {
         for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
             if(typeAugmentedSemanticNode.astNode.getType() == type) return typeAugmentedSemanticNode;
+        }
+        return null;
+    }
+    
+    
+    public TypeAugmentedSemanticNode getASTChild(ASTNodeType type, String image) {
+        for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
+            if(typeAugmentedSemanticNode.astNode.getType() == type &&
+                    typeAugmentedSemanticNode.astNode.hasToken() &&
+                    typeAugmentedSemanticNode.astNode.getToken().getImage().equals(image)) {
+                return typeAugmentedSemanticNode;
+            }
         }
         return null;
     }

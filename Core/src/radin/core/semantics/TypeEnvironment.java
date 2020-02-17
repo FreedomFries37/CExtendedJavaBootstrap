@@ -37,6 +37,8 @@ public class TypeEnvironment {
                 "long",
                 "unsigned"));
     }
+    
+    private static int environmentsCreated = 0;
 
     private HashMap<String, CXType> typeDefinitions;
     private HashSet<CXCompoundType> namedCompoundTypes;
@@ -60,6 +62,8 @@ public class TypeEnvironment {
     private boolean standardBooleanDefined;
     
     public TypeEnvironment() {
+        ICompilationSettings.debugLog.info("Type Environment " + environmentsCreated++ + " Created!");
+        // ICompilationSettings.debugLog.throwing("TypeEnvironment", "<init>", new Throwable());
         typeDefinitions = new HashMap<>();
         namedCompoundTypes = new HashSet<>();
         namedCompoundTypesMap = new HashMap<>();
@@ -74,6 +78,7 @@ public class TypeEnvironment {
     }
     
     public void resetToNone() {
+        ICompilationSettings.debugLog.finer("Type Environment Reset");
         typeDefinitions = new HashMap<>();
         namedCompoundTypes = new HashSet<>();
         namedCompoundTypesMap = new HashMap<>();
@@ -85,6 +90,8 @@ public class TypeEnvironment {
                 new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
         );
         namespaceTree = new NamespaceTree();
+        defaultInheritance = null;
+        currentNamespace = null;
         if(standardBooleanDefined) {
             addTypeDefinition(
                     UnsignedPrimitive.createUnsignedShort(), "boolean"
@@ -435,7 +442,7 @@ public class TypeEnvironment {
             }
             for (AbstractSyntaxNode qualifier : ast.getChildren(ASTNodeType.qualifier)) {
                 switch (qualifier.getToken().toString()) {
-                    case "const": {
+                    case "@const": {
                         type = new ConstantType(type);
                         break;
                     }
@@ -511,7 +518,8 @@ public class TypeEnvironment {
     }
     
     private CXCompoundType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
-        
+        ICompilationSettings.debugLog.finest("in " + namespace + " creating compound type from ");
+        ICompilationSettings.debugLog.finest("\n" + ast.toTreeForm());
         AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
         Token name = nameAST != null? nameAST.getToken() : null;
         boolean isAnonymous = name == null;
@@ -540,6 +548,8 @@ public class TypeEnvironment {
             
             output = type;
         } else {
+            ICompilationSettings.debugLog.finest("Is a class definition");
+    
             CXIdentifier identifier = new CXIdentifier(namespace, name);
             List<CXMethod> methods = new LinkedList<>();
             List<CXConstructor> constructors = new LinkedList<>();
@@ -564,9 +574,12 @@ public class TypeEnvironment {
                     case function_description:
                     case function_definition: {
                         boolean isVirtual = dec.hasChild(ASTNodeType._virtual);
+                        ICompilationSettings.debugLog.finest("Creating method in " + identifier + " with tree:\n" + dec.toTreeForm() + "...");
+    
                         methods.add(
                                 createMethod(visibility, isVirtual, dec)
                         );
+                        ICompilationSettings.debugLog.finest("Done.");
                         break;
                     }
                     case constructor_definition: {
@@ -584,7 +597,7 @@ public class TypeEnvironment {
             
             CXClassType cxClassType;
             if(ast.hasChild(ASTNodeType.inherit)) {
-                
+                ICompilationSettings.debugLog.finest("Determining parent type...");
                
                 CXClassType parent;
                 try {
@@ -592,7 +605,7 @@ public class TypeEnvironment {
                 } catch (InvalidPrimitiveException e) {
                     return null;
                 }
-    
+                ICompilationSettings.debugLog.finest("Parent type found: " + parent);
     
                 cxClassType = new CXClassType(identifier, parent, fieldDeclarations, methods, new LinkedList<>(), this);
                 
@@ -797,14 +810,24 @@ public class TypeEnvironment {
      * @return whether they can be used
      */
     public boolean isStrict(CXType o1, CXType o2) {
-        
+        if(o1 == null || o2 == null) {
+            throw new TypeDoesNotExist("Null");
+        }
         if(!(o1 instanceof ConstantType) && o2 instanceof ConstantType) {
             return isStrict(o1, ((ConstantType) o2).getSubtype());
         }
         if(!(o1 instanceof ICXWrapper) && o2 instanceof ICXWrapper) {
-            return isStrict(o1, ((ICXWrapper) o2).getWrappedType());
+            CXType wrappedType = ((ICXWrapper) o2).getWrappedType();
+            if(wrappedType == null) {
+                throw new TypeDoesNotExist(o1.toString());
+            }
+            return isStrict(o1, wrappedType);
         } else if(o1 instanceof ICXWrapper && o2 instanceof ICXWrapper) {
-            return isStrict(((ICXWrapper) o1).getWrappedType(), o2);
+            CXType wrappedType = ((ICXWrapper) o1).getWrappedType();
+            if(wrappedType == null) {
+                throw new TypeDoesNotExist(o1.toString());
+            }
+            return isStrict(wrappedType, o2);
         }
         return o1.is(o2,this, true);
     }

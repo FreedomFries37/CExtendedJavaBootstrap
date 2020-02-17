@@ -247,9 +247,9 @@ public class VariableTypeTracker {
         privateMethodEntries = new HashMap<>();
         privateFieldEntries = new HashMap<>();
         demoteEntries(privateFieldEntries, old.privateFieldEntries);
-        demoteEntries(privateFieldEntries, old.privateMethodEntries);
+        demoteEntries(privateMethodEntries, old.privateMethodEntries);
         demoteEntries(privateFieldEntries, old2.privateFieldEntries);
-        demoteEntries(privateFieldEntries, old2.privateMethodEntries);
+        demoteEntries(privateMethodEntries, old2.privateMethodEntries);
         privateConstructors = new HashSet<>(old.privateConstructors);
         privateConstructors.addAll(old2.privateConstructors);
     }
@@ -345,7 +345,7 @@ public class VariableTypeTracker {
             } else {
                 key = new MethodKey(type, name, params);
             }
-            if(publicEntries.containsKey(key)) return true;
+            return publicEntries.containsKey(key);
             
         }
         return false;

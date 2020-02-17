@@ -51,9 +51,12 @@ public class ImplementationTypeAnalyzer extends TypeAnalyzer {
                         null
                         );
                 if(corresponding == null) {
+                    ICompilationSettings.debugLog.warning("Corresponding function definition doesn't exist: " +child.getASTChild(ASTNodeType.id).getToken().getImage() );
+                    child.setFailurePoint(true);
                     throw new MethodDoesNotExistError(child.getASTChild(ASTNodeType.id).getToken());
                 }
                 ICompilationSettings.debugLog.info("Implementation found for " + corresponding);
+                ICompilationSettings.debugLog.finest(child.toTreeForm());
                 child.addCompilationTag(new ImplementMethodTag(corresponding));
                
             } else if(child.getASTType() == ASTNodeType.constructor_definition) {

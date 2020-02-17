@@ -4,7 +4,7 @@ import radin.core.chaining.IToolChain;
 import radin.core.AbstractTree;
 import radin.core.semantics.TypeEnvironment;
 
-public interface ISemanticAnalyzer<P extends AbstractTree<? extends P>, S> extends IToolChain<P, S, RuntimeException> {
+public interface ISemanticAnalyzer<P extends AbstractTree<? extends P>, S> extends IToolChain<P, S> {
     
     long getRunCount();
     

@@ -58,6 +58,10 @@ public class PointerType extends AbstractCXPrimitiveType {
         return e.is(this.subType, subType);
     }
     
+    @Override
+    public String infoDump() {
+        return "(" + subType.infoDump() + ")*";
+    }
     
     @Override
     public boolean isIntegral() {

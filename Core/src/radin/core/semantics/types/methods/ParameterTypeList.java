@@ -3,8 +3,11 @@ package radin.core.semantics.types.methods;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ParameterTypeList {
     
@@ -43,7 +46,7 @@ public class ParameterTypeList {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         
-        ParameterTypeList that = (ParameterTypeList) o;
+        ParameterTypeList that = o;
         
         if (size != that.size) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
@@ -57,7 +60,7 @@ public class ParameterTypeList {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         
-        ParameterTypeList that = (ParameterTypeList) o;
+        ParameterTypeList that = o;
         
         if (size != that.size) return false;
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
@@ -69,7 +72,7 @@ public class ParameterTypeList {
     
     @Override
     public String toString() {
-        return "{" + Arrays.toString(parameters) + "}";
+        return "(" + Arrays.stream(parameters).map(CXType::toString).collect(Collectors.joining(", ")) + ")";
     }
     
     @Override

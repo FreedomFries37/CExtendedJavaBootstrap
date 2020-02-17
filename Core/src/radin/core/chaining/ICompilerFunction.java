@@ -5,7 +5,7 @@ package radin.core.chaining;
  * @param <T> input type
  * @param <R> output type
  */
-public interface ICompilerFunction <T, R> extends IToolChain<T, R, RuntimeException> {
+public interface ICompilerFunction <T, R> extends IToolChain<T, R> {
     
     R invoke(T input);
 }

@@ -219,7 +219,10 @@ public enum ASTNodeType {
     compilation_tag("compilation_tag"),
     compilation_tag_list("compilation_tag_list"),
     constructor_description("constructor_description"),
-    typeid("typeid")
+    typeid("typeid"),
+    syntax("syntax"),
+    _true("true"),
+    _false("false")
     ;
     
     

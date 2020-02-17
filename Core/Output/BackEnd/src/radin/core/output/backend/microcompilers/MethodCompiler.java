@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 public class MethodCompiler extends FunctionCompiler {
     
     private CXClassType owner;
+    private CXMethod original;
     private CXClassType parent;
     
     public MethodCompiler(PrintWriter writer, int indent, CXMethod method) {
@@ -22,6 +23,7 @@ public class MethodCompiler extends FunctionCompiler {
                 MethodTASNTracker.getInstance().get(method));
         this.owner = method.getParent();
         this.parent = owner.getParent();
+        this.original = method;
     }
     
     public MethodCompiler(PrintWriter writer, int indent, CXMethod method, TypeAugmentedSemanticNode cs) {
@@ -29,10 +31,12 @@ public class MethodCompiler extends FunctionCompiler {
                 cs);
         this.owner = method.getParent();
         this.parent = owner.getParent();
+        this.original = method;
     }
     
     @Override
     public boolean compile() {
+        println("// " + original);
         print(getReturnType().generateCDeclaration(getName()));
         print("(");
         boolean first= true;

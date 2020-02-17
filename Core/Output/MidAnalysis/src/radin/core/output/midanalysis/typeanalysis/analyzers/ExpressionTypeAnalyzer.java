@@ -72,6 +72,11 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
+        if(node.getASTType() == ASTNodeType._true || node.getASTType() == ASTNodeType._false) {
+            node.setType(UnsignedPrimitive.createUnsigned(CXPrimitiveType.CHAR));
+            return true;
+        }
+        
         if(node.getASTNode().getType() == ASTNodeType.string) {
             node.setType(new PointerType(CXPrimitiveType.CHAR));
             return true;
@@ -174,7 +179,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 return false;
             }
             
-            if(!child.isLValue()) throw new IllegalLValueError(child);
+            if(!child.isLValue()) throw new IllegalLValueError(child.findFirstToken());
             node.setType(new PointerType(child.getCXType()));
             node.setLValue(true);
             return true;
@@ -296,7 +301,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         
         if(node.getASTNode().getType() == ASTNodeType.field_get) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
-            if(!determineTypes(objectInteraction)) throw new IllegalAccessError();
+            if(!determineTypes(objectInteraction)) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             
             
             
@@ -309,7 +314,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 parentType = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(getEnvironment());
             } else {
                 setIsFailurePoint(node.getChild(1));
-                throw new IllegalAccessError(objectInteraction.getCXType(), name);
+                throw new IllegalAccessError(objectInteraction.getCXType(), name, node.getChild(0).findFirstToken()
+                );
             }
             
             
@@ -321,7 +327,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             
             if(!getCurrentTracker().fieldVisible((CXCompoundType) parentType, name)) {
-                throw new IllegalAccessError(parentType, name);
+                throw new IllegalAccessError(parentType, name, node.getChild(0).findFirstToken()
+                );
             }
             if(objectInteraction.getCXType() instanceof CXClassType) {
                 nextType = getCurrentTracker().getFieldType(((CXClassType) parentType), name);
@@ -329,7 +336,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 nextType = getCurrentTracker().getFieldType((CXCompoundType) parentType, name);
             }
             
-            if(nextType == null) throw new IllegalAccessError();
+            if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             node.setType(nextType);
             node.setLValue(objectInteraction.isLValue());
             return true;
@@ -338,7 +345,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.getASTNode().getType() == ASTNodeType.method_call) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) {
-                throw new IllegalAccessError();
+                throw new IllegalAccessError(node.getChild(0).getToken());
             }
             boolean isSuperCall = false;
             if(objectInteraction.getASTType() == ASTNodeType.indirection) {
@@ -391,11 +398,11 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 }
                 ICompilationSettings.debugLog.finer("Couldn't find methods with name " + name.getImage());
                 ICompilationSettings.debugLog.finest("Available options = " + getCurrentTracker().allMethodsAvailable());
-                throw new IllegalAccessError(cxClass, name.getImage(), typeList);
+                throw new IllegalAccessError(cxClass, name.getImage(), typeList, node.getChild(0).findFirstToken(), name);
             }
             
             CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name.getImage(), typeList);
-            if(nextType == null) throw new IllegalAccessError();
+            if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             
             if(!isSuperCall) {
                 Reference<Boolean> ref = new Reference<>();

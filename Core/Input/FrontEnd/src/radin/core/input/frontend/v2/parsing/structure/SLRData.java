@@ -74,7 +74,7 @@ public class SLRData <T> {
     
     private boolean EPS(ParsableObject<?> o) {
         if(o instanceof NonTerminal<?>) return false;
-        return eps.contains((Symbol) o);
+        return eps.contains(o);
     }
     
     private Set<NonTerminal<T>> FIRST(ParsableObject<?> o){

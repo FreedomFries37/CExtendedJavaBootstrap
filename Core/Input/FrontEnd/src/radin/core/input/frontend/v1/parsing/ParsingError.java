@@ -10,4 +10,15 @@ public class ParsingError extends AbstractCompilationError {
     public ParsingError(String error, List<Token> correspondingTokens, String... errorInformation) {
         super(error, correspondingTokens, errorInformation);
     }
+    
+    @Override
+    public String toString() {
+        List<Token> correspondingTokens = getCorrespondingTokens();
+        correspondingTokens.sort(Token::compareTo);
+        if(correspondingTokens.isEmpty()) {
+            return super.toString();
+        }
+        Token token = correspondingTokens.get(0);
+        return super.toString() + " @ ln: " + token.getLineNumber() + ", column: " + token.getColumn() + " in PPO";
+    }
 }

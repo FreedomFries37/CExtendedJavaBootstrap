@@ -39,7 +39,7 @@ public class ExpressionGrammar extends GrammarBuilder<TokenType> {
         addProduction("UnaryExpression", symbol("PostFixExpression"));
         
         addProduction("PostFixExpression", symbol("PrimaryExpression"));
-        addProduction("PostFixExpression", symbol("PostFixExpression"), t_lbrac, symbol("Expression"), t_rbrac);;
+        addProduction("PostFixExpression", symbol("PostFixExpression"), t_lbrac, symbol("Expression"), t_rbrac);
         addProduction("PostFixExpression", symbol("PostFixExpression"), t_lpar, t_rpar);
         addProduction("PostFixExpression", symbol("PostFixExpression"), t_lpar, symbol("ArgumentExpressionList"),
                 t_rpar);

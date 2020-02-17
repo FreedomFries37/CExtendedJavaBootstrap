@@ -19,6 +19,10 @@ public interface IToolChain <T, R> extends ICompilationErrorCollector {
         getErrors().clear();
     }
     
+    default void reset() {
+    
+    }
+    
     default <V> void setVariable(String variable, V value) {
     }
     default <V> V getVariable(String variable) {

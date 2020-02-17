@@ -26,7 +26,12 @@ public abstract class ScopedTypeTracker {
     }
     
     public void typeTrackingClosure() {
-        VariableTypeTracker next = trackerStack.peek().createInnerTypeTracker();
+        VariableTypeTracker next;
+        if(trackerStack.empty()) {
+            next = trackerStack.push(new VariableTypeTracker(environment));
+        } else {
+            next = trackerStack.peek().createInnerTypeTracker();
+        }
         trackerStack.push(next);
         ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size()));
     }
@@ -41,8 +46,12 @@ public abstract class ScopedTypeTracker {
         if(!VariableTypeTracker.trackerPresent(cxClassType)) typeTrackingClosure();
         VariableTypeTracker next = trackerStack.peek().createInnerTypeTrackerLoad(cxClassType);
         trackerStack.push(next);
+        
         ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size())
         + "    Loading into " + cxClassType + " scope");
+        for (String s : next.allMethodsAvailable()) {
+            ICompilationSettings.debugLog.finest("Method Loaded: " + s);
+        }
     }
     
     public static TypeEnvironment getEnvironment() {
@@ -67,6 +76,8 @@ public abstract class ScopedTypeTracker {
         ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size()));
     }
     
-    
+    public void reset() {
+        trackerStack = new Stack<>();
+    }
     
 }

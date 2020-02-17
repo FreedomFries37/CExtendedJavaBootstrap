@@ -64,7 +64,11 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         
         
         if(returnType != CXPrimitiveType.VOID) {
-            if(!compoundStatementTypeAnalyzer.isReturns()) throw new MissingReturnError();
+            if(!compoundStatementTypeAnalyzer.isReturns()) {
+                setIsFailurePoint(node);
+                throw new MissingReturnError(node.getASTChild(ASTNodeType.id).findFirstToken().getPrevious(),
+                        returnType.toString());
+            }
         }
         
         

@@ -142,6 +142,10 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
                 return new Token(TokenType.t_using);
             case "typeid":
                 return new Token(TokenType.t_typeid);
+            case "true":
+                return new Token(TokenType.t_true);
+            case "false":
+                return new Token(TokenType.t_false);
             default:
                 return new Token(TokenType.t_id, image);
         }

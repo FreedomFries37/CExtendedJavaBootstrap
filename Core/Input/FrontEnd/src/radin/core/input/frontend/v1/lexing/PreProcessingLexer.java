@@ -225,12 +225,16 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         }
         
         String arguments = directiveString.substring(directiveString.indexOf(directive) + directive.length()).trim();
+        ICompilationSettings.debugLog.finest("PP DIRECTIVE = " + directive);
+        if(!arguments.isBlank())
+            ICompilationSettings.debugLog.finest("PP ARGUMENTS = " + arguments);
         
         switch (directive) {
             case "#define": {
                 
-                Pattern function = Pattern.compile("(?<id>[a-zA-Z]\\w*)(?<isfunc>\\(\\s*(?<args>(([a-zA-Z]\\w*\\s*(," +
-                        "\\s*[a-zA-Z]\\w*\\s*)*)(,\\s*\\.\\.\\.\\s*)?)|(\\s*\\.\\.\\.\\s*)?)\\))?");
+                Pattern function = Pattern.compile("(?<id>[_a-zA-Z]\\w*)(?<isfunc>\\(\\s*(?<args>(([_a-zA-Z]\\w*\\s*" +
+                        "(," +
+                        "\\s*[_a-zA-Z]\\w*\\s*)*)(,\\s*\\.\\.\\.\\s*)?)|(\\s*\\.\\.\\.\\s*)?)\\))?");
                 
                 Matcher matcher = function.matcher(arguments);
                 if(matcher.find()) {
@@ -257,34 +261,50 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         else
                             define = new Define(identifier, rest);
                     }
-                    
+                    ICompilationSettings.debugLog.fine("PP Defined: " + identifier);
                     defines.put(identifier, define);
                 }
                 return;
             }
             case "#ifndef": {
+                ICompilationSettings.debugLog.finest("Checking if " + arguments + " is not defined...");
                 inIfStatement = true;
                 if(defines.containsKey(arguments)) {
+                    ICompilationSettings.debugLog.finest("" + arguments + " is defined");
                     skipToIfFalse = true;
+                    ICompilationSettings.debugLog.finer("Skipping until #else or #endif is found");
+                } else {
+                    ICompilationSettings.debugLog.finest("" + arguments + " is not defined");
                 }
                 return;
             }
             case "#ifdef": {
+                ICompilationSettings.debugLog.finest("Checking if " + arguments + " is defined...");
                 inIfStatement = true;
                 if(!defines.containsKey(arguments)) {
+                    ICompilationSettings.debugLog.finest("" + arguments + " is not defined");
                     skipToIfFalse = true;
+                    ICompilationSettings.debugLog.finer("Skipping until #else or #endif is found");
+                } else {
+                    ICompilationSettings.debugLog.finest("" + arguments + " is defined");
                 }
                 return;
             }
             case "#else": {
-                if(inIfStatement)
+                
+                if(inIfStatement) {
+                    ICompilationSettings.debugLog.finer("#else found, compilation continuing = " + !skipToIfFalse);
                     skipToIfFalse = !skipToIfFalse;
+                }
                 return;
             }
             case "#endif": {
                 // if(!inIfStatement) throw new IllegalArgumentException();
-                skipToIfFalse = false;
-                inIfStatement = false;
+                if(inIfStatement) {
+                    if(skipToIfFalse) ICompilationSettings.debugLog.finer("#endif found, compilation continuing at " + lineNumber);
+                    skipToIfFalse = false;
+                    inIfStatement = false;
+                }
                 return;
             }
             case "#include": {
@@ -298,9 +318,10 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 Token closestToken = new Token(TokenType.t_reserved, directiveString)
                         .addColumnAndLineNumber(1, lineNumber - 1);
                 if(isLocal) {
+                    ICompilationSettings.debugLog.finer("Include is local");
                     try {
                         File localDirectory = new File(this.filename).getCanonicalFile().getParentFile();
-                        
+                        ICompilationSettings.debugLog.finer("Parent search directory is " + localDirectory);
                         if(localDirectory == null
                                 || !localDirectory.isDirectory()) {
                             throw new CompilationError("File does not exist", closestToken);
@@ -308,9 +329,11 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         Path path = Paths.get(localDirectory.getPath(), filename).toRealPath();
                         file = new File(path.toUri());
                     } catch (IOException e) {
+                        ICompilationSettings.debugLog.severe("Local include searched failed");
                         throw new CompilationError("File does not exist", closestToken);
                     }
                 } else {
+                    ICompilationSettings.debugLog.finer("Include is non-local");
                     String jodin_include = System.getenv("JODIN_INCLUDE");
                     String[] locations = jodin_include.split(";");
                     file = null;
@@ -332,6 +355,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                                 }
                             }
                         } catch (IOException e) {
+                            ICompilationSettings.debugLog.severe("Non-local include searched failed");
                             throw new RuntimeException(location + " for include does not exist");
                         }
                     }
@@ -394,7 +418,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         while(true) {
             String image = "";
     
-            while (Character.isWhitespace(getChar()) || match("//") || match("/*") || match("#")) {
+            /*
+            while (skipToIfFalse || Character.isWhitespace(getChar()) || match("//") || match("/*") || match("#")) {
                 
                 
                 
@@ -406,7 +431,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             consumeChar();
                         }
                     } else if(consume("/*")) {
-                        while (!consume("*/")) {
+                        while (!consume("*//*")) {
                             consumeChar();
                         }
                     }
@@ -428,6 +453,31 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 }
                 
             }
+            */
+    
+            do {
+                if (match('#')) {
+                    if(column != 1) {
+                        throw new IllegalStateException();
+                    }
+                    String preprocessorDirective = "";
+                    while (getChar() != '\n') {
+                        preprocessorDirective += consumeChar();
+                    }
+        
+                    String original = preprocessorDirective + consumeChar();
+                    preprocessorDirective = preprocessorDirective.replaceAll("\\s+", " ");
+                    invokePreprocessorDirective(preprocessorDirective, original);
+        
+                } else if(skipToIfFalse) {
+                    removeChar();
+                } else if (Character.isWhitespace(getChar())) consumeChar();
+                else if (consume("//")) {
+                    while (!consume("\n") && !consume(System.lineSeparator())) consumeChar();
+                } else if (consume("/*")) {
+                    while (!consume("*/")) consumeChar();
+                } else break;
+            } while (true);
             
             if (match('\0')) {
                 
@@ -753,5 +803,6 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     public void reset() {
         super.reset();
         fileCurrentLineNumber = new HashMap<>();
+        defines.clear();
     }
 }

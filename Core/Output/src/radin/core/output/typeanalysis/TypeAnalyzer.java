@@ -43,6 +43,11 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         public TypeAugmentedSemanticNode invoke(TypeAugmentedSemanticNode input) {
             return null;
         }
+    
+        @Override
+        public void reset() {
+        
+        }
     }
     
     public static TypeAnalyzer getInstance() {
@@ -88,9 +93,17 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     }
     
     public TypeAnalyzer(TypeAugmentedSemanticNode tree) {
+        this(tree, getEnvironment());
+    }
+    
+    public TypeAnalyzer(TypeAugmentedSemanticNode tree, TypeEnvironment environment) {
         super();
         this.tree = tree;
         errors = new LinkedList<>();
+        
+        if(environment != null) {
+            setEnvironment(environment);
+        }
         
         if(getEnvironment() != null && getEnvironment().typedefExists("boolean")) {
             trackerStack.push(new VariableTypeTracker(getEnvironment()));
@@ -99,6 +112,7 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
             getCurrentTracker().addFixedFunction("true", new ConstantType(booleanType));
             getCurrentTracker().addFixedFunction("false", new ConstantType(booleanType));
         } else {
+            ICompilationSettings.debugLog.severe("Hopefully shouldn't reach here");
             trackerStack.push(new VariableTypeTracker(new TypeEnvironment()));
         }
     }
@@ -144,7 +158,7 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         } catch (Error e) {
             setIsFailurePoint(tree);
             Token closestToken = tree.findFailureToken();
-            CompilationError error = new CompilationError(e.getMessage(), closestToken);
+            CompilationError error = new CompilationError(e, closestToken);
             errors.add(error);
             ICompilationSettings.debugLog.throwing(getClass().getName(),  "TypeAnalyzer(TypeAugmentedSemanticNode " +
                     "tree)", e);
@@ -192,12 +206,16 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     public abstract boolean determineTypes(TypeAugmentedSemanticNode node);
     
     public <T extends TypeAnalyzer> boolean determineTypes(T other) throws MissingClassReferenceError {
-        ((TypeAnalyzer) other).trackerStack = trackerStack;
+        other.trackerStack = trackerStack;
         ((TypeAnalyzer) other).errors = errors;
         return other.determineTypes();
     }
     
-    
+    @Override
+    public void reset() {
+        super.reset();
+    }
+   
     
     protected void setIsFailurePoint(TypeAugmentedSemanticNode node) {
         node.setFailurePoint(true);

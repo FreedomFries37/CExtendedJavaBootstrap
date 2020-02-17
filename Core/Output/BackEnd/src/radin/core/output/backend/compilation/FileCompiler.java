@@ -9,12 +9,19 @@ import java.io.PrintWriter;
 
 public class FileCompiler extends AbstractCompiler {
     
+    private File outputFile;
+    
     public FileCompiler() {
         super(new PrintWriter(System.out));
     }
     
     public FileCompiler(File file) throws FileNotFoundException {
         super(new PrintWriter(getCreatedFile(file)));
+        this.outputFile = getCreatedFile(file);
+    }
+    
+    public File getOutputFile() {
+        return outputFile;
     }
     
     @Override

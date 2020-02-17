@@ -5,6 +5,9 @@ import radin.core.lexical.TokenType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.PointerType;
+import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
+import radin.core.semantics.types.wrapped.CXMappedType;
+import radin.core.utility.ICompilationSettings;
 
 /**
  * Base type for any CXType. This needs to be inherited for a type to be properly tracked
@@ -98,14 +101,22 @@ public abstract class CXType implements CXEquivalent {
      * @return whether the types are both equivalent to the exact same type
      */
     public boolean isExact(CXType other, TypeEnvironment e) {
+        ICompilationSettings.debugLog.finest("Checking if " + this.infoDump() + " =s= " + other.infoDump());
         boolean leftLTE = e.isStrict(this, other);
+        ICompilationSettings.debugLog.finest("Left direction = " + leftLTE);
+        if(!leftLTE) return false;
         boolean rightLTE = e.isStrict(other, this);
-        return leftLTE && rightLTE;
+        ICompilationSettings.debugLog.finest("Right direction = " + rightLTE);
+        return rightLTE;
     }
     
     @Override
     public String toString() {
         return generateCDefinition().replaceAll("\\s+", " ");
+    }
+    
+    public String infoDump() {
+        return toString();
     }
     
     /**

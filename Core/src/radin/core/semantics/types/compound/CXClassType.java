@@ -5,11 +5,13 @@ import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
+import radin.core.semantics.exceptions.MismatchedTypeEnvironmentException;
 import radin.core.semantics.exceptions.RedeclareError;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
+import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Pair;
 import radin.core.utility.Reference;
 import radin.core.semantics.TypeEnvironment;
@@ -50,6 +52,8 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public CXClassType(CXIdentifier typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
         super(typename, new LinkedList<>(declarations));
+    
+        ICompilationSettings.debugLog.finest("Creating class " + typename);
         this.environment = e;
         sealed = false;
         this.parent = parent;
@@ -489,6 +493,9 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     }
     
     public CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+        ICompilationSettings.debugLog.finest("Getting method with strict parameter checking");
+        ICompilationSettings.debugLog.finest("Name = " + name);
+        ICompilationSettings.debugLog.finest("Parameter types = " + parameterTypeList);
         CXMethod output = getVirtualMethodStrict(name, parameterTypeList);
         if(output != null) {
             if(isVirtual != null) isVirtual.setValue(true);
@@ -540,6 +547,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
 
     private CXMethod getVirtualMethodStrict(String name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : virtualMethodOrder) {
+            
             if(cxMethod.getIdentifierName().equals(name) && parameterTypeList.equalsExact(cxMethod.getParameterTypeList(),
                     environment)) {
                 return cxMethod;
@@ -586,6 +594,11 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return builder.toString();
     }
     
+    @Override
+    public String infoDump() {
+        return toString() + " in " + environment;
+    }
+    
     public Visibility getVisibility(String name) {
         return visibilityMap.get(name);
     }
@@ -617,6 +630,9 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         
         
         if(other instanceof CXClassType){
+            if(((CXClassType) other).environment != e) {
+                throw new MismatchedTypeEnvironmentException(this, e, other, ((CXClassType) other).environment);
+            }
             return this.getLineage().contains(other);
         } else if(other instanceof CXCompoundTypeNameIndirection) {
             if(((CXCompoundTypeNameIndirection) other).getCompoundType() != CXCompoundTypeNameIndirection.CompoundType._class) return false;

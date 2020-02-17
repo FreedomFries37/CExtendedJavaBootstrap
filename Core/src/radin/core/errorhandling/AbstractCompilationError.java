@@ -4,6 +4,7 @@ import radin.core.lexical.Token;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AbstractCompilationError extends Error {
@@ -40,6 +41,9 @@ public abstract class AbstractCompilationError extends Error {
     private String[] errorInformation;
     private List<Token> correspondingTokens;
     
+    public List<Token> getCorrespondingTokens() {
+        return new LinkedList<>(correspondingTokens);
+    }
     
     /**
      * Create a compilation error object for useful error messages
