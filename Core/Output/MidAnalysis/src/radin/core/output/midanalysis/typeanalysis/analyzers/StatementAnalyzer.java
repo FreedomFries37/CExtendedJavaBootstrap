@@ -11,6 +11,7 @@ import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.typeanalysis.errors.IllegalStatementError;
 import radin.core.output.typeanalysis.errors.IncorrectReturnTypeError;
+import radin.core.utility.ICompilationSettings;
 
 public class StatementAnalyzer extends TypeAnalyzer {
     
@@ -151,8 +152,11 @@ public class StatementAnalyzer extends TypeAnalyzer {
                 if(!determineTypes(expressionTypeAnalyzer)) return false;
                 
                 CXType gottenReturnType = node.getChild(0).getCXType();
-               
-                if(returnType == CXPrimitiveType.VOID || !is(gottenReturnType, returnType)) {
+                if(node.getChild(0).getToken() != null && node.getChild(0).getToken().getImage() != null && node.getChild(0).getToken().getImage().equals(
+                        "nullptr")) {
+                    ICompilationSettings.debugLog.finer("Assigning to nullptr bypasses typesystem");
+                }
+                else if(returnType == CXPrimitiveType.VOID || !is(gottenReturnType, returnType)) {
                     throw new IncorrectReturnTypeError(returnType, gottenReturnType);
                 }
                 

@@ -2,6 +2,7 @@ package radin.core.output.backend.compilation;
 
 import radin.core.output.backend.microcompilers.TopLevelDeclarationCompiler;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.utility.ICompilationSettings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -67,6 +68,7 @@ public class FileCompiler extends AbstractCompiler {
     
     @Override
     public boolean compile(TypeAugmentedSemanticNode node) {
+        // ICompilationSettings.debugLog.info("Compiling\n" + node.toTreeForm());
         if(preamble != null) {
             println(preamble);
             println();

@@ -1,7 +1,18 @@
 #ifndef LINKED_LIST_HEADER
 #define LINKED_LIST_HEADER
+#define AND(X, Y) ((X) && (Y))
+#define NOT(X) (!(X))
+#define FALSE (0)
+#define TRUE (!FALSE)
+#if AND(NOT(FALSE), defined(TRUE)) && __LINE__ > 0
+#define HAHA
+#endif
 
-#include "prelude.h"
+/*
+
+This file represents a linked list!
+
+*/
 
 in ll {
 	class Node {

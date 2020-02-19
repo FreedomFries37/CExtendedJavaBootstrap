@@ -61,6 +61,9 @@ public class TypeEnvironment {
     private int longDoubleSize = 10;
     private boolean standardBooleanDefined;
     
+    private List<CXClassType> allCreated = new LinkedList<>(); // doesn't reset;
+    
+    
     public TypeEnvironment() {
         ICompilationSettings.debugLog.info("Type Environment " + environmentsCreated++ + " Created!");
         // ICompilationSettings.debugLog.throwing("TypeEnvironment", "<init>", new Throwable());
@@ -650,6 +653,7 @@ public class TypeEnvironment {
             typesForNamespace.add(cxClassType);
             
             addNamedCompoundType(cxClassType);
+            allCreated.add(cxClassType);
             return cxClassType;
             
         }
@@ -666,6 +670,8 @@ public class TypeEnvironment {
     public NamespaceTree getNamespaceTree() {
         return namespaceTree;
     }
+    
+    
     
     private Visibility getVisibility(AbstractSyntaxNode ast) {
         if(ast.getType() != ASTNodeType.visibility) return null;
@@ -694,6 +700,14 @@ public class TypeEnvironment {
             );
         }
         return output;
+    }
+    
+    public List<CXClassType> getAllCreated() {
+        return allCreated;
+    }
+    
+    public int getTypeId(CXClassType type) {
+        return allCreated.indexOf(type);
     }
     
     /**

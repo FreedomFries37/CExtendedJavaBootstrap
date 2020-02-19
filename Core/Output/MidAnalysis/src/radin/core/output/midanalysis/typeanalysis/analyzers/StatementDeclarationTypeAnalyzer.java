@@ -17,6 +17,7 @@ import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.utility.ICompilationSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -47,7 +48,10 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                         ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType();// .getTypeRedirection
                 // (getEnvironment());
                 
-                if(strictIs(declarationType, CXPrimitiveType.VOID)) throw new VoidTypeError();
+                if(strictIs(declarationType, CXPrimitiveType.VOID)) {
+                    ICompilationSettings.debugLog.finer(declarationType.toString());
+                    throw new VoidTypeError();
+                }
                 
                 
                 if(declarationType instanceof CXCompoundTypeNameIndirection) {
@@ -120,7 +124,12 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     return false;
                 }
                 
-                if(!is(expression.getCXType(), declarationType))
+                if(expression.getToken() != null &&
+                        expression.getToken().getImage() != null &&
+                        expression.getToken().getImage().equals("nullptr")) {
+                    ICompilationSettings.debugLog.finer("Assigning to nullptr bypasses typesystem");
+                }
+                else if(!is(expression.getCXType(), declarationType))
                     throw new IncorrectTypeError(declarationType, expression.getCXType(),
                             declaration.findFirstToken(), expression.findFirstToken());
                 //if(!expression.getCXType().is(declarationType, getEnvironment())) throw new IncorrectTypeError

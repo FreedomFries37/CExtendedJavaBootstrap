@@ -62,8 +62,10 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(operator.getType() == TokenType.t_assign) {
-            
-            if(!is(rhsType, lhs.getCXType())) {
+            if(rhs.getToken() != null && rhs.getToken().getImage() != null && rhs.getToken().getImage().equals(
+                    "nullptr")) {
+              ICompilationSettings.debugLog.finer("Assigning to nullptr bypasses typesystem");
+            } else if(!is(rhsType, lhs.getCXType())) {
                 setIsFailurePoint(rhs);
                 throw new IncorrectTypeError(lhs.getCXType(), rhsType, lhs.findFirstToken(), rhs.findFirstToken());
             }
@@ -71,8 +73,7 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
             
         } else if(operator.getType() == TokenType.t_operator_assign) {
         
-        
-        
+            // TODO: IMPLEMENT OPERATOR ASSIGN
         } else throw new IllegalArgumentException();
         
         node.setType(CXPrimitiveType.VOID);

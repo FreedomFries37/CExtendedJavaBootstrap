@@ -1,0 +1,36 @@
+#include <prelude.h>
+
+void print(const char* c) {
+
+}
+
+
+
+in std {
+	implement Object {
+		int hashcode() {
+			return (int) (void*) this;
+		}
+
+		bool equals(Object other) {
+			return this == other;
+		}
+
+		String toString() {
+			return this->getClass()->getName()->concat("@")->concat(this->hashcode());
+		}
+
+		void drop() {
+			free(this);
+		}
+
+		ClassInfo getClass() {
+			return this->info;
+		}
+	}
+
+	ClassInfo __get_class(class_id id) {
+		return nullptr;  // dynamic compiler link
+	}
+
+}

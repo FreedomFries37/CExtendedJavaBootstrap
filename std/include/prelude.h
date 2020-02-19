@@ -20,18 +20,17 @@ const void* nullptr = 0;
 
 
 in std {
-	ClassInfo getClass(class_id id);
+	ClassInfo get_class(class_id id);
 
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
-
 		private ClassInfo info;
 		public long references; // if using garbage collection
 
 		public Object();
 
 		virtual public int hashcode();
-		virtual public int equals(Object other);
+		virtual public bool equals(Object other);
 		virtual public void drop();
 
 
@@ -54,8 +53,8 @@ in std {
 
 		public int is(Object o);
 
-		virtual public int equals(Object other);
-		virtual public int equals(ClassInfo other);
+		virtual public bool equals(Object other);
+		virtual public bool equals(ClassInfo other);
 	};
 
 	class String{
@@ -71,6 +70,8 @@ in std {
 		public String concat(String other);
 
 		public String concat(char* other);
+
+		public String concat_integer(long other);
 
 		public const char* getCStr();
     };

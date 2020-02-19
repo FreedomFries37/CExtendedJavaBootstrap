@@ -19,6 +19,8 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     private boolean outputPostprocessingOutput = false;
     
+    private boolean allowUseStatements = false;
+    
     private int tabSize = 4;
     
     private IFrontEndUnit<? extends Front> frontEndUnit;
@@ -26,6 +28,8 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     private IToolChain<? super Mid, ? extends Back> backToolChain;
     
     private boolean hideClassPrivateDeclarations = false;
+    
+    private boolean directivesMustStartAtColumn1 = true;
     
     
     @Override
@@ -175,5 +179,25 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     @Override
     public void setHideClassPrivateDeclarations(boolean hideClassPrivateDeclarations) {
         this.hideClassPrivateDeclarations = hideClassPrivateDeclarations;
+    }
+    
+    @Override
+    public boolean isAllowUseStatements() {
+        return allowUseStatements;
+    }
+    
+    @Override
+    public void setAllowUseStatements(boolean allowUseStatements) {
+        this.allowUseStatements = allowUseStatements;
+    }
+    
+    @Override
+    public boolean isDirectivesMustStartAtColumn1() {
+        return directivesMustStartAtColumn1;
+    }
+    
+    @Override
+    public void setDirectivesMustStartAtColumn1(boolean directivesMustStartAtColumn1) {
+        this.directivesMustStartAtColumn1 = directivesMustStartAtColumn1;
     }
 }

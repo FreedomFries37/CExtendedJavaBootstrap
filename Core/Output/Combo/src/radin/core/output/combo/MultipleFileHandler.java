@@ -18,6 +18,7 @@ import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class MultipleFileHandler implements ICompilationErrorCollector {
@@ -79,7 +80,10 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                 return;
             }
             inputString = text.toString().replace("\t", " ".repeat(settings.getTabSize()));
-    
+            inputString = inputString.replaceAll("//.*\n", "\n");
+            // inputString = inputString.replaceAll("/\\*.*\\*/", "");
+            inputString = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(inputString).replaceAll("");
+            inputString = "#include <prelude.h>\n" + inputString;
             errors = new LinkedList<>();
         }
         
@@ -302,7 +306,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
         Set<CompilationNode> explored = new HashSet<>();
         while (!nodes.isEmpty()) {
             compileAttempt++;
-            CompilationNode next = Collections.min(nodes, new NodeComparator());
+            CompilationNode next = ((CompilationNode) nodes.toArray()[0]);
             nodes.remove(next);
            
             stateChanged = !next.equals(last);

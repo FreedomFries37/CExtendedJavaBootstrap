@@ -13,6 +13,7 @@ import radin.core.input.frontend.v1.parsing.Parser;
 import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
 import radin.core.lexical.Token;
 import radin.core.output.backend.compilation.FileCompiler;
+import radin.core.output.backend.microcompilers.FunctionCompiler;
 import radin.core.output.combo.MultipleFileHandler;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
@@ -29,11 +30,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CompilerEntrancePoint {
     
@@ -109,6 +115,9 @@ public class CompilerEntrancePoint {
             
         }
         
+        if(System.getenv("MSFT") != null) {
+            UniversalCompilerSettings.getInstance().getSettings().setDirectivesMustStartAtColumn1(false);
+        }
         
         
         PreProcessingLexer lex = new PreProcessingLexer();
@@ -133,8 +142,7 @@ public class CompilerEntrancePoint {
         
         var backChain = new FileCompiler();
         settings.setBackToolChain(backChain);
-        
-        
+        FunctionCompiler.environment = environment;
         
         List<File> files = new LinkedList<>();
         List<IFrontEndUnit<? extends AbstractSyntaxNode>> frontEndUnits = new LinkedList<>();
@@ -145,7 +153,13 @@ public class CompilerEntrancePoint {
             ICompilationSettings.debugLog.info("Adding " + filenamesString + " for compilation");
         }
         
-        
+        if(System.getenv("JODIN_HOME") != null) {
+            String jodinHome = System.getenv("JODIN_HOME");
+            Stream<Path> pathStream = Files.find(Paths.get(jodinHome), Integer.MAX_VALUE, (p, bfa) -> bfa.isRegularFile());
+            List<File> fileList = pathStream.map((p) -> new File(p.toUri())).collect(Collectors.toList());
+            fileList.removeIf((f) -> !f.getName().endsWith(".cx"));
+            files.addAll(fileList);
+        }
         
         MultipleFileHandler multipleFileHandler = new MultipleFileHandler(
                 files,

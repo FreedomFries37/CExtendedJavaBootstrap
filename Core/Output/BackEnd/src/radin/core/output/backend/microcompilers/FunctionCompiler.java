@@ -2,9 +2,12 @@ package radin.core.output.backend.microcompilers;
 
 import radin.core.output.backend.compilation.AbstractIndentedOutputSingleOutputCompiler;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXParameter;
 import radin.core.output.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
+import radin.core.utility.ICompilationSettings;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -15,6 +18,8 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
     private CXType returnType;
     private List<CXParameter> parameters;
     private TypeAugmentedSemanticNode compoundStatement;
+    public static TypeEnvironment environment;
+    
     
     public FunctionCompiler(PrintWriter printWriter, int indent, String name, CXType returnType, List<CXParameter> parameters, TypeAugmentedSemanticNode compoundStatement) {
         super(printWriter, indent);
@@ -25,7 +30,14 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
     }
     
     public boolean compile() {
+        ICompilationSettings.debugLog.finest("Compiling " + returnType.generateCDeclaration(name));
         print(returnType.generateCDeclaration(name));
+        boolean isGetClass = false;
+        
+        if(name.equals("__get_class")) {
+            isGetClass = true;
+            ICompilationSettings.debugLog.info("__get_class Function found, will add dynamic class id table");
+        }
         print("(");
         boolean first= true;
         for (CXParameter parameter : parameters) {
@@ -35,10 +47,26 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
         }
         print(") ");
         println("{");
-        CompoundStatementCompiler compoundStatementCompiler = new CompoundStatementCompiler(getPrintWriter(),
-                getIndent() + 1);
-        if(compoundStatement == null) throw new IncorrectlyMissingCompoundStatement();
-        if(!compoundStatementCompiler.compile(compoundStatement)) return false;
+        if(!isGetClass) {
+            CompoundStatementCompiler compoundStatementCompiler = new CompoundStatementCompiler(getPrintWriter(),
+                    getIndent() + 1);
+            if (compoundStatement == null) throw new IncorrectlyMissingCompoundStatement();
+            if (!compoundStatementCompiler.compile(compoundStatement)) return false;
+        } else {
+            setIndent(getIndent() + 1);
+            println("switch(id) {");
+            for (CXClassType createdClass : environment.getCreatedClasses()) {
+                int id = environment.getTypeId(createdClass);
+                println("case " + id + ": { // " + createdClass);
+                println("static Class");
+                println("}");
+                println("break;");
+            }
+            println("default: break;");
+            println("}");
+            setIndent(getIndent() - 1);
+        }
+        
         println("}");
         println();
         return true;

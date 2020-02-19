@@ -40,6 +40,9 @@ public class CXDynamicTypeDefinition extends CXType implements ICXWrapper {
     
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
+        if(strictPrimitiveEquality) {
+            return e.isStrict(original, other);
+        }
         return e.is(original, other);
     }
     

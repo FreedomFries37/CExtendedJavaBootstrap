@@ -4,6 +4,7 @@ import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -74,7 +75,7 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
      * @return the appropriate token
      */
     public static Token getKeywordToken(String image) {
-        if(image.startsWith("__")) {
+        if(image.startsWith("__") && !image.equals("__get_class")) {
             return new Token(TokenType.t_reserved, image);
         }
         switch (image) {
@@ -139,7 +140,10 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
             case "internal":
                 return new Token(TokenType.t_internal);
             case "using":
-                return new Token(TokenType.t_using);
+                if(UniversalCompilerSettings.getInstance().getSettings().isAllowUseStatements())
+                    return new Token(TokenType.t_using);
+                else
+                    break;
             case "typeid":
                 return new Token(TokenType.t_typeid);
             case "true":
@@ -147,8 +151,9 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
             case "false":
                 return new Token(TokenType.t_false);
             default:
-                return new Token(TokenType.t_id, image);
+                break;
         }
+        return new Token(TokenType.t_id, image);
     }
     
     @Override

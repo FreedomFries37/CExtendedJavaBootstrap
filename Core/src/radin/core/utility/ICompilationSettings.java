@@ -139,4 +139,13 @@ public interface ICompilationSettings<Front, Mid, Back> {
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setHideClassPrivateDeclarations(boolean hideClassPrivateDeclarations);
+    
+    boolean isAllowUseStatements();
+    
+    @ExperimentalSetting(useBooleanValue = true)
+    void setAllowUseStatements(boolean allowUseStatements);
+    
+    boolean isDirectivesMustStartAtColumn1();
+    
+    void setDirectivesMustStartAtColumn1(boolean directivesMustStartAtColumn1);
 }
