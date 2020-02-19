@@ -279,8 +279,10 @@ public class Parser extends BasicParser {
     private boolean parseImplementation(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Implementation");
         
-        
-        if (!parseFunctionDefinition(child)) return error("Illegal statement in implement section");
+        if(!oneMustParse(child, this::parseFunctionDefinition, this::parseConstructorDefinition)) {
+            return error("Illegal statement in implement section");
+        }
+        // if (!parseFunctionDefinition(child)) return error("Illegal statement in implement section");
         
         
         parent.addChild(child);

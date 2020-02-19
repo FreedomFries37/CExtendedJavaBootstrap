@@ -1,0 +1,42 @@
+void __init_reflection();
+int __main(int argc, std::String argv[]);
+in std {
+    ClassInfo class_std_ClassInfo330389123_info = 0; // class_id = 1
+    ClassInfo class_std_Object691912636_info = 0; // class_id = 0
+    ClassInfo class_std_String823295118_info = 0; // class_id = 2
+    ClassInfo class_std_Inner1592750445_info = 0; // class_id = 6
+    ClassInfo __get_class(class_id id) {
+        if (id == 1) return class_std_ClassInfo330389123_info;
+        if (id == 0) return class_std_Object691912636_info;
+        if (id == 2) return class_std_String823295118_info;
+        if (id == 6) return class_std_Inner1592750445_info;
+        return nullptr;
+    }
+}
+int main(int argc, char* argv[]) {
+    __init_reflection();
+    std::String args[argc];
+    for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);
+    int output = __main(argc, args);
+    for (int i = 0; i < argc; i++) args[i]->drop();
+    return output;
+}
+void __init_reflection() {
+    class_std_ClassInfo330389123_info = new std::ClassInfo();
+    class_std_ClassInfo330389123_info->name = new std::String("std::ClassInfo");
+    class_std_ClassInfo330389123_info->classHash = 1652128221;
+    class_std_ClassInfo330389123_info->info = class_std_ClassInfo330389123_info;
+    class_std_Object691912636_info = new std::ClassInfo();
+    class_std_Object691912636_info->name = new std::String("std::Object");
+    class_std_Object691912636_info->classHash = -25544764;
+    class_std_String823295118_info = new std::ClassInfo();
+    class_std_String823295118_info->name = new std::String("std::String");
+    class_std_String823295118_info->classHash = -247655118;
+    class_std_Inner1592750445_info = new std::ClassInfo();
+    class_std_Inner1592750445_info->name = new std::String("std::Inner");
+    class_std_Inner1592750445_info->classHash = -2130623539;
+    class_std_ClassInfo330389123_info->parent = __get_class(0);
+    class_std_Object691912636_info->parent = nullptr;
+    class_std_String823295118_info->parent = __get_class(0);
+    class_std_Inner1592750445_info->parent = __get_class(0);
+}

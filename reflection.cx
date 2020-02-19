@@ -1,0 +1,23 @@
+in std {
+
+class Inner {
+	private int yeet;
+
+	public Inner() {}
+};
+
+int main(int argc, std::String args[]) {
+	Object o = new Object();
+	ClassInfo c = o->getClass();
+	ClassInfo cI = c->getClass();
+
+	Inner i = new Inner();
+
+	if(c->is(i)) {
+		println("same");
+	}
+
+	return 0;
+}
+
+}

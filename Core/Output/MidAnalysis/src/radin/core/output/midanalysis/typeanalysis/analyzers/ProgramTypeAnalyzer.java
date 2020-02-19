@@ -29,7 +29,11 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
     
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
-        typeTrackingClosure();
+        return determineTypes(node, true);
+    }
+    
+    public boolean determineTypes(TypeAugmentedSemanticNode node, boolean closure) {
+        if(closure) typeTrackingClosure();
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
             
             
@@ -87,7 +91,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
             } else if(child.getASTType() == ASTNodeType.typedef) {
                 child.setType(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
             } else if(child.getASTType() == ASTNodeType.top_level_decs) {
-                if(!determineTypes(child)) {
+                if(!determineTypes(child, false)) {
                     setIsFailurePoint(child);
                     return false;
                 }
@@ -110,7 +114,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
             
         }
         
-        releaseTrackingClosure();
+        if(closure) releaseTrackingClosure();
         return true;
     }
 }

@@ -64,7 +64,7 @@ in std {
 		private ClassInfo parent;
 		private int classHash;
 
-		private ClassInfo(String name, ClassInfo parent, int classHash);
+
 
 		public String getName();
 

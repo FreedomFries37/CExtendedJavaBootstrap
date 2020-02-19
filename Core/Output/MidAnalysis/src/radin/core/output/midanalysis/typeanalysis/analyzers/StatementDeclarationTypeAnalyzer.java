@@ -170,7 +170,9 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             
             
             
-            
+            if(isBaseTracker()) {
+                ICompilationSettings.debugLog.finer("Adding global variable " + name + " of type " + declarationType);
+            }
             getCurrentTracker().addVariable(name, declarationType);
             declaration.setType(declarationType);
         }

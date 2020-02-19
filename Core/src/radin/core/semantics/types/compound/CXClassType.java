@@ -36,7 +36,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     
     private List<Pair<CXMethod, CXMethod>> supersToCreate;
     private List<CXMethod> generatedSupers;
-   
+    
     
     private CXMethod initMethod;
     
@@ -52,7 +52,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public CXClassType(CXIdentifier typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
         super(typename, new LinkedList<>(declarations));
-    
+        
         ICompilationSettings.debugLog.finest("Creating class " + typename);
         this.environment = e;
         sealed = false;
@@ -260,19 +260,28 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
                 if(type instanceof ICXWrapper) {
                     type = ((ICXWrapper) type).getWrappedType();
                 }
-                if(getTypeName().equals("std::ClassInfo") &&
-                        field.getName().equals("info") && type instanceof PointerType &&
+                
+                if (field.getName().equals("info") && type instanceof PointerType &&
                         ((PointerType) type).getSubType() instanceof CXClassType &&
                         ((CXClassType) ((PointerType) type).getSubType()).getTypeName().equals("std::ClassInfo")) {
-                    assignment = CXMethod.variableAST("output");
+                    assignment = new TypedAbstractSyntaxNode(
+                            ASTNodeType.cast,
+                            field.getType(),
+                            new AbstractSyntaxNode(ASTNodeType.id, new Token(TokenType.t_id,
+                                    "__get_class(" + environment.getTypeId(this) + ")")
+                            )
+                    );
                 } else {
                     assignment = new TypedAbstractSyntaxNode(
                             ASTNodeType.cast,
                             field.getType(),
-                            new AbstractSyntaxNode(ASTNodeType.id, new Token(TokenType.t_id, "{0}")
+                            new AbstractSyntaxNode(ASTNodeType.id, new Token(TokenType.t_id,
+                                    "{0}")
                             )
                     );
                 }
+                
+                
                 children.add(assign(fieldGet, assignment));
                 // initMethodBody.append("output->").append(field.getName()).append(" = {0};");
             }
@@ -315,7 +324,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         for (CXConstructor constructor : constructors) {
             
             List<CXType> parameterTypes = constructor.getParameterTypes();
-            if(parameterTypes.size() != parameters.size()) {
+            if(parameterTypes.size() == parameters.size()) {
                 boolean allTrue = true;
                 for (int i = 0; i < parameters.size(); i++) {
                     if(!parameters.get(i).is(parameterTypes.get(i), environment)) {
@@ -477,11 +486,11 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public List<CXMethod> getInstanceMethods() {
         return instanceMethods;
     }
-
+    
     public boolean is(CXClassType other) {
         return getLineage().contains(other);
     }
-
+    
     public List<CXClassType> getLineage() {
         List<CXClassType> output = new LinkedList<>();
         CXClassType ptr = this;
@@ -534,7 +543,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         if(options.size() >= 2) throw new AmbiguousMethodCallError(name, options, tokens);
         return options.get(0);
     }
-
+    
     private CXMethod getConcreteMethod(Token name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : getAllConcreteMethods()) {
             if(cxMethod.getIdentifierName().equals(name.getImage()) && parameterTypeList.equals(cxMethod.getParameterTypeList(),
@@ -544,7 +553,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         }
         return null;
     }
-
+    
     private CXMethod getVirtualMethodStrict(String name, ParameterTypeList parameterTypeList) {
         for (CXMethod cxMethod : virtualMethodOrder) {
             

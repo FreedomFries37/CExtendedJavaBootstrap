@@ -85,6 +85,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                     if(cxType instanceof PointerType && ((PointerType) cxType).getSubType() instanceof CXCompoundType) {
                         cxType = ((PointerType) cxType).getSubType();
                     }
+                    
                     if(astType == ASTNodeType.specifier && !cxType.isPrimitive()) {
                         if (child.containsCompilationTag(TypeDefHelperTag.class)) {
                             TypeDefHelperTag compilationTag =
@@ -105,11 +106,13 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                         CXType type = child.getCXType();
                         switch (child.getASTType()) {
                             case declaration: {
+                                print("static ");
                                 String varName = child.getChild(0).getToken().getImage();
                                 print(type.generateCDeclaration(varName));
                                 break;
                             }
                             case initialized_declaration: {
+                                print("static ");
                                 ExpressionCompiler expressionCompiler = new ExpressionCompiler(getPrintWriter());
                                 String varName = child.getASTChild(ASTNodeType.declaration).getChild(0).getToken().getImage();
                                 print(type.generateCDeclaration(varName));

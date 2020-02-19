@@ -9,6 +9,8 @@ import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.typeanalysis.TypeAnalyzer;
+import radin.core.output.typeanalysis.errors.MissingMainFunctionError;
+import radin.core.output.typeanalysis.errors.MultipleMainDefinitionsError;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
@@ -380,7 +382,9 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     compilationNode.getErrors());
             errorReader.readErrors();
         }
-        
+        if(MultipleMainDefinitionsError.firstDefinition == null) {
+            throw new MissingMainFunctionError();
+        }
         return failed.isEmpty();
     }
     

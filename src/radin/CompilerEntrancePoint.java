@@ -13,6 +13,7 @@ import radin.core.input.frontend.v1.parsing.Parser;
 import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
 import radin.core.lexical.Token;
 import radin.core.output.backend.compilation.FileCompiler;
+import radin.core.output.backend.compilation.RuntimeCompiler;
 import radin.core.output.backend.microcompilers.FunctionCompiler;
 import radin.core.output.combo.MultipleFileHandler;
 import radin.core.output.midanalysis.ScopedTypeTracker;
@@ -33,10 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -167,8 +165,23 @@ public class CompilerEntrancePoint {
         );
         
         boolean b = multipleFileHandler.compileAll();
-        if (!b) {
+        if (b) {
+            ICompilationSettings.debugLog.info("Generating runtime...");
+            UniversalCompilerSettings.getInstance().getSettings().setLookForMainFunction(false);
+            UniversalCompilerSettings.getInstance().getSettings().setInRuntimeCompilationMode(true);
+            RuntimeCompiler runtimeCompiler = new RuntimeCompiler(environment);
+            runtimeCompiler.compile();
+            
+            File runtimeFile = new File("runtime.cx");
+            multipleFileHandler = new MultipleFileHandler(
+                    Collections.singletonList(runtimeFile),
+                    compilationSettings
+            );
+            multipleFileHandler.compileAll();
+            
             ICompilationSettings.debugLog.info("Compilation completed");
+        } else {
+            ICompilationSettings.debugLog.warning("Compilation failed");
         }
         
         

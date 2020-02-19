@@ -1,13 +1,24 @@
 #include <prelude.h>
 
+
 void print(const char* c) {
+
+}
+void println(const char* c) {
+
+}
+void print_s(std::String o) {
+
+}
+void println_s(std::String o) {
 
 }
 
 
-
 in std {
 	implement Object {
+		Object() { }
+
 		int hashcode() {
 			return (int) (void*) this;
 		}
@@ -29,8 +40,62 @@ in std {
 		}
 	}
 
-	ClassInfo __get_class(class_id id) {
-		return nullptr;  // dynamic compiler link
+	implement ClassInfo {
+
+		ClassInfo() { }
+
+
+		String getName() { return this->name; }
+
+		bool is(Object o) {
+			if(o == nullptr) return false;
+			return this->is_class(o->getClass());
+		}
+
+		bool is_class(ClassInfo o) {
+			if (o->equals(this)) return true;
+			if (o->parent != nullptr) {
+				 return this->is_class(o->parent);
+			}
+			return false;
+		}
+
+		bool equals(Object other) {
+			if (!other) return false;
+			if (!this->getClass()->is(other)) return false;
+			return this->equals((ClassInfo) other);
+		}
+		bool equals(ClassInfo other) {
+			return this->classHash == other->classHash;
+		}
+
 	}
 
+	implement String {
+        String() : this("") { }
+        String(const char* bp) {
+
+        }
+
+        void drop() {
+        	// free(this->backing_ptr);
+        	super->drop();
+        }
+
+		String concat(String other) {
+			return this;
+		}
+
+		String concat(char* other) {
+			return this;
+		}
+
+		const char* getCStr() {
+			return this->backingPtr;
+		}
+
+		String concat_integer(long other) {
+			return this;
+		}
+	}
 }

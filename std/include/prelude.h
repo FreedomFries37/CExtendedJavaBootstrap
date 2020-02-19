@@ -1,11 +1,13 @@
 #ifndef __PRELUDE_HEADER__
 #define __PRELUDE_HEADER__
 
-in std class ClassInfo;
+#include <reflection.h>
+
+
 in std class String;
 
 typedef unsigned char bool;
-typedef unsigned long class_id;
+
 
 void* malloc(unsigned int sz);
 void* calloc(unsigned int num, unsigned int sz);
@@ -20,7 +22,7 @@ const void* nullptr = 0;
 
 
 in std {
-	ClassInfo get_class(class_id id);
+	// ClassInfo get_class(class_id id);
 
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
@@ -43,15 +45,18 @@ in std {
 	};
 
 	class ClassInfo {
+
+
 		private String name;
 		private ClassInfo parent;
 		private int classHash;
 
-		private ClassInfo(String name, ClassInfo parent, int classHash);
+		public ClassInfo();
 
 		public String getName();
 
-		public int is(Object o);
+		public bool is(Object o);
+		private bool is_class(ClassInfo o);
 
 		virtual public bool equals(Object other);
 		virtual public bool equals(ClassInfo other);

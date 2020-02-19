@@ -33,11 +33,19 @@ public class CXConstructor extends CXMethod {
     private static Token createConstructorName(CXClassType parent, List<CXParameter> parameters, AbstractSyntaxNode corresponding) {
         Token corr = corresponding.getChild(0).getToken();
         return new Token(TokenType.t_id,
-                "construct_" + parent.getTypeNameIdentifier().generateCDefinitionNoHash() + Math.abs(parameters.hashCode()) + '_').addColumnAndLineNumber(
+                "construct_" + parent.getTypeNameIdentifier().generateCDefinitionNoHash() + deterministicParameterHash(parameters) + '_').addColumnAndLineNumber(
                 corr.getColumn(),
                 corr.getLineNumber()
         );
         
+    }
+    
+    private static int deterministicParameterHash(List<? extends CXParameter> parameters) {
+        int output = 0;
+        for (CXParameter parameter : parameters) {
+            output += parameter.getType().hashCode();
+        }
+        return Math.abs(output);
     }
     
     public AbstractSyntaxNode getCorrespondingASTNode() {

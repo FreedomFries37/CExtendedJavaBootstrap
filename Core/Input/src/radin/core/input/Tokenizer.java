@@ -74,8 +74,9 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
      * @param image the input image
      * @return the appropriate token
      */
-    public static Token getKeywordToken(String image) {
-        if(image.startsWith("__") && !image.equals("__get_class")) {
+    public Token getKeywordToken(String image) {
+        if(image.startsWith("__") && !(UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode() || image.equals(
+                "__get_class"))) {
             return new Token(TokenType.t_reserved, image);
         }
         switch (image) {

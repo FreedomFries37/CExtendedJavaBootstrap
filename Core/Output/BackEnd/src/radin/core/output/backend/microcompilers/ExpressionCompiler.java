@@ -54,7 +54,11 @@ public class ExpressionCompiler extends AbstractCompiler {
             case sizeof: {
                 CXType type = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
                 print("sizeof(");
-                print(type.generateCDefinition());
+                if(UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode() && type instanceof PointerType && ((PointerType) type).getSubType() instanceof CXClassType) {
+                    print(((PointerType) type).getSubType().generateCDeclaration());
+                } else {
+                    print(type.generateCDefinition());
+                }
                 print(")");
                 break;
             }

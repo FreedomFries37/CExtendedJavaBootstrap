@@ -9,6 +9,7 @@ import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.utility.ICompilationSettings;
@@ -45,13 +46,13 @@ public class ImplementationTypeAnalyzer extends TypeAnalyzer {
                     parameterTypes.add(paramType);
                 }
     
-                CXMethod corresponding = parentType.getMethod(
-                        child.getASTChild(ASTNodeType.id).getToken(),
+                CXMethod corresponding = parentType.getMethodStrict(
+                        child.getASTChild(ASTNodeType.id).getToken().getImage(),
                         new ParameterTypeList(parameterTypes),
                         null
                         );
                 if(corresponding == null) {
-                    ICompilationSettings.debugLog.warning("Corresponding function definition doesn't exist: " +child.getASTChild(ASTNodeType.id).getToken().getImage() );
+                    ICompilationSettings.debugLog.warning("Corresponding function declaration doesn't exist: " +child.getASTChild(ASTNodeType.id).getToken().getImage() );
                     child.setFailurePoint(true);
                     throw new MethodDoesNotExistError(child.getASTChild(ASTNodeType.id).getToken());
                 }
@@ -65,6 +66,23 @@ public class ImplementationTypeAnalyzer extends TypeAnalyzer {
                     output = false;
                     setIsFailurePoint(child);
                 }
+                List<CXType> parameterTypes = new LinkedList<>();
+                for (AbstractSyntaxNode abstractSyntaxNode : child.getASTNode().getChild(ASTNodeType.parameter_list)) {
+                    assert  abstractSyntaxNode instanceof TypedAbstractSyntaxNode;
+                    CXType paramType = ((TypedAbstractSyntaxNode) abstractSyntaxNode).getCxType().getTypeRedirection(getEnvironment());
+                    parameterTypes.add(paramType);
+                }
+    
+                CXConstructor corresponding = parentType.getConstructor(parameterTypes, environment);
+                if(corresponding == null) {
+                    ICompilationSettings.debugLog.warning("Corresponding method declaration doesn't exist: " +child.getASTChild(ASTNodeType.id).getToken().getImage() );
+                    child.setFailurePoint(true);
+                    throw new MethodDoesNotExistError(child.getASTChild(ASTNodeType.id).getToken());
+                }
+    
+                ICompilationSettings.debugLog.info("Implementation found for " + corresponding);
+                ICompilationSettings.debugLog.finest(child.toTreeForm());
+                child.addCompilationTag(new ImplementMethodTag(corresponding));
             }
             
         }

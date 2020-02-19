@@ -28,6 +28,7 @@ import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
 import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Reference;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.util.regex.Pattern;
 
@@ -327,8 +328,13 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             
             if(!getCurrentTracker().fieldVisible((CXCompoundType) parentType, name)) {
-                throw new IllegalAccessError(parentType, name, node.getChild(0).findFirstToken()
-                );
+                if(!UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode())
+                    throw new IllegalAccessError(parentType, name, node.getChild(0).findFirstToken());
+                else {
+                    node.setType(CXPrimitiveType.VOID.toPointer());
+                    node.setLValue(true);
+                    return true;
+                }
             }
             if(objectInteraction.getCXType() instanceof CXClassType) {
                 nextType = getCurrentTracker().getFieldType(((CXClassType) parentType), name);

@@ -8,12 +8,13 @@ import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXParameter;
 import radin.core.output.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.PrintWriter;
 import java.util.List;
 
 public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler {
-
+    
     private String name;
     private CXType returnType;
     private List<CXParameter> parameters;
@@ -31,12 +32,20 @@ public class FunctionCompiler extends AbstractIndentedOutputSingleOutputCompiler
     
     public boolean compile() {
         ICompilationSettings.debugLog.finest("Compiling " + returnType.generateCDeclaration(name));
-        print(returnType.generateCDeclaration(name));
+       
         boolean isGetClass = false;
         
+        /*
         if(name.equals("__get_class")) {
             isGetClass = true;
             ICompilationSettings.debugLog.info("__get_class Function found, will add dynamic class id table");
+        }
+         */
+        
+        if(name.equals("main") && UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction()) {
+            print(returnType.generateCDeclaration("__main"));
+        } else {
+            print(returnType.generateCDeclaration(name));
         }
         print("(");
         boolean first= true;

@@ -42,6 +42,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
         }
     }
     
+    boolean isLookForMainFunction();
+    
+    void setLookForMainFunction(boolean lookForMainFunction);
+    
     /**
      * Optimize output code
      * @param value
@@ -148,4 +152,8 @@ public interface ICompilationSettings<Front, Mid, Back> {
     boolean isDirectivesMustStartAtColumn1();
     
     void setDirectivesMustStartAtColumn1(boolean directivesMustStartAtColumn1);
+    
+    boolean isInRuntimeCompilationMode();
+    
+    void setInRuntimeCompilationMode(boolean inRuntimeCompilationMode);
 }

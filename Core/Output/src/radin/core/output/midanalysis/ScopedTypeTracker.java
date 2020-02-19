@@ -70,6 +70,10 @@ public abstract class ScopedTypeTracker {
         return trackerStack.peek();
     }
     
+    public boolean isBaseTracker() {
+        return trackerStack.size() == 1;
+    }
+    
     public void releaseTrackingClosure() {
         trackerStack.pop();
         getCurrentTracker().removeParentlessStructFields();

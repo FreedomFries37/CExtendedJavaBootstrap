@@ -31,6 +31,19 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     private boolean directivesMustStartAtColumn1 = true;
     
+    private boolean lookForMainFunction = true;
+    
+    private boolean isInRuntimeCompilationMode = false;
+    
+    @Override
+    public boolean isLookForMainFunction() {
+        return lookForMainFunction;
+    }
+    
+    @Override
+    public void setLookForMainFunction(boolean lookForMainFunction) {
+        this.lookForMainFunction = lookForMainFunction;
+    }
     
     @Override
     public void setOptimizationLevel(int value) {
@@ -200,4 +213,16 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     public void setDirectivesMustStartAtColumn1(boolean directivesMustStartAtColumn1) {
         this.directivesMustStartAtColumn1 = directivesMustStartAtColumn1;
     }
+    
+    @Override
+    public boolean isInRuntimeCompilationMode() {
+        return isInRuntimeCompilationMode;
+    }
+    
+    @Override
+    public void setInRuntimeCompilationMode(boolean inRuntimeCompilationMode) {
+        isInRuntimeCompilationMode = inRuntimeCompilationMode;
+    }
+    
+    
 }

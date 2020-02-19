@@ -119,6 +119,11 @@ public abstract class CXType implements CXEquivalent {
         return toString();
     }
     
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+    
     /**
      * Gets the type indirection
      * @return

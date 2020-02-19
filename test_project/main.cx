@@ -1,7 +1,11 @@
 #include "LinkedList.h"
 
-int main() {
+int main(int argc, std::String argv[]) {
 	bool val = boolean_test();
+
+	for (int i = 0; i < argc; i++) {
+		println_s(argv[i]);
+	}
 
 	return val;
 }
