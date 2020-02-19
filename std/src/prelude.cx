@@ -1,4 +1,5 @@
 #include <prelude.h>
+#include <string.h>
 
 
 void print(const char* c) {
@@ -74,7 +75,8 @@ in std {
 	implement String {
         String() : this("") { }
         String(const char* bp) {
-
+			this->backingPtr = strdup(bp);
+			this->length = strlen(bp);
         }
 
         void drop() {
@@ -83,7 +85,10 @@ in std {
         }
 
 		String concat(String other) {
-			return this;
+			char next[this->length + other->length + 1];
+			strcpy(next, this->backingPtr);
+			strcat(next, other->backingPtr);
+			return new String(next);
 		}
 
 		String concat(char* other) {

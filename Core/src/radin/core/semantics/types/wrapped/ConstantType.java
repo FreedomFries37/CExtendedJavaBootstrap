@@ -3,6 +3,9 @@ package radin.core.semantics.types.wrapped;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
+import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
+import radin.core.semantics.types.primitives.ArrayType;
+import radin.core.semantics.types.primitives.PointerType;
 
 public class ConstantType extends CXType /*implements ICXWrapper*/ {
     
@@ -52,8 +55,17 @@ public class ConstantType extends CXType /*implements ICXWrapper*/ {
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(other instanceof ConstantType) {
+            if(strictPrimitiveEquality)
+                e.isStrict(subtype, ((ConstantType) other).getSubtype());
+                else
             return e.is(subtype, ((ConstantType) other).getSubtype());
             // return subtype.is(((ConstantType) other).getSubtype(), e);
+        }
+        if(this.subtype instanceof AbstractCXPrimitiveType && !(this.subtype instanceof PointerType || this.subtype instanceof ArrayType)) {
+            if(strictPrimitiveEquality)
+                e.isStrict(subtype, other);
+            else
+                return e.is(subtype, other);
         }
         return false;
     }

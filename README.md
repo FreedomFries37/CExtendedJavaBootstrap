@@ -11,6 +11,7 @@
 2. Main Additions to C
     1. Classes
     2. Namespaces
+    3. Modified entry point
 3. Future Plans
     - Jodin Compiler written in Jodin
     - Finely Tuned Importing
@@ -122,6 +123,13 @@ so you could still refer to it using `animals::mammals::Dolphin` within the `in 
 > 18 |     ko::object* o; // Should be an ambiguous reference
 >    |            ^_________________________________________________ Could be CXClass ko::object or CXClass std::ko::object
 >```
+
+#### Modified Entry Point
+The entry point of jodin projects must be of the following signature:
+```
+int main(int argc, std::String args[])
+```
+The compiler will let let you know if your main function is incorrect, or doesn't exist
 
 Code Examples
 ---
@@ -238,14 +246,14 @@ These are the features that I have determined are necessary for work on the self
 | Feature           | Implementation Status |
 |:------------------|----------------------:|
 | Generics          | None                  |
-| Compilation Tags  | None                  |
-| Preamble          | Bare minimum          |
-| Object base class | None                  |
-| String class      | None                  |
+| Compilation Tags  | Completed                  |
+| Preamble          | Working State         |
+| Object base class | Completed             |
+| String class      | Work in progress      |
 | Exception Handling| None                  |
 | Interfaces        | None                  |
-| Implement Block   | AST                   |
-| Runtime Class Info| None                  |
+| Implement Block   | Completed             |
+| Runtime Class Info| Works in a non static context                  |
 
 ##### Preamable
 The preamble AST will be attached to the top of every file being compiled.
