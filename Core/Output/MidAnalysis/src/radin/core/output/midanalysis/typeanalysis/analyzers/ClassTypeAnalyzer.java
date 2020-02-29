@@ -224,7 +224,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 getCurrentTracker().addBasicCompoundType(vTable);
                 getCurrentTracker().addIsTracking(vTable);
             }
-            getCurrentTracker().addPrivateField(cxClassType, "vtable", vTable.toPointer());
+            getCurrentTracker().addPrivateField(cxClassType, UniversalCompilerSettings.getInstance().getSettings().getvTableName(), vTable.toPointer());
             for (CXMethod cxMethod : cxClassType.getParent().getVirtualMethodsOrder()) {
                 getCurrentTracker().addVariable(cxMethod.getCFunctionName(), cxMethod.getFunctionPointer());
             }

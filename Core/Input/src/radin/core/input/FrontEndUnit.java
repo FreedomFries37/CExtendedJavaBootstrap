@@ -3,6 +3,7 @@ package radin.core.input;
 import radin.core.AbstractTree;
 import radin.core.IFrontEndUnit;
 import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.ICompilationSettings;
 
@@ -37,6 +38,8 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
                 IFrontEndUnit.super.setVariable(variable, value);
         }
     }
+    
+    
     
     @Override
     public <V> V getVariable(String variable) {

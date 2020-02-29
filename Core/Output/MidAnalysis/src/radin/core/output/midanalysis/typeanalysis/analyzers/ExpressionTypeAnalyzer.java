@@ -382,7 +382,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             CXType cxClass;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 cxClass = objectInteraction.getCXType();
-            } else {
+            }
+            
+            else {
                 cxClass = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(getEnvironment());
             }
             

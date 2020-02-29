@@ -3,6 +3,10 @@ package radin.core.semantics;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.utility.ICompilationSettings;
 
+import java.util.HashMap;
+
+import static radin.core.semantics.AbstractSyntaxNode.cleanNameToType;
+
 public enum ASTNodeType {
     /**
      * An operator
@@ -38,7 +42,7 @@ public enum ASTNodeType {
     /**
      * Gets the e-th value of an array
      */
-    array_reference("[E]"),
+    array_reference("arr_get"),
     /**
      * Represents a operation after a value
      */
@@ -222,7 +226,11 @@ public enum ASTNodeType {
     typeid("typeid"),
     syntax("syntax"),
     _true("true"),
-    _false("false")
+    _false("false"),
+    ast("ast"),
+    generic("generic"),
+    trait("trait"),
+    id_list("id_list")
     ;
     
     
@@ -230,6 +238,7 @@ public enum ASTNodeType {
     
     ASTNodeType(String name) {
         this.name = name;
+        cleanNameToType.putIfAbsent(name, this);
     }
     
     public String getName() {
@@ -240,4 +249,8 @@ public enum ASTNodeType {
     public String toString() {
         return name;
     }
+    
+    
+    
+    
 }

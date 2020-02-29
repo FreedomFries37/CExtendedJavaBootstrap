@@ -17,6 +17,7 @@ import radin.core.utility.Reference;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
+import radin.core.utility.UniversalCompilerSettings;
 
 import java.util.*;
 
@@ -42,6 +43,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     
     private boolean sealed;
     private TypeEnvironment environment;
+    private List<ClassFieldDeclaration> classFields;
     
     public CXClassType(CXIdentifier identifier, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment environment) {
@@ -52,7 +54,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public CXClassType(CXIdentifier typename, CXClassType parent, List<ClassFieldDeclaration> declarations,
                        List<CXMethod> methods, List<CXConstructor> constructors, TypeEnvironment e) {
         super(typename, new LinkedList<>(declarations));
-        
+        classFields = declarations;
         ICompilationSettings.debugLog.finest("Creating class " + typename);
         this.environment = e;
         sealed = false;
@@ -141,6 +143,10 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         }
     }
     
+    public List<ClassFieldDeclaration> getClassFields() {
+        return classFields;
+    }
+    
     @Override
     public TypeEnvironment getEnvironment() {
         return environment;
@@ -175,10 +181,11 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public CXMethod getInitMethod() {
         if(initMethod == null) {
             List<AbstractSyntaxNode> children = new LinkedList<>();
-            
+    
+            String vtableName = UniversalCompilerSettings.getInstance().getSettings().getvTableName();
             AbstractSyntaxNode vtable = new AbstractSyntaxNode(
                     ASTNodeType.indirection,
-                    CXMethod.variableAST("vtable")
+                    CXMethod.variableAST(vtableName)
             );
             
             AbstractSyntaxNode outputDec = new AbstractSyntaxNode(ASTNodeType.declarations,
@@ -200,11 +207,11 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
                     new TypedAbstractSyntaxNode(
                             ASTNodeType.declaration,
                             new PointerType(getVTable().getTypeIndirection()),
-                            CXMethod.variableAST("vtable")
+                            CXMethod.variableAST(vtableName)
                     ));
             children.add(vtableDec);
             AbstractSyntaxNode vtableSet = assign(
-                    CXMethod.variableAST("vtable"),
+                    CXMethod.variableAST(vtableName),
                     new AbstractSyntaxNode(ASTNodeType.id,
                             new Token(TokenType.t_id, "malloc" + "(sizeof(struct " + getVTableName() + "))"))
             );
@@ -216,8 +223,8 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
                                     new AbstractSyntaxNode(
                                             ASTNodeType.indirection,
                                             CXMethod.variableAST("output")),
-                                    "vtable"),
-                            CXMethod.variableAST("vtable")
+                                    vtableName),
+                            CXMethod.variableAST(vtableName)
                     )
             );
             children.add(assign(fieldGet(vtable, "offset"), new AbstractSyntaxNode(ASTNodeType.literal,
@@ -302,6 +309,12 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         }
         
         return initMethod;
+    }
+    
+    public List<CXMethod> getAllMethods() {
+        List<CXMethod> output = getConcreteMethodsOrder();
+        output.addAll(getVirtualMethodsOrder());
+        return output;
     }
     
     @Override
@@ -409,7 +422,7 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         CXType vtableType = new PointerType(environment.getNamedCompoundType(getVTableName()).getTypeIndirection());
         List<FieldDeclaration> fieldDeclarations = new LinkedList<>();
         fieldDeclarations.add(
-                new FieldDeclaration(vtableType, "vtable")
+                new FieldDeclaration(vtableType, UniversalCompilerSettings.getInstance().getSettings().getvTableName())
         );
         
         
@@ -676,13 +689,18 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return "struct " + getCTypeName();
     }
     
+    @Override
+    public String ASTableDeclaration() {
+        return getTypeNameIdentifier().toString();
+    }
+    
     public String getCTypeName() {
         return "class_" + super.getCTypeName();
     }
     
     @Override
     public String toString() {
-        return "CXClass " + getTypeName();
+        return getTypeName();
     }
     
     private String getStructName() {
@@ -721,6 +739,11 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
             if(cxMethod.getIdentifierName().equals(name) && cxMethod.getParameterTypes().equals(types)) return true;
         }
         return false;
+    }
+    
+    @Override
+    public boolean canInstantiateDirectly() {
+        return true;
     }
     
 }

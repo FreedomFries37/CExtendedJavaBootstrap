@@ -48,7 +48,7 @@ in std {
 
 		String getName() { return this->name; }
 
-		bool is(Object o) {
+		bool is_object(Object o) {
 			if(o == nullptr) return false;
 			return this->is_class(o->getClass());
 		}
@@ -63,7 +63,7 @@ in std {
 
 		bool equals(Object other) {
 			if (!other) return false;
-			if (!this->getClass()->is(other)) return false;
+			if (!this->getClass()->is_object(other)) return false;
 			return this->equals((ClassInfo) other);
 		}
 		bool equals(ClassInfo other) {

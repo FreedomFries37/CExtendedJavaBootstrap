@@ -111,4 +111,14 @@ public abstract class CXCompoundType extends CXType implements ICXCompoundType {
         result = 31 * result + (anonymous ? 1 : 0);
         return result;
     }
+    
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     *
+     * @return Such a string
+     */
+    @Override
+    public String getSafeTypeString() {
+        return typeName.toString().replaceAll("\\W+", "_");
+    }
 }

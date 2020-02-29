@@ -4,6 +4,7 @@ import radin.core.output.tags.TypeDefHelperTag;
 import radin.core.AbstractTree;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.exceptions.InvalidPrimitiveException;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
@@ -14,7 +15,7 @@ import java.util.List;
 
 public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanticNode> {
     
-   
+    
     private TypeAugmentedSemanticNode head;
     
     public TypeAugmentedSemanticTree(AbstractSyntaxNode headAST, TypeEnvironment environment) {

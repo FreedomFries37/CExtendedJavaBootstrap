@@ -23,6 +23,12 @@ public class Token implements Comparable<Token> {
         this.image = image;
     }
     
+    public Token changedType(TokenType tokenType) {
+        Token output = new Token(tokenType, image);
+        output.addColumnAndLineNumber(column, lineNumber);
+        return output;
+    }
+    
     public Token getPrevious() {
         return previous;
     }

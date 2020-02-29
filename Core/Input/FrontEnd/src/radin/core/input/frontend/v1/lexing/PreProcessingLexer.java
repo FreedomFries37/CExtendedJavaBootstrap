@@ -914,7 +914,14 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
                     consumeNextChars(2);
                     return new Token(TokenType.t_literal, "'" + str);
+                } case '$': {
+                    return new Token(TokenType.t_dollar);
                 }
+                case '@': {
+                    return new Token(TokenType.t_at);
+                }
+                default:
+                    return null;
             }
         }
     }

@@ -9,9 +9,12 @@ in std class String;
 typedef unsigned char bool;
 
 
+
 void* malloc(unsigned int sz);
 void* calloc(unsigned int num, unsigned int sz);
 void free(void* ptr);
+void exit(int status);
+void panic(std::String msg);
 
 void print(const char* c);
 void println(const char* c);
@@ -55,7 +58,7 @@ in std {
 
 		public String getName();
 
-		public bool is(Object o);
+		public bool is_object(Object o);
 		private bool is_class(ClassInfo o);
 
 		virtual public bool equals(Object other);

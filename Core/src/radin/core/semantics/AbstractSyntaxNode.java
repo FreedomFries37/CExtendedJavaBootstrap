@@ -8,6 +8,8 @@ import java.util.*;
 
 public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
     
+    public static final HashMap<String, ASTNodeType> cleanNameToType = new HashMap<>();
+    
     private ASTNodeType type;
     private Token token;
     private List<AbstractSyntaxNode> childList;
@@ -67,7 +69,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     
     public AbstractSyntaxNode(AbstractSyntaxNode other,
                               boolean addFirst, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
-        this(other.type);
+        this(other.type, other.token);
         if(!addFirst) {
             childList.addAll(other.getChildList());
             if(add != EMPTY) childList.add(add);
@@ -75,6 +77,21 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
         }else {
             if(add != EMPTY) childList.add(add);
             childList.addAll(Arrays.asList(additionalChildren));
+            childList.addAll(other.getChildList());
+        }
+    }
+    
+    public AbstractSyntaxNode(AbstractSyntaxNode other, List<AbstractSyntaxNode> additionalChildren) {
+        this(other, false, additionalChildren);
+    }
+    
+    public AbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, List<AbstractSyntaxNode> additionalChildren) {
+        this(other.type, other.token);
+        if(!addFirst) {
+            childList.addAll(other.getChildList());
+            childList.addAll(additionalChildren);
+        }else {
+            childList.addAll(additionalChildren);
             childList.addAll(other.getChildList());
         }
     }
@@ -142,13 +159,18 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     
     
     protected String toTreeForm(int indent, String hint) {
-        StringBuilder output = new StringBuilder(String.format("%s%15s", indentString(indent),  "(" + hint + ")"));
+        StringBuilder output = new StringBuilder(indentString(indent));
         
         return treeFormHelper(indent, output);
     }
     
     private String treeFormHelper(int indent, StringBuilder output) {
         Iterator<String> hints = this.hints.iterator();
+        if (childList.isEmpty()) {
+            output.append(";");
+        } else {
+            output.append(" {");
+        }
         for (AbstractSyntaxNode child : childList) {
             output.append("\n");
             if(hints.hasNext()) {
@@ -156,6 +178,9 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
             } else {
                 output.append(child.toTreeForm(indent + 1));
             }
+        }
+        if(!childList.isEmpty()) {
+            output.append("\n").append(getIndent(indent)).append("}");
         }
         return output.toString();
     }

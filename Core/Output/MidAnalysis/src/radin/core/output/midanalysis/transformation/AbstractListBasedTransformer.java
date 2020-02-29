@@ -4,6 +4,7 @@ import radin.core.chaining.ICompilerFunction;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
+import radin.core.output.midanalysis.GenericModule;
 import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
@@ -23,8 +24,8 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
     
     private Stack<T> headStack = new Stack<>();
     
-    public AbstractListBasedTransformer(Stack<VariableTypeTracker> trackerStack) {
-        super(trackerStack);
+    public AbstractListBasedTransformer(Stack<VariableTypeTracker> trackerStack, GenericModule module) {
+        super(trackerStack, module);
     }
     
     public AbstractListBasedTransformer(ScopedTypeTracker old) {

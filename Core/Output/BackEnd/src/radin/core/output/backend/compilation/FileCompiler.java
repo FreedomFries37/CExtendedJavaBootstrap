@@ -48,12 +48,12 @@ public class FileCompiler extends AbstractCompiler {
     
     private static File getCreatedFile(File value) {
         var nextName = value.getName();
-        if(nextName.endsWith(".cx")) {
-            nextName = nextName.substring(0, nextName.length() - 3) + ".c";
+        if(nextName.endsWith(".jdn")) {
+            nextName = nextName.substring(0, nextName.length() - 4) + ".c";
         } else {
             nextName += ".c";
         }
-        return new File(nextName);
+        return ICompilationSettings.createFile(nextName);
     }
     
     private String preamble;

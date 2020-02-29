@@ -6,10 +6,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.utility.UniversalCompilerSettings;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +22,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     private TypeEnvironment environment;
     
     public RuntimeCompiler(TypeEnvironment environment) throws IOException {
-        super(new PrintWriter(new FileWriter(new File("runtime.cx"))), 0);
+        super(new PrintWriter(new FileWriter(new File("runtime.jdn"))), 0);
         this.environment = environment;
     }
     
@@ -36,6 +33,20 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     
     @Override
     public boolean compile() {
+        
+        if(System.getenv("JODIN_HOME") != null) {
+            File baseRuntimeFile = new File(new File(System.getenv("JODIN_HOME")), "runtime.i");
+            try {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(baseRuntimeFile));
+                
+                while (bufferedReader.ready()) {
+                    println(bufferedReader.readLine());
+                }
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         
         println("void __init_reflection();");
         println("int __main(int argc, std::String argv[]);");

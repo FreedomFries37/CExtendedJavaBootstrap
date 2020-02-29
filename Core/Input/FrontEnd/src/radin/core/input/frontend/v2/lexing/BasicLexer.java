@@ -246,6 +246,7 @@ public class BasicLexer extends Tokenizer<Token> {
                 consumeNextChars(2);
                 return new Token(TokenType.t_literal, "'" + str);
             }
+            
         }
         
         return null;

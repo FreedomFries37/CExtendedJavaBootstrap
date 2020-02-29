@@ -9,6 +9,7 @@ import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.PointerType;
+import radin.core.utility.UniversalCompilerSettings;
 
 
 import java.util.LinkedList;
@@ -244,7 +245,7 @@ public class CXMethod implements CXEquivalent {
                                 new AbstractSyntaxNode(ASTNodeType.indirection,
                                         thisAST()
                                 ),
-                                variableAST("vtable")
+                                variableAST(UniversalCompilerSettings.getInstance().getSettings().getvTableName())
                         )
                 ),
                 variableAST(replacementName)

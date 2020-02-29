@@ -151,6 +151,14 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
                 return new Token(TokenType.t_true);
             case "false":
                 return new Token(TokenType.t_false);
+            case "ast":
+                return new Token(TokenType.t_ast);
+            case "is":
+                return new Token(TokenType.t_is);
+            case "abstract":
+                return new Token(TokenType.t_abstract);
+            case "trait":
+                return new Token(TokenType.t_trait);
             default:
                 break;
         }

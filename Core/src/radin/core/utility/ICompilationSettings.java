@@ -5,10 +5,35 @@ import radin.core.IFrontEndUnit;
 import radin.core.JodinLogger;
 import radin.core.chaining.IToolChain;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
 
 public interface ICompilationSettings<Front, Mid, Back> {
+    
+    static File createFile(String filename) {
+        String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();
+        if(directory.equals("")) {
+            ICompilationSettings.debugLog.info("Created file " + filename);
+            return new File(filename);
+        } else {
+            File dir = new File(directory);
+            dir.mkdirs();
+            if(!dir.exists()) {
+                ICompilationSettings.debugLog.severe("Did not create file " + filename + " in " + dir);
+                return null;
+            }
+            
+            ICompilationSettings.debugLog.info("Created file " + filename + " in " + dir.getAbsolutePath());
+            File file = new File(dir, filename);
+            File parentFile = file.getParentFile();
+            parentFile.mkdirs();
+            if(!parentFile.exists()) {
+                return null;
+            }
+            return file;
+        }
+    }
     
     /**
      * Use experimental settings while compiling
@@ -156,4 +181,16 @@ public interface ICompilationSettings<Front, Mid, Back> {
     boolean isInRuntimeCompilationMode();
     
     void setInRuntimeCompilationMode(boolean inRuntimeCompilationMode);
+    
+    boolean isOutputAST();
+    
+    void setOutputAST(boolean outputAST);
+    
+    boolean isOutputTAST();
+    
+    void setOutputTAST(boolean outputTAST);
+    
+    String getDirectory();
+    
+    void setDirectory(String directory);
 }

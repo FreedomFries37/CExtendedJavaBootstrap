@@ -3,6 +3,7 @@ package radin.core.input.frontend.v1.parsing;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.input.IParser;
 import radin.core.input.ITokenizer;
+import radin.core.input.frontend.directastparsing.ASTParser;
 import radin.core.utility.Pair;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
@@ -252,9 +253,12 @@ BasicParser implements IParser<Token, ParseNode> {
                 clearErrors();
                 return AttemptStatus.ROLLBACK;
             } else {
+                allErrors.addAll(tempErrors);
+                tempErrors.clear();
                 popState();
                 suppressErrors.pop();
                 forceParse.pop();
+                
                 
                 return AttemptStatus.DESYNC;
             }

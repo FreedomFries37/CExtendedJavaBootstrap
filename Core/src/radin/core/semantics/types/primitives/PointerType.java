@@ -1,7 +1,9 @@
 package radin.core.semantics.types.primitives;
 
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.CXClassType;
 
 public class PointerType extends AbstractCXPrimitiveType {
     
@@ -17,9 +19,19 @@ public class PointerType extends AbstractCXPrimitiveType {
     
     @Override
     public String generateCDefinition() {
-        return subType.getTypeIndirection().generateCDefinition() + "*";
+        return subType.generateCDefinition() + "*";
     }
     
+    @Override
+    public String generateCDeclaration() {
+        return subType.generateCDeclaration() + "*";
+    }
+    
+    @Override
+    public String ASTableDeclaration() {
+        if(subType instanceof CXClassType) return subType.ASTableDeclaration();
+        return subType.ASTableDeclaration() + "*";
+    }
     
     @Override
     public boolean isValid(TypeEnvironment e) {
@@ -73,6 +85,16 @@ public class PointerType extends AbstractCXPrimitiveType {
         return subType.toString() + "*";
     }
     
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     *
+     * @return Such a string
+     */
+    @Override
+    public String getSafeTypeString() {
+        return subType.getSafeTypeString() + "_p";
+    }
+    
     @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
         return new PointerType(subType.getTypeRedirection(e));
@@ -81,5 +103,10 @@ public class PointerType extends AbstractCXPrimitiveType {
     @Override
     public CXType getCTypeIndirection() {
         return new PointerType(subType.getCTypeIndirection());
+    }
+    
+    @Override
+    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+        return new PointerType(subType.propagateGenericReplacement(original, replacement));
     }
 }

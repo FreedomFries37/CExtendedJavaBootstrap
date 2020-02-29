@@ -44,6 +44,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
     private IToolChain<? super TypeAugmentedSemanticNode, ? extends Boolean> backToolChain;
     
     
+    
     private class CompilationNode implements ICompilationErrorCollector {
         private String file;
         private AbstractSyntaxNode astTree;
@@ -62,12 +63,12 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
             this.environment = e;
             StringBuilder text = new StringBuilder();
             try {
-        
+                
                 BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
-        
+                
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
-            
+                    
                     if (!line.endsWith("\\")) {
                         text.append(line);
                         text.append("\n");
@@ -76,7 +77,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                         text.append(' ');
                     }
                 }
-        
+                
             } catch (IOException err) {
                 err.printStackTrace();
                 return;
@@ -92,7 +93,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
         public String getInputString() {
             return inputString;
         }
-    
+        
         @Override
         public String toString() {
             return "CompilationNode{" +
@@ -101,7 +102,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     ", isCompleted=" + isCompleted +
                     '}';
         }
-    
+        
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -128,20 +129,36 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     frontEndUnit.setVariable("lexer.inputString", inputString);
                     astTree = frontEndUnit.invoke();
                     inputString = frontEndUnit.getUsedString();
+                    
                     if(UniversalCompilerSettings.getInstance().getSettings().isOutputPostprocessingOutput()){
-                        File preProcessingOutput = new File(file + ".ppo");
                         try {
-                            
+                            File preProcessingOutput = ICompilationSettings.createFile(file + ".ppo");
                             FileWriter fileWriter = new FileWriter(preProcessingOutput);
                             fileWriter.write(inputString);
                             fileWriter.flush();
                             ICompilationSettings.debugLog.info("Created PreProcessor Output File " + preProcessingOutput.getName());
                             fileWriter.close();
                         } catch (IOException e) {
-                            ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " + preProcessingOutput);
+                            ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " +file + ".ppo");
                         }
                     }
-                    if (frontEndUnit.hasErrors()) {
+                    
+                    if(astTree != null && UniversalCompilerSettings.getInstance().getSettings().isOutputAST()) {
+                        File astOutput = ICompilationSettings.createFile("ast/" + new File(file).getName() + ".ast");
+                        try{
+                            PrintWriter fileWriter = new PrintWriter(new FileWriter(astOutput));
+                            fileWriter.println("ast {");
+                            fileWriter.println(astTree.toTreeForm());
+                            fileWriter.println("}");
+                            fileWriter.flush();
+                            ICompilationSettings.debugLog.info("Created AST File " + astOutput);
+                            fileWriter.close();
+                        } catch (IOException e) {
+                            ICompilationSettings.debugLog.warning("Couldn't create AST file at " +file + ".ast");
+                        }
+                    }
+                    
+                    if (frontEndUnit.hasErrors() || astTree == null) {
                         
                         errors.addAll(frontEndUnit.getErrors());
                         return CompilationResult.Failed;
@@ -310,7 +327,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
             compileAttempt++;
             CompilationNode next = ((CompilationNode) nodes.toArray()[0]);
             nodes.remove(next);
-           
+            
             stateChanged = !next.equals(last);
             if(firstInCycle == null) {
                 firstInCycle = next;
@@ -319,7 +336,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                 if(explored.equals(new HashSet<>(nodes))) {
                     ICompilationSettings.debugLog.severe("Attempted to compile project and made no progress");
                     ICompilationSettings.debugLog.severe("Compilation Failed");
-    
+                    
                     return false;
                 }
             }
@@ -346,7 +363,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     }
                 }
             }
-    
+            
             switch (compilationResult) {
                 case ErroredOut:
                     ICompilationSettings.debugLog.warning("Erroring out of " + next.getFile());

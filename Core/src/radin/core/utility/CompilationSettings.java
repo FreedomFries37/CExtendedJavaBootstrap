@@ -3,6 +3,8 @@ package radin.core.utility;
 import radin.core.IFrontEndUnit;
 import radin.core.chaining.IToolChain;
 
+import java.io.File;
+
 public class CompilationSettings<Front, Mid, Back> implements ICompilationSettings<Front, Mid, Back> {
     
     private int optimizationLevel = 0;
@@ -11,13 +13,17 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     private boolean createStrings = false;
     
     private String indent = "    ";
-    private String vTableName = "vtable";
+    private String vTableName = "__vtable";
     
     private boolean reduceIndirection = false;
     
     private boolean showErrorStackTrace = false;
     
     private boolean outputPostprocessingOutput = false;
+    private boolean outputAST = false;
+    private boolean outputTAST = false;
+    
+    private String directory = "";
     
     private boolean allowUseStatements = false;
     
@@ -224,5 +230,34 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
         isInRuntimeCompilationMode = inRuntimeCompilationMode;
     }
     
+    @Override
+    public boolean isOutputAST() {
+        return outputAST;
+    }
+    
+    @Override
+    public void setOutputAST(boolean outputAST) {
+        this.outputAST = outputAST;
+    }
+    
+    @Override
+    public boolean isOutputTAST() {
+        return outputTAST;
+    }
+    
+    @Override
+    public void setOutputTAST(boolean outputTAST) {
+        this.outputTAST = outputTAST;
+    }
+    
+    @Override
+    public String getDirectory() {
+        return directory;
+    }
+    
+    @Override
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
     
 }

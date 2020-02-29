@@ -3,6 +3,7 @@ package radin.core.semantics.types;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
@@ -161,5 +162,20 @@ public abstract class CXType implements CXEquivalent {
         return new PointerType(this);
     }
     
+    public String ASTableDeclaration() {
+        return toString();
+    }
+    
+    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+        return this;
+    }
+    
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     * @return Such a string
+     */
+    public String getSafeTypeString() {
+        return generateCDeclaration().replaceAll("\\W", "_");
+    }
     
 }

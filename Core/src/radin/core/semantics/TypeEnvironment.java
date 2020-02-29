@@ -11,14 +11,10 @@ import radin.core.semantics.types.compound.CXUnionType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;
+import radin.core.semantics.types.primitives.*;
 import radin.core.semantics.types.wrapped.*;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Pair;
-import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
-import radin.core.semantics.types.primitives.CXPrimitiveType;
-import radin.core.semantics.types.primitives.LongPrimitive;
-import radin.core.semantics.types.primitives.UnsignedPrimitive;
-import radin.core.semantics.types.primitives.PointerType;
 
 
 import java.util.*;
@@ -63,6 +59,9 @@ public class TypeEnvironment {
     
     private List<CXClassType> allCreated = new LinkedList<>(); // doesn't reset;
     
+    public CXClassType getDefaultInheritance() {
+        return defaultInheritance;
+    }
     
     public TypeEnvironment() {
         ICompilationSettings.debugLog.info("Type Environment " + environmentsCreated++ + " Created!");
@@ -273,11 +272,22 @@ public class TypeEnvironment {
     public CXType addTypeDefinition(AbstractSyntaxNode typeAST, String name) throws InvalidPrimitiveException {
         if(primitives.contains(name)) throw new PrimitiveTypeDefinitionError(name);
         if(name.equals("void")) throw new VoidTypeError();
-        if(typeDefinitions.containsKey(name)) throw new TypeDefinitionAlreadyExistsError(name);
         
         CXType type = getType(typeAST);
+        if(typeDefinitions.containsKey(name) && !type.isExact(typeDefinitions.get(name), this)) throw new TypeDefinitionAlreadyExistsError(name);
+    
         typeDefinitions.put(name, new CXDynamicTypeDefinition(name, type));
         return type;
+    }
+    
+    public void removeTypeDefinition(String name) throws InvalidPrimitiveException {
+        if(primitives.contains(name)) throw new PrimitiveTypeDefinitionError(name);
+        if(name.equals("void")) throw new VoidTypeError();
+    
+    
+        typeDefinitions.remove(name);
+        
+        //typeDefinitions.put(name, new CXDynamicTypeDefinition(name, type));
     }
     
     public CXType getTypeDefinition(String name) {
@@ -319,7 +329,7 @@ public class TypeEnvironment {
         if(output.size() > 1) throw new AmbiguousIdentifierError(corresponding, output);
         else if(output.size() == 1) return new PointerType(output.get(0));
         
-        throw new TypeDoesNotExist(new CXIdentifier(namespacedTypename.getParentNamespace(), namespacedTypename.getIdentifier()).toString());
+        throw new TypeDoesNotExist(namespacedTypename.toString());
     }
     
     public CXType getType(Token typenameImage, Token tok) {
@@ -511,6 +521,14 @@ public class TypeEnvironment {
             return createType(ast, currentNamespace);
         }
         
+        if(ast.getType() == ASTNodeType.array_type) {
+            return new ArrayType(((TypedAbstractSyntaxNode) ast).getCxType());
+        }
+        
+        if(ast.getType() == ASTNodeType.abstract_declarator) {
+            return getType(ast.getChild(0));
+        }
+        
         throw new UnsupportedOperationException(ast.getType().toString());
     }
     
@@ -522,7 +540,7 @@ public class TypeEnvironment {
     
     private CXCompoundType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
         ICompilationSettings.debugLog.finest("in " + namespace + " creating compound type from ");
-        ICompilationSettings.debugLog.finest("\n" + ast.toTreeForm());
+        // ICompilationSettings.debugLog.finest("\n" + ast.toTreeForm());
         AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
         Token name = nameAST != null? nameAST.getToken() : null;
         boolean isAnonymous = name == null;
