@@ -6,7 +6,7 @@ import radin.core.semantics.types.CXType;
 
 import java.util.*;
 
-public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
+public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
     
     public static final HashMap<String, ASTNodeType> cleanNameToType = new HashMap<>();
     

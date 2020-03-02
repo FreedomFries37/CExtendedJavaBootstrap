@@ -13,6 +13,8 @@ import java.util.List;
 
 public interface ICXClassType extends ICXCompoundType, CXCallable {
     
+    CXType getAsCXType();
+    
     TypeEnvironment getEnvironment();
     
     void addConstructors(List<CXConstructor> constructors);

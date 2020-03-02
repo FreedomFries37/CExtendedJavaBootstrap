@@ -119,6 +119,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
         public CompilationResult attemptCompile() {
             try {
                 lastCompileAttemptTime = compileAttempt;
+                
                 if(astTree == null) {
                     frontEndUnit.reset();
                     frontEndUnit.clearErrors();

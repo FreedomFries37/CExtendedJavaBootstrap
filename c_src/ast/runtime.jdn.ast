@@ -706,9 +706,73 @@ top_level_decs {
       }
     }
   }
+  function_definition [void] {
+    empty;
+    id $__free_heap;
+    params;
+    compound_statement {
+      func_call {
+        id $free;
+        sequence {
+          field_get {
+            id $jodin_heap;
+            id $jheap;
+          }
+        }
+      }
+    }
+  }
+  function_definition [void*] {
+    empty;
+    id $__jalloc;
+    params {
+      dec [size_t] {
+        id $length;
+      }
+    }
+    compound_statement {
+      return {
+        func_call {
+          id $malloc;
+          sequence {
+            id $length;
+          }
+        }
+      }
+    }
+  }
+  generic {
+    parameterized_types {
+      parameter_type {
+        id $T;
+      }
+    }
+    function_definition [size_t] {
+      empty;
+      id $getActualSize;
+      params;
+      compound_statement {
+        return {
+          sizeof [T];
+        }
+      }
+    }
+  }
   declarations {
     function_description [void] {
       id $__init_reflection;
+      params;
+    }
+  }
+  declarations {
+    function_description [void] {
+      id $__init_heap;
+      params;
+    }
+  }
+  declarations {
+    function_description [void] {
+      id $__free_heap;
       params;
     }
   }
@@ -730,7 +794,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_std_ClassInfo66005309_info;
+          id $class_std_ClassInfo612126077_info;
         }
         literal $0;
       }
@@ -738,7 +802,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_std_Object295518204_info;
+          id $class_std_Object250602564_info;
         }
         literal $0;
       }
@@ -746,7 +810,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_std_String426900686_info;
+          id $class_std_String119220082_info;
         }
         literal $0;
       }
@@ -754,7 +818,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_ll_Node2060947710_info;
+          id $class_ll_Node1687898818_info;
         }
         literal $0;
       }
@@ -762,7 +826,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_ll_IntLinkedList355477606_info;
+          id $class_ll_IntLinkedList190643162_info;
         }
         literal $0;
       }
@@ -783,7 +847,7 @@ top_level_decs {
             literal $1;
           }
           return {
-            id $class_std_ClassInfo66005309_info;
+            id $class_std_ClassInfo612126077_info;
           }
           empty;
         }
@@ -794,7 +858,7 @@ top_level_decs {
             literal $0;
           }
           return {
-            id $class_std_Object295518204_info;
+            id $class_std_Object250602564_info;
           }
           empty;
         }
@@ -805,7 +869,7 @@ top_level_decs {
             literal $2;
           }
           return {
-            id $class_std_String426900686_info;
+            id $class_std_String119220082_info;
           }
           empty;
         }
@@ -816,7 +880,7 @@ top_level_decs {
             literal $6;
           }
           return {
-            id $class_ll_Node2060947710_info;
+            id $class_ll_Node1687898818_info;
           }
           empty;
         }
@@ -827,7 +891,7 @@ top_level_decs {
             literal $7;
           }
           return {
-            id $class_ll_IntLinkedList355477606_info;
+            id $class_ll_IntLinkedList190643162_info;
           }
           empty;
         }
@@ -850,6 +914,10 @@ top_level_decs {
       }
     }
     compound_statement {
+      func_call {
+        id $__init_heap;
+        sequence;
+      }
       func_call {
         id $__init_reflection;
         sequence;
@@ -937,6 +1005,10 @@ top_level_decs {
           sequence;
         }
       }
+      func_call {
+        id $__free_heap;
+        sequence;
+      }
       return {
         id $output;
       }
@@ -948,7 +1020,7 @@ top_level_decs {
     params;
     compound_statement {
       assign {
-        id $class_std_ClassInfo66005309_info;
+        id $class_std_ClassInfo612126077_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -957,7 +1029,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo66005309_info;
+            id $class_std_ClassInfo612126077_info;
           }
           id $name;
         }
@@ -971,28 +1043,28 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo66005309_info;
+            id $class_std_ClassInfo612126077_info;
           }
           id $classHash;
         }
         assign_type::@=;
         uniop {
           op::@-;
-          literal $2046164579;
+          literal $1796039203;
         }
       }
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo66005309_info;
+            id $class_std_ClassInfo612126077_info;
           }
           id $info;
         }
         assign_type::@=;
-        id $class_std_ClassInfo66005309_info;
+        id $class_std_ClassInfo612126077_info;
       }
       assign {
-        id $class_std_Object295518204_info;
+        id $class_std_Object250602564_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1001,7 +1073,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_Object295518204_info;
+            id $class_std_Object250602564_info;
           }
           id $name;
         }
@@ -1015,15 +1087,15 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_Object295518204_info;
+            id $class_std_Object250602564_info;
           }
           id $classHash;
         }
         assign_type::@=;
-        literal $571129732;
+        literal $821255108;
       }
       assign {
-        id $class_std_String426900686_info;
+        id $class_std_String119220082_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1032,7 +1104,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_String426900686_info;
+            id $class_std_String119220082_info;
           }
           id $name;
         }
@@ -1046,15 +1118,15 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_String426900686_info;
+            id $class_std_String119220082_info;
           }
           id $classHash;
         }
         assign_type::@=;
-        literal $349019378;
+        literal $599144754;
       }
       assign {
-        id $class_ll_Node2060947710_info;
+        id $class_ll_Node1687898818_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1063,7 +1135,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_ll_Node2060947710_info;
+            id $class_ll_Node1687898818_info;
           }
           id $name;
         }
@@ -1077,15 +1149,15 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_ll_Node2060947710_info;
+            id $class_ll_Node1687898818_info;
           }
           id $classHash;
         }
         assign_type::@=;
-        literal $535130430;
+        literal $785255806;
       }
       assign {
-        id $class_ll_IntLinkedList355477606_info;
+        id $class_ll_IntLinkedList190643162_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1094,7 +1166,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_ll_IntLinkedList355477606_info;
+            id $class_ll_IntLinkedList190643162_info;
           }
           id $name;
         }
@@ -1108,20 +1180,20 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_ll_IntLinkedList355477606_info;
+            id $class_ll_IntLinkedList190643162_info;
           }
           id $classHash;
         }
         assign_type::@=;
         uniop {
           op::@-;
-          literal $1865096102;
+          literal $1614970726;
         }
       }
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo66005309_info;
+            id $class_std_ClassInfo612126077_info;
           }
           id $parent;
         }
@@ -1136,7 +1208,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_Object295518204_info;
+            id $class_std_Object250602564_info;
           }
           id $parent;
         }
@@ -1146,7 +1218,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_String426900686_info;
+            id $class_std_String119220082_info;
           }
           id $parent;
         }
@@ -1161,7 +1233,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_ll_Node2060947710_info;
+            id $class_ll_Node1687898818_info;
           }
           id $parent;
         }
@@ -1176,7 +1248,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_ll_IntLinkedList355477606_info;
+            id $class_ll_IntLinkedList190643162_info;
           }
           id $parent;
         }

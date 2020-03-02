@@ -3,15 +3,18 @@
 
 #include <reflection.h>
 
-
 in std class String;
+in std class ClassInfo;
 
 typedef unsigned char bool;
-
+typedef unsigned long size_t;
 
 
 void* malloc(unsigned int sz);
 void* calloc(unsigned int num, unsigned int sz);
+
+
+
 void free(void* ptr);
 void exit(int status);
 void panic(std::String msg);
@@ -25,7 +28,7 @@ const void* nullptr = 0;
 
 
 in std {
-	// ClassInfo get_class(class_id id);
+	// ClassInfo get_class(class_id id);s
 
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
@@ -46,6 +49,8 @@ in std {
 
 
 	};
+
+
 
 	class ClassInfo {
 
@@ -82,6 +87,8 @@ in std {
 		public String concat_integer(long other);
 
 		public const char* getCStr();
+
+		virtual public int length();
     };
 
 }

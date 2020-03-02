@@ -95,6 +95,13 @@ public class PointerType extends AbstractCXPrimitiveType {
         return subType.getSafeTypeString() + "_p";
     }
     
+    public CXType innerMostType() {
+        if(subType instanceof PointerType) {
+            return ((PointerType) subType).innerMostType();
+        }
+        return subType;
+    }
+    
     @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
         return new PointerType(subType.getTypeRedirection(e));

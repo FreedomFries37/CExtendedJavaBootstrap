@@ -1,9 +1,5 @@
 package radin.core.input.frontend.v1.parsing;
 
-import jdk.jshell.spi.ExecutionControl;
-import radin.core.input.ITokenizer;
-import radin.core.input.frontend.directastparsing.ASTParser;
-import radin.core.input.frontend.v1.semantics.SynthesizedMissingException;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.TokenStoringAbstractSyntaxNode;
@@ -17,14 +13,13 @@ import static radin.core.lexical.TokenType.*;
 
 public class Parser extends BasicParser {
     
-    private HashSet<String> typedefed;
+    
     private HashSet<String> compoundTypeNames;
     private Stack<HashSet<String>> typedefStack;
     private Stack<HashSet<String>> compoundTypesStack;
-   
+    
     public Parser() {
         super();
-        typedefed = new HashSet<>();
         compoundTypeNames = new HashSet<>();
         typedefStack = new Stack<>();
         typedefStack.add(new HashSet<>());
@@ -34,11 +29,11 @@ public class Parser extends BasicParser {
     
     
     public HashSet<String> getTypedefed() {
-        return typedefed;
+        return typedefStack.peek();
     }
     
     private boolean isTypeName(String image) {
-        return typedefed.contains(image) || typedefStack.peek().contains(image);
+        return typedefStack.peek().contains(image);
     }
     
     private boolean isCompoundTypeName(String image) {
@@ -73,7 +68,6 @@ public class Parser extends BasicParser {
     protected void pushState() {
         super.pushState();
         typedefClosure();
-        typedefStack.peek().addAll(new HashSet<>(typedefed));
         compoundTypesStack.push(new HashSet<>(compoundTypeNames));
     }
     
@@ -81,7 +75,8 @@ public class Parser extends BasicParser {
     protected boolean popState() {
         boolean b = super.popState();
         if (b) {
-            typedefStack.pop();
+            HashSet<String> pop = typedefStack.pop();
+            typedefStack.peek().addAll(pop);
             compoundTypesStack.pop();
         }
         return b;
@@ -91,7 +86,7 @@ public class Parser extends BasicParser {
     protected boolean applyState() {
         boolean b = super.applyState();
         if (b) {
-            typedefed = typedefStack.pop();
+            typedefStack.pop();
             compoundTypeNames = compoundTypesStack.pop();
         }
         return b;
@@ -99,7 +94,6 @@ public class Parser extends BasicParser {
     
     @Override
     public void reset() {
-        typedefed.clear();
         compoundTypeNames.clear();
         typedefStack.clear();
         typedefStack.add(new HashSet<>());
@@ -149,11 +143,11 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("GenericDeclaration");
         
         if(!consume(t_for)) return false;
-        
         if(!consume(t_lt)) return false;
+        typedefClosure();
+        
         if(!parseTypeParameterList(child)) return false;
         if(!consume(t_gt)) return error("Missing matching >");
-        typedefClosure();
         
         /*
         CategoryNode ptr = child.getCategoryNode("IdentifierList");
@@ -168,15 +162,10 @@ public class Parser extends BasicParser {
             }
         }
         */
-    
         
-        if (getCurrentType() == t_class) {
-            error("GENERIC CLASSES NOT YET IMPLEMENTED");
-        } else {
-            if(!parseFunctionDefinition(child)) return false;
-        }
-    
-    
+        if(!parseTopLevelDeclaration(child)) return false;
+        
+        
         releaseTypeDefClosure();
         parent.addChild(child);
         return true;
@@ -265,7 +254,7 @@ public class Parser extends BasicParser {
             case t_const: {
                 Token corresponding = getCurrent();
                 if (!oneMustParse(child, this::parseFunctionDefinition, this::parseDeclaration)) {
-                    return error("Could not parse declaration", true, corresponding);
+                    return error("Could not parse declaration", corresponding);
                     //return error("Could not parse declaration",true, corresponding);
                 }
                 break;
@@ -293,7 +282,7 @@ public class Parser extends BasicParser {
             default:
                 return error("Not a valid top level declaration");
         }
-        clearErrors();
+        clearTempErrors();
         
         parent.addChild(child);
         return true;
@@ -362,7 +351,7 @@ public class Parser extends BasicParser {
         }
         if (!parseNamespace(child)) return false;
         String id = getInnerMost(child.getCategoryNode("Namespace"));
-        typedefed.add(id);
+        typedefStack.peek().add(id);
         if (match(t_assign)) {
             if (!parseAlias(child)) return false;
         }
@@ -432,7 +421,12 @@ public class Parser extends BasicParser {
         if (!match(TokenType.t_lcurl)) {
             if (!parseDeclarationList(child)) return false;
         }
-        if (!parseCompoundStatement(child)) return absorbErrors("Failed to compile compound statement");
+        if(match(t_lcurl)) {
+            forceParse();
+        }
+        if (!parseCompoundStatement(child)) {
+            return false;
+        }
         
         parent.addChild(child);
         return true;
@@ -531,7 +525,7 @@ public class Parser extends BasicParser {
         if (!consume(TokenType.t_lcurl)) return error("missing { for compound statement");
         //attemptParse(this::parseDeclarationList, child);
         if(!match(t_rcurl)) {
-            if(!parseStatementList(child)) return false;
+            if(!parseStatementList(child)) return error("");
         }
         if (!consume(TokenType.t_rcurl)) return error("missing matching } for compound statement");
         
@@ -1252,7 +1246,7 @@ public class Parser extends BasicParser {
             case t_id:
             case t_new:
             case t_super:
-                {
+            {
                 if (!parseAtom(child)) return false;
                 if (!parseAtomTail(child)) return false;
                 break;
@@ -1456,11 +1450,17 @@ public class Parser extends BasicParser {
         CategoryNode output = new CategoryNode("TypeName");
         
         if (!parseSpecsAndQuals(output)) return false;
+        if(consume(t_lt)) {
+            
+            if(!consume(t_gt)) return missingError("Missing matching <");
+        }
         if (!parseAbstractDeclarator(output)) return false;
         
         parent.addChild(output);
         return true;
     }
+    
+    
     
     private boolean parseSpecsAndQuals(CategoryNode parent) {
         CategoryNode output = new CategoryNode("SpecsAndQuals");
@@ -1689,10 +1689,12 @@ public class Parser extends BasicParser {
         CategoryNode output = new CategoryNode("ClassSpecifier");
         
         if (!consume(TokenType.t_class)) return false;
-        if (!match(TokenType.t_id)) return false;
+        Token token = undoTypeName(getCurrent());
+        if (token.getType() != t_id) return error("Class specifier must have a valid ID");
         String image = getCurrent().getImage();
-        consumeAndAddAsLeaf(output);
-        typedefed.add(image);
+        output.addChild(new LeafNode(token));
+        getNext();
+        typedefStack.peek().add(image);
         
         
         parent.addChild(output);
@@ -1773,12 +1775,18 @@ public class Parser extends BasicParser {
         if (!match(TokenType.t_id)) {
             if (match(t_literal)) return error("Can't typedef a literal");
             if (match(t_typename)) return error("ID already exists as a type");
-            return error("Can't typedef a " + getCurrentType());
+            
+            if (match(t_semic)) {
+                if(typedefStack.peek().contains(getPrevious().getImage())) {
+                    return true;
+                }
+            } else
+                return error("Can't typedef a " + getCurrentType());
         }
         String typename = getCurrent().getImage();
         consumeAndAddAsLeaf(child);
         
-        typedefed.add(typename);
+        typedefStack.peek().add(typename);
         
         parent.addChild(child);
         return true;
@@ -1940,6 +1948,10 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("Declaration");
         
         if (!parseDeclarationSpecifiers(child)) return false;
+        if(consume(t_lt)) {
+        
+            if(!consume(t_gt)) return missingError("Missing matching <");
+        }
         if (!match(TokenType.t_semic)) {
             if (!parseInitDeclaratorList(child)) return false;
         }
@@ -2146,7 +2158,7 @@ public class Parser extends BasicParser {
         
         
         String name = child.getLeafNode(TokenType.t_id).getToken().getImage();
-        typedefed.add(name);
+        typedefStack.peek().add(name);
         boolean forced = false;
         if (match(TokenType.t_colon)) {
             forceParse();

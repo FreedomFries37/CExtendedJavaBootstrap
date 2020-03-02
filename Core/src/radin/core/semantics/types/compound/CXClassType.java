@@ -746,4 +746,8 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
         return true;
     }
     
+    @Override
+    public CXType getAsCXType() {
+        return this;
+    }
 }

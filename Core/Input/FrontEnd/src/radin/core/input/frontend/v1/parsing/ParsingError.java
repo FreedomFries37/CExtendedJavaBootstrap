@@ -19,6 +19,8 @@ public class ParsingError extends AbstractCompilationError {
             return super.toString();
         }
         Token token = correspondingTokens.get(0);
-        return super.toString() + " @ ln: " + token.getLineNumber() + ", column: " + token.getColumn() + " in PPO";
+        return super.toString() + " -> " + token + " @ ln: " + token.getLineNumber() + ", column: " + token.getColumn() +
+                " in" +
+                " PPO";
     }
 }

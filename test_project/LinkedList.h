@@ -15,37 +15,37 @@ This file represents a linked list!
 */
 
 in ll {
-	class Node {
-		private void* value_ptr;
+	for <T> class Node {
+		private T value_ptr;
 		public Node prev;
 		public Node next;
 
-		public Node(void* value_ptr) {
+		public Node(T value_ptr) {
         	this->value_ptr = value_ptr;
         }
 
-		public void* get_value_ptr();
-		public void set_value_ptr(void* val);
+		public T get_value_ptr();
+		public void set_value_ptr(T val);
 	};
 
-	class IntLinkedList {
-		private Node head;
-		private Node tail;
+	for <T> class LinkedList {
+		private Node<T> head;
+		private Node<T> tail;
 		private int size;
 
-		public IntLinkedList() {
-			this->head = 0;
-			this->tail = 0;
+		public LinkedList() {
+			this->head = nullptr;
+			this->tail = nullptr;
 		}
 
-		public void add(int element);
-		public int get(int index);
+		public void add(T element);
+		public T get(int index);
 		public int size();
 		public bool remove(int value);
 
 		public bool remove_nth_element(int n);
 
-		private Node get_nth_node(int n);
+		private Node<T> get_nth_node(int n);
 	};
 }
 

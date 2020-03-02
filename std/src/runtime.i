@@ -16,6 +16,8 @@ This file is compiled with special rules, significantly that words starting with
 
 typedef unsigned char byte;
 
+
+
 struct j_heap{
 	byte* jheap;
 	size_t size;
@@ -36,7 +38,7 @@ void panic(std::String message) {
 
 
 bool __init_heap() {
-	jodin_heap.jheap = calloc(byte, HEAP_SIZE);
+	jodin_heap.jheap = calloc(sizeof(byte), HEAP_SIZE);
 	if(jodin_heap.jheap == nullptr) {
 		return false;
 	}
@@ -48,8 +50,12 @@ bool __init_heap() {
 	return true;
 }
 
-for <T> T jalloc(unsigned count) {
-	return (T) malloc(sizeof(T) * count);
+void __free_heap() {
+	free(jodin_heap.jheap);
+}
+
+void* __jalloc(size_t length) {
+	return malloc(length);
 }
 
 

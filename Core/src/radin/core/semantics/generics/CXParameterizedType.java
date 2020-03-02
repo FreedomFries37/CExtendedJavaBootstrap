@@ -6,24 +6,28 @@ import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.compound.CXStructType;
+import radin.core.semantics.types.compound.ICXClassType;
+import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 import radin.core.utility.Reference;
 
 import java.util.LinkedList;
+import java.util.List;
 
-public class CXParameterizedType extends CXClassType implements ICXWrapper {
+public class CXParameterizedType extends CXType implements ICXClassType {
     
-    private CXClassType upperBound;
+    private ICXClassType upperBound;
     private Token name;
     
-    public CXParameterizedType(CXClassType upperBound, Token name, TypeEnvironment e) {
-        super(new CXIdentifier(name, false), upperBound.getClassFields(), upperBound.getAllMethods(),
-                new LinkedList<>(), e);
+    public CXParameterizedType(ICXClassType upperBound, Token name, TypeEnvironment e) {
         this.upperBound = upperBound;
         this.name = name;
     }
+    
+    
     
     /**
      * Creates a declaration of a variable of a certain type
@@ -68,7 +72,7 @@ public class CXParameterizedType extends CXClassType implements ICXWrapper {
      */
     @Override
     public long getDataSize(TypeEnvironment e) {
-        return upperBound.getDataSize(e);
+        return upperBound.getAsCXType().getDataSize(e);
     }
     
     /**
@@ -86,11 +90,7 @@ public class CXParameterizedType extends CXClassType implements ICXWrapper {
      */
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
-        if(strictPrimitiveEquality) {
-            return e.is(upperBound, other);
-        } else {
-            return e.isStrict(upperBound, other);
-        }
+        return this == other;
     }
     
     @Override
@@ -104,8 +104,118 @@ public class CXParameterizedType extends CXClassType implements ICXWrapper {
     }
     
     @Override
-    public CXType getWrappedType() {
-        return upperBound;
+    public TypeEnvironment getEnvironment() {
+        return upperBound.getEnvironment();
+    }
+    
+    @Override
+    public CXStructType getVTable() {
+        return upperBound.getVTable();
+    }
+    
+    @Override
+    public List<CXMethod> getVirtualMethodsOrder() {
+        return upperBound.getVirtualMethodsOrder();
+    }
+    
+    @Override
+    public List<CXMethod> getConcreteMethodsOrder() {
+        return upperBound.getConcreteMethodsOrder();
+    }
+    
+    @Override
+    public boolean isVirtual(Token name, ParameterTypeList typeList) {
+        return upperBound.isVirtual(name, typeList);
+    }
+    
+    @Override
+    public List<FieldDeclaration> getFields() {
+        return upperBound.getFields();
+    }
+    
+    @Override
+    public String getTypeName() {
+        return name.getImage();
+    }
+    
+    @Override
+    public CXIdentifier getTypeNameIdentifier() {
+        return new CXIdentifier(name, false);
+    }
+    
+    @Override
+    public CXType getAsCXType() {
+        return this;
+    }
+    
+    @Override
+    public void addConstructors(List<CXConstructor> constructors) {
+        throw new IllegalStateException();
+    }
+    
+    @Override
+    public void setEnvironment(TypeEnvironment environment) {
+        throw new IllegalStateException();
+    }
+    
+    @Override
+    public CXMethod getInitMethod() {
+        return null;
+    }
+    
+    @Override
+    public List<CXConstructor> getConstructors() {
+        return null;
+    }
+    
+    @Override
+    public CXConstructor getConstructor(List<CXType> parameters, TypeEnvironment environment) {
+        return null;
+    }
+    
+    @Override
+    public CXConstructor getConstructor(int length) {
+        return null;
+    }
+    
+    @Override
+    public CXConstructor getConstructor(ParameterTypeList parameterTypeList) {
+        return null;
+    }
+    
+    @Override
+    public void generateSuperMethods(String vtablename) {
+    
+    }
+    
+    @Override
+    public CXMethod getSuperMethod(String name, ParameterTypeList typeList) {
+        return null;
+    }
+    
+    @Override
+    public CXStructType getStructEquivalent() {
+        return null;
+    }
+    
+    @Override
+    public List<CXMethod> getGeneratedSupers() {
+        return null;
+    }
+    
+    @Override
+    public boolean canInstantiateDirectly() {
+        return false;
+    }
+    
+    @Override
+    public String getCTypeName() {
+        return null;
+    }
+    
+    @Override
+    public String toString() {
+        return name.getImage();
     }
     
     @Override
@@ -113,4 +223,6 @@ public class CXParameterizedType extends CXClassType implements ICXWrapper {
         if(original == this) return replacement;
         return this;
     }
+    
+    
 }

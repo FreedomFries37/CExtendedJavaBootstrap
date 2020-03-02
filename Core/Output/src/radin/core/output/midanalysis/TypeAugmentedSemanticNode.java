@@ -3,7 +3,7 @@ package radin.core.output.midanalysis;
 import radin.core.lexical.Token;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
-import radin.core.semantics.MeaningfulNode;
+import radin.core.semantics.ASTMeaningfulNode;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSemanticNode> {
+public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSemanticNode> {
     
     private AbstractSyntaxNode astNode;
     

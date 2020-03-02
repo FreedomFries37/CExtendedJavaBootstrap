@@ -1,7 +1,7 @@
 #include "LinkedList.h"
 
 in ll {
-	implement Node {
+	implement Node<T> {
 		void* get_value_ptr() {
 			return this->value_ptr;
 		}
@@ -11,13 +11,11 @@ in ll {
 		}
 	}
 
-	implement IntLinkedList {
+	implement LinkedList<T> {
 
-		void add(int element) {
-			Node n = this->get_nth_node(this->size-1);
-			int* val = malloc(sizeof(int));
-			*val = element;
-			Node next = new Node(val);
+		void add(T element) {
+			Node<T> n = this->get_nth_node(this->size-1);
+			Node<T> next = new Node(element);
 			n->next = next;
 			next->prev = n;
 			++this->size;
@@ -25,16 +23,16 @@ in ll {
 
 
 
-		Node get_nth_node(int n) {
-			Node ptr = this->head;
+		Node<T> get_nth_node(int n) {
+			Node<T> ptr = this->head;
 			for(int i = 0; i < n; i++) {
 				ptr = ptr->next;
 			}
 			return ptr;
 		}
 
-		int get(int index) {
-			return * (int *) this->get_nth_node(index)->get_value_ptr();
+		T get(int index) {
+			return this->get_nth_node(index)->get_value_ptr();
 		}
 
 		int size() {

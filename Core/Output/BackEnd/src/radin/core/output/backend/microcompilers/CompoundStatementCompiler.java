@@ -18,7 +18,7 @@ public class CompoundStatementCompiler extends AbstractIndentedOutputCompiler {
         //print(getIndentString());
         Integer currentLine = null;
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
-            Token firstToken = child.findFirstToken();
+            /*Token firstToken = child.findFirstToken();
             if(firstToken != null && firstToken.getLineNumber() >= 0 && (currentLine == null || firstToken.getLineNumber() >= currentLine)) {
                 if (currentLine == null) {
                     currentLine = firstToken.getLineNumber();
@@ -30,6 +30,8 @@ public class CompoundStatementCompiler extends AbstractIndentedOutputCompiler {
             } else {
                 currentLine = null;
             }
+            
+             */
             if(!statementCompiler.compile(child)) return false;
     
             println();

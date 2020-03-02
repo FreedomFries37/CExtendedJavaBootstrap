@@ -39,7 +39,9 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
     public String generateCDeclaration(String identifier) {
         
         StringBuilder builder = new StringBuilder();
-        getBaseStruct(builder);
+        if(isAnonymous()) {
+            getBaseStruct(builder);
+        }
         builder.append(" ");
         builder.append(identifier);
         return builder.toString();

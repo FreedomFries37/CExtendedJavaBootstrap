@@ -36,7 +36,7 @@ void panic(std::String message) {
 
 
 bool __init_heap() {
-	jodin_heap.jheap = calloc(byte, HEAP_SIZE);
+	jodin_heap.jheap = calloc(sizeof(byte), HEAP_SIZE);
 	if(jodin_heap.jheap == nullptr) {
 		return false;
 	}
@@ -48,58 +48,70 @@ bool __init_heap() {
 	return true;
 }
 
-for <T> T jalloc(unsigned count) {
-	return (T) malloc(sizeof(T) * count);
+void __free_heap() {
+	free(jodin_heap.jheap);
+}
+
+void* __jalloc(size_t length) {
+	return malloc(length);
+}
+
+for <T> size_t getActualSize() {
+	return sizeof(T);
 }
 
 
 
 
 void __init_reflection();
+void __init_heap();
+void __free_heap();
 int __main(int argc, std::String argv[]);
 in std {
-    ClassInfo class_std_ClassInfo215860611_info = 0; // class_id = 1
-    ClassInfo class_std_Object577384124_info = 0; // class_id = 0
-    ClassInfo class_std_String708766606_info = 0; // class_id = 2
-    ClassInfo class_ll_Node1779081790_info = 0; // class_id = 6
-    ClassInfo class_ll_IntLinkedList637343526_info = 0; // class_id = 7
+    ClassInfo class_std_ClassInfo612126077_info = 0; // class_id = 1
+    ClassInfo class_std_Object250602564_info = 0; // class_id = 0
+    ClassInfo class_std_String119220082_info = 0; // class_id = 2
+    ClassInfo class_ll_Node1687898818_info = 0; // class_id = 6
+    ClassInfo class_ll_IntLinkedList190643162_info = 0; // class_id = 7
     ClassInfo __get_class(class_id id) {
-        if (id == 1) return class_std_ClassInfo215860611_info;
-        if (id == 0) return class_std_Object577384124_info;
-        if (id == 2) return class_std_String708766606_info;
-        if (id == 6) return class_ll_Node1779081790_info;
-        if (id == 7) return class_ll_IntLinkedList637343526_info;
+        if (id == 1) return class_std_ClassInfo612126077_info;
+        if (id == 0) return class_std_Object250602564_info;
+        if (id == 2) return class_std_String119220082_info;
+        if (id == 6) return class_ll_Node1687898818_info;
+        if (id == 7) return class_ll_IntLinkedList190643162_info;
         return nullptr;
     }
 }
 int main(int argc, char* argv[]) {
+    __init_heap();
     __init_reflection();
     std::String args[argc];
     for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);
     int output = __main(argc, args);
     for (int i = 0; i < argc; i++) args[i]->drop();
+    __free_heap();
     return output;
 }
 void __init_reflection() {
-    class_std_ClassInfo215860611_info = new std::ClassInfo();
-    class_std_ClassInfo215860611_info->name = new std::String("std::ClassInfo");
-    class_std_ClassInfo215860611_info->classHash = -1898255651;
-    class_std_ClassInfo215860611_info->info = class_std_ClassInfo215860611_info;
-    class_std_Object577384124_info = new std::ClassInfo();
-    class_std_Object577384124_info->name = new std::String("std::Object");
-    class_std_Object577384124_info->classHash = 719038660;
-    class_std_String708766606_info = new std::ClassInfo();
-    class_std_String708766606_info->name = new std::String("std::String");
-    class_std_String708766606_info->classHash = 496928306;
-    class_ll_Node1779081790_info = new std::ClassInfo();
-    class_ll_Node1779081790_info->name = new std::String("ll::Node");
-    class_ll_Node1779081790_info->classHash = 683039358;
-    class_ll_IntLinkedList637343526_info = new std::ClassInfo();
-    class_ll_IntLinkedList637343526_info->name = new std::String("ll::IntLinkedList");
-    class_ll_IntLinkedList637343526_info->classHash = -1717187174;
-    class_std_ClassInfo215860611_info->parent = __get_class(0);
-    class_std_Object577384124_info->parent = nullptr;
-    class_std_String708766606_info->parent = __get_class(0);
-    class_ll_Node1779081790_info->parent = __get_class(0);
-    class_ll_IntLinkedList637343526_info->parent = __get_class(0);
+    class_std_ClassInfo612126077_info = new std::ClassInfo();
+    class_std_ClassInfo612126077_info->name = new std::String("std::ClassInfo");
+    class_std_ClassInfo612126077_info->classHash = -1796039203;
+    class_std_ClassInfo612126077_info->info = class_std_ClassInfo612126077_info;
+    class_std_Object250602564_info = new std::ClassInfo();
+    class_std_Object250602564_info->name = new std::String("std::Object");
+    class_std_Object250602564_info->classHash = 821255108;
+    class_std_String119220082_info = new std::ClassInfo();
+    class_std_String119220082_info->name = new std::String("std::String");
+    class_std_String119220082_info->classHash = 599144754;
+    class_ll_Node1687898818_info = new std::ClassInfo();
+    class_ll_Node1687898818_info->name = new std::String("ll::Node");
+    class_ll_Node1687898818_info->classHash = 785255806;
+    class_ll_IntLinkedList190643162_info = new std::ClassInfo();
+    class_ll_IntLinkedList190643162_info->name = new std::String("ll::IntLinkedList");
+    class_ll_IntLinkedList190643162_info->classHash = -1614970726;
+    class_std_ClassInfo612126077_info->parent = __get_class(0);
+    class_std_Object250602564_info->parent = nullptr;
+    class_std_String119220082_info->parent = __get_class(0);
+    class_ll_Node1687898818_info->parent = __get_class(0);
+    class_ll_IntLinkedList190643162_info->parent = __get_class(0);
 }

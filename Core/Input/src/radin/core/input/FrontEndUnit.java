@@ -118,6 +118,12 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
         builder.reset();
     }
     
+    @Override
+    public void clearErrors() {
+        lexer.clearErrors();
+        parser.clearErrors();
+        builder.clearErrors();
+    }
     
     @Override
     public List<AbstractCompilationError> getErrors() {

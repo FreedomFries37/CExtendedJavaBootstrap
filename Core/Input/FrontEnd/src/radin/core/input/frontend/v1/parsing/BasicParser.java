@@ -3,7 +3,6 @@ package radin.core.input.frontend.v1.parsing;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.input.IParser;
 import radin.core.input.ITokenizer;
-import radin.core.input.frontend.directastparsing.ASTParser;
 import radin.core.utility.Pair;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
@@ -220,8 +219,14 @@ BasicParser implements IParser<Token, ParseNode> {
         return false;
     }
     
+    public void clearTempErrors() {
+        tempErrors.clear();
+    }
+    
+    @Override
     public void clearErrors() {
         tempErrors.clear();
+        allErrors.clear();
     }
     
     @Override
@@ -250,7 +255,7 @@ BasicParser implements IParser<Token, ParseNode> {
                 applyState();
                 suppressErrors.pop();
                 forceParse.pop();
-                clearErrors();
+                clearTempErrors();
                 return AttemptStatus.ROLLBACK;
             } else {
                 allErrors.addAll(tempErrors);
@@ -268,7 +273,7 @@ BasicParser implements IParser<Token, ParseNode> {
         popState();
         suppressErrors.pop();
         forceParse.pop();
-        clearErrors();
+        clearTempErrors();
         return AttemptStatus.PARSED;
     }
     

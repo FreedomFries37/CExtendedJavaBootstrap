@@ -106,6 +106,10 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 }
                 
                 
+            } else if(child.getASTType() == ASTNodeType.generic) {
+                GenericTypeAnalyzer genericTypeAnalyzer = new GenericTypeAnalyzer(child);
+                
+                if(!determineTypes(genericTypeAnalyzer)) return false;
             }
             
             

@@ -230,7 +230,9 @@ public enum ASTNodeType {
     ast("ast"),
     generic("generic"),
     trait("trait"),
-    id_list("id_list")
+    id_list("id_list"),
+    parameterized_types("parameterized_types"),
+    parameter_type("parameter_type")
     ;
     
     

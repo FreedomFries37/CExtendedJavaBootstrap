@@ -4,10 +4,7 @@ import radin.core.annotations.AnnotationManager;
 import radin.core.lexical.Token;
 import radin.core.semantics.exceptions.*;
 import radin.core.semantics.types.*;
-import radin.core.semantics.types.compound.CXClassType;
-import radin.core.semantics.types.compound.CXCompoundType;
-import radin.core.semantics.types.compound.CXStructType;
-import radin.core.semantics.types.compound.CXUnionType;
+import radin.core.semantics.types.compound.*;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;
@@ -373,6 +370,10 @@ public class TypeEnvironment {
         
         if(output == null)
             throw new TypeDoesNotExist(typenameImage.getImage());
+        
+        if(output instanceof ICXClassType) {
+            output = output.toPointer();
+        }
         return output;
     }
     
