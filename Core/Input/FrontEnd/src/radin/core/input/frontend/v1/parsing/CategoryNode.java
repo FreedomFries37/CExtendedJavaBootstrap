@@ -1,5 +1,6 @@
 package radin.core.input.frontend.v1.parsing;
 
+import radin.core.input.frontend.v1.MissingChildError;
 import radin.core.lexical.TokenType;
 import radin.core.input.frontend.v1.MissingCategoryNodeError;
 
@@ -37,6 +38,9 @@ public class CategoryNode extends ParseNode {
     }
     
     public ParseNode getChild(int index) {
+        if(index >= allChildren.size()) {
+            throw new MissingChildError(this, index);
+        }
         return allChildren.get(index);
     }
     
@@ -142,6 +146,11 @@ public class CategoryNode extends ParseNode {
             output.append(child.toTreeForm(indent + 1));
         }
         return output.toString();
+    }
+    
+    @Override
+    public List<ParseNode> getMutableChildren() {
+        return getAllChildren();
     }
     
     public List<ParseNode> postfix() {

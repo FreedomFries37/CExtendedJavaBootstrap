@@ -72,8 +72,9 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             for (int i = 0; i < this.args.size(); i++) {
                 String thisArg = this.args.get(i);
                 String replace = args[i].trim().replaceAll("\\s+", " ");
-                
-                output = output.replaceAll("(\\W)" + thisArg + "(\\W)", "$1" + replace + "$2");
+    
+                output = output.replaceAll("#" + thisArg + "(\\W|$)", "\"" + replace + "\"$2");
+                output = output.replaceAll("([^\\w#])" + thisArg + "(\\W)", "$1" + replace + "$2");
                 output = output.replaceAll("##" + thisArg + "\\W", replace + "$1");
                 output = output.replaceAll("##" + thisArg + "$", replace);
                 output = output.replaceAll("\\W" + thisArg + "##", "$1" + replace + "##");
@@ -149,6 +150,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         compilationErrors = new LinkedList<>();
         fileCurrentLineNumber = new HashMap<>();
     }
+    
+    
     
     @Override
     public List<AbstractCompilationError> getErrors() {
@@ -556,6 +559,15 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         }
     }
     
+    public void define(String name) {
+        defines.put(name, new Define(name));
+    }
+    
+    public void define(String name, Object value) {
+        Define define = new Define(name, value.toString());
+        defines.put(name, define);
+    }
+    
     
     @Override
     protected Token singleLex() {
@@ -616,7 +628,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             // ICompilationSettings.debugLog.info("Previous line number is " + getPrevious()
                             // .getLineNumber());
                         }
-                        if(!createdTokens.isEmpty() && getPrevious().getLineNumber() == lineNumber) {
+                        if(!createdTokens.isEmpty() && getPrevious().getLineNumber() == lineNumber && getPrevious().getColumn() >= 1) {
                             
                             Token token = new Token(TokenType.t_reserved, "#");
                             token.addColumnAndLineNumber(column, lineNumber);
@@ -980,6 +992,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         HashMap<String, Define> output = new HashMap<>();
         
         output.put("__LINE__", new FunctionDefine("__LINE__", () -> "" + lineNumber ));
+        output.put("__FILE__", new FunctionDefine("__FILE__", () -> "\"" + currentFile + '"' ));
         output.put("defined", new FunctionDefine("defined", false, Collections.singletonList("X"),
                 (String[] args) -> defines.containsKey(args[0]) ? "1" : "0" ));
         

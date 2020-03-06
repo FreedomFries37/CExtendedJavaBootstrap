@@ -158,7 +158,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::Object*] {
-            type $Object;
+            treeType $Object;
             params;
             empty;
           }
@@ -244,7 +244,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::ClassInfo*] {
-            type $ClassInfo;
+            treeType $ClassInfo;
             params;
             empty;
           }
@@ -326,7 +326,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::String*] {
-            type $String;
+            treeType $String;
             params {
               dec [const char*] {
                 id $bp;
@@ -338,7 +338,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::String*] {
-            type $String;
+            treeType $String;
             params;
             empty;
           }
@@ -624,13 +624,13 @@ top_level_decs {
   top_level_decs {
     implement [std::Object] {
       constructor_definition [std::Object] {
-        type $Object;
+        treeType $Object;
         params;
         compound_statement;
       }
       function_definition [int] {
         implementing [std::Object] {
-          type $Object;
+          treeType $Object;
         }
         id $hashcode;
         params;
@@ -646,7 +646,7 @@ top_level_decs {
       }
       function_definition [bool] {
         implementing [std::Object] {
-          type $Object;
+          treeType $Object;
         }
         id $equals;
         params {
@@ -666,7 +666,7 @@ top_level_decs {
       }
       function_definition [std::String] {
         implementing [std::Object] {
-          type $Object;
+          treeType $Object;
         }
         id $toString;
         params;
@@ -712,7 +712,7 @@ top_level_decs {
       }
       function_definition [void] {
         implementing [std::Object] {
-          type $Object;
+          treeType $Object;
         }
         id $drop;
         params;
@@ -727,7 +727,7 @@ top_level_decs {
       }
       function_definition [std::ClassInfo] {
         implementing [std::Object] {
-          type $Object;
+          treeType $Object;
         }
         id $getClass;
         params;
@@ -745,13 +745,13 @@ top_level_decs {
     }
     implement [std::ClassInfo] {
       constructor_definition [std::ClassInfo] {
-        type $ClassInfo;
+        treeType $ClassInfo;
         params;
         compound_statement;
       }
       function_definition [std::String] {
         implementing [std::ClassInfo] {
-          type $ClassInfo;
+          treeType $ClassInfo;
         }
         id $getName;
         params;
@@ -768,7 +768,7 @@ top_level_decs {
       }
       function_definition [bool] {
         implementing [std::ClassInfo] {
-          type $ClassInfo;
+          treeType $ClassInfo;
         }
         id $is_object;
         params {
@@ -809,7 +809,7 @@ top_level_decs {
       }
       function_definition [bool] {
         implementing [std::ClassInfo] {
-          type $ClassInfo;
+          treeType $ClassInfo;
         }
         id $is_class;
         params {
@@ -871,7 +871,7 @@ top_level_decs {
       }
       function_definition [bool] {
         implementing [std::ClassInfo] {
-          type $ClassInfo;
+          treeType $ClassInfo;
         }
         id $equals;
         params {
@@ -931,7 +931,7 @@ top_level_decs {
       }
       function_definition [bool] {
         implementing [std::ClassInfo] {
-          type $ClassInfo;
+          treeType $ClassInfo;
         }
         id $equals;
         params {
@@ -962,7 +962,7 @@ top_level_decs {
     }
     implement [std::String] {
       constructor_definition [std::String] {
-        type $String;
+        treeType $String;
         params;
         id $this;
         sequence {
@@ -971,7 +971,7 @@ top_level_decs {
         compound_statement;
       }
       constructor_definition [std::String] {
-        type $String;
+        treeType $String;
         params {
           dec [const char*] {
             id $bp;
@@ -1012,7 +1012,7 @@ top_level_decs {
       }
       function_definition [void] {
         implementing [std::String] {
-          type $String;
+          treeType $String;
         }
         id $drop;
         params;
@@ -1028,7 +1028,7 @@ top_level_decs {
       }
       function_definition [std::String] {
         implementing [std::String] {
-          type $String;
+          treeType $String;
         }
         id $concat;
         params {
@@ -1096,7 +1096,7 @@ top_level_decs {
       }
       function_definition [std::String] {
         implementing [std::String] {
-          type $String;
+          treeType $String;
         }
         id $concat;
         params {
@@ -1112,7 +1112,7 @@ top_level_decs {
       }
       function_definition [const char*] {
         implementing [std::String] {
-          type $String;
+          treeType $String;
         }
         id $getCStr;
         params;
@@ -1129,7 +1129,7 @@ top_level_decs {
       }
       function_definition [std::String] {
         implementing [std::String] {
-          type $String;
+          treeType $String;
         }
         id $concat_integer;
         params {

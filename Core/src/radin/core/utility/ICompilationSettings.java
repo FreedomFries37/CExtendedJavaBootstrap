@@ -11,6 +11,11 @@ import java.util.logging.Level;
 
 public interface ICompilationSettings<Front, Mid, Back> {
     
+    enum SupportedWordSize {
+        arch64,
+        arch32
+    }
+    
     static File createFile(String filename) {
         String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();
         if(directory.equals("")) {

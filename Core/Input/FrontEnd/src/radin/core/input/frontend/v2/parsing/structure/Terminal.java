@@ -1,18 +1,18 @@
 package radin.core.input.frontend.v2.parsing.structure;
 
-public class NonTerminal<T> extends ParsableObject<T> {
+public class Terminal <T> extends ParsableObject<T> {
     
-    public NonTerminal(T backingObject) {
+    public Terminal(T backingObject) {
         super(backingObject);
     }
     
     @Override
     public boolean equals(Object o) {
         if(o == null) return false;
-        if(!(o instanceof NonTerminal<?>)) {
+        if(!(o instanceof Terminal<?>)) {
             return false;
         }
         
-        return this.getBackingObject().equals(((NonTerminal<?>) o).getBackingObject());
+        return this.getBackingObject().equals(((Terminal<?>) o).getBackingObject());
     }
 }

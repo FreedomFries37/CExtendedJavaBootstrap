@@ -37,6 +37,10 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
         }
     }
     
+    public AbstractCXPrimitiveType getPrimitiveCXType() {
+        return primitiveCXType;
+    }
+    
     @Override
     public String generateCDefinition() {
         return "unsigned " + primitiveCXType.generateCDefinition();

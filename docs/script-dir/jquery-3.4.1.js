@@ -89,7 +89,7 @@ var isWindow = function isWindow( obj ) {
 
 
 	var preservedScriptAttributes = {
-		type: true,
+		treeType: true,
 		src: true,
 		nonce: true,
 		noModule: true
@@ -284,7 +284,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 					( copyIsArray = Array.isArray( copy ) ) ) ) {
 					src = target[ name ];
 
-					// Ensure proper type for the source value
+					// Ensure proper treeType for the source value
 					if ( copyIsArray && !Array.isArray( src ) ) {
 						clone = [];
 					} else if ( !copyIsArray && !jQuery.isPlainObject( src ) ) {
@@ -327,7 +327,7 @@ jQuery.extend( {
 		var proto, Ctor;
 
 		// Detect obvious negatives
-		// Use toString instead of jQuery.type to catch host objects
+		// Use toString instead of jQuery.treeType to catch host objects
 		if ( !obj || toString.call( obj ) !== "[object Object]" ) {
 			return false;
 		}
@@ -500,13 +500,13 @@ function isArrayLike( obj ) {
 	// hasOwn isn't used here due to false negatives
 	// regarding Nodelist length in IE
 	var length = !!obj && "length" in obj && obj.length,
-		type = toType( obj );
+		treeType = toType( obj );
 
 	if ( isFunction( obj ) || isWindow( obj ) ) {
 		return false;
 	}
 
-	return type === "array" || length === 0 ||
+	return treeType === "array" || length === 0 ||
 		typeof length === "number" && length > 0 && ( length - 1 ) in obj;
 }
 var Sizzle =
@@ -625,7 +625,7 @@ var i,
 		"TAG": new RegExp( "^(" + identifier + "|[*])" ),
 		"ATTR": new RegExp( "^" + attributes ),
 		"PSEUDO": new RegExp( "^" + pseudos ),
-		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" + whitespace +
+		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-treeType)(?:\\(" + whitespace +
 			"*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" + whitespace +
 			"*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
 		"bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
@@ -956,23 +956,23 @@ function siblingCheck( a, b ) {
 
 /**
  * Returns a function to use in pseudos for input types
- * @param {String} type
+ * @param {String} treeType
  */
-function createInputPseudo( type ) {
+function createInputPseudo( treeType ) {
 	return function( elem ) {
 		var name = elem.nodeName.toLowerCase();
-		return name === "input" && elem.type === type;
+		return name === "input" && elem.treeType === treeType;
 	};
 }
 
 /**
  * Returns a function to use in pseudos for buttons
- * @param {String} type
+ * @param {String} treeType
  */
-function createButtonPseudo( type ) {
+function createButtonPseudo( treeType ) {
 	return function( elem ) {
 		var name = elem.nodeName.toLowerCase();
-		return (name === "input" || name === "button") && elem.type === type;
+		return (name === "input" || name === "button") && elem.treeType === treeType;
 	};
 }
 
@@ -982,7 +982,7 @@ function createButtonPseudo( type ) {
  */
 function createDisabledPseudo( disabled ) {
 
-	// Known :disabled false positives: fieldset[disabled] > legend:nth-of-type(n+2) :can-disable
+	// Known :disabled false positives: fieldset[disabled] > legend:nth-of-treeType(n+2) :can-disable
 	return function( elem ) {
 
 		// Only certain elements can match :enabled or :disabled
@@ -1308,9 +1308,9 @@ setDocument = Sizzle.setDocument = function( node ) {
 				"<select disabled='disabled'><option/></select>";
 
 			// Support: Windows 8 Native Apps
-			// The type and name attributes are restricted during .innerHTML assignment
+			// The treeType and name attributes are restricted during .innerHTML assignment
 			var input = document.createElement("input");
-			input.setAttribute( "type", "hidden" );
+			input.setAttribute( "treeType", "hidden" );
 			el.appendChild( input ).setAttribute( "name", "D" );
 
 			// Support: IE8
@@ -1664,8 +1664,8 @@ Expr = Sizzle.selectors = {
 
 		"CHILD": function( match ) {
 			/* matches from matchExpr["CHILD"]
-				1 type (only|nth|...)
-				2 what (child|of-type)
+				1 treeType (only|nth|...)
+				2 what (child|of-treeType)
 				3 argument (even|odd|\d*|\d*n([+-]\d+)?|...)
 				4 xn-component of xn+y argument ([+-]?\d*n|)
 				5 sign of xn-component
@@ -1718,7 +1718,7 @@ Expr = Sizzle.selectors = {
 				match[2] = unquoted.slice( 0, excess );
 			}
 
-			// Return only captures needed by the pseudo filter method (type and argument)
+			// Return only captures needed by the pseudo filter method (treeType and argument)
 			return match.slice( 0, 3 );
 		}
 	},
@@ -1768,10 +1768,10 @@ Expr = Sizzle.selectors = {
 			};
 		},
 
-		"CHILD": function( type, what, argument, first, last ) {
-			var simple = type.slice( 0, 3 ) !== "nth",
-				forward = type.slice( -4 ) !== "last",
-				ofType = what === "of-type";
+		"CHILD": function( treeType, what, argument, first, last ) {
+			var simple = treeType.slice( 0, 3 ) !== "nth",
+				forward = treeType.slice( -4 ) !== "last",
+				ofType = what === "of-treeType";
 
 			return first === 1 && last === 0 ?
 
@@ -1790,7 +1790,7 @@ Expr = Sizzle.selectors = {
 
 					if ( parent ) {
 
-						// :(first|last|only)-(child|of-type)
+						// :(first|last|only)-(child|of-treeType)
 						if ( simple ) {
 							while ( dir ) {
 								node = elem;
@@ -1803,7 +1803,7 @@ Expr = Sizzle.selectors = {
 									}
 								}
 								// Reverse direction for :only-* (if we haven't yet done so)
-								start = dir = type === "only" && !start && "nextSibling";
+								start = dir = treeType === "only" && !start && "nextSibling";
 							}
 							return true;
 						}
@@ -1824,7 +1824,7 @@ Expr = Sizzle.selectors = {
 							uniqueCache = outerCache[ node.uniqueID ] ||
 								(outerCache[ node.uniqueID ] = {});
 
-							cache = uniqueCache[ type ] || [];
+							cache = uniqueCache[ treeType ] || [];
 							nodeIndex = cache[ 0 ] === dirruns && cache[ 1 ];
 							diff = nodeIndex && cache[ 2 ];
 							node = nodeIndex && parent.childNodes[ nodeIndex ];
@@ -1836,7 +1836,7 @@ Expr = Sizzle.selectors = {
 
 								// When found, cache indexes on `parent` and break
 								if ( node.nodeType === 1 && ++diff && node === elem ) {
-									uniqueCache[ type ] = [ dirruns, nodeIndex, diff ];
+									uniqueCache[ treeType ] = [ dirruns, nodeIndex, diff ];
 									break;
 								}
 							}
@@ -1853,13 +1853,13 @@ Expr = Sizzle.selectors = {
 								uniqueCache = outerCache[ node.uniqueID ] ||
 									(outerCache[ node.uniqueID ] = {});
 
-								cache = uniqueCache[ type ] || [];
+								cache = uniqueCache[ treeType ] || [];
 								nodeIndex = cache[ 0 ] === dirruns && cache[ 1 ];
 								diff = nodeIndex;
 							}
 
 							// xml :nth-child(...)
-							// or :nth-last-child(...) or :nth(-last)?-of-type(...)
+							// or :nth-last-child(...) or :nth(-last)?-of-treeType(...)
 							if ( diff === false ) {
 								// Use the same loop as above to seek `elem` from the start
 								while ( (node = ++nodeIndex && node && node[ dir ] ||
@@ -1879,7 +1879,7 @@ Expr = Sizzle.selectors = {
 											uniqueCache = outerCache[ node.uniqueID ] ||
 												(outerCache[ node.uniqueID ] = {});
 
-											uniqueCache[ type ] = [ dirruns, diff ];
+											uniqueCache[ treeType ] = [ dirruns, diff ];
 										}
 
 										if ( node === elem ) {
@@ -2019,7 +2019,7 @@ Expr = Sizzle.selectors = {
 		},
 
 		"focus": function( elem ) {
-			return elem === document.activeElement && (!document.hasFocus || document.hasFocus()) && !!(elem.type || elem.href || ~elem.tabIndex);
+			return elem === document.activeElement && (!document.hasFocus || document.hasFocus()) && !!(elem.treeType || elem.href || ~elem.tabIndex);
 		},
 
 		// Boolean properties
@@ -2072,17 +2072,17 @@ Expr = Sizzle.selectors = {
 
 		"button": function( elem ) {
 			var name = elem.nodeName.toLowerCase();
-			return name === "input" && elem.type === "button" || name === "button";
+			return name === "input" && elem.treeType === "button" || name === "button";
 		},
 
 		"text": function( elem ) {
 			var attr;
 			return elem.nodeName.toLowerCase() === "input" &&
-				elem.type === "text" &&
+				elem.treeType === "text" &&
 
 				// Support: IE<8
-				// New HTML5 attribute values (e.g., "search") appear with elem.type === "text"
-				( (attr = elem.getAttribute("type")) == null || attr.toLowerCase() === "text" );
+				// New HTML5 attribute values (e.g., "search") appear with elem.treeType === "text"
+				( (attr = elem.getAttribute("treeType")) == null || attr.toLowerCase() === "text" );
 		},
 
 		// Position-in-collection
@@ -2138,7 +2138,7 @@ Expr = Sizzle.selectors = {
 
 Expr.pseudos["nth"] = Expr.pseudos["eq"];
 
-// Add button/input type pseudos
+// Add button/input treeType pseudos
 for ( i in { radio: true, checkbox: true, file: true, password: true, image: true } ) {
 	Expr.pseudos[ i ] = createInputPseudo( i );
 }
@@ -2152,7 +2152,7 @@ setFilters.prototype = Expr.filters = Expr.pseudos;
 Expr.setFilters = new setFilters();
 
 tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
-	var matched, match, tokens, type,
+	var matched, match, tokens, treeType,
 		soFar, groups, preFilters,
 		cached = tokenCache[ selector + " " ];
 
@@ -2183,19 +2183,19 @@ tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 			tokens.push({
 				value: matched,
 				// Cast descendant combinators to space
-				type: match[0].replace( rtrim, " " )
+				treeType: match[0].replace( rtrim, " " )
 			});
 			soFar = soFar.slice( matched.length );
 		}
 
 		// Filters
-		for ( type in Expr.filter ) {
-			if ( (match = matchExpr[ type ].exec( soFar )) && (!preFilters[ type ] ||
-				(match = preFilters[ type ]( match ))) ) {
+		for ( treeType in Expr.filter ) {
+			if ( (match = matchExpr[ treeType ].exec( soFar )) && (!preFilters[ treeType ] ||
+				(match = preFilters[ treeType ]( match ))) ) {
 				matched = match.shift();
 				tokens.push({
 					value: matched,
-					type: type,
+					treeType: treeType,
 					matches: match
 				});
 				soFar = soFar.slice( matched.length );
@@ -2432,7 +2432,7 @@ function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postS
 function matcherFromTokens( tokens ) {
 	var checkContext, matcher, j,
 		len = tokens.length,
-		leadingRelative = Expr.relative[ tokens[0].type ],
+		leadingRelative = Expr.relative[ tokens[0].treeType ],
 		implicitRelative = leadingRelative || Expr.relative[" "],
 		i = leadingRelative ? 1 : 0,
 
@@ -2454,17 +2454,17 @@ function matcherFromTokens( tokens ) {
 		} ];
 
 	for ( ; i < len; i++ ) {
-		if ( (matcher = Expr.relative[ tokens[i].type ]) ) {
+		if ( (matcher = Expr.relative[ tokens[i].treeType ]) ) {
 			matchers = [ addCombinator(elementMatcher( matchers ), matcher) ];
 		} else {
-			matcher = Expr.filter[ tokens[i].type ].apply( null, tokens[i].matches );
+			matcher = Expr.filter[ tokens[i].treeType ].apply( null, tokens[i].matches );
 
 			// Return special upon seeing a positional matcher
 			if ( matcher[ expando ] ) {
 				// Find the next relative operator (if any) for proper handling
 				j = ++i;
 				for ( ; j < len; j++ ) {
-					if ( Expr.relative[ tokens[j].type ] ) {
+					if ( Expr.relative[ tokens[j].treeType ] ) {
 						break;
 					}
 				}
@@ -2472,7 +2472,7 @@ function matcherFromTokens( tokens ) {
 					i > 1 && elementMatcher( matchers ),
 					i > 1 && toSelector(
 						// If the preceding token was a descendant combinator, insert an implicit any-element `*`
-						tokens.slice( 0, i - 1 ).concat({ value: tokens[ i - 2 ].type === " " ? "*" : "" })
+						tokens.slice( 0, i - 1 ).concat({ value: tokens[ i - 2 ].treeType === " " ? "*" : "" })
 					).replace( rtrim, "$1" ),
 					matcher,
 					i < j && matcherFromTokens( tokens.slice( i, j ) ),
@@ -2638,7 +2638,7 @@ compile = Sizzle.compile = function( selector, match /* Internal Use Only */ ) {
  * @param {Array} [seed] A set of elements to match against
  */
 select = Sizzle.select = function( selector, context, results, seed ) {
-	var i, tokens, token, type, find,
+	var i, tokens, token, treeType, find,
 		compiled = typeof selector === "function" && selector,
 		match = !seed && tokenize( (selector = compiled.selector || selector) );
 
@@ -2650,8 +2650,8 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 
 		// Reduce context if the leading compound selector is an ID
 		tokens = match[0] = match[0].slice( 0 );
-		if ( tokens.length > 2 && (token = tokens[0]).type === "ID" &&
-				context.nodeType === 9 && documentIsHTML && Expr.relative[ tokens[1].type ] ) {
+		if ( tokens.length > 2 && (token = tokens[0]).treeType === "ID" &&
+				context.nodeType === 9 && documentIsHTML && Expr.relative[ tokens[1].treeType ] ) {
 
 			context = ( Expr.find["ID"]( token.matches[0].replace(runescape, funescape), context ) || [] )[0];
 			if ( !context ) {
@@ -2671,14 +2671,14 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 			token = tokens[i];
 
 			// Abort if we hit a combinator
-			if ( Expr.relative[ (type = token.type) ] ) {
+			if ( Expr.relative[ (treeType = token.treeType) ] ) {
 				break;
 			}
-			if ( (find = Expr.find[ type ]) ) {
+			if ( (find = Expr.find[ treeType ]) ) {
 				// Search, expanding context for leading sibling combinators
 				if ( (seed = find(
 					token.matches[0].replace( runescape, funescape ),
-					rsibling.test( tokens[0].type ) && testContext( context.parentNode ) || context
+					rsibling.test( tokens[0].treeType ) && testContext( context.parentNode ) || context
 				)) ) {
 
 					// If seed is empty or no tokens remain, we can return early
@@ -2733,9 +2733,9 @@ if ( !assert(function( el ) {
 	el.innerHTML = "<a href='#'></a>";
 	return el.firstChild.getAttribute("href") === "#" ;
 }) ) {
-	addHandle( "type|href|height|width", function( elem, name, isXML ) {
+	addHandle( "treeType|href|height|width", function( elem, name, isXML ) {
 		if ( !isXML ) {
-			return elem.getAttribute( name, name.toLowerCase() === "type" ? 1 : 2 );
+			return elem.getAttribute( name, name.toLowerCase() === "treeType" ? 1 : 2 );
 		}
 	});
 }
@@ -4350,17 +4350,17 @@ jQuery.fn.extend( {
 
 
 jQuery.extend( {
-	queue: function( elem, type, data ) {
+	queue: function( elem, treeType, data ) {
 		var queue;
 
 		if ( elem ) {
-			type = ( type || "fx" ) + "queue";
-			queue = dataPriv.get( elem, type );
+			treeType = ( treeType || "fx" ) + "queue";
+			queue = dataPriv.get( elem, treeType );
 
 			// Speed up dequeue by getting out quickly if this is just a lookup
 			if ( data ) {
 				if ( !queue || Array.isArray( data ) ) {
-					queue = dataPriv.access( elem, type, jQuery.makeArray( data ) );
+					queue = dataPriv.access( elem, treeType, jQuery.makeArray( data ) );
 				} else {
 					queue.push( data );
 				}
@@ -4369,15 +4369,15 @@ jQuery.extend( {
 		}
 	},
 
-	dequeue: function( elem, type ) {
-		type = type || "fx";
+	dequeue: function( elem, treeType ) {
+		treeType = treeType || "fx";
 
-		var queue = jQuery.queue( elem, type ),
+		var queue = jQuery.queue( elem, treeType ),
 			startLength = queue.length,
 			fn = queue.shift(),
-			hooks = jQuery._queueHooks( elem, type ),
+			hooks = jQuery._queueHooks( elem, treeType ),
 			next = function() {
-				jQuery.dequeue( elem, type );
+				jQuery.dequeue( elem, treeType );
 			};
 
 		// If the fx queue is dequeued, always remove the progress sentinel
@@ -4390,7 +4390,7 @@ jQuery.extend( {
 
 			// Add a progress sentinel to prevent the fx queue from being
 			// automatically dequeued
-			if ( type === "fx" ) {
+			if ( treeType === "fx" ) {
 				queue.unshift( "inprogress" );
 			}
 
@@ -4405,55 +4405,55 @@ jQuery.extend( {
 	},
 
 	// Not public - generate a queueHooks object, or return the current one
-	_queueHooks: function( elem, type ) {
-		var key = type + "queueHooks";
+	_queueHooks: function( elem, treeType ) {
+		var key = treeType + "queueHooks";
 		return dataPriv.get( elem, key ) || dataPriv.access( elem, key, {
 			empty: jQuery.Callbacks( "once memory" ).add( function() {
-				dataPriv.remove( elem, [ type + "queue", key ] );
+				dataPriv.remove( elem, [ treeType + "queue", key ] );
 			} )
 		} );
 	}
 } );
 
 jQuery.fn.extend( {
-	queue: function( type, data ) {
+	queue: function( treeType, data ) {
 		var setter = 2;
 
-		if ( typeof type !== "string" ) {
-			data = type;
-			type = "fx";
+		if ( typeof treeType !== "string" ) {
+			data = treeType;
+			treeType = "fx";
 			setter--;
 		}
 
 		if ( arguments.length < setter ) {
-			return jQuery.queue( this[ 0 ], type );
+			return jQuery.queue( this[ 0 ], treeType );
 		}
 
 		return data === undefined ?
 			this :
 			this.each( function() {
-				var queue = jQuery.queue( this, type, data );
+				var queue = jQuery.queue( this, treeType, data );
 
 				// Ensure a hooks for this queue
-				jQuery._queueHooks( this, type );
+				jQuery._queueHooks( this, treeType );
 
-				if ( type === "fx" && queue[ 0 ] !== "inprogress" ) {
-					jQuery.dequeue( this, type );
+				if ( treeType === "fx" && queue[ 0 ] !== "inprogress" ) {
+					jQuery.dequeue( this, treeType );
 				}
 			} );
 	},
-	dequeue: function( type ) {
+	dequeue: function( treeType ) {
 		return this.each( function() {
-			jQuery.dequeue( this, type );
+			jQuery.dequeue( this, treeType );
 		} );
 	},
-	clearQueue: function( type ) {
-		return this.queue( type || "fx", [] );
+	clearQueue: function( treeType ) {
+		return this.queue( treeType || "fx", [] );
 	},
 
-	// Get a promise resolved when queues of a certain type
-	// are emptied (fx is the type by default)
-	promise: function( type, obj ) {
+	// Get a promise resolved when queues of a certain treeType
+	// are emptied (fx is the treeType by default)
+	promise: function( treeType, obj ) {
 		var tmp,
 			count = 1,
 			defer = jQuery.Deferred(),
@@ -4465,14 +4465,14 @@ jQuery.fn.extend( {
 				}
 			};
 
-		if ( typeof type !== "string" ) {
-			obj = type;
-			type = undefined;
+		if ( typeof treeType !== "string" ) {
+			obj = treeType;
+			treeType = undefined;
 		}
-		type = type || "fx";
+		treeType = treeType || "fx";
 
 		while ( i-- ) {
-			tmp = dataPriv.get( elements[ i ], type + "queueHooks" );
+			tmp = dataPriv.get( elements[ i ], treeType + "queueHooks" );
 			if ( tmp && tmp.empty ) {
 				count++;
 				tmp.empty.add( resolve );
@@ -4863,7 +4863,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 		if ( scripts ) {
 			j = 0;
 			while ( ( elem = tmp[ j++ ] ) ) {
-				if ( rscriptType.test( elem.type || "" ) ) {
+				if ( rscriptType.test( elem.treeType || "" ) ) {
 					scripts.push( elem );
 				}
 			}
@@ -4882,8 +4882,8 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 	// Support: Android 4.0 - 4.3 only
 	// Check state lost if the name is set (#11217)
 	// Support: Windows Web Apps (WWA)
-	// `name` and `type` must use .setAttribute for WWA (#14901)
-	input.setAttribute( "type", "radio" );
+	// `name` and `treeType` must use .setAttribute for WWA (#14901)
+	input.setAttribute( "treeType", "radio" );
 	input.setAttribute( "checked", "checked" );
 	input.setAttribute( "name", "t" );
 
@@ -4919,8 +4919,8 @@ function returnFalse() {
 // and blur to be synchronous when the element is not already active.
 // (focus and blur are always synchronous in other supported browsers,
 // this just defines when we can count on it).
-function expectSync( elem, type ) {
-	return ( elem === safeActiveElement() ) === ( type === "focus" );
+function expectSync( elem, treeType ) {
+	return ( elem === safeActiveElement() ) === ( treeType === "focus" );
 }
 
 // Support: IE <=9 only
@@ -4933,7 +4933,7 @@ function safeActiveElement() {
 }
 
 function on( elem, types, selector, data, fn, one ) {
-	var origFn, type;
+	var origFn, treeType;
 
 	// Types can be a map of types/handlers
 	if ( typeof types === "object" ) {
@@ -4945,8 +4945,8 @@ function on( elem, types, selector, data, fn, one ) {
 			data = data || selector;
 			selector = undefined;
 		}
-		for ( type in types ) {
-			on( elem, type, selector, data, types[ type ], one );
+		for ( treeType in types ) {
+			on( elem, treeType, selector, data, types[ treeType ], one );
 		}
 		return elem;
 	}
@@ -5005,7 +5005,7 @@ jQuery.event = {
 
 		var handleObjIn, eventHandle, tmp,
 			events, t, handleObj,
-			special, handlers, type, namespaces, origType,
+			special, handlers, treeType, namespaces, origType,
 			elemData = dataPriv.get( elem );
 
 		// Don't attach events to noData or text/comment nodes (but allow plain objects)
@@ -5040,7 +5040,7 @@ jQuery.event = {
 
 				// Discard the second event of a jQuery.event.trigger() and
 				// when an event is called after a page has unloaded
-				return typeof jQuery !== "undefined" && jQuery.event.triggered !== e.type ?
+				return typeof jQuery !== "undefined" && jQuery.event.triggered !== e.treeType ?
 					jQuery.event.dispatch.apply( elem, arguments ) : undefined;
 			};
 		}
@@ -5050,26 +5050,26 @@ jQuery.event = {
 		t = types.length;
 		while ( t-- ) {
 			tmp = rtypenamespace.exec( types[ t ] ) || [];
-			type = origType = tmp[ 1 ];
+			treeType = origType = tmp[ 1 ];
 			namespaces = ( tmp[ 2 ] || "" ).split( "." ).sort();
 
-			// There *must* be a type, no attaching namespace-only handlers
-			if ( !type ) {
+			// There *must* be a treeType, no attaching namespace-only handlers
+			if ( !treeType ) {
 				continue;
 			}
 
-			// If event changes its type, use the special event handlers for the changed type
-			special = jQuery.event.special[ type ] || {};
+			// If event changes its treeType, use the special event handlers for the changed treeType
+			special = jQuery.event.special[ treeType ] || {};
 
-			// If selector defined, determine special event api type, otherwise given type
-			type = ( selector ? special.delegateType : special.bindType ) || type;
+			// If selector defined, determine special event api treeType, otherwise given treeType
+			treeType = ( selector ? special.delegateType : special.bindType ) || treeType;
 
-			// Update special based on newly reset type
-			special = jQuery.event.special[ type ] || {};
+			// Update special based on newly reset treeType
+			special = jQuery.event.special[ treeType ] || {};
 
 			// handleObj is passed to all event handlers
 			handleObj = jQuery.extend( {
-				type: type,
+				treeType: treeType,
 				origType: origType,
 				data: data,
 				handler: handler,
@@ -5080,8 +5080,8 @@ jQuery.event = {
 			}, handleObjIn );
 
 			// Init the event handler queue if we're the first
-			if ( !( handlers = events[ type ] ) ) {
-				handlers = events[ type ] = [];
+			if ( !( handlers = events[ treeType ] ) ) {
+				handlers = events[ treeType ] = [];
 				handlers.delegateCount = 0;
 
 				// Only use addEventListener if the special events handler returns false
@@ -5089,7 +5089,7 @@ jQuery.event = {
 					special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
 
 					if ( elem.addEventListener ) {
-						elem.addEventListener( type, eventHandle );
+						elem.addEventListener( treeType, eventHandle );
 					}
 				}
 			}
@@ -5110,7 +5110,7 @@ jQuery.event = {
 			}
 
 			// Keep track of which events have ever been used, for event optimization
-			jQuery.event.global[ type ] = true;
+			jQuery.event.global[ treeType ] = true;
 		}
 
 	},
@@ -5120,32 +5120,32 @@ jQuery.event = {
 
 		var j, origCount, tmp,
 			events, t, handleObj,
-			special, handlers, type, namespaces, origType,
+			special, handlers, treeType, namespaces, origType,
 			elemData = dataPriv.hasData( elem ) && dataPriv.get( elem );
 
 		if ( !elemData || !( events = elemData.events ) ) {
 			return;
 		}
 
-		// Once for each type.namespace in types; type may be omitted
+		// Once for each treeType.namespace in types; treeType may be omitted
 		types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
 		t = types.length;
 		while ( t-- ) {
 			tmp = rtypenamespace.exec( types[ t ] ) || [];
-			type = origType = tmp[ 1 ];
+			treeType = origType = tmp[ 1 ];
 			namespaces = ( tmp[ 2 ] || "" ).split( "." ).sort();
 
 			// Unbind all events (on this namespace, if provided) for the element
-			if ( !type ) {
-				for ( type in events ) {
-					jQuery.event.remove( elem, type + types[ t ], handler, selector, true );
+			if ( !treeType ) {
+				for ( treeType in events ) {
+					jQuery.event.remove( elem, treeType + types[ t ], handler, selector, true );
 				}
 				continue;
 			}
 
-			special = jQuery.event.special[ type ] || {};
-			type = ( selector ? special.delegateType : special.bindType ) || type;
-			handlers = events[ type ] || [];
+			special = jQuery.event.special[ treeType ] || {};
+			treeType = ( selector ? special.delegateType : special.bindType ) || treeType;
+			handlers = events[ treeType ] || [];
 			tmp = tmp[ 2 ] &&
 				new RegExp( "(^|\\.)" + namespaces.join( "\\.(?:.*\\.|)" ) + "(\\.|$)" );
 
@@ -5176,10 +5176,10 @@ jQuery.event = {
 				if ( !special.teardown ||
 					special.teardown.call( elem, namespaces, elemData.handle ) === false ) {
 
-					jQuery.removeEvent( elem, type, elemData.handle );
+					jQuery.removeEvent( elem, treeType, elemData.handle );
 				}
 
-				delete events[ type ];
+				delete events[ treeType ];
 			}
 		}
 
@@ -5196,8 +5196,8 @@ jQuery.event = {
 
 		var i, j, ret, matched, handleObj, handlerQueue,
 			args = new Array( arguments.length ),
-			handlers = ( dataPriv.get( this, "events" ) || {} )[ event.type ] || [],
-			special = jQuery.event.special[ event.type ] || {};
+			handlers = ( dataPriv.get( this, "events" ) || {} )[ event.treeType ] || [],
+			special = jQuery.event.special[ event.treeType ] || {};
 
 		// Use the fix-ed jQuery.Event rather than the (read-only) native event
 		args[ 0 ] = event;
@@ -5208,7 +5208,7 @@ jQuery.event = {
 
 		event.delegateTarget = this;
 
-		// Call the preDispatch hook for the mapped type, and let it bail if desired
+		// Call the preDispatch hook for the mapped treeType, and let it bail if desired
 		if ( special.preDispatch && special.preDispatch.call( this, event ) === false ) {
 			return;
 		}
@@ -5246,7 +5246,7 @@ jQuery.event = {
 			}
 		}
 
-		// Call the postDispatch hook for the mapped type
+		// Call the postDispatch hook for the mapped treeType
 		if ( special.postDispatch ) {
 			special.postDispatch.call( this, event );
 		}
@@ -5269,16 +5269,16 @@ jQuery.event = {
 
 			// Support: Firefox <=42
 			// Suppress spec-violating clicks indicating a non-primary pointer button (trac-3861)
-			// https://www.w3.org/TR/DOM-Level-3-Events/#event-type-click
+			// https://www.w3.org/TR/DOM-Level-3-Events/#event-treeType-click
 			// Support: IE 11 only
 			// ...but not arrow key "clicks" of radio inputs, which can have `button` -1 (gh-2343)
-			!( event.type === "click" && event.button >= 1 ) ) {
+			!( event.treeType === "click" && event.button >= 1 ) ) {
 
 			for ( ; cur !== this; cur = cur.parentNode || this ) {
 
 				// Don't check non-elements (#13208)
 				// Don't process clicks on disabled elements (#6911, #8165, #11382, #11764)
-				if ( cur.nodeType === 1 && !( event.type === "click" && cur.disabled === true ) ) {
+				if ( cur.nodeType === 1 && !( event.treeType === "click" && cur.disabled === true ) ) {
 					matchedHandlers = [];
 					matchedSelectors = {};
 					for ( i = 0; i < delegateCount; i++ ) {
@@ -5362,7 +5362,7 @@ jQuery.event = {
 				var el = this || data;
 
 				// Claim the first handler
-				if ( rcheckableType.test( el.type ) &&
+				if ( rcheckableType.test( el.treeType ) &&
 					el.click && nodeName( el, "input" ) ) {
 
 					// dataPriv.set( el, "click", ... )
@@ -5379,7 +5379,7 @@ jQuery.event = {
 				var el = this || data;
 
 				// Force setup before triggering a click
-				if ( rcheckableType.test( el.type ) &&
+				if ( rcheckableType.test( el.treeType ) &&
 					el.click && nodeName( el, "input" ) ) {
 
 					leverageNative( el, "click" );
@@ -5393,7 +5393,7 @@ jQuery.event = {
 			// Also prevent it if we're currently inside a leveraged native-event stack
 			_default: function( event ) {
 				var target = event.target;
-				return rcheckableType.test( target.type ) &&
+				return rcheckableType.test( target.treeType ) &&
 					target.click && nodeName( target, "input" ) &&
 					dataPriv.get( target, "click" ) ||
 					nodeName( target, "a" );
@@ -5417,25 +5417,25 @@ jQuery.event = {
 // synthetic events by interrupting progress until reinvoked in response to
 // *native* events that it fires directly, ensuring that state changes have
 // already occurred before other listeners are invoked.
-function leverageNative( el, type, expectSync ) {
+function leverageNative( el, treeType, expectSync ) {
 
 	// Missing expectSync indicates a trigger call, which must force setup through jQuery.event.add
 	if ( !expectSync ) {
-		if ( dataPriv.get( el, type ) === undefined ) {
-			jQuery.event.add( el, type, returnTrue );
+		if ( dataPriv.get( el, treeType ) === undefined ) {
+			jQuery.event.add( el, treeType, returnTrue );
 		}
 		return;
 	}
 
 	// Register the controller as a special universal handler for all event namespaces
-	dataPriv.set( el, type, false );
-	jQuery.event.add( el, type, {
+	dataPriv.set( el, treeType, false );
+	jQuery.event.add( el, treeType, {
 		namespace: false,
 		handler: function( event ) {
 			var notAsync, result,
-				saved = dataPriv.get( this, type );
+				saved = dataPriv.get( this, treeType );
 
-			if ( ( event.isTrigger & 1 ) && this[ type ] ) {
+			if ( ( event.isTrigger & 1 ) && this[ treeType ] ) {
 
 				// Interrupt processing of the outer synthetic .trigger()ed event
 				// Saved data should be false in such cases, but might be a leftover capture object
@@ -5446,16 +5446,16 @@ function leverageNative( el, type, expectSync ) {
 					// There will always be at least one argument (an event object), so this array
 					// will not be confused with a leftover capture object.
 					saved = slice.call( arguments );
-					dataPriv.set( this, type, saved );
+					dataPriv.set( this, treeType, saved );
 
 					// Trigger the native event and capture its result
 					// Support: IE <=9 - 11+
 					// focus() and blur() are asynchronous
-					notAsync = expectSync( this, type );
-					this[ type ]();
-					result = dataPriv.get( this, type );
+					notAsync = expectSync( this, treeType );
+					this[ treeType ]();
+					result = dataPriv.get( this, treeType );
 					if ( saved !== result || notAsync ) {
-						dataPriv.set( this, type, false );
+						dataPriv.set( this, treeType, false );
 					} else {
 						result = {};
 					}
@@ -5473,7 +5473,7 @@ function leverageNative( el, type, expectSync ) {
 				// This technically gets the ordering wrong w.r.t. to `.trigger()` (in which the
 				// bubbling surrogate propagates *after* the non-bubbling base), but that seems
 				// less bad than duplication.
-				} else if ( ( jQuery.event.special[ type ] || {} ).delegateType ) {
+				} else if ( ( jQuery.event.special[ treeType ] || {} ).delegateType ) {
 					event.stopPropagation();
 				}
 
@@ -5482,7 +5482,7 @@ function leverageNative( el, type, expectSync ) {
 			} else if ( saved.length ) {
 
 				// ...and capture the result
-				dataPriv.set( this, type, {
+				dataPriv.set( this, treeType, {
 					value: jQuery.event.trigger(
 
 						// Support: IE <=9 - 11+
@@ -5500,11 +5500,11 @@ function leverageNative( el, type, expectSync ) {
 	} );
 }
 
-jQuery.removeEvent = function( elem, type, handle ) {
+jQuery.removeEvent = function( elem, treeType, handle ) {
 
 	// This "if" is needed for plain objects
 	if ( elem.removeEventListener ) {
-		elem.removeEventListener( type, handle );
+		elem.removeEventListener( treeType, handle );
 	}
 };
 
@@ -5516,9 +5516,9 @@ jQuery.Event = function( src, props ) {
 	}
 
 	// Event object
-	if ( src && src.type ) {
+	if ( src && src.treeType ) {
 		this.originalEvent = src;
-		this.type = src.type;
+		this.treeType = src.treeType;
 
 		// Events bubbling up the document may have been marked as prevented
 		// by a handler lower down the tree; reflect the correct value.
@@ -5540,9 +5540,9 @@ jQuery.Event = function( src, props ) {
 		this.currentTarget = src.currentTarget;
 		this.relatedTarget = src.relatedTarget;
 
-	// Event type
+	// Event treeType
 	} else {
-		this.type = src;
+		this.treeType = src;
 	}
 
 	// Put explicitly provided properties onto the event object
@@ -5634,12 +5634,12 @@ jQuery.each( {
 		var button = event.button;
 
 		// Add which for key events
-		if ( event.which == null && rkeyEvent.test( event.type ) ) {
+		if ( event.which == null && rkeyEvent.test( event.treeType ) ) {
 			return event.charCode != null ? event.charCode : event.keyCode;
 		}
 
 		// Add which for click: 1 === left; 2 === middle; 3 === right
-		if ( !event.which && button !== undefined && rmouseEvent.test( event.type ) ) {
+		if ( !event.which && button !== undefined && rmouseEvent.test( event.treeType ) ) {
 			if ( button & 1 ) {
 				return 1;
 			}
@@ -5659,8 +5659,8 @@ jQuery.each( {
 	}
 }, jQuery.event.addProp );
 
-jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateType ) {
-	jQuery.event.special[ type ] = {
+jQuery.each( { focus: "focusin", blur: "focusout" }, function( treeType, delegateType ) {
+	jQuery.event.special[ treeType ] = {
 
 		// Utilize native event if possible so blur/focus sequence is correct
 		setup: function() {
@@ -5668,7 +5668,7 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 			// Claim the first handler
 			// dataPriv.set( this, "focus", ... )
 			// dataPriv.set( this, "blur", ... )
-			leverageNative( this, type, expectSync );
+			leverageNative( this, treeType, expectSync );
 
 			// Return false to allow normal processing in the caller
 			return false;
@@ -5676,7 +5676,7 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 		trigger: function() {
 
 			// Force setup before trigger
-			leverageNative( this, type );
+			leverageNative( this, treeType );
 
 			// Return non-false to allow normal event-path propagation
 			return true;
@@ -5713,9 +5713,9 @@ jQuery.each( {
 			// For mouseenter/leave call the handler if related is outside the target.
 			// NB: No relatedTarget if the mouse left/entered the browser window
 			if ( !related || ( related !== target && !jQuery.contains( target, related ) ) ) {
-				event.type = handleObj.origType;
+				event.treeType = handleObj.origType;
 				ret = handleObj.handler.apply( this, arguments );
-				event.type = fix;
+				event.treeType = fix;
 			}
 			return ret;
 		}
@@ -5731,7 +5731,7 @@ jQuery.fn.extend( {
 		return on( this, types, selector, data, fn, 1 );
 	},
 	off: function( types, selector, fn ) {
-		var handleObj, type;
+		var handleObj, treeType;
 		if ( types && types.preventDefault && types.handleObj ) {
 
 			// ( event )  dispatched jQuery.Event
@@ -5748,8 +5748,8 @@ jQuery.fn.extend( {
 		if ( typeof types === "object" ) {
 
 			// ( types-object [, selector] )
-			for ( type in types ) {
-				this.off( type, selector, types[ type ] );
+			for ( treeType in types ) {
+				this.off( treeType, selector, types[ treeType ] );
 			}
 			return this;
 		}
@@ -5798,23 +5798,23 @@ function manipulationTarget( elem, content ) {
 	return elem;
 }
 
-// Replace/restore the type attribute of script elements for safe DOM manipulation
+// Replace/restore the treeType attribute of script elements for safe DOM manipulation
 function disableScript( elem ) {
-	elem.type = ( elem.getAttribute( "type" ) !== null ) + "/" + elem.type;
+	elem.treeType = ( elem.getAttribute( "treeType" ) !== null ) + "/" + elem.treeType;
 	return elem;
 }
 function restoreScript( elem ) {
-	if ( ( elem.type || "" ).slice( 0, 5 ) === "true/" ) {
-		elem.type = elem.type.slice( 5 );
+	if ( ( elem.treeType || "" ).slice( 0, 5 ) === "true/" ) {
+		elem.treeType = elem.treeType.slice( 5 );
 	} else {
-		elem.removeAttribute( "type" );
+		elem.removeAttribute( "treeType" );
 	}
 
 	return elem;
 }
 
 function cloneCopyEvent( src, dest ) {
-	var i, l, type, pdataOld, pdataCur, udataOld, udataCur, events;
+	var i, l, treeType, pdataOld, pdataCur, udataOld, udataCur, events;
 
 	if ( dest.nodeType !== 1 ) {
 		return;
@@ -5830,9 +5830,9 @@ function cloneCopyEvent( src, dest ) {
 			delete pdataCur.handle;
 			pdataCur.events = {};
 
-			for ( type in events ) {
-				for ( i = 0, l = events[ type ].length; i < l; i++ ) {
-					jQuery.event.add( dest, type, events[ type ][ i ] );
+			for ( treeType in events ) {
+				for ( i = 0, l = events[ treeType ].length; i < l; i++ ) {
+					jQuery.event.add( dest, treeType, events[ treeType ][ i ] );
 				}
 			}
 		}
@@ -5852,7 +5852,7 @@ function fixInput( src, dest ) {
 	var nodeName = dest.nodeName.toLowerCase();
 
 	// Fails to persist the checked state of a cloned checkbox or radio button.
-	if ( nodeName === "input" && rcheckableType.test( src.type ) ) {
+	if ( nodeName === "input" && rcheckableType.test( src.treeType ) ) {
 		dest.checked = src.checked;
 
 	// Fails to return the selected option to the default selected state when cloning options
@@ -5929,11 +5929,11 @@ function domManip( collection, args, callback, ignored ) {
 				// Evaluate executable scripts on first document insertion
 				for ( i = 0; i < hasScripts; i++ ) {
 					node = scripts[ i ];
-					if ( rscriptType.test( node.type || "" ) &&
+					if ( rscriptType.test( node.treeType || "" ) &&
 						!dataPriv.access( node, "globalEval" ) &&
 						jQuery.contains( doc, node ) ) {
 
-						if ( node.src && ( node.type || "" ).toLowerCase()  !== "module" ) {
+						if ( node.src && ( node.treeType || "" ).toLowerCase()  !== "module" ) {
 
 							// Optional AJAX dependency, but won't run scripts if not present
 							if ( jQuery._evalUrl && !node.noModule ) {
@@ -6022,7 +6022,7 @@ jQuery.extend( {
 	},
 
 	cleanData: function( elems ) {
-		var data, elem, type,
+		var data, elem, treeType,
 			special = jQuery.event.special,
 			i = 0;
 
@@ -6030,13 +6030,13 @@ jQuery.extend( {
 			if ( acceptData( elem ) ) {
 				if ( ( data = elem[ dataPriv.expando ] ) ) {
 					if ( data.events ) {
-						for ( type in data.events ) {
-							if ( special[ type ] ) {
-								jQuery.event.remove( elem, type );
+						for ( treeType in data.events ) {
+							if ( special[ treeType ] ) {
+								jQuery.event.remove( elem, treeType );
 
 							// This is a shortcut to avoid jQuery.event.remove's overhead
 							} else {
-								jQuery.removeEvent( elem, type, data.handle );
+								jQuery.removeEvent( elem, treeType, data.handle );
 							}
 						}
 					}
@@ -6655,7 +6655,7 @@ jQuery.extend( {
 		}
 
 		// Make sure that we're working with the right name
-		var ret, type, hooks,
+		var ret, treeType, hooks,
 			origName = camelCase( name ),
 			isCustomProp = rcustomProp.test( name ),
 			style = elem.style;
@@ -6672,14 +6672,14 @@ jQuery.extend( {
 
 		// Check if we're setting a value
 		if ( value !== undefined ) {
-			type = typeof value;
+			treeType = typeof value;
 
 			// Convert "+=" or "-=" to relative numbers (#7345)
-			if ( type === "string" && ( ret = rcssNum.exec( value ) ) && ret[ 1 ] ) {
+			if ( treeType === "string" && ( ret = rcssNum.exec( value ) ) && ret[ 1 ] ) {
 				value = adjustCSS( elem, name, ret );
 
 				// Fixes bug #9237
-				type = "number";
+				treeType = "number";
 			}
 
 			// Make sure that null and NaN values aren't set (#7116)
@@ -6690,7 +6690,7 @@ jQuery.extend( {
 			// If a number was passed in, add the unit (except for certain CSS properties)
 			// The isCustomProp check can be removed in jQuery 4.0 when we only auto-append
 			// "px" to a few hardcoded values.
-			if ( type === "number" && !isCustomProp ) {
+			if ( treeType === "number" && !isCustomProp ) {
 				value += ret && ret[ 3 ] || ( jQuery.cssNumber[ origName ] ? "" : "px" );
 			}
 
@@ -7045,21 +7045,21 @@ function createFxNow() {
 }
 
 // Generate parameters to create a standard animation
-function genFx( type, includeWidth ) {
+function genFx( treeType, includeWidth ) {
 	var which,
 		i = 0,
-		attrs = { height: type };
+		attrs = { height: treeType };
 
 	// If we include width, step value is 1 to do all cssExpand values,
 	// otherwise step value is 2 to skip over Left and Right
 	includeWidth = includeWidth ? 1 : 0;
 	for ( ; i < 4; i += 2 - includeWidth ) {
 		which = cssExpand[ i ];
-		attrs[ "margin" + which ] = attrs[ "padding" + which ] = type;
+		attrs[ "margin" + which ] = attrs[ "padding" + which ] = treeType;
 	}
 
 	if ( includeWidth ) {
-		attrs.opacity = attrs.width = type;
+		attrs.opacity = attrs.width = treeType;
 	}
 
 	return attrs;
@@ -7151,7 +7151,7 @@ function defaultPrefilter( elem, props, opts ) {
 		// the overflowX value there.
 		opts.overflow = [ style.overflow, style.overflowX, style.overflowY ];
 
-		// Identify a display type, preferring old show/hide data over the CSS cascade
+		// Identify a display treeType, preferring old show/hide data over the CSS cascade
 		restoreDisplay = dataShow && dataShow.display;
 		if ( restoreDisplay == null ) {
 			restoreDisplay = dataPriv.get( elem, "display" );
@@ -7525,25 +7525,25 @@ jQuery.fn.extend( {
 			this.each( doAnimation ) :
 			this.queue( optall.queue, doAnimation );
 	},
-	stop: function( type, clearQueue, gotoEnd ) {
+	stop: function( treeType, clearQueue, gotoEnd ) {
 		var stopQueue = function( hooks ) {
 			var stop = hooks.stop;
 			delete hooks.stop;
 			stop( gotoEnd );
 		};
 
-		if ( typeof type !== "string" ) {
+		if ( typeof treeType !== "string" ) {
 			gotoEnd = clearQueue;
-			clearQueue = type;
-			type = undefined;
+			clearQueue = treeType;
+			treeType = undefined;
 		}
-		if ( clearQueue && type !== false ) {
-			this.queue( type || "fx", [] );
+		if ( clearQueue && treeType !== false ) {
+			this.queue( treeType || "fx", [] );
 		}
 
 		return this.each( function() {
 			var dequeue = true,
-				index = type != null && type + "queueHooks",
+				index = treeType != null && treeType + "queueHooks",
 				timers = jQuery.timers,
 				data = dataPriv.get( this );
 
@@ -7561,7 +7561,7 @@ jQuery.fn.extend( {
 
 			for ( index = timers.length; index--; ) {
 				if ( timers[ index ].elem === this &&
-					( type == null || timers[ index ].queue === type ) ) {
+					( treeType == null || timers[ index ].queue === treeType ) ) {
 
 					timers[ index ].anim.stop( gotoEnd );
 					dequeue = false;
@@ -7573,19 +7573,19 @@ jQuery.fn.extend( {
 			// Timers currently will call their complete callbacks, which
 			// will dequeue but only if they were gotoEnd.
 			if ( dequeue || !gotoEnd ) {
-				jQuery.dequeue( this, type );
+				jQuery.dequeue( this, treeType );
 			}
 		} );
 	},
-	finish: function( type ) {
-		if ( type !== false ) {
-			type = type || "fx";
+	finish: function( treeType ) {
+		if ( treeType !== false ) {
+			treeType = treeType || "fx";
 		}
 		return this.each( function() {
 			var index,
 				data = dataPriv.get( this ),
-				queue = data[ type + "queue" ],
-				hooks = data[ type + "queueHooks" ],
+				queue = data[ treeType + "queue" ],
+				hooks = data[ treeType + "queueHooks" ],
 				timers = jQuery.timers,
 				length = queue ? queue.length : 0;
 
@@ -7593,7 +7593,7 @@ jQuery.fn.extend( {
 			data.finish = true;
 
 			// Empty the queue first
-			jQuery.queue( this, type, [] );
+			jQuery.queue( this, treeType, [] );
 
 			if ( hooks && hooks.stop ) {
 				hooks.stop.call( this, true );
@@ -7601,7 +7601,7 @@ jQuery.fn.extend( {
 
 			// Look for any active animations, and finish them
 			for ( index = timers.length; index--; ) {
-				if ( timers[ index ].elem === this && timers[ index ].queue === type ) {
+				if ( timers[ index ].elem === this && timers[ index ].queue === treeType ) {
 					timers[ index ].anim.stop( true );
 					timers.splice( index, 1 );
 				}
@@ -7696,11 +7696,11 @@ jQuery.fx.speeds = {
 
 // Based off of the plugin by Clint Helfers, with permission.
 // https://web.archive.org/web/20100324014747/http://blindsignals.com/index.php/2009/07/jquery-delay/
-jQuery.fn.delay = function( time, type ) {
+jQuery.fn.delay = function( time, treeType ) {
 	time = jQuery.fx ? jQuery.fx.speeds[ time ] || time : time;
-	type = type || "fx";
+	treeType = treeType || "fx";
 
-	return this.queue( type, function( next, hooks ) {
+	return this.queue( treeType, function( next, hooks ) {
 		var timeout = window.setTimeout( next, time );
 		hooks.stop = function() {
 			window.clearTimeout( timeout );
@@ -7714,7 +7714,7 @@ jQuery.fn.delay = function( time, type ) {
 		select = document.createElement( "select" ),
 		opt = select.appendChild( document.createElement( "option" ) );
 
-	input.type = "checkbox";
+	input.treeType = "checkbox";
 
 	// Support: Android <=4.3 only
 	// Default value for a checkbox should be "on"
@@ -7728,7 +7728,7 @@ jQuery.fn.delay = function( time, type ) {
 	// An input loses its value after becoming a radio
 	input = document.createElement( "input" );
 	input.value = "t";
-	input.type = "radio";
+	input.treeType = "radio";
 	support.radioValue = input.value === "t";
 } )();
 
@@ -7796,12 +7796,12 @@ jQuery.extend( {
 	},
 
 	attrHooks: {
-		type: {
+		treeType: {
 			set: function( elem, value ) {
 				if ( !support.radioValue && value === "radio" &&
 					nodeName( elem, "input" ) ) {
 					var val = elem.value;
-					elem.setAttribute( "type", value );
+					elem.setAttribute( "treeType", value );
 					if ( val ) {
 						elem.value = val;
 					}
@@ -8107,8 +8107,8 @@ jQuery.fn.extend( {
 	},
 
 	toggleClass: function( value, stateVal ) {
-		var type = typeof value,
-			isValidValue = type === "string" || Array.isArray( value );
+		var treeType = typeof value,
+			isValidValue = treeType === "string" || Array.isArray( value );
 
 		if ( typeof stateVal === "boolean" && isValidValue ) {
 			return stateVal ? this.addClass( value ) : this.removeClass( value );
@@ -8144,7 +8144,7 @@ jQuery.fn.extend( {
 				}
 
 			// Toggle whole class name
-			} else if ( value === undefined || type === "boolean" ) {
+			} else if ( value === undefined || treeType === "boolean" ) {
 				className = getClass( this );
 				if ( className ) {
 
@@ -8195,7 +8195,7 @@ jQuery.fn.extend( {
 
 		if ( !arguments.length ) {
 			if ( elem ) {
-				hooks = jQuery.valHooks[ elem.type ] ||
+				hooks = jQuery.valHooks[ elem.treeType ] ||
 					jQuery.valHooks[ elem.nodeName.toLowerCase() ];
 
 				if ( hooks &&
@@ -8247,7 +8247,7 @@ jQuery.fn.extend( {
 				} );
 			}
 
-			hooks = jQuery.valHooks[ this.type ] || jQuery.valHooks[ this.nodeName.toLowerCase() ];
+			hooks = jQuery.valHooks[ this.treeType ] || jQuery.valHooks[ this.nodeName.toLowerCase() ];
 
 			// If set returns undefined, fall back to normal setting
 			if ( !hooks || !( "set" in hooks ) || hooks.set( this, val, "value" ) === undefined ) {
@@ -8278,7 +8278,7 @@ jQuery.extend( {
 				var value, option, i,
 					options = elem.options,
 					index = elem.selectedIndex,
-					one = elem.type === "select-one",
+					one = elem.treeType === "select-one",
 					values = one ? null : [],
 					max = one ? index + 1 : options.length;
 
@@ -8384,7 +8384,7 @@ jQuery.extend( jQuery.event, {
 
 		var i, cur, tmp, bubbleType, ontype, handle, special, lastElement,
 			eventPath = [ elem || document ],
-			type = hasOwn.call( event, "type" ) ? event.type : event,
+			treeType = hasOwn.call( event, "treeType" ) ? event.treeType : event,
 			namespaces = hasOwn.call( event, "namespace" ) ? event.namespace.split( "." ) : [];
 
 		cur = lastElement = tmp = elem = elem || document;
@@ -8395,23 +8395,23 @@ jQuery.extend( jQuery.event, {
 		}
 
 		// focus/blur morphs to focusin/out; ensure we're not firing them right now
-		if ( rfocusMorph.test( type + jQuery.event.triggered ) ) {
+		if ( rfocusMorph.test( treeType + jQuery.event.triggered ) ) {
 			return;
 		}
 
-		if ( type.indexOf( "." ) > -1 ) {
+		if ( treeType.indexOf( "." ) > -1 ) {
 
-			// Namespaced trigger; create a regexp to match event type in handle()
-			namespaces = type.split( "." );
-			type = namespaces.shift();
+			// Namespaced trigger; create a regexp to match event treeType in handle()
+			namespaces = treeType.split( "." );
+			treeType = namespaces.shift();
 			namespaces.sort();
 		}
-		ontype = type.indexOf( ":" ) < 0 && "on" + type;
+		ontype = treeType.indexOf( ":" ) < 0 && "on" + treeType;
 
-		// Caller can pass in a jQuery.Event object, Object, or just an event type string
+		// Caller can pass in a jQuery.Event object, Object, or just an event treeType string
 		event = event[ jQuery.expando ] ?
 			event :
-			new jQuery.Event( type, typeof event === "object" && event );
+			new jQuery.Event( treeType, typeof event === "object" && event );
 
 		// Trigger bitmask: & 1 for native handlers; & 2 for jQuery (always true)
 		event.isTrigger = onlyHandlers ? 2 : 3;
@@ -8432,7 +8432,7 @@ jQuery.extend( jQuery.event, {
 			jQuery.makeArray( data, [ event ] );
 
 		// Allow special events to draw outside the lines
-		special = jQuery.event.special[ type ] || {};
+		special = jQuery.event.special[ treeType ] || {};
 		if ( !onlyHandlers && special.trigger && special.trigger.apply( elem, data ) === false ) {
 			return;
 		}
@@ -8441,8 +8441,8 @@ jQuery.extend( jQuery.event, {
 		// Bubble up to document, then to window; watch for a global ownerDocument var (#9724)
 		if ( !onlyHandlers && !special.noBubble && !isWindow( elem ) ) {
 
-			bubbleType = special.delegateType || type;
-			if ( !rfocusMorph.test( bubbleType + type ) ) {
+			bubbleType = special.delegateType || treeType;
+			if ( !rfocusMorph.test( bubbleType + treeType ) ) {
 				cur = cur.parentNode;
 			}
 			for ( ; cur; cur = cur.parentNode ) {
@@ -8460,12 +8460,12 @@ jQuery.extend( jQuery.event, {
 		i = 0;
 		while ( ( cur = eventPath[ i++ ] ) && !event.isPropagationStopped() ) {
 			lastElement = cur;
-			event.type = i > 1 ?
+			event.treeType = i > 1 ?
 				bubbleType :
-				special.bindType || type;
+				special.bindType || treeType;
 
 			// jQuery handler
-			handle = ( dataPriv.get( cur, "events" ) || {} )[ event.type ] &&
+			handle = ( dataPriv.get( cur, "events" ) || {} )[ event.treeType ] &&
 				dataPriv.get( cur, "handle" );
 			if ( handle ) {
 				handle.apply( cur, data );
@@ -8480,7 +8480,7 @@ jQuery.extend( jQuery.event, {
 				}
 			}
 		}
-		event.type = type;
+		event.treeType = treeType;
 
 		// If nobody prevented the default action, do it now
 		if ( !onlyHandlers && !event.isDefaultPrevented() ) {
@@ -8491,7 +8491,7 @@ jQuery.extend( jQuery.event, {
 
 				// Call a native DOM method on the target with the same name as the event.
 				// Don't do default actions on window, that's where global variables be (#6170)
-				if ( ontype && isFunction( elem[ type ] ) && !isWindow( elem ) ) {
+				if ( ontype && isFunction( elem[ treeType ] ) && !isWindow( elem ) ) {
 
 					// Don't re-trigger an onFOO event when we call its FOO() method
 					tmp = elem[ ontype ];
@@ -8501,16 +8501,16 @@ jQuery.extend( jQuery.event, {
 					}
 
 					// Prevent re-triggering of the same event, since we already bubbled it above
-					jQuery.event.triggered = type;
+					jQuery.event.triggered = treeType;
 
 					if ( event.isPropagationStopped() ) {
-						lastElement.addEventListener( type, stopPropagationCallback );
+						lastElement.addEventListener( treeType, stopPropagationCallback );
 					}
 
-					elem[ type ]();
+					elem[ treeType ]();
 
 					if ( event.isPropagationStopped() ) {
-						lastElement.removeEventListener( type, stopPropagationCallback );
+						lastElement.removeEventListener( treeType, stopPropagationCallback );
 					}
 
 					jQuery.event.triggered = undefined;
@@ -8527,12 +8527,12 @@ jQuery.extend( jQuery.event, {
 
 	// Piggyback on a donor event to simulate a different one
 	// Used only for `focus(in | out)` events
-	simulate: function( type, elem, event ) {
+	simulate: function( treeType, elem, event ) {
 		var e = jQuery.extend(
 			new jQuery.Event(),
 			event,
 			{
-				type: type,
+				treeType: treeType,
 				isSimulated: true
 			}
 		);
@@ -8544,15 +8544,15 @@ jQuery.extend( jQuery.event, {
 
 jQuery.fn.extend( {
 
-	trigger: function( type, data ) {
+	trigger: function( treeType, data ) {
 		return this.each( function() {
-			jQuery.event.trigger( type, data, this );
+			jQuery.event.trigger( treeType, data, this );
 		} );
 	},
-	triggerHandler: function( type, data ) {
+	triggerHandler: function( treeType, data ) {
 		var elem = this[ 0 ];
 		if ( elem ) {
-			return jQuery.event.trigger( type, data, elem, true );
+			return jQuery.event.trigger( treeType, data, elem, true );
 		}
 	}
 } );
@@ -8726,12 +8726,12 @@ jQuery.fn.extend( {
 			return elements ? jQuery.makeArray( elements ) : this;
 		} )
 		.filter( function() {
-			var type = this.type;
+			var treeType = this.treeType;
 
 			// Use .is( ":disabled" ) so that fieldset[disabled] works
 			return this.name && !jQuery( this ).is( ":disabled" ) &&
-				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( type ) &&
-				( this.checked || !rcheckableType.test( type ) );
+				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( treeType ) &&
+				( this.checked || !rcheckableType.test( treeType ) );
 		} )
 		.map( function( i, elem ) {
 			var val = jQuery( this ).val();
@@ -8869,16 +8869,16 @@ function ajaxExtend( target, src ) {
 }
 
 /* Handles responses to an ajax request:
- * - finds the right dataType (mediates between content-type and expected dataType)
+ * - finds the right dataType (mediates between content-treeType and expected dataType)
  * - returns the corresponding response
  */
 function ajaxHandleResponses( s, jqXHR, responses ) {
 
-	var ct, type, finalDataType, firstDataType,
+	var ct, treeType, finalDataType, firstDataType,
 		contents = s.contents,
 		dataTypes = s.dataTypes;
 
-	// Remove auto dataType and get content-type in the process
+	// Remove auto dataType and get content-treeType in the process
 	while ( dataTypes[ 0 ] === "*" ) {
 		dataTypes.shift();
 		if ( ct === undefined ) {
@@ -8886,11 +8886,11 @@ function ajaxHandleResponses( s, jqXHR, responses ) {
 		}
 	}
 
-	// Check if we're dealing with a known content-type
+	// Check if we're dealing with a known content-treeType
 	if ( ct ) {
-		for ( type in contents ) {
-			if ( contents[ type ] && contents[ type ].test( ct ) ) {
-				dataTypes.unshift( type );
+		for ( treeType in contents ) {
+			if ( contents[ treeType ] && contents[ treeType ].test( ct ) ) {
+				dataTypes.unshift( treeType );
 				break;
 			}
 		}
@@ -8902,13 +8902,13 @@ function ajaxHandleResponses( s, jqXHR, responses ) {
 	} else {
 
 		// Try convertible dataTypes
-		for ( type in responses ) {
-			if ( !dataTypes[ 0 ] || s.converters[ type + " " + dataTypes[ 0 ] ] ) {
-				finalDataType = type;
+		for ( treeType in responses ) {
+			if ( !dataTypes[ 0 ] || s.converters[ treeType + " " + dataTypes[ 0 ] ] ) {
+				finalDataType = treeType;
 				break;
 			}
 			if ( !firstDataType ) {
-				firstDataType = type;
+				firstDataType = treeType;
 			}
 		}
 
@@ -9037,7 +9037,7 @@ jQuery.extend( {
 
 	ajaxSettings: {
 		url: location.href,
-		type: "GET",
+		treeType: "GET",
 		isLocal: rlocalProtocol.test( location.protocol ),
 		global: true,
 		processData: true,
@@ -9220,10 +9220,10 @@ jQuery.extend( {
 					return this;
 				},
 
-				// Overrides response content-type header
-				overrideMimeType: function( type ) {
+				// Overrides response content-treeType header
+				overrideMimeType: function( treeType ) {
 					if ( completed == null ) {
-						s.mimeType = type;
+						s.mimeType = treeType;
 					}
 					return this;
 				},
@@ -9267,8 +9267,8 @@ jQuery.extend( {
 		s.url = ( ( url || s.url || location.href ) + "" )
 			.replace( rprotocol, location.protocol + "//" );
 
-		// Alias method option to type as per ticket #12004
-		s.type = options.method || options.type || s.method || s.type;
+		// Alias method option to treeType as per ticket #12004
+		s.treeType = options.method || options.treeType || s.method || s.treeType;
 
 		// Extract dataTypes list
 		s.dataTypes = ( s.dataType || "*" ).toLowerCase().match( rnothtmlwhite ) || [ "" ];
@@ -9318,11 +9318,11 @@ jQuery.extend( {
 			jQuery.event.trigger( "ajaxStart" );
 		}
 
-		// Uppercase the type
-		s.type = s.type.toUpperCase();
+		// Uppercase the treeType
+		s.treeType = s.treeType.toUpperCase();
 
 		// Determine if request has content
-		s.hasContent = !rnoContent.test( s.type );
+		s.hasContent = !rnoContent.test( s.treeType );
 
 		// Save the URL in case we're toying with the If-Modified-Since
 		// and/or If-None-Match header later on
@@ -9482,7 +9482,7 @@ jQuery.extend( {
 			// Convert no matter what (that way responseXXX fields are always set)
 			response = ajaxConvert( s, response, jqXHR, isSuccess );
 
-			// If successful, handle type chaining
+			// If successful, handle treeType chaining
 			if ( isSuccess ) {
 
 				// Set the If-Modified-Since and/or If-None-Match header, if in ifModified mode.
@@ -9498,7 +9498,7 @@ jQuery.extend( {
 				}
 
 				// if no content
-				if ( status === 204 || s.type === "HEAD" ) {
+				if ( status === 204 || s.treeType === "HEAD" ) {
 					statusText = "nocontent";
 
 				// if not modified
@@ -9570,11 +9570,11 @@ jQuery.extend( {
 } );
 
 jQuery.each( [ "get", "post" ], function( i, method ) {
-	jQuery[ method ] = function( url, data, callback, type ) {
+	jQuery[ method ] = function( url, data, callback, treeType ) {
 
 		// Shift arguments if data argument was omitted
 		if ( isFunction( data ) ) {
-			type = type || callback;
+			treeType = treeType || callback;
 			callback = data;
 			data = undefined;
 		}
@@ -9582,8 +9582,8 @@ jQuery.each( [ "get", "post" ], function( i, method ) {
 		// The url can be an options object (which then must have .url)
 		return jQuery.ajax( jQuery.extend( {
 			url: url,
-			type: method,
-			dataType: type,
+			treeType: method,
+			dataType: treeType,
 			data: data,
 			success: callback
 		}, jQuery.isPlainObject( url ) && url ) );
@@ -9596,7 +9596,7 @@ jQuery._evalUrl = function( url, options ) {
 		url: url,
 
 		// Make this explicit, since user can override this through ajaxSetup (#11264)
-		type: "GET",
+		treeType: "GET",
 		dataType: "script",
 		cache: true,
 		async: false,
@@ -9723,7 +9723,7 @@ jQuery.ajaxTransport( function( options ) {
 					xhr = options.xhr();
 
 				xhr.open(
-					options.type,
+					options.treeType,
 					options.url,
 					options.async,
 					options.username,
@@ -9737,7 +9737,7 @@ jQuery.ajaxTransport( function( options ) {
 					}
 				}
 
-				// Override mime type if needed
+				// Override mime treeType if needed
 				if ( options.mimeType && xhr.overrideMimeType ) {
 					xhr.overrideMimeType( options.mimeType );
 				}
@@ -9757,16 +9757,16 @@ jQuery.ajaxTransport( function( options ) {
 				}
 
 				// Callback
-				callback = function( type ) {
+				callback = function( treeType ) {
 					return function() {
 						if ( callback ) {
 							callback = errorCallback = xhr.onload =
 								xhr.onerror = xhr.onabort = xhr.ontimeout =
 									xhr.onreadystatechange = null;
 
-							if ( type === "abort" ) {
+							if ( treeType === "abort" ) {
 								xhr.abort();
-							} else if ( type === "error" ) {
+							} else if ( treeType === "error" ) {
 
 								// Support: IE <=9 only
 								// On a manual native abort, IE9 throws
@@ -9886,7 +9886,7 @@ jQuery.ajaxPrefilter( "script", function( s ) {
 		s.cache = false;
 	}
 	if ( s.crossDomain ) {
-		s.type = "GET";
+		s.treeType = "GET";
 	}
 } );
 
@@ -9905,7 +9905,7 @@ jQuery.ajaxTransport( "script", function( s ) {
 						script.remove();
 						callback = null;
 						if ( evt ) {
-							complete( evt.type === "error" ? 404 : 200, evt.type );
+							complete( evt.treeType === "error" ? 404 : 200, evt.treeType );
 						}
 					} );
 
@@ -9949,7 +9949,7 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 				rjsonp.test( s.data ) && "data"
 		);
 
-	// Handle iff the expected data type is "jsonp" or we have a parameter to set
+	// Handle iff the expected data treeType is "jsonp" or we have a parameter to set
 	if ( jsonProp || s.dataTypes[ 0 ] === "jsonp" ) {
 
 		// Get callback name, remembering preexisting value associated with it
@@ -10086,7 +10086,7 @@ jQuery.parseHTML = function( data, context, keepScripts ) {
  * Load a url into a page
  */
 jQuery.fn.load = function( url, params, callback ) {
-	var selector, type, response,
+	var selector, treeType, response,
 		self = this,
 		off = url.indexOf( " " );
 
@@ -10104,7 +10104,7 @@ jQuery.fn.load = function( url, params, callback ) {
 
 	// Otherwise, build a param string
 	} else if ( params && typeof params === "object" ) {
-		type = "POST";
+		treeType = "POST";
 	}
 
 	// If we have elements to modify, make the request
@@ -10112,10 +10112,10 @@ jQuery.fn.load = function( url, params, callback ) {
 		jQuery.ajax( {
 			url: url,
 
-			// If "type" variable is undefined, then "GET" method will be used.
+			// If "treeType" variable is undefined, then "GET" method will be used.
 			// Make value of this field explicit since
 			// user can override it through ajaxSetup method
-			type: type || "GET",
+			treeType: treeType || "GET",
 			dataType: "html",
 			data: params
 		} ).done( function( responseText ) {
@@ -10156,9 +10156,9 @@ jQuery.each( [
 	"ajaxError",
 	"ajaxSuccess",
 	"ajaxSend"
-], function( i, type ) {
-	jQuery.fn[ type ] = function( fn ) {
-		return this.on( type, fn );
+], function( i, treeType ) {
+	jQuery.fn[ treeType ] = function( fn ) {
+		return this.on( treeType, fn );
 	};
 } );
 
@@ -10388,8 +10388,8 @@ jQuery.each( [ "top", "left" ], function( i, prop ) {
 
 
 // Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
-jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
-	jQuery.each( { padding: "inner" + name, content: type, "": "outer" + name },
+jQuery.each( { Height: "height", Width: "width" }, function( name, treeType ) {
+	jQuery.each( { padding: "inner" + name, content: treeType, "": "outer" + name },
 		function( defaultExtra, funcName ) {
 
 		// Margin is only for outerHeight, outerWidth
@@ -10397,7 +10397,7 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 			var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),
 				extra = defaultExtra || ( margin === true || value === true ? "margin" : "border" );
 
-			return access( this, function( elem, type, value ) {
+			return access( this, function( elem, treeType, value ) {
 				var doc;
 
 				if ( isWindow( elem ) ) {
@@ -10424,11 +10424,11 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 				return value === undefined ?
 
 					// Get width or height on the element, requesting but not forcing parseFloat
-					jQuery.css( elem, type, extra ) :
+					jQuery.css( elem, treeType, extra ) :
 
 					// Set width or height on the element
-					jQuery.style( elem, type, value, extra );
-			}, type, chainable ? margin : undefined, chainable );
+					jQuery.style( elem, treeType, value, extra );
+			}, treeType, chainable ? margin : undefined, chainable );
 		};
 	} );
 } );
@@ -10521,7 +10521,7 @@ jQuery.nodeName = nodeName;
 jQuery.isFunction = isFunction;
 jQuery.isWindow = isWindow;
 jQuery.camelCase = camelCase;
-jQuery.type = toType;
+jQuery.treeType = toType;
 
 jQuery.now = Date.now;
 
@@ -10530,8 +10530,8 @@ jQuery.isNumeric = function( obj ) {
 	// As of jQuery 3.0, isNumeric is limited to
 	// strings and numbers (primitives or objects)
 	// that can be coerced to finite numbers (gh-2662)
-	var type = jQuery.type( obj );
-	return ( type === "number" || type === "string" ) &&
+	var treeType = jQuery.treeType( obj );
+	return ( treeType === "number" || treeType === "string" ) &&
 
 		// parseFloat NaNs numeric-cast false positives ("")
 		// ...but misinterprets leading-number strings, particularly hex literals ("0x...")

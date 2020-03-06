@@ -23,7 +23,7 @@ public class GrammarTester {
         }
         SLRData<TokenType> tokenSLRData = grammar.toData(TokenType.t_eof);
         tokenSLRData.generateFirstSets();
-        for (Map.Entry<ParsableObject<?>, Set<NonTerminal<TokenType>>> parsableObjectSetEntry : tokenSLRData.getFirstSet().entrySet()) {
+        for (Map.Entry<ParsableObject<?>, Set<Terminal<TokenType>>> parsableObjectSetEntry : tokenSLRData.getFirstSet().entrySet()) {
             System.out.println(parsableObjectSetEntry);
         }
         System.out.println();
@@ -32,7 +32,7 @@ public class GrammarTester {
         }
         tokenSLRData.generateFollowSet();
         System.out.println();
-        for (Map.Entry<ParsableObject<?>, Set<NonTerminal<TokenType>>> parsableObjectSetEntry : tokenSLRData.getFollowSet().entrySet()) {
+        for (Map.Entry<ParsableObject<?>, Set<Terminal<TokenType>>> parsableObjectSetEntry : tokenSLRData.getFollowSet().entrySet()) {
             System.out.println(parsableObjectSetEntry);
         }
         

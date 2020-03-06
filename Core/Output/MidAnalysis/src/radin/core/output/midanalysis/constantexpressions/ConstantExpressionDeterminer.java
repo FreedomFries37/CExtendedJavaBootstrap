@@ -63,7 +63,7 @@ public class ConstantExpressionDeterminer implements IToolChain<ASTMeaningfulNod
     
     @Override
     public Number invoke(ASTMeaningfulNode<?> input) {
-        switch (input.getType()) {
+        switch (input.getTreeType()) {
             case binop:
                 break;
             case uniop: {

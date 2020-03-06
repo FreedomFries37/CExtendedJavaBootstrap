@@ -114,7 +114,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     }
     
     public ASTNodeType getASTType() {
-        return astNode.getType();
+        return astNode.getTreeType();
     }
     
     public CXType getCXType() {
@@ -154,7 +154,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     
     public List<TypeAugmentedSemanticNode> getAllChildren(ASTNodeType type) {
         List<TypeAugmentedSemanticNode> output = new LinkedList<>();
-        if(this.astNode.getType() == type) output.add(this);
+        if(this.astNode.getTreeType() == type) output.add(this);
         for (TypeAugmentedSemanticNode child : children) {
             output.addAll(child.getAllChildren(type));
         }
@@ -163,7 +163,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     
     public TypeAugmentedSemanticNode getASTChild(ASTNodeType type) {
         for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
-            if(typeAugmentedSemanticNode.astNode.getType() == type) return typeAugmentedSemanticNode;
+            if(typeAugmentedSemanticNode.astNode.getTreeType() == type) return typeAugmentedSemanticNode;
         }
         return null;
     }
@@ -171,7 +171,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     
     public TypeAugmentedSemanticNode getASTChild(ASTNodeType type, String image) {
         for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
-            if(typeAugmentedSemanticNode.astNode.getType() == type &&
+            if(typeAugmentedSemanticNode.astNode.getTreeType() == type &&
                     typeAugmentedSemanticNode.astNode.hasToken() &&
                     typeAugmentedSemanticNode.astNode.getToken().getImage().equals(image)) {
                 return typeAugmentedSemanticNode;
@@ -231,7 +231,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     }
     
     @Override
-    public ASTNodeType getType() {
+    public ASTNodeType getTreeType() {
         return getASTType();
     }
     
@@ -292,6 +292,11 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
             if(childFirst != null) return childFirst;
         }
         return null;
+    }
+    
+    @Override
+    public List<TypeAugmentedSemanticNode> getMutableChildren() {
+        return children;
     }
     
     public TypeAugmentedSemanticNode getDeepestFailureNode() {

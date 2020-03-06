@@ -35,7 +35,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
     
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
-        assert node.getASTNode().getType() == ASTNodeType.declarations;
+        assert node.getASTNode().getTreeType() == ASTNodeType.declarations;
         
         for (TypeAugmentedSemanticNode declaration : node.getChildren()) {
             CXType declarationType;

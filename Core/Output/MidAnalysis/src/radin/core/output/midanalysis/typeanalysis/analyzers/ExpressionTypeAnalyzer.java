@@ -43,7 +43,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         if(node.isTypedExpression()) return true;
         
-        if(node.getASTNode().getType() == ASTNodeType._super) {
+        if(node.getASTNode().getTreeType() == ASTNodeType._super) {
             node.setType(getCurrentTracker().getType("super"));
             return true;
         }
@@ -53,7 +53,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.literal) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.literal) {
             String image = node.getToken().getImage();
             Pattern floatingPoint = Pattern.compile("-?\\d+\\.\\d*|\\d*\\.\\d+");
             Pattern integer = Pattern.compile("\\d+|0b[01]+|0x[a-fA-F]+");
@@ -78,12 +78,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.string) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.string) {
             node.setType(new PointerType(CXPrimitiveType.CHAR));
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.id) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.id) {
             String image = node.getToken().getImage();
             if(!getCurrentTracker().variableExists(image)) {
                 throw new IdentifierDoesNotExistError(image);
@@ -97,7 +97,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.binop) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.binop) {
             Token opToken = node.getASTChild(ASTNodeType.operator).getToken();
             TypeAugmentedSemanticNode lhs = node.getChild(1);
             TypeAugmentedSemanticNode rhs = node.getChild(2);
@@ -141,7 +141,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.indirection) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.indirection) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)){
                 setIsFailurePoint(child);
@@ -172,7 +172,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.addressof) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.addressof) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             
             if(!determineTypes(child)) {
@@ -186,7 +186,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.uniop) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.uniop) {
             TypeAugmentedSemanticNode child = node.getChild(1);
             if(!determineTypes(child)) {
                 setIsFailurePoint(child);
@@ -198,7 +198,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.postop) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.postop) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)) {
                 setIsFailurePoint(child);
@@ -209,7 +209,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.cast) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.cast) {
             assert node.getASTNode() instanceof TypedAbstractSyntaxNode;
             CXType castType = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
             TypeAugmentedSemanticNode child = node.getChild(0);
@@ -226,7 +226,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.array_reference) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.array_reference) {
             TypeAugmentedSemanticNode lhs = node.getChild(0);
             TypeAugmentedSemanticNode rhs = node.getChild(1);
     
@@ -267,7 +267,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.function_call) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.function_call) {
             /*
             if(node.getChild(0).getASTType() != ASTNodeType.id) {
             
@@ -300,7 +300,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.field_get) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.field_get) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             
@@ -348,7 +348,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.method_call) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.method_call) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) {
                 throw new IllegalAccessError(node.getChild(0).getToken());

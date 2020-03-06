@@ -1,8 +1,9 @@
 #ifndef SANDBOX_STRING_H
 #define SANDBOX_STRING_H
 
+#include <primitives.h>
 #define NULL ((void*) 0)
-typedef unsigned long size_t;
+
 
 void * memcpy ( void * destination, const void * source, size_t num );
 void * memmove ( void * destination, const void * source, size_t num );

@@ -2,16 +2,23 @@
 #define __PRELUDE_HEADER__
 
 #include <reflection.h>
+#include <primitives.h>
+
+class Char;
+class Int;
+class Short;
+class Long;
+
+class Double;
+class Float;
+
 
 in std class String;
 in std class ClassInfo;
 
-typedef unsigned char bool;
-typedef unsigned long size_t;
 
-
-void* malloc(unsigned int sz);
-void* calloc(unsigned int num, unsigned int sz);
+void* malloc(size_t sz);
+void* calloc(size_t num, size_t sz);
 
 
 

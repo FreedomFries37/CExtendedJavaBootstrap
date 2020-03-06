@@ -8,9 +8,9 @@ import java.util.*;
  */
 public class GrammarBuilder <T>  {
     
-    private class GrammarBuilderNonTerminal extends NonTerminal<T> {
+    private class GrammarBuilderTerminal extends Terminal<T> {
     
-        public GrammarBuilderNonTerminal(T backingObject) {
+        public GrammarBuilderTerminal(T backingObject) {
             super(backingObject);
         }
     }
@@ -41,8 +41,8 @@ public class GrammarBuilder <T>  {
         symbols.putAll(other.symbols);
     }
     
-    public GrammarBuilderNonTerminal nonTerminal(T o) {
-        return new GrammarBuilderNonTerminal(o);
+    public GrammarBuilderTerminal terminal(T o) {
+        return new GrammarBuilderTerminal(o);
     }
     
     public void setStartingSymbol(Symbol startingSymbol) {
@@ -64,16 +64,20 @@ public class GrammarBuilder <T>  {
                 arr[index] = symbol((String) rh);
             } else if(rh instanceof Symbol) {
                 arr[index] = (Symbol) rh;
-            } else if(rh instanceof NonTerminal) {
-                arr[index] = (NonTerminal<T>) rh;
+            } else if(rh instanceof Terminal) {
+                arr[index] = (Terminal<T>) rh;
             } else {
-                arr[index] = nonTerminal((T) rh);
+                arr[index] = terminal((T) rh);
             }
             
             index++;
         }
         
         addProduction(lhs, arr);
+    }
+    
+    public LRData<T> toNormalData(T eof) {
+        return new LRData<>(productions, startingSymbol, eof);
     }
     
     public void addProduction(Symbol lhs, ParsableObject<?>... rhs) {

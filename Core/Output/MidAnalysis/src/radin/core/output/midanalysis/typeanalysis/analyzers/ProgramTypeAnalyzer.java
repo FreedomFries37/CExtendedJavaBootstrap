@@ -19,7 +19,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
     
     public ProgramTypeAnalyzer(AbstractSyntaxNode program) {
         this(new TypeAugmentedSemanticTree(program, getEnvironment()).getHead());
-        assert program.getType() == ASTNodeType.top_level_decs;
+        assert program.getTreeType() == ASTNodeType.top_level_decs;
     }
     
     

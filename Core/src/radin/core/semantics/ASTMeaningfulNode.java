@@ -1,21 +1,17 @@
 package radin.core.semantics;
 
-import radin.core.AbstractTree;
 import radin.core.lexical.Token;
-
-import java.util.List;
 
 /**
  * Represents a node that has a {@link ASTNodeType}
- * @param <R>
+ * @param <T>
  */
-public abstract class ASTMeaningfulNode<T extends ASTMeaningfulNode<T>> extends AbstractTree<T> {
+public abstract class ASTMeaningfulNode<T extends ASTMeaningfulNode<T>> extends AbstractGenericMeaningfulNode<ASTNodeType, T> {
     
-    abstract public ASTNodeType getType();
+    abstract public ASTNodeType getTreeType();
     abstract public Token getToken();
     
-    @Override
-    abstract public List<T> getDirectChildren();
+    
     public ASTMeaningfulNode<T> getChildWithASTType(ASTNodeType type) {
         return getChildWithASTType(type, 0);
     }
@@ -29,7 +25,7 @@ public abstract class ASTMeaningfulNode<T extends ASTMeaningfulNode<T>> extends 
     public ASTMeaningfulNode<T> getChildWithASTType(ASTNodeType type, int count) {
         int found = -1;
         for (ASTMeaningfulNode<T> directChild : getDirectChildren()) {
-            if(directChild.getType().equals(type)) {
+            if(directChild.getTreeType().equals(type)) {
                 if(++found == count) {
                     return directChild;
                 }
@@ -40,7 +36,8 @@ public abstract class ASTMeaningfulNode<T extends ASTMeaningfulNode<T>> extends 
     
     
     
-    public ASTMeaningfulNode<T> getChildAtIndex(int index) {
+    
+    public T getChildAtIndex(int index) {
         return getDirectChildren().get(index);
     }
 }

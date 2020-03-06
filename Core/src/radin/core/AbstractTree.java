@@ -33,6 +33,10 @@ public abstract class AbstractTree<T extends AbstractTree<T>> {
     
     public abstract List<T> postfix();
     public abstract List<T> getDirectChildren();
+    public abstract List<T> getMutableChildren();
+    public List<? extends T> getImmutableChildren() {
+        return getDirectChildren();
+    }
     
     public void addChild(T other) {
         getDirectChildren().add(other);

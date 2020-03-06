@@ -42,7 +42,7 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
     }
     
     public TypedAbstractSyntaxNode addType(CXType type) {
-        return new TypedAbstractSyntaxNode(this.getType(), type, childList);
+        return new TypedAbstractSyntaxNode(this.getTreeType(), type, childList);
     }
     
     public static AbstractSyntaxNode unroll(ASTNodeType type, AbstractSyntaxNode first, AbstractSyntaxNode unrolled) {
@@ -59,7 +59,7 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
         for (AbstractSyntaxNode abstractSyntaxNode : node.getChildList()) {
             childrensChildren.addAll(abstractSyntaxNode.getChildList());
         }
-        return new AbstractSyntaxNode(node.getType(), childrensChildren);
+        return new AbstractSyntaxNode(node.getTreeType(), childrensChildren);
     }
     
     public AbstractSyntaxNode(AbstractSyntaxNode other,
@@ -115,7 +115,7 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
     }
     
     @Override
-    public ASTNodeType getType() {
+    public ASTNodeType getTreeType() {
         return type;
     }
     
@@ -138,7 +138,7 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
     
     public AbstractSyntaxNode getChild(ASTNodeType type) {
         for (AbstractSyntaxNode abstractSyntaxNode : childList) {
-            if(abstractSyntaxNode.getType().equals(type)) return abstractSyntaxNode;
+            if(abstractSyntaxNode.getTreeType().equals(type)) return abstractSyntaxNode;
         }
         return null;
     }
@@ -146,7 +146,7 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
     public List<AbstractSyntaxNode> getChildren(ASTNodeType type){
         List<AbstractSyntaxNode> output = new LinkedList<>();
         for (AbstractSyntaxNode abstractSyntaxNode : childList) {
-            if(abstractSyntaxNode.getType().equals(type)) output.add(abstractSyntaxNode);
+            if(abstractSyntaxNode.getTreeType().equals(type)) output.add(abstractSyntaxNode);
         }
         return output;
     }
@@ -234,7 +234,7 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
         return childList;
     }
     
-    public List<? super AbstractSyntaxNode> getMutableChildren() {
+    public List<AbstractSyntaxNode> getMutableChildren() {
         return childList;
     }
 }

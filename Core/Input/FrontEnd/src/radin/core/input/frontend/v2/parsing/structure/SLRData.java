@@ -5,15 +5,11 @@ import radin.core.utility.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SLRData <T> {
+public class SLRData <T> extends LRData<T> {
     
-    private List<Production> productionList;
-    private Set<Symbol> symbols;
-    private Symbol startingSymbol;
+    private HashMap<ParsableObject<?>, Set<Terminal<T>>> followSet;
     
-    private HashSet<Symbol> eps;
-    private HashMap<ParsableObject<?>, Set<NonTerminal<T>>> firstSet;
-    private HashMap<ParsableObject<?>, Set<NonTerminal<T>>> followSet;
+    
     
     private List<LRState<T>> states;
     private LRState<T> state0;
@@ -21,95 +17,20 @@ public class SLRData <T> {
     private int backingNumber;
     private HashMap<LRState<T>, Integer> stateToNumber;
     private HashMap<Pair<ParsableObject<?>, LRState<T>>, LRActionRecord<LRState<T>>> parseTable;
-    private T eof;
     
     
     public SLRData(List<Production> productionList, Symbol startingSymbol, T eof) {
-        this.productionList = productionList;
-        this.startingSymbol = new Symbol(startingSymbol.getBackingObject() + "'");
-        this.productionList.add(new Production(this.startingSymbol, Arrays.asList(startingSymbol,
-                new NonTerminal<>(eof))));
-        this.symbols = new HashSet<>();
+        super(productionList, startingSymbol, eof);
+        this.getProductionList().add(new Production(this.getStartingSymbol(), Arrays.asList(startingSymbol,
+                new Terminal<>(eof))));
         for (Production production : productionList) {
-            this.symbols.add(production.getLhs());
+            this.getSymbols().add(production.getLhs());
         }
-        this.eof = eof;
     }
     
-    public void generateFirstSets() {
-        firstSet = new HashMap<>();
-        eps = new HashSet<>();
-        for (Symbol symbol : symbols) {
-            firstSet.put(symbol, new HashSet<>());
-        }
-        
-        HashMap<ParsableObject<?>, Set<NonTerminal<T>>> firstSet = this.firstSet;
-        do {
-            this.firstSet = firstSet;
-            firstSet = new HashMap<>();
-            for (Map.Entry<ParsableObject<?>, Set<NonTerminal<T>>> symbolSetEntry : this.firstSet.entrySet()) {
-                firstSet.put(symbolSetEntry.getKey(), new HashSet<>(symbolSetEntry.getValue()));
-            }
-            
-            OUTER:
-            for (Production p : productionList) {
-                Symbol s = p.getLhs();
-                
-                for (ParsableObject<?> parsableObject : p.getRhs()) {
-                    if (parsableObject instanceof Symbol) {
-                        firstSet.get(s).addAll(firstSet.get(parsableObject));
-                        if(!eps.contains(parsableObject)) continue OUTER;
-                    } else {
-                        NonTerminal<T> tNonTerminal = (NonTerminal<T>) parsableObject;
-                        firstSet.put(tNonTerminal, Collections.singleton(tNonTerminal));
-                        firstSet.get(s).add(tNonTerminal);
-                        continue OUTER;
-                    }
-                }
-                
-            }
-        } while (!firstSet.equals(this.firstSet));
-        
-    }
-    
-    private boolean EPS(ParsableObject<?> o) {
-        if(o instanceof NonTerminal<?>) return false;
-        return eps.contains(o);
-    }
-    
-    private Set<NonTerminal<T>> FIRST(ParsableObject<?> o){
-        return firstSet.getOrDefault(o, new HashSet<>());
-    }
-    
-    private Set<NonTerminal<T>> FOLLOW(ParsableObject<?> o){
+    private Set<Terminal<T>> FOLLOW(ParsableObject<?> o){
         return followSet.getOrDefault(o, new HashSet<>());
     }
-    
-    private boolean stringEps(List<ParsableObject<?>> objects) {
-        for (ParsableObject<?> object : objects) {
-            if(!EPS(object)) return false;
-        }
-        return true;
-    }
-    
-    public List<Production> getProductionsForSymbol(Symbol s) {
-        return productionList.stream().filter(t -> t.getLhs().equals(s)).collect(Collectors.toList());
-    }
-    
-    private Set<NonTerminal<T>> stringFirst(List<ParsableObject<?>> objects) {
-        Set<NonTerminal<T>> output = new HashSet<>();
-        for (ParsableObject<?> object : objects) {
-            if(object instanceof Symbol) {
-                output.addAll(FIRST(object));
-                if (!EPS(object)) return output;
-            }else {
-                output.add((NonTerminal<T>) object);
-                return output;
-            }
-        }
-        return output;
-    }
-    
     
     
     public void generateFollowSet() {
@@ -118,22 +39,22 @@ public class SLRData <T> {
             followSet.put(object, new HashSet<>());
         }
         
-        HashMap<ParsableObject<?>, Set<NonTerminal<T>>> followSet = this.followSet;
+        HashMap<ParsableObject<?>, Set<Terminal<T>>> followSet = this.followSet;
         do {
             this.followSet = followSet;
             followSet = new HashMap<>();
-            for (Map.Entry<ParsableObject<?>, Set<NonTerminal<T>>> symbolSetEntry : this.followSet.entrySet()) {
+            for (Map.Entry<ParsableObject<?>, Set<Terminal<T>>> symbolSetEntry : this.followSet.entrySet()) {
                 followSet.put(symbolSetEntry.getKey(), new HashSet<>(symbolSetEntry.getValue()));
             }
             
-            for (Production production : productionList) {
+            for (Production production : getProductionList()) {
                 List<ParsableObject<?>> rhs = production.getRhs();
                 for (int i = 0; i < rhs.size(); i++) {
                     ParsableObject<?> B = rhs.get(i);
                     if(!followSet.containsKey(B)) followSet.put(B, new HashSet<>());
                     if(i < rhs.size() - 1) {
                         List<ParsableObject<?>> beta = rhs.subList(i+1, rhs.size());
-                        Set<NonTerminal<T>> stringFirst = stringFirst(beta);
+                        Set<Terminal<T>> stringFirst = stringFirst(beta);
                         followSet.get(B).addAll(stringFirst);
                         if(stringEps(beta)) {
                             followSet.get(B).addAll(followSet.get(production.getLhs()));
@@ -151,13 +72,13 @@ public class SLRData <T> {
         Set<Item<T>> set = new HashSet<>();
         Queue<Symbol> toVisit = new LinkedList<>();
         Set<Symbol> visited = new HashSet<>();
-        visited.add(startingSymbol);
-        for (Production production : getProductionsForSymbol(startingSymbol)) {
+        visited.add(getStartingSymbol());
+        for (Production production : getProductionsForSymbol(getStartingSymbol())) {
             if(production.getRhs().size() > 0 && production.getRhs().get(0) instanceof Symbol) {
                 toVisit.offer(((Symbol) production.getRhs().get(0)));
             }
-            Set<NonTerminal<T>> prodFollowSet = FOLLOW(production.getLhs());
-            prodFollowSet.add(new NonTerminal<>(eof));
+            Set<Terminal<T>> prodFollowSet = FOLLOW(production.getLhs());
+            prodFollowSet.add(new Terminal<>(eof));
             set.add(new Item<>(production, prodFollowSet));
         }
         
@@ -179,27 +100,7 @@ public class SLRData <T> {
         states.add(state0);
     }
     
-    public List<Production> getProductionList() {
-        return productionList;
-    }
-    
-    public Set<Symbol> getSymbols() {
-        return symbols;
-    }
-    
-    public Symbol getStartingSymbol() {
-        return startingSymbol;
-    }
-    
-    public HashSet<Symbol> getEps() {
-        return eps;
-    }
-    
-    public HashMap<ParsableObject<?>, Set<NonTerminal<T>>> getFirstSet() {
-        return firstSet;
-    }
-    
-    public HashMap<ParsableObject<?>, Set<NonTerminal<T>>> getFollowSet() {
+    public HashMap<ParsableObject<?>, Set<Terminal<T>>> getFollowSet() {
         return followSet;
     }
     

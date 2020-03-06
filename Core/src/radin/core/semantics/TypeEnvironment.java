@@ -386,10 +386,10 @@ public class TypeEnvironment {
             return ((TypedAbstractSyntaxNode) ast).getCxType();
         }
         
-        if(ast.getType().equals(ASTNodeType.namespaced)) {
+        if(ast.getTreeType().equals(ASTNodeType.namespaced)) {
             AbstractSyntaxNode node = ast;
             CXIdentifier namespace = null;
-            while (node.getType() == ASTNodeType.namespaced) {
+            while (node.getTreeType() == ASTNodeType.namespaced) {
                 namespace = new CXIdentifier(namespace, node.getChild(0).getToken());
                 node = node.getChild(1);
             }
@@ -415,16 +415,16 @@ public class TypeEnvironment {
             //throw new TypeDoesNotExist(new CXIdentifier(namespace, image).toString());
         }
         
-        if(ast.getType().equals(ASTNodeType.typename)) {
+        if(ast.getTreeType().equals(ASTNodeType.typename)) {
             String image = ast.getToken().getImage();
             return getType(ast.getToken(), ast.getToken());
         }
         
-        if(ast.getType().equals(ASTNodeType.pointer_type)) {
+        if(ast.getTreeType().equals(ASTNodeType.pointer_type)) {
             return new PointerType(getType(ast.getChild(0)));
         }
         
-        if(ast.getType().equals(ASTNodeType.qualifiers_and_specifiers)) {
+        if(ast.getTreeType().equals(ASTNodeType.qualifiers_and_specifiers)) {
             if(ast.hasChild(ASTNodeType.namespaced)) {
                 return getType(ast.getChild(ASTNodeType.namespaced));
             }
@@ -468,7 +468,7 @@ public class TypeEnvironment {
         }
         
         
-        if(ast.getType().equals(ASTNodeType.specifier)) {
+        if(ast.getTreeType().equals(ASTNodeType.specifier)) {
             
             if(ast.hasChild(ASTNodeType.basic_compound_type_dec)) {
                 return createType(ast.getChild(ASTNodeType.basic_compound_type_dec), null);
@@ -480,7 +480,7 @@ public class TypeEnvironment {
                 } else {
                     CXCompoundTypeNameIndirection.CompoundType type;
                     boolean addTypeDef = false;
-                    switch (ast.getChild(ASTNodeType.compound_type_reference).getChild(0).getType()) {
+                    switch (ast.getChild(ASTNodeType.compound_type_reference).getChild(0).getTreeType()) {
                         case struct: {
                             type = CXCompoundTypeNameIndirection.CompoundType.struct;
                             break;
@@ -518,19 +518,19 @@ public class TypeEnvironment {
             
         }
         
-        if(ast.getType().equals(ASTNodeType.class_type_definition)) {
+        if(ast.getTreeType().equals(ASTNodeType.class_type_definition)) {
             return createType(ast, currentNamespace);
         }
         
-        if(ast.getType() == ASTNodeType.array_type) {
+        if(ast.getTreeType() == ASTNodeType.array_type) {
             return new ArrayType(((TypedAbstractSyntaxNode) ast).getCxType());
         }
         
-        if(ast.getType() == ASTNodeType.abstract_declarator) {
+        if(ast.getTreeType() == ASTNodeType.abstract_declarator) {
             return getType(ast.getChild(0));
         }
         
-        throw new UnsupportedOperationException(ast.getType().toString());
+        throw new UnsupportedOperationException(ast.getTreeType().toString());
     }
     
     private String getSpecifier(AbstractSyntaxNode node) {
@@ -546,7 +546,7 @@ public class TypeEnvironment {
         Token name = nameAST != null? nameAST.getToken() : null;
         boolean isAnonymous = name == null;
         CXCompoundType output;
-        if(ast.getType().equals(ASTNodeType.basic_compound_type_dec)) {
+        if(ast.getTreeType().equals(ASTNodeType.basic_compound_type_dec)) {
             boolean isUnion = ast.hasChild(ASTNodeType.union);
             AbstractSyntaxNode fields = ast.getChild(ASTNodeType.basic_compound_type_fields);
             List<CXCompoundType.FieldDeclaration> fieldDeclarations = createFieldDeclarations(fields);
@@ -584,9 +584,9 @@ public class TypeEnvironment {
                 Visibility visibility = getVisibility(abstractSyntaxNode.getChild(ASTNodeType.visibility));
                 
                 AbstractSyntaxNode dec = abstractSyntaxNode.getChild(1);
-                switch (dec.getType()) {
+                switch (dec.getTreeType()) {
                     case declarations: {
-                        if(dec.getType() != ASTNodeType.function_description) {
+                        if(dec.getTreeType() != ASTNodeType.function_description) {
                             fieldDeclarations.addAll(
                                     createClassFieldDeclarations(visibility, dec)
                             );
@@ -610,7 +610,7 @@ public class TypeEnvironment {
                         break;
                     }
                     default:
-                        throw new UnsupportedOperationException(dec.getType().toString());
+                        throw new UnsupportedOperationException(dec.getTreeType().toString());
                 }
                 
             }
@@ -693,7 +693,7 @@ public class TypeEnvironment {
     
     
     private Visibility getVisibility(AbstractSyntaxNode ast) {
-        if(ast.getType() != ASTNodeType.visibility) return null;
+        if(ast.getTreeType() != ASTNodeType.visibility) return null;
         switch (ast.getToken().getType()) {
             case t_public: return Visibility._public;
             case t_private: return Visibility._private;
@@ -775,7 +775,7 @@ public class TypeEnvironment {
     }
     
     private CXMethod createMethod(Visibility visibility, boolean isVirtual, AbstractSyntaxNode ast) {
-        if(!(ast.getType().equals(ASTNodeType.function_definition) || ast.getType() == ASTNodeType.function_description)) {
+        if(!(ast.getTreeType().equals(ASTNodeType.function_definition) || ast.getTreeType() == ASTNodeType.function_description)) {
             throw new UnsupportedOperationException();
         }
         

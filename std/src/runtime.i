@@ -13,6 +13,7 @@ This file is compiled with special rules, significantly that words starting with
 #endif
 
 #include <string.h>
+#include <primitives.h>
 
 typedef unsigned char byte;
 
@@ -35,9 +36,18 @@ void panic(std::String message) {
 	exit(-1);
 }
 
+void assert_failure(const char* file, int linenumber, const char* message) {
+	print(file);
+	print(": ");
+	//print()
+	println(message);
+}
 
 
 bool __init_heap() {
+	ASSERT
+
+
 	jodin_heap.jheap = calloc(sizeof(byte), HEAP_SIZE);
 	if(jodin_heap.jheap == nullptr) {
 		return false;

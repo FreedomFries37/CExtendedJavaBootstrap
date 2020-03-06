@@ -158,7 +158,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::Object*] {
-            type $Object;
+            treeType $Object;
             params;
             empty;
           }
@@ -244,7 +244,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::ClassInfo*] {
-            type $ClassInfo;
+            treeType $ClassInfo;
             params;
             empty;
           }
@@ -326,7 +326,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::String*] {
-            type $String;
+            treeType $String;
             params {
               dec [const char*] {
                 id $bp;
@@ -338,7 +338,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::String*] {
-            type $String;
+            treeType $String;
             params;
             empty;
           }
@@ -425,7 +425,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [ll::Node*] {
-            type $Node;
+            treeType $Node;
             params {
               dec [void*] {
                 id $value_ptr;
@@ -495,7 +495,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [ll::IntLinkedList*] {
-            type $IntLinkedList;
+            treeType $IntLinkedList;
             params;
             compound_statement {
               assign {

@@ -35,7 +35,7 @@ Class are written using the follow syntax
 
 ```
 class IDENTIFIER (: PARENT_IDENTIFIER)? {
-    (public|private)? type field_name;
+    (public|private)? treeType field_name;
             or
     (public|private)? CLASSNAME(parameters?);
             or

@@ -35,7 +35,7 @@ public class SLRParser<Input extends Token, Check> implements IParser<Input, Par
     private ITokenizer<? extends Input> tokenizer;
     private HashMap<Pair<ParsableObject<?>, Integer>, LRActionRecord<Integer>> parseTable;
     private SLRData<Check> slrData;
-    private Stack<NonTerminal<Check>> buffer = new Stack<>();
+    private Stack<Terminal<Check>> buffer = new Stack<>();
     
     public SLRParser(Map<? super Input, ? extends Check> mappingFunction, ITokenizer<? extends Input> tokenizer, SLRData<Check> slrData) {
         this.mappingFunction = mappingFunction;
@@ -44,14 +44,14 @@ public class SLRParser<Input extends Token, Check> implements IParser<Input, Par
         parseTable = this.slrData.transformParseTable();
     }
     
-    private NonTerminal<Check> scan() {
+    private Terminal<Check> scan() {
         if(!buffer.isEmpty()) return buffer.pop();
         Input next = getNext();
-        return new NonTerminal<>(mappingFunction.map(next));
+        return new Terminal<>(mappingFunction.map(next));
     }
     
     private ParsableObject<?> symbolOverwrite(ParsableObject<?> o) {
-        buffer.push(new NonTerminal<>(mappingFunction.map(getCurrent())));
+        buffer.push(new Terminal<>(mappingFunction.map(getCurrent())));
         return o;
     }
     
@@ -87,7 +87,7 @@ public class SLRParser<Input extends Token, Check> implements IParser<Input, Par
             switch (actionRecord.getAction()) {
                 case SHIFT:
                     parseStack.push(new Pair<>(symbol, actionRecord.getNextState()));
-                    if(symbol instanceof NonTerminal) {
+                    if(symbol instanceof Terminal) {
                         createdParseNodes.add(new LeafNode(getCurrent()));
                     }
                     symbol = scan();
