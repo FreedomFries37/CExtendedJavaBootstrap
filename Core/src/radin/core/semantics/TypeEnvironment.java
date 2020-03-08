@@ -430,31 +430,36 @@ public class TypeEnvironment {
             if(ast.hasChild(ASTNodeType.namespaced)) {
                 return getType(ast.getChild(ASTNodeType.namespaced));
             }
+            if(ast.hasChild(typename) && ast.getChildList().size() == 1) {
+                return getType(ast.getChild(typename));
+            }
             
             List<AbstractSyntaxNode> specifiers = ast.getChildren(ASTNodeType.specifier);
             specifiers.sort(new SpecifierComparator());
             CXType type = null;
             
-            if(specifiers.get(0).getToken() != null  ) {
+            if(specifiers.isEmpty()) {
                 boolean isCompoundReference = false;
                 CXCompoundTypeNameIndirection.CompoundType ctype = null;
-                switch (specifiers.get(0).getToken().getType()) {
-                    case t_struct: {
+                switch (ast.getChild(0).getTreeType()) {
+                    case struct: {
                         ctype = CXCompoundTypeNameIndirection.CompoundType.struct;
+                        isCompoundReference = true;
                         break;
                     }
-                    case t_union: {
+                    case union: {
+                        isCompoundReference = true;
                         ctype = CXCompoundTypeNameIndirection.CompoundType.union;
                         break;
                     }
-                    case t_class: {
-                        return addDeferred(specifiers.get(1).getToken());
+                    case _class: {
+                        return addDeferred(ast.getChild(1).getToken());
                     }
                     default:
                         break;
                 }
                 if(isCompoundReference) {
-                
+                    return new CXCompoundTypeNameIndirection(ctype, ast.getChild(1).getToken());
                 }
                 
             }

@@ -6,11 +6,13 @@ import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.types.CXIdentifier;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode, SymbolTable<CXIdentifier,
         TypeAugmentedSemanticNode>> {
     
+    private List<AbstractCompilationError> errors = new LinkedList<>();
     
     @Override
     public SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> invoke(TypeAugmentedSemanticNode input) {
@@ -19,6 +21,6 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
     
     @Override
     public List<AbstractCompilationError> getErrors() {
-        return null;
+        return errors;
     }
 }

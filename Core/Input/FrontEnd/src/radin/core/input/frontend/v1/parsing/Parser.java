@@ -250,7 +250,7 @@ public class Parser extends BasicParser {
         switch (getCurrentType()) {
             case t_typedef: {
                 if (!parseTypeDef(child)) return false;
-                if (!consume(TokenType.t_semic)) return missingError("Missing semi-colon");
+                if (!consume(TokenType.t_semic)) return error("Missing semi-colon");
                 break;
             }
             case t_class:
@@ -1947,6 +1947,7 @@ public class Parser extends BasicParser {
             
             if (match(t_semic)) {
                 if(scopedTypedefStack.peek().contains(getPrevious().getImage())) {
+                    parent.addChild(child);
                     return true;
                 }
             } else

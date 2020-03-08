@@ -1,7 +1,12 @@
+struct s {
+	int a;
+	double c;
+};
+
 void hello_world() {
 	int a = 3;
 	int b = 5;
 
 	int c = a + b;
-	int *c = &c;
+	int *c_ptr = &c;
 }
