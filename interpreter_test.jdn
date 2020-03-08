@@ -10,3 +10,9 @@ void hello_world() {
 	int c = a + b;
 	int *c_ptr = &c;
 }
+
+int main(int argc, std::String argv[]) {
+
+return 0;
+
+}

@@ -45,7 +45,7 @@ void assert_failure(const char* file, int linenumber, const char* message) {
 
 
 bool __init_heap() {
-	ASSERT
+
 
 
 	jodin_heap.jheap = calloc(sizeof(byte), HEAP_SIZE);

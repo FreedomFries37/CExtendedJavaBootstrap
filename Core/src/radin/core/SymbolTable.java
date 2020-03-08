@@ -43,6 +43,14 @@ public class SymbolTable<K, T> implements Iterable<Map.Entry<SymbolTable<K, T>.K
         public int hashCode() {
             return Objects.hash(key);
         }
+    
+        @Override
+        public String toString() {
+            return "Key{" +
+                    "key=" + key +
+                    ", fileOrigin='" + fileOrigin + '\'' +
+                    '}';
+        }
     }
     
     
@@ -59,6 +67,11 @@ public class SymbolTable<K, T> implements Iterable<Map.Entry<SymbolTable<K, T>.K
                 put(keyTEntry.getKey(), keyTEntry.getValue());
             }
         }
+    }
+    
+    @Override
+    public String toString() {
+        return "SymbolTable{size = "+ size() +"}";
     }
     
     public int size() {

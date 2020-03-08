@@ -43,7 +43,7 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
     private IToolChain<? super AbstractSyntaxNode, ? extends TypeAugmentedSemanticNode> midToolChain;
     private IToolChain<? super TypeAugmentedSemanticNode, ? extends Output> backToolChain;
     
-    private List<Output> generatedOutputs;
+    private List<Output> generatedOutputs = new LinkedList<>();
     
     private class CompilationNode implements ICompilationErrorCollector {
         private String file;

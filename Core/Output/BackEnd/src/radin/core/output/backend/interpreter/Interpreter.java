@@ -34,6 +34,15 @@ public class Interpreter implements ICompilationErrorCollector {
         public PointerInstance<T> toPointer() {
             return new PointerInstance<>(getType().toPointer(), this);
         }
+    
+        @Override
+        public String toString() {
+            return "Instance{" +
+                    "type=" + type +
+                    '}';
+        }
+        
+        abstract void copyFrom(Instance<?> other);
     }
     
     class PrimitiveInstance<R, P extends AbstractCXPrimitiveType> extends Instance<P> {
@@ -52,6 +61,18 @@ public class Interpreter implements ICompilationErrorCollector {
         
         public void setBackingValue(R backingValue) {
             this.backingValue = backingValue;
+        }
+    
+        @Override
+        public String toString() {
+            return "(" + getType() + ") " + backingValue;
+        }
+    
+        @Override
+        void copyFrom(Instance<?> other) {
+            assert other instanceof PrimitiveInstance;
+            
+            this.backingValue = ((PrimitiveInstance<R, P>) other).backingValue;
         }
     }
     
@@ -88,6 +109,16 @@ public class Interpreter implements ICompilationErrorCollector {
         public int size() {
             return size;
         }
+    
+        @Override
+        public String toString() {
+            return "ArrayInstance{" +
+                    "type=" + getType() +
+                    ", size=" + size +
+                    '}';
+        }
+        
+        
     }
     
     
@@ -120,6 +151,15 @@ public class Interpreter implements ICompilationErrorCollector {
         public void setPointer(Instance<R> pointer) {
             setAt(index, pointer);
         }
+    
+        @Override
+        public String toString() {
+            return "PointerInstance{" +
+                    "type=" + getType() +
+                    '}';
+        }
+        
+        
     }
     
     public class CompoundInstance<T extends CXCompoundType> extends Instance<T> {
@@ -135,6 +175,15 @@ public class Interpreter implements ICompilationErrorCollector {
         
         public <R extends CXType, I extends Instance<R>> I get(String key) {
             return (I) fields.get(key);
+        }
+    
+        @Override
+        void copyFrom(Instance<?> other) {
+            assert other instanceof CompoundInstance;
+    
+            for (String s : fields.keySet()) {
+                this.fields.replace(s, ((CompoundInstance<CXCompoundType>) other).fields.get(s));
+            }
         }
     }
     
@@ -219,9 +268,32 @@ public class Interpreter implements ICompilationErrorCollector {
         this.environment = environment;
         this.symbols = symbols;
         autoVariables.add(new HashMap<>());
+        for (Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol : this.symbols) {
+            if(symbol.getValue().getASTType() == ASTNodeType.function_definition) {
+            
+            } else if(symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
+                // is a value;
+                try {
+                    if(!invoke(symbol.getValue())) throw new IllegalStateException();
+                    addAutoVariable(symbol.getKey().getToken().getImage(), pop());
+                } catch (FunctionReturned functionReturned) {
+                    throw new IllegalStateException();
+                }
+            }
+        }
     }
     
     protected Instance<?> getInstance(TypeAugmentedSemanticNode node) {
+        switch (node.getASTType()) {
+            case id: {
+                String name = node.getToken().getImage();
+                for (int i = autoVariables.size() - 1; i >= 0; i--) {
+                    if(autoVariables.get(i).containsKey(name)) {
+                        return autoVariables.get(i).get(name);
+                    }
+                }
+            }
+        }
         return null;
     }
     
@@ -266,6 +338,7 @@ public class Interpreter implements ICompilationErrorCollector {
             for (int i = 0; i < args.length; i++) {
                 argv.setAt(i, createCharPointerFromString(args[i]));
             }
+            push(argv);
             if(!invoke(main)) return -1;
             endClosure();
         } catch (FunctionReturned e) {
@@ -355,16 +428,16 @@ public class Interpreter implements ICompilationErrorCollector {
         switch (input.getASTType()) {
             case operator:
                 break;
-            case binop:
+            case binop: {
                 Token op = input.getChild(0).getToken();
-                if(!invoke(input.getChild(1))) return false;
+                if (!invoke(input.getChild(1))) return false;
                 PrimitiveInstance<? extends Number, ?> lhs =
                         (PrimitiveInstance<? extends Number, ?>) pop();
-                if(!invoke(input.getChild(2))) return false;
+                if (!invoke(input.getChild(2))) return false;
                 PrimitiveInstance<? extends Number, ?> rhs =
                         (PrimitiveInstance<? extends Number, ?>) pop();
-                
-                if(lhs.getType().isFloatingPoint()) {
+    
+                if (lhs.getType().isFloatingPoint()) {
                     push(new PrimitiveInstance<>(lhs.getType(),
                             opOnFloatingPoint(op.getType(), lhs.backingValue.doubleValue(),
                                     rhs.backingValue.doubleValue()),
@@ -373,13 +446,26 @@ public class Interpreter implements ICompilationErrorCollector {
                     push(new PrimitiveInstance<>(lhs.getType(), opOnIntegral(op.getType(),
                             lhs.getBackingValue().longValue(), rhs.getBackingValue().longValue()), lhs.unsigned));
                 }
-                
+            }
                 break;
             case uniop:
                 break;
             case declaration:
                 break;
-            case assignment:
+            case assignment: {
+                if (!invoke(input.getChild(0))) return false;
+                // LHS should be pushed
+                Instance<?> lhs = pop();
+                if (!invoke(input.getChild(2))) return false;
+                Instance<?> rhs = pop();
+    
+                Token assignmentToken = input.getASTChild(ASTNodeType.assignment_type).getToken();
+                if(assignmentToken.getType() == TokenType.t_eq) {
+                    lhs.copyFrom(rhs);
+                } else if(assignmentToken.getType() == TokenType.t_operator_assign) {
+                
+                } else return false;
+            }
                 break;
             case assignment_type:
                 break;
@@ -399,6 +485,9 @@ public class Interpreter implements ICompilationErrorCollector {
                 push(getInstance(input));
                 break;
             case sequence:
+                for (TypeAugmentedSemanticNode entry : input.getDirectChildren()) {
+                    if(!invoke(entry)) return false;
+                }
                 break;
             case typename:
                 break;
@@ -427,6 +516,15 @@ public class Interpreter implements ICompilationErrorCollector {
                 endClosure();
                 break;
             case field_get:
+                if(!invoke(input.getChild(0))) return false;
+                // owner on stack
+            {
+                CompoundInstance<?> compoundInstance = (CompoundInstance<?>) pop();
+                String field = input.getASTChild(ASTNodeType.id).getToken().getImage();
+                
+                // push field
+                push(compoundInstance.get(field));
+            }
                 break;
             case if_cond:
                 break;
@@ -515,6 +613,11 @@ public class Interpreter implements ICompilationErrorCollector {
             case initialized_declaration:
                 break;
             case compound_statement:
+                startLexicalScope();
+                for (TypeAugmentedSemanticNode directChild : input.getDirectChildren()) {
+                    if(!invoke(directChild)) return false;
+                }
+                endLexicalScope();
                 break;
             case sizeof:
                 break;

@@ -512,7 +512,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             node.setSynthesized(getCatNode("CastExpression").getSynthesized());
                             return true;
                         } else if(node.firstIs(TokenType.t_sizeof)) {
-                            AbstractSyntaxNode typeName = getCatNode("TypeName").getSynthesized();
+                            AbstractSyntaxNode typeName = getCatNode("CanonicalType").getSynthesized();
+                            getCatNode("AbstractDeclarator").setInherit(typeName);
+                            typeName = getCatNode("AbstractDeclarator").getSynthesized();
                             CXType type = environment.getType(typeName);
                             if(type instanceof PointerType && UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode()) {
                                 if(((PointerType) type).innerMostType() instanceof ICXClassType) {

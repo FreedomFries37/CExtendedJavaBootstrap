@@ -1279,6 +1279,7 @@ public class Parser extends BasicParser {
                 consumeAndAddAsLeaf(child);
                 if (!consume(TokenType.t_lpar)) return false;
                 if (!parseCanonicalType(child)) return false;
+                if (!parseAbstractDeclarator(child)) return false;
                 if (!consume(TokenType.t_rpar)) return false;
                 break;
             }

@@ -13,8 +13,11 @@ This file is compiled with special rules, significantly that words starting with
 #endif
 
 #include <string.h>
+#include <primitives.h>
 
 typedef unsigned char byte;
+
+
 
 struct j_heap{
 	byte* jheap;
@@ -33,9 +36,18 @@ void panic(std::String message) {
 	exit(-1);
 }
 
+void assert_failure(const char* file, int linenumber, const char* message) {
+	print(file);
+	print(": ");
+	//print()
+	println(message);
+}
 
 
 bool __init_heap() {
+
+
+
 	jodin_heap.jheap = calloc(sizeof(byte), HEAP_SIZE);
 	if(jodin_heap.jheap == nullptr) {
 		return false;
@@ -56,10 +68,6 @@ void* __jalloc(size_t length) {
 	return malloc(length);
 }
 
-for <T> size_t getActualSize() {
-	return sizeof(T);
-}
-
 
 
 
@@ -68,17 +76,13 @@ void __init_heap();
 void __free_heap();
 int __main(int argc, std::String argv[]);
 in std {
-    ClassInfo class_std_ClassInfo612126077_info = 0; // class_id = 1
-    ClassInfo class_std_Object250602564_info = 0; // class_id = 0
-    ClassInfo class_std_String119220082_info = 0; // class_id = 2
-    ClassInfo class_ll_Node1687898818_info = 0; // class_id = 6
-    ClassInfo class_ll_IntLinkedList190643162_info = 0; // class_id = 7
+    ClassInfo class_std_ClassInfo917514787_info = 0; // class_id = 1
+    ClassInfo class_std_Object1279038300_info = 0; // class_id = 0
+    ClassInfo class_std_String1410420782_info = 0; // class_id = 2
     ClassInfo __get_class(class_id id) {
-        if (id == 1) return class_std_ClassInfo612126077_info;
-        if (id == 0) return class_std_Object250602564_info;
-        if (id == 2) return class_std_String119220082_info;
-        if (id == 6) return class_ll_Node1687898818_info;
-        if (id == 7) return class_ll_IntLinkedList190643162_info;
+        if (id == 1) return class_std_ClassInfo917514787_info;
+        if (id == 0) return class_std_Object1279038300_info;
+        if (id == 2) return class_std_String1410420782_info;
         return nullptr;
     }
 }
@@ -93,25 +97,17 @@ int main(int argc, char* argv[]) {
     return output;
 }
 void __init_reflection() {
-    class_std_ClassInfo612126077_info = new std::ClassInfo();
-    class_std_ClassInfo612126077_info->name = new std::String("std::ClassInfo");
-    class_std_ClassInfo612126077_info->classHash = -1796039203;
-    class_std_ClassInfo612126077_info->info = class_std_ClassInfo612126077_info;
-    class_std_Object250602564_info = new std::ClassInfo();
-    class_std_Object250602564_info->name = new std::String("std::Object");
-    class_std_Object250602564_info->classHash = 821255108;
-    class_std_String119220082_info = new std::ClassInfo();
-    class_std_String119220082_info->name = new std::String("std::String");
-    class_std_String119220082_info->classHash = 599144754;
-    class_ll_Node1687898818_info = new std::ClassInfo();
-    class_ll_Node1687898818_info->name = new std::String("ll::Node");
-    class_ll_Node1687898818_info->classHash = 785255806;
-    class_ll_IntLinkedList190643162_info = new std::ClassInfo();
-    class_ll_IntLinkedList190643162_info->name = new std::String("ll::IntLinkedList");
-    class_ll_IntLinkedList190643162_info->classHash = -1614970726;
-    class_std_ClassInfo612126077_info->parent = __get_class(0);
-    class_std_Object250602564_info->parent = nullptr;
-    class_std_String119220082_info->parent = __get_class(0);
-    class_ll_Node1687898818_info->parent = __get_class(0);
-    class_ll_IntLinkedList190643162_info->parent = __get_class(0);
+    class_std_ClassInfo917514787_info = new std::ClassInfo();
+    class_std_ClassInfo917514787_info->name = new std::String("std::ClassInfo");
+    class_std_ClassInfo917514787_info->classHash = -1621812675;
+    class_std_ClassInfo917514787_info->info = class_std_ClassInfo917514787_info;
+    class_std_Object1279038300_info = new std::ClassInfo();
+    class_std_Object1279038300_info->name = new std::String("std::Object");
+    class_std_Object1279038300_info->classHash = 995481636;
+    class_std_String1410420782_info = new std::ClassInfo();
+    class_std_String1410420782_info->name = new std::String("std::String");
+    class_std_String1410420782_info->classHash = 773371282;
+    class_std_ClassInfo917514787_info->parent = __get_class(0);
+    class_std_Object1279038300_info->parent = nullptr;
+    class_std_String1410420782_info->parent = __get_class(0);
 }

@@ -38,6 +38,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.System.exit;
+
 public class InterpreterEntrancePoint {
     private static ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, SymbolTable<CXIdentifier,
             TypeAugmentedSemanticNode>> settings;
@@ -90,12 +92,12 @@ public class InterpreterEntrancePoint {
                     case "--arch": {
                         if (!argsIterator.hasNext()) {
                             System.err.println("Expected an argument");
-                            System.exit(-1);
+                            exit(-1);
                         }
                         int a = Integer.parseInt(argsIterator.next());
                         if(a != 32 && a != 64) {
                             System.err.println("Must be either 32 or 64");
-                            System.exit(-1);
+                            exit(-1);
                         }
                         arch = a;
                         break;
@@ -103,7 +105,7 @@ public class InterpreterEntrancePoint {
                     case "--debug-level": {
                         if (!argsIterator.hasNext()) {
                             System.err.println("Expected an argument");
-                            System.exit(-1);
+                            exit(-1);
                         }
                         int level = Integer.parseInt(argsIterator.next());
                         Level actual;
@@ -245,7 +247,7 @@ public class InterpreterEntrancePoint {
             Interpreter interpreter = new Interpreter(environment, symbolTable);
             
             ICompilationSettings.debugLog.info("Running interpreter");
-            interpreter.run(argPassOff.toArray(new String[0]));
+            exit(interpreter.run(argPassOff.toArray(new String[0])));
         } else {
             ICompilationSettings.debugLog.warning("Compilation failed");
         }
