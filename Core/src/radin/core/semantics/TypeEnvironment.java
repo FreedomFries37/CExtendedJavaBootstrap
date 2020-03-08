@@ -16,12 +16,14 @@ import radin.core.utility.Pair;
 
 import java.util.*;
 
+import static radin.core.lexical.TokenType.t_class;
 import static radin.core.lexical.TokenType.t_id;
+import static radin.core.semantics.ASTNodeType.*;
 
 public class TypeEnvironment {
     
     private final static HashSet<String> primitives;
-
+    
     static {
         primitives = new HashSet<>();
         primitives.addAll(Arrays.asList("char",
@@ -32,7 +34,7 @@ public class TypeEnvironment {
     }
     
     private static int environmentsCreated = 0;
-
+    
     private HashMap<String, CXType> typeDefinitions;
     private HashSet<CXCompoundType> namedCompoundTypes;
     private HashMap<String, CXCompoundType> namedCompoundTypesMap;
@@ -133,11 +135,11 @@ public class TypeEnvironment {
     public int getShortIntSize() {
         return shortIntSize;
     }
-
+    
     public void setShortIntSize(int shortIntSize) {
         this.shortIntSize = shortIntSize;
     }
-
+    
     public int getLongIntSize() {
         return longIntSize;
     }
@@ -185,7 +187,7 @@ public class TypeEnvironment {
         ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
         CXIdentifier actual = new CXIdentifier(parent, identifier.getIdentifier());
         ICompilationSettings.debugLog.finest("Rectified to " + actual);
-    
+        
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
@@ -208,7 +210,7 @@ public class TypeEnvironment {
         
         CXIdentifier actual = new CXIdentifier(namespace,  identifier);
         ICompilationSettings.debugLog.finest("Getting temp type " + actual);
-    
+        
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
     
@@ -272,7 +274,7 @@ public class TypeEnvironment {
         
         CXType type = getType(typeAST);
         if(typeDefinitions.containsKey(name) && !type.isExact(typeDefinitions.get(name), this)) throw new TypeDefinitionAlreadyExistsError(name);
-    
+        
         typeDefinitions.put(name, new CXDynamicTypeDefinition(name, type));
         return type;
     }
@@ -280,8 +282,8 @@ public class TypeEnvironment {
     public void removeTypeDefinition(String name) throws InvalidPrimitiveException {
         if(primitives.contains(name)) throw new PrimitiveTypeDefinitionError(name);
         if(name.equals("void")) throw new VoidTypeError();
-    
-    
+        
+        
         typeDefinitions.remove(name);
         
         //typeDefinitions.put(name, new CXDynamicTypeDefinition(name, type));
@@ -304,7 +306,7 @@ public class TypeEnvironment {
                 corresponding);
         
         List<CXType> output = new LinkedList<>();
-    
+        
         for (CXIdentifier namespace : namespaceTree.getNamespaces(currentNamespace, namespacedTypename.getParentNamespace())) {
             for (CXCompoundType cxCompoundType : namespaceTree.getTypesForNamespace(namespace)) {
                 if(cxCompoundType.getTypeNameIdentifier().getIdentifierString().equals(namespacedTypename.getIdentifierString())) {
@@ -346,19 +348,19 @@ public class TypeEnvironment {
         }
         List<CXType> possibilities = new LinkedList<>();
         for (CXCompoundType cxCompoundType : typesForNamespace) {
-    
+            
             if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(typenameImage))
                 possibilities.add(cxCompoundType);
         }
         
-    
+        
         if(output != null && possibilities.size() > 0) {
             if(output instanceof CXDelayedTypeDefinition && possibilities.size() == 1 && possibilities.get(0) instanceof CXClassType) {
                 if(((CXDelayedTypeDefinition) output).getIdentifier().equals(((CXClassType) possibilities.get(0)).getTypeNameIdentifier())) {
                     return new PointerType(possibilities.get(0));
                 }
             }
-        
+            
             possibilities.add(output);
             throw new AmbiguousIdentifierError(tok, possibilities);
         } else if(possibilities.size() > 1) {
@@ -366,7 +368,7 @@ public class TypeEnvironment {
         } else if(possibilities.size() == 1) {
             output = new PointerType(possibilities.get(0));
         }
-    
+        
         
         if(output == null)
             throw new TypeDoesNotExist(typenameImage.getImage());
@@ -432,6 +434,30 @@ public class TypeEnvironment {
             List<AbstractSyntaxNode> specifiers = ast.getChildren(ASTNodeType.specifier);
             specifiers.sort(new SpecifierComparator());
             CXType type = null;
+            
+            if(specifiers.get(0).getToken() != null  ) {
+                boolean isCompoundReference = false;
+                CXCompoundTypeNameIndirection.CompoundType ctype = null;
+                switch (specifiers.get(0).getToken().getType()) {
+                    case t_struct: {
+                        ctype = CXCompoundTypeNameIndirection.CompoundType.struct;
+                        break;
+                    }
+                    case t_union: {
+                        ctype = CXCompoundTypeNameIndirection.CompoundType.union;
+                        break;
+                    }
+                    case t_class: {
+                        return addDeferred(specifiers.get(1).getToken());
+                    }
+                    default:
+                        break;
+                }
+                if(isCompoundReference) {
+                
+                }
+                
+            }
             for (AbstractSyntaxNode specifier : specifiers) {
                 if(type == null) {
                     type = getType(specifier);
@@ -547,7 +573,7 @@ public class TypeEnvironment {
         boolean isAnonymous = name == null;
         CXCompoundType output;
         if(ast.getTreeType().equals(ASTNodeType.basic_compound_type_dec)) {
-            boolean isUnion = ast.hasChild(ASTNodeType.union);
+            boolean isUnion = ast.hasChild(union);
             AbstractSyntaxNode fields = ast.getChild(ASTNodeType.basic_compound_type_fields);
             List<CXCompoundType.FieldDeclaration> fieldDeclarations = createFieldDeclarations(fields);
             
@@ -571,7 +597,7 @@ public class TypeEnvironment {
             output = type;
         } else {
             ICompilationSettings.debugLog.finest("Is a class definition");
-    
+            
             CXIdentifier identifier = new CXIdentifier(namespace, name);
             List<CXMethod> methods = new LinkedList<>();
             List<CXConstructor> constructors = new LinkedList<>();
@@ -597,7 +623,7 @@ public class TypeEnvironment {
                     case function_definition: {
                         boolean isVirtual = dec.hasChild(ASTNodeType._virtual);
                         ICompilationSettings.debugLog.finest("Creating method in " + identifier + " with tree:\n" + dec.toTreeForm() + "...");
-    
+                        
                         methods.add(
                                 createMethod(visibility, isVirtual, dec)
                         );
@@ -620,7 +646,7 @@ public class TypeEnvironment {
             CXClassType cxClassType;
             if(ast.hasChild(ASTNodeType.inherit)) {
                 ICompilationSettings.debugLog.finest("Determining parent type...");
-               
+                
                 CXClassType parent;
                 try {
                     parent = (CXClassType) ((PointerType) getType(ast.getChild(ASTNodeType.inherit).getChild(0))).getSubType();
@@ -628,7 +654,7 @@ public class TypeEnvironment {
                     return null;
                 }
                 ICompilationSettings.debugLog.finest("Parent type found: " + parent);
-    
+                
                 cxClassType = new CXClassType(identifier, parent, fieldDeclarations, methods, new LinkedList<>(), this);
                 
                 
@@ -645,7 +671,7 @@ public class TypeEnvironment {
                 if(dec.hasChild(ASTNodeType.sequence)) {
                     
                     AbstractSyntaxNode priorAST = dec.getChild(2);
-                   
+                    
                     
                     constructors.add(
                             createConstructor(visibilityIterator.next(), cxClassType, params, compound, dec)
@@ -663,9 +689,9 @@ public class TypeEnvironment {
             cxClassType.addConstructors(constructors);
             createdClasses.add(cxClassType);
             cxClassType.setEnvironment(this);
-    
+            
             ICompilationSettings.debugLog.info("Created new class " + cxClassType.getTypeNameIdentifier()
-                + (cxClassType.getParent() != null ? " : " + cxClassType.getParent().getTypeNameIdentifier() : ""));
+                    + (cxClassType.getParent() != null ? " : " + cxClassType.getParent().getTypeNameIdentifier() : ""));
             
             
             List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(namespace);

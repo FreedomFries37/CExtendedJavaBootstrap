@@ -1,6 +1,7 @@
 package radin;
 
 import radin.core.IFrontEndUnit;
+import radin.core.SymbolTable;
 import radin.core.chaining.ToolChainFactory;
 import radin.core.input.FrontEndUnit;
 import radin.core.input.IParser;
@@ -13,6 +14,7 @@ import radin.core.lexical.Token;
 import radin.core.output.backend.compilation.FileCompiler;
 import radin.core.output.backend.compilation.RuntimeCompiler;
 import radin.core.output.backend.interpreter.Interpreter;
+import radin.core.output.backend.interpreter.SymbolTableCreator;
 import radin.core.output.backend.microcompilers.FunctionCompiler;
 import radin.core.output.combo.MultipleFileHandler;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
@@ -21,6 +23,7 @@ import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
 import radin.core.output.typeanalysis.TypeAnalyzer;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.utility.CompilationSettings;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.UniversalCompilerSettings;
@@ -36,20 +39,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class InterpreterEntrancePoint {
-    private static ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> settings;
+    private static ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, SymbolTable<CXIdentifier,
+            TypeAugmentedSemanticNode>> settings;
     
-    public static ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> getSettings() {
+    public static ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,SymbolTable<CXIdentifier,
+            TypeAugmentedSemanticNode>> getSettings() {
         return settings;
     }
     
     
     public static void main(String[] args) throws IOException {
-        ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> compilationSettings =
+        ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
+                SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> compilationSettings =
                 new CompilationSettings<>();
         setCompilationSettings(compilationSettings);
         settings = compilationSettings;
         // UniversalCompilerSettings.getInstance().setSettings(compilationSettings);
-        
+        List<String> argPassOff = new LinkedList<>();
         List<String> filenamesStrings = new LinkedList<>();
         Iterator<String> argsIterator = Arrays.stream(args).iterator();
         Integer arch = null;
@@ -128,6 +134,13 @@ public class InterpreterEntrancePoint {
                         compilationSettings.setLogLevel(actual);
                         break;
                     }
+                    case "--args":
+                    case "-a": {
+                        while (argsIterator.hasNext()) {
+                            argPassOff.add(argsIterator.next());
+                        }
+                        break;
+                    }
                 }
             } else {
                 filenamesStrings.add(argument);
@@ -185,7 +198,7 @@ public class InterpreterEntrancePoint {
         settings.setMidToolChain(midChain);
         
         
-        var backChain = new Interpreter();
+        var backChain = new SymbolTableCreator();
         settings.setBackToolChain(backChain);
         FunctionCompiler.environment = environment;
         
@@ -206,7 +219,7 @@ public class InterpreterEntrancePoint {
             files.addAll(fileList);
         }
         
-        MultipleFileHandler multipleFileHandler = new MultipleFileHandler(
+        MultipleFileHandler<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> multipleFileHandler = new MultipleFileHandler<>(
                 files,
                 compilationSettings
         );
@@ -220,22 +233,28 @@ public class InterpreterEntrancePoint {
             runtimeCompiler.compile();
             
             File runtimeFile = new File("runtime.jdn");
-            multipleFileHandler = new MultipleFileHandler(
+            List<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> generatedOutputs =
+                    multipleFileHandler.getGeneratedOutputs();
+            multipleFileHandler = new MultipleFileHandler<> (
                     Collections.singletonList(runtimeFile),
                     compilationSettings
             );
             multipleFileHandler.compileAll();
+            generatedOutputs.addAll(multipleFileHandler.getGeneratedOutputs());
+            SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbolTable = new SymbolTable<>(generatedOutputs);
+            Interpreter interpreter = new Interpreter(environment, symbolTable);
             
-            ICompilationSettings.debugLog.info("Compilation completed");
+            ICompilationSettings.debugLog.info("Running interpreter");
+            interpreter.run(argPassOff.toArray(new String[0]));
         } else {
             ICompilationSettings.debugLog.warning("Compilation failed");
         }
         
         
-        
     }
     
-    public static void setCompilationSettings(ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> settings) {
+    public static void setCompilationSettings(ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
+            SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> settings) {
         TypeAnalyzer.setCompilationSettings(settings);
         // AbstractCompiler.setSettings(settings);
         Tokenizer.setCompilationSettings(settings);

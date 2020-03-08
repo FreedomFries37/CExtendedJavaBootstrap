@@ -23,9 +23,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public class MultipleFileHandler implements ICompilationErrorCollector {
+public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
     
-    private ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> settings;
+    private ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Output> settings;
     
     
     private List<AbstractCompilationError> fullErrors;
@@ -41,9 +41,9 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
     
     private IFrontEndUnit<? extends AbstractSyntaxNode> frontEndUnit;
     private IToolChain<? super AbstractSyntaxNode, ? extends TypeAugmentedSemanticNode> midToolChain;
-    private IToolChain<? super TypeAugmentedSemanticNode, ? extends Boolean> backToolChain;
+    private IToolChain<? super TypeAugmentedSemanticNode, ? extends Output> backToolChain;
     
-    
+    private List<Output> generatedOutputs;
     
     private class CompilationNode implements ICompilationErrorCollector {
         private String file;
@@ -193,8 +193,8 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                     backToolChain.setVariable("file", file);
                     
                     backToolChain.getErrors().clear();
-                    Boolean aBoolean = backToolChain.invoke(invoke);
-                    if (!aBoolean || backToolChain.hasErrors()) {
+                    Output output = backToolChain.invoke(invoke);
+                    if ((output instanceof Boolean && !((Boolean) output)) || output == null || backToolChain.hasErrors()) {
                         if (!stateChanged) {
                             errors.addAll(backToolChain.getErrors());
                             return CompilationResult.Failed;
@@ -204,6 +204,7 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
                         // backToolChain.clearErrors();
                         return CompilationResult.Failed;
                     }
+                    generatedOutputs.add(output);
                     return CompilationResult.Completed;
                 } else {
                     if (midToolChain.hasErrors()) {
@@ -263,6 +264,10 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
         }
     }
     
+    public List<Output> getGeneratedOutputs() {
+        return generatedOutputs;
+    }
+    
     private class NodeComparator implements Comparator<CompilationNode> {
         
         @Override
@@ -284,7 +289,8 @@ public class MultipleFileHandler implements ICompilationErrorCollector {
     
     
     
-    public MultipleFileHandler(List<File> files, ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> settings) {
+    public MultipleFileHandler(List<File> files, ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
+            Output> settings) {
         this.settings = settings;
         compileStartTime = System.currentTimeMillis();
         fullErrors = new LinkedList<>();

@@ -1,14 +1,12 @@
 package radin.core.output.backend.interpreter;
 
 import radin.core.SymbolTable;
-import radin.core.chaining.IToolChain;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.ASTNodeType;
-import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
@@ -178,6 +176,8 @@ public class Interpreter implements ICompilationErrorCollector {
     private Stack<Instance<?>> memStack = new Stack<>();
     private Stack<Integer> previousMemStackSize = new Stack<>();
     
+    
+    
     public void addAutoVariable(String name, Instance<?> value) {
         autoVariables.peek().put(name, value);
     }
@@ -215,13 +215,14 @@ public class Interpreter implements ICompilationErrorCollector {
         return memStack.pop();
     }
     
-    public Interpreter(TypeEnvironment environment) {
+    public Interpreter(TypeEnvironment environment, SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols) {
         this.environment = environment;
+        this.symbols = symbols;
         autoVariables.add(new HashMap<>());
     }
     
     protected Instance<?> getInstance(TypeAugmentedSemanticNode node) {
-    
+        return null;
     }
     
     private class FunctionReturned extends Throwable {
@@ -273,7 +274,7 @@ public class Interpreter implements ICompilationErrorCollector {
         return -1;
     }
     
-    private double opOnFloatingPoint(TokenType op, double lhs, double rhs) {
+    private Number opOnFloatingPoint(TokenType op, double lhs, double rhs) {
         switch (op) {
             case t_dand:
                 return lhs != 0 && rhs != 0? 1 : 0;
@@ -293,12 +294,57 @@ public class Interpreter implements ICompilationErrorCollector {
                 return lhs + rhs;
             case t_star:
                 return lhs * rhs;
+            case t_fwslash:
+                return lhs / rhs;
             case t_percent:
                 return lhs % rhs;
             case t_lt:
                 return lhs < rhs? 1 : 0;
             case t_gt:
                 return lhs > rhs? 1 : 0;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+    
+    private Number opOnIntegral(TokenType op, long lhs, long rhs) {
+        switch (op) {
+            case t_dand:
+                return lhs != 0 && rhs != 0? 1 : 0;
+            case t_dor:
+                return lhs != 0 || rhs != 0? 1 : 0;
+            case t_lte:
+                return lhs <= rhs? 1 : 0;
+            case t_gte:
+                return lhs >= rhs? 1 : 0;
+            case t_eq:
+                return lhs == rhs? 1 : 0;
+            case t_neq:
+                return lhs != rhs? 1 : 0;
+            case t_minus:
+                return lhs - rhs;
+            case t_add:
+                return lhs + rhs;
+            case t_star:
+                return lhs * rhs;
+            case t_fwslash:
+                return lhs / rhs;
+            case t_percent:
+                return lhs % rhs;
+            case t_lt:
+                return lhs < rhs? 1 : 0;
+            case t_gt:
+                return lhs > rhs? 1 : 0;
+            case t_lshift:
+                return lhs << rhs;
+            case t_rshift:
+                return lhs >> rhs;
+            case t_bar:
+                return lhs | rhs;
+            case t_and:
+                return lhs & rhs;
+            case t_crt:
+                return lhs ^ rhs;
             default:
                 throw new UnsupportedOperationException();
         }
@@ -324,7 +370,8 @@ public class Interpreter implements ICompilationErrorCollector {
                                     rhs.backingValue.doubleValue()),
                             lhs.unsigned));
                 } else {
-                    push(new PrimitiveInstance<>(lhs.getType(), ))
+                    push(new PrimitiveInstance<>(lhs.getType(), opOnIntegral(op.getType(),
+                            lhs.getBackingValue().longValue(), rhs.getBackingValue().longValue()), lhs.unsigned));
                 }
                 
                 break;

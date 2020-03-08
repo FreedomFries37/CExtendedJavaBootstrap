@@ -1,8 +1,9 @@
 package radin.core.utility;
 
+import java.util.Map;
 import java.util.Objects;
 
-public class Pair<T, R> {
+public class Pair<T, R> implements Map.Entry<T, R>{
     private T val1;
     private R val2;
     
@@ -56,5 +57,22 @@ public class Pair<T, R> {
     
     public static <T, R> Pair<T, R> to(T o1, R o2) {
         return new Pair<>(o1, o2);
+    }
+    
+    @Override
+    public T getKey() {
+        return getVal1();
+    }
+    
+    @Override
+    public R getValue() {
+        return getVal2();
+    }
+    
+    @Override
+    public R setValue(R value) {
+        R output = getVal2();
+        setVal2(value);
+        return output;
     }
 }

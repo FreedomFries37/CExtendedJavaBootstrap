@@ -212,7 +212,7 @@ public class CompilerEntrancePoint {
             files.addAll(fileList);
         }
         
-        MultipleFileHandler multipleFileHandler = new MultipleFileHandler(
+        MultipleFileHandler<Boolean> multipleFileHandler = new MultipleFileHandler<>(
                 files,
                 compilationSettings
         );
@@ -226,7 +226,7 @@ public class CompilerEntrancePoint {
             runtimeCompiler.compile();
             
             File runtimeFile = new File("runtime.jdn");
-            multipleFileHandler = new MultipleFileHandler(
+            multipleFileHandler = new MultipleFileHandler<Boolean>(
                     Collections.singletonList(runtimeFile),
                     compilationSettings
             );

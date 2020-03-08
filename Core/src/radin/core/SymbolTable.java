@@ -2,10 +2,11 @@ package radin.core;
 
 import radin.core.lexical.Token;
 import radin.core.semantics.types.CXIdentifier;
+import radin.core.utility.Pair;
 
 import java.util.*;
 
-public abstract class SymbolTable<K, T> {
+public class SymbolTable<K, T> implements Iterable<Map.Entry<SymbolTable<K, T>.Key, T>> {
     
     public class Key {
         private K key;
@@ -44,10 +45,20 @@ public abstract class SymbolTable<K, T> {
         }
     }
     
+    
     private HashMap<Key, T> table;
     
     public SymbolTable() {
         table = new HashMap<>();
+    }
+    
+    public SymbolTable(Collection<? extends SymbolTable<K, T>> combine) {
+        this();
+        for (SymbolTable<K, T> ktSymbolTable : combine) {
+            for (Map.Entry<Key, T> keyTEntry : ktSymbolTable) {
+                put(keyTEntry.getKey(), keyTEntry.getValue());
+            }
+        }
     }
     
     public int size() {
@@ -116,5 +127,10 @@ public abstract class SymbolTable<K, T> {
     
     public T replace(Key key, T value) {
         return table.replace(key, value);
+    }
+    
+    @Override
+    public Iterator<Map.Entry<Key, T>> iterator() {
+        return entrySet().iterator();
     }
 }
