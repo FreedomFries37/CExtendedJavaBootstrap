@@ -3,6 +3,9 @@ struct s {
 	double c;
 };
 
+char c = '\n';
+char b = 'a';
+
 void hello_world() {
 	int a = 3;
 	int b = 5;

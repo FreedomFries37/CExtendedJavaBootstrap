@@ -63,6 +63,7 @@ public class SymbolTable<K, T> implements Iterable<Map.Entry<SymbolTable<K, T>.K
     public SymbolTable(Collection<? extends SymbolTable<K, T>> combine) {
         this();
         for (SymbolTable<K, T> ktSymbolTable : combine) {
+            if(ktSymbolTable == null) continue;
             for (Map.Entry<Key, T> keyTEntry : ktSymbolTable) {
                 put(keyTEntry.getKey(), keyTEntry.getValue());
             }

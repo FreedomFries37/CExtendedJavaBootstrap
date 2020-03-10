@@ -103,4 +103,20 @@ in std {
 			return this;
 		}
 	}
+
+	implement Int {
+
+		Int(int value) {
+			this->value = value;
+		}
+
+        public Int getValue() {
+        	return this->value;
+        }
+
+        public void setValue(int value) {
+        	this->value = value;
+        }
+
+     }
 }

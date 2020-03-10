@@ -17,10 +17,6 @@ in std class String;
 in std class ClassInfo;
 
 
-void* malloc(size_t sz);
-void* calloc(size_t num, size_t sz);
-
-
 
 void free(void* ptr);
 void exit(int status);
@@ -97,6 +93,16 @@ in std {
 
 		virtual public int length();
     };
+
+    class Int {
+    	private int value;
+
+    	public Int(int value);
+
+    	public Int getValue();
+
+    	public void setValue(int value);
+    }
 
 }
 

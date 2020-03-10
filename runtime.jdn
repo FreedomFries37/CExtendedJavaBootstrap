@@ -30,6 +30,8 @@ struct j_heap{
 
 struct j_heap jodin_heap;
 
+int i = 3;
+
 
 void panic(std::String message) {
 	println_s(message);
@@ -47,8 +49,7 @@ void assert_failure(const char* file, int linenumber, const char* message) {
 bool __init_heap() {
 
 
-
-	jodin_heap.jheap = calloc(sizeof(byte), HEAP_SIZE);
+	jodin_heap.jheap = nullptr;
 	if(jodin_heap.jheap == nullptr) {
 		return false;
 	}

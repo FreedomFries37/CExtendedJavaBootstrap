@@ -4,14 +4,6 @@ top_level_decs {
     id $class_id;
   }
   top_level_decs {
-    qualifiers_and_specifiers [std::ClassInfo*] {
-      specifier [std::ClassInfo*] {
-        compound_type_reference {
-          class;
-          id $ClassInfo;
-        }
-      }
-    }
     declarations {
       function_description [std::ClassInfo*] {
         id $__get_class;
@@ -23,22 +15,73 @@ top_level_decs {
       }
     }
   }
-  qualifiers_and_specifiers [std::String*] {
-    specifier [std::String*] {
-      compound_type_reference {
-        class;
-        id $String;
-      }
-    }
+  typedef [char] {
+    id $i8;
   }
   typedef [unsigned char] {
+    id $u8;
+  }
+  typedef [int] {
+    id $i16;
+  }
+  typedef [unsigned int] {
+    id $u16;
+  }
+  typedef [int] {
+    id $i32;
+  }
+  typedef [unsigned int] {
+    id $u32;
+  }
+  typedef [long long int] {
+    id $i64;
+  }
+  typedef [unsigned long long int] {
+    id $u64;
+  }
+  typedef [u32] {
+    id $size_t;
+  }
+  typedef [u8] {
     id $bool;
+  }
+  qualifiers_and_specifiers [Char*] {
+    class;
+    type $Char;
+  }
+  qualifiers_and_specifiers [Int*] {
+    class;
+    type $Int;
+  }
+  qualifiers_and_specifiers [Short*] {
+    class;
+    type $Short;
+  }
+  qualifiers_and_specifiers [Long*] {
+    class;
+    type $Long;
+  }
+  qualifiers_and_specifiers [Double*] {
+    class;
+    type $Double;
+  }
+  qualifiers_and_specifiers [Float*] {
+    class;
+    type $Float;
+  }
+  qualifiers_and_specifiers [std::String*] {
+    class;
+    type $String;
+  }
+  qualifiers_and_specifiers [std::ClassInfo*] {
+    class;
+    type $ClassInfo;
   }
   declarations {
     function_description [void*] {
       id $malloc;
       params {
-        dec [unsigned int] {
+        dec [size_t] {
           id $sz;
         }
       }
@@ -48,10 +91,10 @@ top_level_decs {
     function_description [void*] {
       id $calloc;
       params {
-        dec [unsigned int] {
+        dec [size_t] {
           id $num;
         }
-        dec [unsigned int] {
+        dec [size_t] {
           id $sz;
         }
       }
@@ -129,7 +172,7 @@ top_level_decs {
   }
   declarations {
     initialized_declaration {
-      dec [const void*] {
+      dec [void*] {
         id $nullptr;
       }
       literal $0;
@@ -158,7 +201,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::Object*] {
-            treeType $Object;
+            type $Object;
             params;
             empty;
           }
@@ -244,7 +287,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::ClassInfo*] {
-            treeType $ClassInfo;
+            type $ClassInfo;
             params;
             empty;
           }
@@ -326,7 +369,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::String*] {
-            treeType $String;
+            type $String;
             params {
               dec [const char*] {
                 id $bp;
@@ -338,7 +381,7 @@ top_level_decs {
         class_level_declaration {
           visibility::@public;
           constructor_definition [std::String*] {
-            treeType $String;
+            type $String;
             params;
             empty;
           }
@@ -386,16 +429,33 @@ top_level_decs {
         }
         class_level_declaration {
           visibility::@public;
-          function_description [const char*] {
+          function_description [char*] {
             id $getCStr;
+            params;
+          }
+        }
+        class_level_declaration {
+          visibility::@public;
+          function_description [int] {
+            virtual;
+            id $length;
             params;
           }
         }
       }
     }
   }
-  typedef [unsigned long int] {
-    id $size_t;
+  typedef [long long int] {
+    type $i64;
+  }
+  typedef [unsigned long long int] {
+    type $u64;
+  }
+  typedef [u32] {
+    type $size_t;
+  }
+  typedef [u8] {
+    type $bool;
   }
   declarations {
     function_description [void*] {
@@ -581,31 +641,49 @@ top_level_decs {
       }
     }
   }
+  typedef [long long int] {
+    type $i64;
+  }
+  typedef [unsigned long long int] {
+    type $u64;
+  }
+  typedef [u32] {
+    type $size_t;
+  }
+  typedef [u8] {
+    type $bool;
+  }
   typedef [unsigned char] {
     id $byte;
   }
-  qualifiers_and_specifiers [struct j_heap { byte* jheap; size_t size; size_t bytes_free; }] {
-    specifier [struct j_heap { byte* jheap; size_t size; size_t bytes_free; }] {
-      struct/union_dec {
-        struct;
-        id $j_heap;
-        struct/union_field_declarations {
-          struct/union_field_declaration [byte*] {
-            id $jheap;
-          }
-          struct/union_field_declaration [size_t] {
-            id $size;
-          }
-          struct/union_field_declaration [size_t] {
-            id $bytes_free;
-          }
+  specifier [struct j_heap { byte jheap[]; size_t size; size_t bytes_free; }] {
+    struct/union_dec {
+      struct;
+      id $j_heap;
+      struct/union_field_declarations {
+        struct/union_field_declaration [byte*] {
+          id $jheap;
+        }
+        struct/union_field_declaration [size_t] {
+          id $size;
+        }
+        struct/union_field_declaration [size_t] {
+          id $bytes_free;
         }
       }
     }
   }
   declarations {
-    dec [struct j_heap { byte* jheap; size_t size; size_t bytes_free; }] {
+    dec [struct j_heap { byte jheap[]; size_t size; size_t bytes_free; }] {
       id $jodin_heap;
+    }
+  }
+  declarations {
+    initialized_declaration {
+      dec [int] {
+        id $i;
+      }
+      literal $3;
     }
   }
   function_definition [void] {
@@ -634,6 +712,41 @@ top_level_decs {
       }
     }
   }
+  function_definition [void] {
+    empty;
+    id $assert_failure;
+    params {
+      dec [const char*] {
+        id $file;
+      }
+      dec [int] {
+        id $linenumber;
+      }
+      dec [const char*] {
+        id $message;
+      }
+    }
+    compound_statement {
+      func_call {
+        id $print;
+        sequence {
+          id $file;
+        }
+      }
+      func_call {
+        id $print;
+        sequence {
+          string $": ";
+        }
+      }
+      func_call {
+        id $println;
+        sequence {
+          id $message;
+        }
+      }
+    }
+  }
   function_definition [bool] {
     empty;
     id $__init_heap;
@@ -645,21 +758,7 @@ top_level_decs {
           id $jheap;
         }
         assign_type::@=;
-        func_call {
-          id $calloc;
-          sequence {
-            sizeof [byte];
-            binop {
-              op::@*;
-              literal $1028;
-              binop {
-                op::@*;
-                literal $1028;
-                literal $128;
-              }
-            }
-          }
-        }
+        id $nullptr;
       }
       if {
         binop {
@@ -741,23 +840,6 @@ top_level_decs {
       }
     }
   }
-  generic {
-    parameterized_types {
-      parameter_type {
-        id $T;
-      }
-    }
-    function_definition [size_t] {
-      empty;
-      id $getActualSize;
-      params;
-      compound_statement {
-        return {
-          sizeof [T];
-        }
-      }
-    }
-  }
   declarations {
     function_description [void] {
       id $__init_reflection;
@@ -794,7 +876,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_std_ClassInfo612126077_info;
+          id $class_std_ClassInfo917514787_info;
         }
         literal $0;
       }
@@ -802,7 +884,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_std_Object250602564_info;
+          id $class_std_Object1279038300_info;
         }
         literal $0;
       }
@@ -810,23 +892,7 @@ top_level_decs {
     declarations {
       initialized_declaration {
         dec [std::ClassInfo] {
-          id $class_std_String119220082_info;
-        }
-        literal $0;
-      }
-    }
-    declarations {
-      initialized_declaration {
-        dec [std::ClassInfo] {
-          id $class_ll_Node1687898818_info;
-        }
-        literal $0;
-      }
-    }
-    declarations {
-      initialized_declaration {
-        dec [std::ClassInfo] {
-          id $class_ll_IntLinkedList190643162_info;
+          id $class_std_String1410420782_info;
         }
         literal $0;
       }
@@ -847,7 +913,7 @@ top_level_decs {
             literal $1;
           }
           return {
-            id $class_std_ClassInfo612126077_info;
+            id $class_std_ClassInfo917514787_info;
           }
           empty;
         }
@@ -858,7 +924,7 @@ top_level_decs {
             literal $0;
           }
           return {
-            id $class_std_Object250602564_info;
+            id $class_std_Object1279038300_info;
           }
           empty;
         }
@@ -869,29 +935,7 @@ top_level_decs {
             literal $2;
           }
           return {
-            id $class_std_String119220082_info;
-          }
-          empty;
-        }
-        if {
-          binop {
-            op::@==;
-            id $id;
-            literal $6;
-          }
-          return {
-            id $class_ll_Node1687898818_info;
-          }
-          empty;
-        }
-        if {
-          binop {
-            op::@==;
-            id $id;
-            literal $7;
-          }
-          return {
-            id $class_ll_IntLinkedList190643162_info;
+            id $class_std_String1410420782_info;
           }
           empty;
         }
@@ -1020,7 +1064,7 @@ top_level_decs {
     params;
     compound_statement {
       assign {
-        id $class_std_ClassInfo612126077_info;
+        id $class_std_ClassInfo917514787_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1029,7 +1073,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo612126077_info;
+            id $class_std_ClassInfo917514787_info;
           }
           id $name;
         }
@@ -1043,28 +1087,28 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo612126077_info;
+            id $class_std_ClassInfo917514787_info;
           }
           id $classHash;
         }
         assign_type::@=;
         uniop {
           op::@-;
-          literal $1796039203;
+          literal $1621812675;
         }
       }
       assign {
         field_get {
           indirection {
-            id $class_std_ClassInfo612126077_info;
+            id $class_std_ClassInfo917514787_info;
           }
           id $info;
         }
         assign_type::@=;
-        id $class_std_ClassInfo612126077_info;
+        id $class_std_ClassInfo917514787_info;
       }
       assign {
-        id $class_std_Object250602564_info;
+        id $class_std_Object1279038300_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1073,7 +1117,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_Object250602564_info;
+            id $class_std_Object1279038300_info;
           }
           id $name;
         }
@@ -1087,15 +1131,15 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_Object250602564_info;
+            id $class_std_Object1279038300_info;
           }
           id $classHash;
         }
         assign_type::@=;
-        literal $821255108;
+        literal $995481636;
       }
       assign {
-        id $class_std_String119220082_info;
+        id $class_std_String1410420782_info;
         assign_type::@=;
         constructor_call::@new [std::ClassInfo] {
           sequence;
@@ -1104,7 +1148,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_String119220082_info;
+            id $class_std_String1410420782_info;
           }
           id $name;
         }
@@ -1118,82 +1162,17 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_String119220082_info;
+            id $class_std_String1410420782_info;
           }
           id $classHash;
         }
         assign_type::@=;
-        literal $599144754;
-      }
-      assign {
-        id $class_ll_Node1687898818_info;
-        assign_type::@=;
-        constructor_call::@new [std::ClassInfo] {
-          sequence;
-        }
+        literal $773371282;
       }
       assign {
         field_get {
           indirection {
-            id $class_ll_Node1687898818_info;
-          }
-          id $name;
-        }
-        assign_type::@=;
-        constructor_call::@new [std::String] {
-          sequence {
-            string $"ll::Node";
-          }
-        }
-      }
-      assign {
-        field_get {
-          indirection {
-            id $class_ll_Node1687898818_info;
-          }
-          id $classHash;
-        }
-        assign_type::@=;
-        literal $785255806;
-      }
-      assign {
-        id $class_ll_IntLinkedList190643162_info;
-        assign_type::@=;
-        constructor_call::@new [std::ClassInfo] {
-          sequence;
-        }
-      }
-      assign {
-        field_get {
-          indirection {
-            id $class_ll_IntLinkedList190643162_info;
-          }
-          id $name;
-        }
-        assign_type::@=;
-        constructor_call::@new [std::String] {
-          sequence {
-            string $"ll::IntLinkedList";
-          }
-        }
-      }
-      assign {
-        field_get {
-          indirection {
-            id $class_ll_IntLinkedList190643162_info;
-          }
-          id $classHash;
-        }
-        assign_type::@=;
-        uniop {
-          op::@-;
-          literal $1614970726;
-        }
-      }
-      assign {
-        field_get {
-          indirection {
-            id $class_std_ClassInfo612126077_info;
+            id $class_std_ClassInfo917514787_info;
           }
           id $parent;
         }
@@ -1208,7 +1187,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_Object250602564_info;
+            id $class_std_Object1279038300_info;
           }
           id $parent;
         }
@@ -1218,37 +1197,7 @@ top_level_decs {
       assign {
         field_get {
           indirection {
-            id $class_std_String119220082_info;
-          }
-          id $parent;
-        }
-        assign_type::@=;
-        func_call {
-          id $__get_class;
-          sequence {
-            literal $0;
-          }
-        }
-      }
-      assign {
-        field_get {
-          indirection {
-            id $class_ll_Node1687898818_info;
-          }
-          id $parent;
-        }
-        assign_type::@=;
-        func_call {
-          id $__get_class;
-          sequence {
-            literal $0;
-          }
-        }
-      }
-      assign {
-        field_get {
-          indirection {
-            id $class_ll_IntLinkedList190643162_info;
+            id $class_std_String1410420782_info;
           }
           id $parent;
         }

@@ -2,9 +2,11 @@ package radin.core.output.backend.interpreter;
 
 import radin.core.SymbolTable;
 import radin.core.errorhandling.AbstractCompilationError;
+import radin.core.errorhandling.CompilationError;
 import radin.core.errorhandling.ICompilationErrorCollector;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
+import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
@@ -14,11 +16,15 @@ import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.ICXCompoundType;
+import radin.core.semantics.types.methods.CXMethod;
+import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.zip.DeflaterOutputStream;
 
-public class Interpreter implements ICompilationErrorCollector {
+public class Interpreter {
     
     abstract class Instance<T extends CXType> {
         private T type;
@@ -32,9 +38,9 @@ public class Interpreter implements ICompilationErrorCollector {
         }
         
         public PointerInstance<T> toPointer() {
-            return new PointerInstance<>(getType().toPointer(), this);
+            return new PointerInstance<>(getType(), this);
         }
-    
+        
         @Override
         public String toString() {
             return "Instance{" +
@@ -62,12 +68,12 @@ public class Interpreter implements ICompilationErrorCollector {
         public void setBackingValue(R backingValue) {
             this.backingValue = backingValue;
         }
-    
+        
         @Override
         public String toString() {
             return "(" + getType() + ") " + backingValue;
         }
-    
+        
         @Override
         void copyFrom(Instance<?> other) {
             assert other instanceof PrimitiveInstance;
@@ -82,16 +88,19 @@ public class Interpreter implements ICompilationErrorCollector {
     
     class ArrayInstance<R extends CXType, T extends ArrayType> extends PrimitiveInstance<ArrayList<Instance<R>>, T> {
         private int size;
+        private R subType;
         
-        public ArrayInstance(T type, int size) {
+        public ArrayInstance(T type, R subtype, int size) {
             super(type, new ArrayList<>(size), true);
+            this.subType = subtype;
             for (int i = 0; i < size; i++) {
-                getBackingValue().add(null);
+                getBackingValue().add((Instance<R>) createNewInstance(subtype));
             }
         }
         
-        public ArrayInstance(T type, ArrayList<Instance<R>> other) {
+        public ArrayInstance(T type, R subType, ArrayList<Instance<R>> other) {
             super(type, other, true);
+            this.subType = subType;
         }
         
         public Instance<R> getAt(int index) {
@@ -103,13 +112,21 @@ public class Interpreter implements ICompilationErrorCollector {
         }
         
         public PointerInstance<R> asPointer() {
-            return new PointerInstance<>(new PointerType(getType().getBaseType()), getBackingValue(), 0);
+            return new PointerInstance<>(subType, getBackingValue(), 0);
         }
-        
-        public int size() {
+    
+        public int getSize() {
             return size;
         }
     
+        public R getSubType() {
+            return subType;
+        }
+    
+        public int size() {
+            return size;
+        }
+        
         @Override
         public String toString() {
             return "ArrayInstance{" +
@@ -117,30 +134,44 @@ public class Interpreter implements ICompilationErrorCollector {
                     ", size=" + size +
                     '}';
         }
-        
+    
+        @Override
+        void copyFrom(Instance<?> other) {
+            if(other instanceof ArrayInstance) {
+                this.setBackingValue(((ArrayInstance<R, T>) other).getBackingValue());
+            } else {
+                assert other instanceof PrimitiveInstance;
+                if((long) ((PrimitiveInstance) other).getBackingValue() == 0) {
+                    this.setBackingValue(null);
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+        }
         
     }
     
     
     class PointerInstance<R extends CXType> extends ArrayInstance<R, PointerType> {
         private int index = 0;
-        public PointerInstance(PointerType type, Instance<R> pointer) {
-            super(type, 1);
+        
+        public PointerInstance(R type, Instance<R> pointer) {
+            super(type.toPointer(), type, 1);
             setAt(0, pointer);
         }
         
-        public PointerInstance(PointerType type, ArrayList<Instance<R>> backing, int offset) {
-            super(type, backing);
+        public PointerInstance(R type, ArrayList<Instance<R>> backing, int offset) {
+            super(type.toPointer(), type, backing);
             index = offset;
         }
         
         
         public PointerInstance<R> getPointerOfOffset(int offset) {
-            return new PointerInstance<>(getType(), getBackingValue(), index + offset);
+            return new PointerInstance<R>(getSubType(), getBackingValue(), index + offset);
         }
         
         public PointerInstance(PointerType type) {
-            super(type, 1);
+            super(type, (R) type.getSubType(), 1);
         }
         
         
@@ -151,7 +182,7 @@ public class Interpreter implements ICompilationErrorCollector {
         public void setPointer(Instance<R> pointer) {
             setAt(index, pointer);
         }
-    
+        
         @Override
         public String toString() {
             return "PointerInstance{" +
@@ -176,11 +207,11 @@ public class Interpreter implements ICompilationErrorCollector {
         public <R extends CXType, I extends Instance<R>> I get(String key) {
             return (I) fields.get(key);
         }
-    
+        
         @Override
         void copyFrom(Instance<?> other) {
             assert other instanceof CompoundInstance;
-    
+            
             for (String s : fields.keySet()) {
                 this.fields.replace(s, ((CompoundInstance<CXCompoundType>) other).fields.get(s));
             }
@@ -200,7 +231,7 @@ public class Interpreter implements ICompilationErrorCollector {
             return new PointerInstance<>(((PointerType) type));
         }else if (type instanceof ArrayType) {
             // TODO: implement proper array sizing
-            return new ArrayInstance<>(((ArrayType) type), 15);
+            return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getBaseType(), 15);
         }else if (type instanceof AbstractCXPrimitiveType) {
             boolean unsigned = false;
             AbstractCXPrimitiveType fixed = ((AbstractCXPrimitiveType) type);
@@ -273,11 +304,15 @@ public class Interpreter implements ICompilationErrorCollector {
             
             } else if(symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
                 // is a value;
-                try {
-                    if(!invoke(symbol.getValue())) throw new IllegalStateException();
-                    addAutoVariable(symbol.getKey().getToken().getImage(), pop());
-                } catch (FunctionReturned functionReturned) {
-                    throw new IllegalStateException();
+                if(symbol.getValue().getTreeType() != ASTNodeType.empty) {
+                    try {
+                        if (!invoke(symbol.getValue())) throw new IllegalStateException();
+                        addAutoVariable(symbol.getKey().getToken().getImage(), pop());
+                    } catch (FunctionReturned functionReturned) {
+                        throw new IllegalStateException();
+                    }
+                } else {
+                    addAutoVariable(symbol.getKey().getToken().getImage(), createNewInstance(symbol.getValue().getCXType()));
                 }
             }
         }
@@ -293,6 +328,19 @@ public class Interpreter implements ICompilationErrorCollector {
                     }
                 }
             }
+            case literal:{
+                AbstractCXPrimitiveType primitiveType = (AbstractCXPrimitiveType) node.getCXType();
+                if(primitiveType.isFloatingPoint()) {
+                    Double d = Double.parseDouble(node.getToken().getImage());
+                    return createNewInstance(primitiveType, d);
+                } else if (primitiveType.isChar()) {
+                    char c = node.getToken().getImage().charAt(1);
+                    return createNewInstance(primitiveType, c);
+                } else if(primitiveType.isIntegral()) {
+                    long l = Long.parseLong(node.getToken().getImage());
+                    return createNewInstance(primitiveType, l);
+                }
+            }
         }
         return null;
     }
@@ -306,11 +354,12 @@ public class Interpreter implements ICompilationErrorCollector {
     }
     
     public <T extends CXType> ArrayInstance<T, ArrayType> createArray(T type, int size) {
-        return new ArrayInstance<>(new ArrayType(type), size);
+        return new ArrayInstance<>(new ArrayType(type), type, size);
     }
     
     public ArrayInstance<CXPrimitiveType,ArrayType> createCharArrayFromString(String s) {
         ArrayInstance<CXPrimitiveType, ArrayType> output = new ArrayInstance<>(new ArrayType(CXPrimitiveType.CHAR),
+                CXPrimitiveType.CHAR,
                 s.length() + 1);
         for (int i = 0; i < output.size() - 1; i++) {
             output.setAt(
@@ -436,7 +485,15 @@ public class Interpreter implements ICompilationErrorCollector {
                 if (!invoke(input.getChild(2))) return false;
                 PrimitiveInstance<? extends Number, ?> rhs =
                         (PrimitiveInstance<? extends Number, ?>) pop();
-    
+                if(lhs.getBackingValue() == null && rhs.getType().isIntegral() && rhs.getBackingValue().longValue() == 0) {
+                
+                } else if(rhs.getBackingValue() == null && lhs.getType().isIntegral() && lhs.getBackingValue().longValue() == 0) {
+                    push(new PrimitiveInstance<>(LongPrimitive.create(), opOnIntegral(
+                            op.getType(),
+                            lhs,
+                            createNewInstance(LongPrimitive.create(), 0L)
+                    )));
+                }
                 if (lhs.getType().isFloatingPoint()) {
                     push(new PrimitiveInstance<>(lhs.getType(),
                             opOnFloatingPoint(op.getType(), lhs.backingValue.doubleValue(),
@@ -447,7 +504,7 @@ public class Interpreter implements ICompilationErrorCollector {
                             lhs.getBackingValue().longValue(), rhs.getBackingValue().longValue()), lhs.unsigned));
                 }
             }
-                break;
+            break;
             case uniop:
                 break;
             case declaration:
@@ -458,15 +515,15 @@ public class Interpreter implements ICompilationErrorCollector {
                 Instance<?> lhs = pop();
                 if (!invoke(input.getChild(2))) return false;
                 Instance<?> rhs = pop();
-    
+                
                 Token assignmentToken = input.getASTChild(ASTNodeType.assignment_type).getToken();
-                if(assignmentToken.getType() == TokenType.t_eq) {
+                if (assignmentToken.getType() == TokenType.t_assign) {
                     lhs.copyFrom(rhs);
-                } else if(assignmentToken.getType() == TokenType.t_operator_assign) {
+                } else if (assignmentToken.getType() == TokenType.t_operator_assign) {
                 
                 } else return false;
             }
-                break;
+            break;
             case assignment_type:
                 break;
             case ternary:
@@ -486,7 +543,7 @@ public class Interpreter implements ICompilationErrorCollector {
                 break;
             case sequence:
                 for (TypeAugmentedSemanticNode entry : input.getDirectChildren()) {
-                    if(!invoke(entry)) return false;
+                    if (!invoke(entry)) return false;
                 }
                 break;
             case typename:
@@ -495,8 +552,12 @@ public class Interpreter implements ICompilationErrorCollector {
                 break;
             case function_call:
                 
-                if(!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                 TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
+                if(function == null) {
+                    throw new CompilationError("Symbol " + input.getASTChild(ASTNodeType.id).getToken().getImage() + " not " +
+                            "defined", input.getASTChild(ASTNodeType.id).getToken());
+                }
                 try {
                     if (!invoke(function)) return false;
                 } catch (FunctionReturned functionReturned) {
@@ -507,26 +568,59 @@ public class Interpreter implements ICompilationErrorCollector {
                 break;
             case method_call:
                 // owner is pushed to stack
-                if(!invoke(input.getChild(0))) return false;
+            {
+                if (!invoke(input.getChild(0))) return false;
                 CompoundInstance<CXClassType> classTypeInstance = ((CompoundInstance<CXClassType>) pop());
                 createClosure();
                 addAutoVariable("this", classTypeInstance);
-                
-                
+                Token idToken = input.getASTChild(ASTNodeType.id).getToken();
+                int memstackPrevious = memStack.size();
+                if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                Stack<CXType> types = new Stack<>();
+                Stack<Instance<?>> instances = new Stack<>();
+                while (memStack.size() > memstackPrevious) {
+                    Instance<?> pop = pop();
+                    types.push(pop.getType());
+                    instances.push(pop);
+                }
+                for (Instance<?> instance : instances) {
+                    memStack.push(instance);
+                }
+                TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType(), idToken, types);
+                try {
+                    if (!invoke(method)) return false;
+                } catch (FunctionReturned functionReturned) {
+                    push(returnValue);
+                    returnValue = null;
+                }
                 endClosure();
-                break;
+            }
+            break;
             case field_get:
                 if(!invoke(input.getChild(0))) return false;
                 // owner on stack
             {
                 CompoundInstance<?> compoundInstance = (CompoundInstance<?>) pop();
-                String field = input.getASTChild(ASTNodeType.id).getToken().getImage();
+                String field = input.getChild(1).getToken().getImage();
                 
                 // push field
                 push(compoundInstance.get(field));
             }
-                break;
+            break;
             case if_cond:
+                if(!invoke(input.getChild(0))) return false;
+                PrimitiveInstance<Number, ?> pop = (PrimitiveInstance<Number, ?>) pop();
+                boolean cond;
+                if(pop.getBackingValue() instanceof Double || pop.getBackingValue() instanceof Float) {
+                    cond = pop.getBackingValue().doubleValue() != 0;
+                } else {
+                    cond = pop.getBackingValue().intValue() != 0;
+                }
+                if(cond) {
+                    if(!invoke(input.getChild(1))) return false;
+                } else if(input.getChild(2).getASTType() != ASTNodeType.empty) {
+                    if(!invoke(input.getChild(2))) return false;
+                }
                 break;
             case while_cond:
                 break;
@@ -620,6 +714,7 @@ public class Interpreter implements ICompilationErrorCollector {
                 endLexicalScope();
                 break;
             case sizeof:
+                push(createNewInstance(LongPrimitive.create(), input.getCXType().getDataSize(environment)));
                 break;
             case constructor_call:
                 break;
@@ -679,8 +774,9 @@ public class Interpreter implements ICompilationErrorCollector {
         return true;
     }
     
-    @Override
-    public List<AbstractCompilationError> getErrors() {
-        return null;
+    public TypeAugmentedSemanticNode dynamicMethodLookup(CXClassType clazz, Token id, List<CXType> inputTypes) {
+        ParameterTypeList parameterTypeList = new ParameterTypeList(inputTypes);
+        CXMethod method = clazz.getMethod(id, parameterTypeList, null);
+        return MethodTASNTracker.getInstance().get(method);
     }
 }

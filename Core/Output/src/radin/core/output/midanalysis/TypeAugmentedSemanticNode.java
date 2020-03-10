@@ -28,6 +28,8 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     
     private HashSet<ICompilationTag> compilationTags;
     
+    public final static TypeAugmentedSemanticNode EMPTY = new TypeAugmentedSemanticNode(AbstractSyntaxNode.EMPTY);
+    
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode base) {
         this.astNode = base;
@@ -152,11 +154,34 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         return astNode.hasChild(type);
     }
     
+    /**
+     * Gets any child node of this node that has this type, including itself
+     * @param type the child to check
+     * @return a list of nodes that is either this or is a descendent of this with the parameter type
+     */
     public List<TypeAugmentedSemanticNode> getAllChildren(ASTNodeType type) {
         List<TypeAugmentedSemanticNode> output = new LinkedList<>();
         if(this.astNode.getTreeType() == type) output.add(this);
         for (TypeAugmentedSemanticNode child : children) {
             output.addAll(child.getAllChildren(type));
+        }
+        return output;
+    }
+    
+    /**
+     * Gets any child node of this node that has this type, including itself
+     * @param type the child to check
+     * @param maxDepth the deepest layer to check, where 0 is just itself
+     * @return a list of nodes that is either this or is a descendent of this with the parameter type
+     */
+    public List<TypeAugmentedSemanticNode> getAllChildren(ASTNodeType type, int maxDepth) {
+        
+        List<TypeAugmentedSemanticNode> output = new LinkedList<>();
+        if(this.astNode.getTreeType() == type) output.add(this);
+        if(maxDepth > 0) {
+            for (TypeAugmentedSemanticNode child : children) {
+                output.addAll(child.getAllChildren(type, maxDepth - 1));
+            }
         }
         return output;
     }

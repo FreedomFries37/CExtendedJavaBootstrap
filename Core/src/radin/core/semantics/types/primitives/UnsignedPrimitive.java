@@ -57,6 +57,11 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
     }
     
     @Override
+    public boolean isChar() {
+        return primitiveCXType.isChar();
+    }
+    
+    @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         return primitiveCXType.is(other, e, strictPrimitiveEquality);
     }

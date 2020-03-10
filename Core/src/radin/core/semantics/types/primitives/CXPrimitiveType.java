@@ -135,6 +135,10 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         return myPrimitive.floatingPoint;
     }
     
+    @Override
+    public boolean isChar() {
+        return this == CHAR;
+    }
     
     /**
      *
