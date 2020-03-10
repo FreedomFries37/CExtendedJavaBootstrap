@@ -219,7 +219,10 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             }
             CXType fromCXType = child.getCXType();
             
-            if(!is(castType, fromCXType)) throw new IllegalCastError(fromCXType, castType, child.findFirstToken());
+            if(!environment.is(castType, CXPrimitiveType.VOID.toPointer()) &&
+                    !is(castType, fromCXType)) {
+                throw new IllegalCastError(fromCXType, castType, child.findFirstToken());
+            }
             //if(!castType.is(fromCXType, getEnvironment())) throw new IllegalCastError(fromCXType, castType);
             node.setType(castType);
             node.setLValue(child.isLValue());

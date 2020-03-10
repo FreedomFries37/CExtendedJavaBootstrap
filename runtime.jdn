@@ -74,15 +74,15 @@ void __init_heap();
 void __free_heap();
 int __main(int argc, std::String argv[]);
 in std {
-    ClassInfo class_std_ClassInfo1838021661_info = 0; // class_id = 1
-    ClassInfo class_std_Object1476498148_info = 0; // class_id = 0
-    ClassInfo class_std_String1345115666_info = 0; // class_id = 2
-    ClassInfo class_std_Int463076748_info = 0; // class_id = 3
+    ClassInfo class_std_ClassInfo389205475_info = 0; // class_id = 1
+    ClassInfo class_std_Object750728988_info = 0; // class_id = 0
+    ClassInfo class_std_String882111470_info = 0; // class_id = 2
+    ClassInfo class_std_Int1604663412_info = 0; // class_id = 3
     ClassInfo __get_class(class_id id) {
-        if (id == 1) return class_std_ClassInfo1838021661_info;
-        if (id == 0) return class_std_Object1476498148_info;
-        if (id == 2) return class_std_String1345115666_info;
-        if (id == 3) return class_std_Int463076748_info;
+        if (id == 1) return class_std_ClassInfo389205475_info;
+        if (id == 0) return class_std_Object750728988_info;
+        if (id == 2) return class_std_String882111470_info;
+        if (id == 3) return class_std_Int1604663412_info;
         return nullptr;
     }
 }
@@ -97,21 +97,21 @@ int main(int argc, char* argv[]) {
     return output;
 }
 void __init_reflection() {
-    class_std_ClassInfo1838021661_info = new std::ClassInfo();
-    class_std_ClassInfo1838021661_info->name = new std::String("std::ClassInfo");
-    class_std_ClassInfo1838021661_info->classHash = -1144096643;
-    class_std_ClassInfo1838021661_info->info = class_std_ClassInfo1838021661_info;
-    class_std_Object1476498148_info = new std::ClassInfo();
-    class_std_Object1476498148_info->name = new std::String("std::Object");
-    class_std_Object1476498148_info->classHash = 1473197668;
-    class_std_String1345115666_info = new std::ClassInfo();
-    class_std_String1345115666_info->name = new std::String("std::String");
-    class_std_String1345115666_info->classHash = 1251087314;
-    class_std_Int463076748_info = new std::ClassInfo();
-    class_std_Int463076748_info->name = new std::String("std::Int");
-    class_std_Int463076748_info->classHash = 1470477300;
-    class_std_ClassInfo1838021661_info->parent = __get_class(0);
-    class_std_Object1476498148_info->parent = nullptr;
-    class_std_String1345115666_info->parent = __get_class(0);
-    class_std_Int463076748_info->parent = __get_class(0);
+    class_std_ClassInfo389205475_info = new std::ClassInfo();
+    class_std_ClassInfo389205475_info->name = new std::String("std::ClassInfo");
+    class_std_ClassInfo389205475_info->classHash = -819532163;
+    class_std_ClassInfo389205475_info->info = class_std_ClassInfo389205475_info;
+    class_std_Object750728988_info = new std::ClassInfo();
+    class_std_Object750728988_info->name = new std::String("std::Object");
+    class_std_Object750728988_info->classHash = 1797762148;
+    class_std_String882111470_info = new std::ClassInfo();
+    class_std_String882111470_info->name = new std::String("std::String");
+    class_std_String882111470_info->classHash = 1575651794;
+    class_std_Int1604663412_info = new std::ClassInfo();
+    class_std_Int1604663412_info->name = new std::String("std::Int");
+    class_std_Int1604663412_info->classHash = 1795041780;
+    class_std_ClassInfo389205475_info->parent = __get_class(0);
+    class_std_Object750728988_info->parent = nullptr;
+    class_std_String882111470_info->parent = __get_class(0);
+    class_std_Int1604663412_info->parent = __get_class(0);
 }

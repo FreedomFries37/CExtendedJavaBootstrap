@@ -28,7 +28,7 @@ void println(const char* c);
 void print_s(std::String o);
 void println_s(std::String o);
 
-const void* nullptr = 0;
+const void* nullptr = (void*) 0;
 
 
 in std {
