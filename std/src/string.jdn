@@ -1,0 +1,16 @@
+#include <string.h>
+
+char* strdup(const char* str1) {
+	char* output = calloc(sizeof(char), strlen(str1) + 1);
+
+	return output;
+}
+
+size_t strlen ( const char * str ) {
+	const char* ptr = str;
+	size_t output = 0;
+	while(*ptr != '0') {
+		ptr++;
+	}
+	return output;
+}

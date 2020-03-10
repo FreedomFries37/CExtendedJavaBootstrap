@@ -344,10 +344,11 @@ public class CXMethod implements CXEquivalent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CXMethod cxMethod = (CXMethod) o;
+        boolean equals = returnType.equals(cxMethod.returnType);
         return isVirtual == cxMethod.isVirtual &&
                 Objects.equals(parent, cxMethod.parent) &&
                 visibility == cxMethod.visibility &&
-                returnType.equals(cxMethod.returnType) &&
+                equals &&
                 name.equals(cxMethod.name) &&
                 parameters.equals(cxMethod.parameters);
     }

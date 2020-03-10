@@ -57,7 +57,8 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
                 value.setType(dec.getCXType());
                 output.put(output.new Key(
                                 new CXIdentifier(parentIdentifier, dec.getASTChild(ASTNodeType.id).getToken()), file,
-                                dec.getASTChild(ASTNodeType.id).getToken()
+                                dec.getASTChild(ASTNodeType.id).getToken(),
+                                dec.getCXType()
                         ),
                         value);
             }
@@ -66,10 +67,11 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
                 TypeAugmentedSemanticNode val = dec.getChild(1);
                 
                 output.put(output.new Key(
-                        new CXIdentifier(parentIdentifier, id),
-                        file,
-                        id
-                ),
+                                new CXIdentifier(parentIdentifier, id),
+                                file,
+                                id,
+                                dec.getCXType()
+                        ),
                         val);
             }
         }

@@ -71,7 +71,11 @@ public class JodinLogger {
     }
     
     public JodinLogger(String filename) {
-        base = Logger.getLogger("JodinLogger");
+        this(filename, "JodinLogger");
+    }
+    
+    public JodinLogger(String filename, String subsystem) {
+        base = Logger.getLogger(subsystem);
         FileHandler fh;
         
         try {

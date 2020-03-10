@@ -16,6 +16,7 @@ class Float;
 in std class String;
 in std class ClassInfo;
 
+void* calloc(size_t size, size_t length);
 
 
 void free(void* ptr);
@@ -102,7 +103,7 @@ in std {
     	public Int getValue();
 
     	public void setValue(int value);
-    }
+    };
 
 }
 

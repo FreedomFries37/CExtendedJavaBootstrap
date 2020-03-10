@@ -182,4 +182,9 @@ public class ArrayType extends AbstractCXPrimitiveType implements Deference {
     public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
         return new ArrayType(baseType.propagateGenericReplacement(original, replacement), size);
     }
+    
+    @Override
+    public TypeEnvironment getEnvironment() {
+        return baseType.getEnvironment();
+    }
 }

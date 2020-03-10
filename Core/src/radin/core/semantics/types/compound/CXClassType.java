@@ -750,4 +750,8 @@ public class CXClassType extends CXCompoundType implements ICXClassType {
     public CXType getAsCXType() {
         return this;
     }
+    
+    
+    
+    
 }

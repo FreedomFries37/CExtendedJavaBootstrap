@@ -11,10 +11,11 @@ import java.util.logging.Level;
 
 public interface ICompilationSettings<Front, Mid, Back> {
     
-    enum SupportedWordSize {
-        arch64,
-        arch32
-    }
+    JodinLogger debugLog = new JodinLogger("debug.log");
+    /**
+     * The logger for the interpreter
+     */
+    JodinLogger ilog = new JodinLogger("interpreter.log", "interpreter");
     
     static File createFile(String filename) {
         String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();
@@ -39,6 +40,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
             return file;
         }
     }
+    
+    String getDirectory();
+    
+    void setDirectory(String directory);
     
     /**
      * Use experimental settings while compiling
@@ -73,32 +78,35 @@ public interface ICompilationSettings<Front, Mid, Back> {
     }
     
     boolean isLookForMainFunction();
-    
+
     void setLookForMainFunction(boolean lookForMainFunction);
     
+    int getOptimizationLevel();
+
     /**
      * Optimize output code
      * @param value
      */
     @ExperimentalSetting(useIntegerValue = true)
     void setOptimizationLevel(int value);
-    int getOptimizationLevel();
     
+    boolean getUseStackTrace();
+
     /**
      * All function calls now run through a stack
      *
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setUseStackTrace(boolean value);
-    boolean getUseStackTrace();
     
+    boolean getUseTryCatch();
+
     /**
      * Compile with added option of try/catch blocks
      * @param value
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setUseTryCatch(boolean value);
-    boolean getUseTryCatch();
     
     /**
      * string literals are automatically turned into string objects
@@ -106,8 +114,8 @@ public interface ICompilationSettings<Front, Mid, Back> {
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setAutoCreateStrings(boolean value);
-    boolean autoCreateStrings();
     
+    boolean autoCreateStrings();
     
     String getIndent();
     
@@ -142,12 +150,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
     
     void setTabSize(int tabSize);
     
-    JodinLogger debugLog = new JodinLogger("debug.log");
-    
     default void setLogLevel(Level logLevel) {
         debugLog.setLevel(logLevel);
+        ilog.setLevel(logLevel);
     }
-    
     
     boolean isOutputPostprocessingOutput();
     
@@ -195,7 +201,8 @@ public interface ICompilationSettings<Front, Mid, Back> {
     
     void setOutputTAST(boolean outputTAST);
     
-    String getDirectory();
-    
-    void setDirectory(String directory);
+    enum SupportedWordSize {
+        arch64,
+        arch32
+    }
 }

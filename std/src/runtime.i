@@ -65,9 +65,6 @@ void __free_heap() {
 	free(jodin_heap.jheap);
 }
 
-void* __jalloc(size_t length) {
-	return malloc(length);
-}
 
 
 

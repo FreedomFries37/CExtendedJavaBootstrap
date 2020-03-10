@@ -14,6 +14,8 @@ public abstract class CXCompoundType extends CXType implements ICXCompoundType {
     private CXIdentifier typeName;
     private boolean anonymous;
     
+    
+    
     public CXCompoundType(List<FieldDeclaration> fields) {
         this.fields = fields;
         anonymous = true;
@@ -111,6 +113,7 @@ public abstract class CXCompoundType extends CXType implements ICXCompoundType {
         result = 31 * result + (anonymous ? 1 : 0);
         return result;
     }
+    
     
     /**
      * Creates a modified version of the C Declaration that matches the pattern {@code \W+}

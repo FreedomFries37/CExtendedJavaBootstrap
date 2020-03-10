@@ -1,5 +1,6 @@
 package radin.core.output.midanalysis.typeanalysis.analyzers;
 
+import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.tags.PriorConstructorTag;
@@ -44,6 +45,9 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
         
             getCurrentTracker().addVariable(name, type);
         }
+    
+        CXConstructor currentConstructor = owner.getConstructor(new ParameterTypeList(parametersTypes));
+        
         
         if(node.hasASTChild(ASTNodeType.sequence)) {
             CXClassType priorType;
@@ -71,8 +75,6 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
             }
     
             CXConstructor priorConstructor = priorType.getConstructor(parameterTypeList);
-            CXConstructor currentConstructor = owner.getConstructor(new ParameterTypeList(parametersTypes));
-    
             
             currentConstructor.setPriorConstructor(priorConstructor);
             node.addCompilationTag(new PriorConstructorTag(priorConstructor, node.getASTChild(ASTNodeType.sequence)));
@@ -80,6 +82,7 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
     
         TypeAugmentedSemanticNode compoundStatement = node.getASTChild(ASTNodeType.compound_statement);
         if(compoundStatement != null) {
+            MethodTASNTracker.getInstance().add(currentConstructor, node);
             CompoundStatementTypeAnalyzer compoundStatementTypeAnalyzer =
                     new CompoundStatementTypeAnalyzer(compoundStatement, CXPrimitiveType.VOID, false);
             if (!determineTypes(compoundStatementTypeAnalyzer)) return false;

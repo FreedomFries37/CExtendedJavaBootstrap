@@ -15,7 +15,9 @@ void hello_world() {
 }
 
 int main(int argc, std::String argv[]) {
-
-return 0;
+	for(int i = 0; i < argc; ++i) {
+		println_s(argv[i]);
+	}
+	return 0;
 
 }

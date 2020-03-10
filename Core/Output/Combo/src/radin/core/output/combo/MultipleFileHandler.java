@@ -181,6 +181,19 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                     midToolChain.clearErrors();
                     
                     invoke = midToolChain.invoke(astTree);
+                    if(invoke != null && UniversalCompilerSettings.getInstance().getSettings().isOutputTAST()) {
+                        File astOutput = ICompilationSettings.createFile("ast/" + new File(file).getName() + ".tast");
+                        try{
+                            PrintWriter fileWriter = new PrintWriter(new FileWriter(astOutput));
+                            fileWriter.println(invoke.toTreeForm());
+                            fileWriter.flush();
+                            ICompilationSettings.debugLog.info("Created TAST File " + astOutput);
+                            fileWriter.close();
+                        } catch (IOException e) {
+                            ICompilationSettings.debugLog.warning("Couldn't create AST file at " +file + ".ast");
+                        }
+                    }
+                    
                 } else {
                     ICompilationSettings.debugLog.finer("Skipping creating Type-AST for " + file);
                     invoke = typedTree;

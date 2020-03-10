@@ -10,6 +10,8 @@ import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
 import radin.core.semantics.types.wrapped.CXMappedType;
 import radin.core.utility.ICompilationSettings;
 
+import java.util.Objects;
+
 /**
  * Base type for any CXType. This needs to be inherited for a type to be properly tracked
  * Represents all C Types and Class Types
@@ -178,4 +180,20 @@ public abstract class CXType implements CXEquivalent {
         return generateCDeclaration().replaceAll("\\W", "_");
     }
     
+    public TypeEnvironment getEnvironment() {
+        return null;
+    }
+    
+    public boolean equals(CXType obj) {
+        if(this == obj) return true;
+        TypeEnvironment e;
+        if(this.getEnvironment() != null) {
+            e = getEnvironment();
+        } else if(obj.getEnvironment() != null) {
+            e = obj.getEnvironment();
+        } else {
+            e = TypeEnvironment.getStandardEnvironment();
+        }
+        return this.isExact(obj, e);
+    }
 }

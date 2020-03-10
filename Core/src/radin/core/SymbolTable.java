@@ -2,6 +2,7 @@ package radin.core;
 
 import radin.core.lexical.Token;
 import radin.core.semantics.types.CXIdentifier;
+import radin.core.semantics.types.CXType;
 import radin.core.utility.Pair;
 
 import java.util.*;
@@ -12,11 +13,19 @@ public class SymbolTable<K, T> implements Iterable<Map.Entry<SymbolTable<K, T>.K
         private K key;
         private String fileOrigin;
         private Token token;
+        private CXType type;
     
         public Key(K key, String fileOrigin, Token token) {
             this.key = key;
             this.fileOrigin = fileOrigin;
             this.token = token;
+        }
+    
+        public Key(K key, String fileOrigin, Token token, CXType type) {
+            this.key = key;
+            this.fileOrigin = fileOrigin;
+            this.token = token;
+            this.type = type;
         }
     
         public K getKey() {
@@ -29,6 +38,10 @@ public class SymbolTable<K, T> implements Iterable<Map.Entry<SymbolTable<K, T>.K
     
         public Token getToken() {
             return token;
+        }
+    
+        public CXType getType() {
+            return type;
         }
     
         @Override
