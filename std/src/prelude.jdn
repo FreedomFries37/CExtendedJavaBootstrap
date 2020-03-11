@@ -2,17 +2,22 @@
 #include <string.h>
 
 
-void print(const char* c) {
+void printf(const char* c);
 
+void print(const char* c) {
+	printf(c);
 }
 void println(const char* c) {
-
+	if(c != nullptr) {
+		print(c);
+	}
+	print("\n");
 }
 void print_s(std::String o) {
-
+	print(o->getCStr());
 }
 void println_s(std::String o) {
-
+	println(o->getCStr());
 }
 
 
@@ -72,37 +77,7 @@ in std {
 
 	}
 
-	implement String {
-        String() : this("") { }
-        String(const char* bp) {
-			this->backingPtr = strdup(bp);
-			this->length = strlen(bp);
-        }
 
-        void drop() {
-        	// free(this->backing_ptr);
-        	super->drop();
-        }
-
-		String concat(String other) {
-			char next[this->length + other->length + 1];
-			strcpy(next, this->backingPtr);
-			strcat(next, other->backingPtr);
-			return new String(next);
-		}
-
-		String concat(char* other) {
-			return this;
-		}
-
-		const char* getCStr() {
-			return this->backingPtr;
-		}
-
-		String concat_integer(long other) {
-			return this;
-		}
-	}
 
 	implement Int {
 

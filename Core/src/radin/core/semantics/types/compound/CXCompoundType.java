@@ -52,7 +52,9 @@ public abstract class CXCompoundType extends CXType implements ICXCompoundType {
         return fields;
     }
     
-   
+    public List<FieldDeclaration> getAllFields() {
+        return fields;
+    }
     
     
     @Override

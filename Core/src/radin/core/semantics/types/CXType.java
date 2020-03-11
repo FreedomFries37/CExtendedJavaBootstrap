@@ -184,6 +184,7 @@ public abstract class CXType implements CXEquivalent {
         return null;
     }
     
+    private static TypeEnvironment basicEnvironment = null;
     public boolean equals(CXType obj) {
         if(this == obj) return true;
         TypeEnvironment e;
@@ -192,7 +193,10 @@ public abstract class CXType implements CXEquivalent {
         } else if(obj.getEnvironment() != null) {
             e = obj.getEnvironment();
         } else {
-            e = TypeEnvironment.getStandardEnvironment();
+            if(basicEnvironment == null) {
+                basicEnvironment = TypeEnvironment.getStandardEnvironment();
+            }
+            e = basicEnvironment;
         }
         return this.isExact(obj, e);
     }

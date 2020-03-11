@@ -72,46 +72,46 @@ void __free_heap() {
 void __init_reflection();
 void __init_heap();
 void __free_heap();
-int __main(int argc, std::String argv[]);
+int main(int argc, std::String argv[]);
 in std {
-    ClassInfo class_std_ClassInfo389205475_info = 0; // class_id = 1
-    ClassInfo class_std_Object750728988_info = 0; // class_id = 0
-    ClassInfo class_std_String882111470_info = 0; // class_id = 2
-    ClassInfo class_std_Int1604663412_info = 0; // class_id = 3
+    ClassInfo class_std_ClassInfo1572911331_info = 0; // class_id = 1
+    ClassInfo class_std_Object1934434844_info = 0; // class_id = 0
+    ClassInfo class_std_String2065817326_info = 0; // class_id = 2
+    ClassInfo class_std_Int420957556_info = 0; // class_id = 3
     ClassInfo __get_class(class_id id) {
-        if (id == 1) return class_std_ClassInfo389205475_info;
-        if (id == 0) return class_std_Object750728988_info;
-        if (id == 2) return class_std_String882111470_info;
-        if (id == 3) return class_std_Int1604663412_info;
+        if (id == 1) return class_std_ClassInfo1572911331_info;
+        if (id == 0) return class_std_Object1934434844_info;
+        if (id == 2) return class_std_String2065817326_info;
+        if (id == 3) return class_std_Int420957556_info;
         return nullptr;
     }
 }
-int main(int argc, char* argv[]) {
+int start(int argc, char* argv[]) {
     __init_heap();
     __init_reflection();
     std::String args[argc];
     for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);
-    int output = __main(argc, args);
+    int output = main(argc, args);
     for (int i = 0; i < argc; i++) args[i]->drop();
     __free_heap();
     return output;
 }
 void __init_reflection() {
-    class_std_ClassInfo389205475_info = new std::ClassInfo();
-    class_std_ClassInfo389205475_info->name = new std::String("std::ClassInfo");
-    class_std_ClassInfo389205475_info->classHash = -819532163;
-    class_std_ClassInfo389205475_info->info = class_std_ClassInfo389205475_info;
-    class_std_Object750728988_info = new std::ClassInfo();
-    class_std_Object750728988_info->name = new std::String("std::Object");
-    class_std_Object750728988_info->classHash = 1797762148;
-    class_std_String882111470_info = new std::ClassInfo();
-    class_std_String882111470_info->name = new std::String("std::String");
-    class_std_String882111470_info->classHash = 1575651794;
-    class_std_Int1604663412_info = new std::ClassInfo();
-    class_std_Int1604663412_info->name = new std::String("std::Int");
-    class_std_Int1604663412_info->classHash = 1795041780;
-    class_std_ClassInfo389205475_info->parent = __get_class(0);
-    class_std_Object750728988_info->parent = nullptr;
-    class_std_String882111470_info->parent = __get_class(0);
-    class_std_Int1604663412_info->parent = __get_class(0);
+    class_std_ClassInfo1572911331_info = new std::ClassInfo();
+    class_std_ClassInfo1572911331_info->name = new std::String("std::ClassInfo");
+    class_std_ClassInfo1572911331_info->classHash = 1515611005;
+    class_std_ClassInfo1572911331_info->info = class_std_ClassInfo1572911331_info;
+    class_std_Object1934434844_info = new std::ClassInfo();
+    class_std_Object1934434844_info->name = new std::String("std::Object");
+    class_std_Object1934434844_info->classHash = -162061980;
+    class_std_String2065817326_info = new std::ClassInfo();
+    class_std_String2065817326_info->name = new std::String("std::String");
+    class_std_String2065817326_info->classHash = -384172334;
+    class_std_Int420957556_info = new std::ClassInfo();
+    class_std_Int420957556_info->name = new std::String("std::Int");
+    class_std_Int420957556_info->classHash = -164782348;
+    class_std_ClassInfo1572911331_info->parent = __get_class(0);
+    class_std_Object1934434844_info->parent = nullptr;
+    class_std_String2065817326_info->parent = __get_class(0);
+    class_std_Int420957556_info->parent = __get_class(0);
 }

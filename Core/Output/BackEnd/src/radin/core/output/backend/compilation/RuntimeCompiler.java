@@ -20,6 +20,8 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     
     
     private TypeEnvironment environment;
+    private String entrancePoint = "main";
+    private String jodinEntrancePoint = "__main";
     
     public RuntimeCompiler(TypeEnvironment environment) throws IOException {
         super(new PrintWriter(new FileWriter(new File("runtime.jdn"))), 0);
@@ -51,7 +53,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         println("void __init_reflection();");
         println("void __init_heap();");
         println("void __free_heap();");
-        println("int __main(int argc, std::String argv[]);");
+        println("int " + jodinEntrancePoint + "(int argc, std::String argv[]);");
         println("in std {");
         setIndent(getIndent() + 1);
         List<CXClassType> cxClassTypes = environment.getAllCreated().stream().filter(distinctBy((t) -> environment.getTypeId(t))).collect(Collectors.toList());
@@ -84,13 +86,13 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         setIndent(getIndent() - 1);
         println("}");
         
-        println("int main(int argc, char* argv[]) {");
+        println("int " + entrancePoint + "(int argc, char* argv[]) {");
         setIndent(getIndent() + 1);
         println("__init_heap();");
         println("__init_reflection();");
         println("std::String args[argc];");
         println("for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);");
-        println("int output = __main(argc, args);");
+        println("int output = " + jodinEntrancePoint + "(argc, args);");
         println("for (int i = 0; i < argc; i++) args[i]->drop();");
         println("__free_heap();");
         println("return output;");
@@ -135,6 +137,14 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         flush();
         close();
         return true;
+    }
+    
+    public void setEntrancePoint(String entrancePoint) {
+        this.entrancePoint = entrancePoint;
+    }
+    
+    public void setJodinEntrancePoint(String jodinEntrancePoint) {
+        this.jodinEntrancePoint = jodinEntrancePoint;
     }
     
     @Override

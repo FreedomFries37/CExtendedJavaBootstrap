@@ -15,9 +15,17 @@ void hello_world() {
 }
 
 int main(int argc, std::String argv[]) {
+
+/*
 	for(int i = 0; i < argc; ++i) {
 		println_s(argv[i]);
 	}
+	*/
+	std::String hw = new std::String("Hello World!");
+	println_s(hw);
+	std::String more = hw->concat("\tsize = ")->concat_integer(hw->length());
+	println_s(more);
+
 	return 0;
 
 }

@@ -1,5 +1,6 @@
 package radin.core.output.midanalysis.typeanalysis.analyzers;
 
+import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.output.tags.BasicCompilationTag;
 import radin.core.output.typeanalysis.errors.IncorrectMainDefinition;
 import radin.core.output.typeanalysis.errors.IncorrectReturnTypeError;
@@ -69,6 +70,8 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         }
         
         String functionName = node.getASTChild(ASTNodeType.id).getToken().getImage();
+    
+        
         
         if(UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction() && functionName.equals("main") && !hasOwnerType) {
             if(!environment.is(returnType, CXPrimitiveType.INTEGER) ||

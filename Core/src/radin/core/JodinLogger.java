@@ -76,6 +76,7 @@ public class JodinLogger {
     
     public JodinLogger(String filename, String subsystem) {
         base = Logger.getLogger(subsystem);
+        base.setUseParentHandlers(false);
         FileHandler fh;
         
         try {

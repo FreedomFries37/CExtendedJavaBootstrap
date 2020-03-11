@@ -232,6 +232,8 @@ public class InterpreterEntrancePoint {
             UniversalCompilerSettings.getInstance().getSettings().setLookForMainFunction(false);
             UniversalCompilerSettings.getInstance().getSettings().setInRuntimeCompilationMode(true);
             RuntimeCompiler runtimeCompiler = new RuntimeCompiler(environment);
+            runtimeCompiler.setEntrancePoint("start");
+            runtimeCompiler.setJodinEntrancePoint("main");
             runtimeCompiler.compile();
             
             File runtimeFile = new File("runtime.jdn");
