@@ -88,7 +88,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
                 throw new MultipleMainDefinitionsError(node.getASTChild(ASTNodeType.id).getToken());
             }
             MultipleMainDefinitionsError.firstDefinition = node.getASTChild(ASTNodeType.id).getToken();
-            
+            ICompilationSettings.debugLog.info("Main Function Found");
             node.addCompilationTag(BasicCompilationTag.MAIN_FUNCTION);
         }
         

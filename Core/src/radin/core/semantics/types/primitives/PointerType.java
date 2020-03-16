@@ -5,6 +5,7 @@ import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Deference;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.wrapped.CXMappedType;
 
 public class PointerType extends ArrayType {
     
@@ -51,6 +52,10 @@ public class PointerType extends ArrayType {
             AbstractCXPrimitiveType abstractCXPrimitiveType = (AbstractCXPrimitiveType) other;
             return false;
             // return abstractCXPrimitiveType.isIntegral();
+        }
+        if(other instanceof CXMappedType) {
+            ((CXMappedType) other).update();
+            return is(((CXMappedType) other).getWrappedType(), e, strictPrimitiveEquality);
         }
         if(!(other instanceof ArrayType || other instanceof PointerType)) {
             return false;
