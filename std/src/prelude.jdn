@@ -95,7 +95,16 @@ in std {
     	}
 
     	std::String toString() {
-    		return new std::String("number");
+    		int last = this->value % 10;
+    		Int tail = new Int(last);
+    		int first = this->value / 10;
+    		if(first > 0) {
+    			Int head = new Int(first);
+    			return head->toString()->concat(tail);
+    		} else {
+    			return tail->toString();
+    		}
+
     	}
 
     }

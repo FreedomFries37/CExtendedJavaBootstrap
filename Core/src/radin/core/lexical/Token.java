@@ -8,10 +8,12 @@ public class Token implements Comparable<Token> {
     
     private TokenType type;
     private String image;
-    private int column = -1;
-    private int lineNumber = -1;
+    private int virtualColumn = -1;
+    private int virtualLineNumber = -1;
     private Token previous;
     
+    private int actualLineNumber;
+    private String filename;
     
     
     public Token(TokenType type) {
@@ -25,7 +27,7 @@ public class Token implements Comparable<Token> {
     
     public Token changedType(TokenType tokenType) {
         Token output = new Token(tokenType, image);
-        output.addColumnAndLineNumber(column, lineNumber);
+        output.addColumnAndLineNumber(virtualColumn, virtualLineNumber);
         return output;
     }
     
@@ -37,12 +39,20 @@ public class Token implements Comparable<Token> {
         this.previous = previous;
     }
     
-    public int getColumn() {
-        return column;
+    /**
+     * The column in the Pre Processor Output
+     * @return
+     */
+    public int getVirtualColumn() {
+        return virtualColumn;
     }
     
-    public int getLineNumber() {
-        return lineNumber;
+    /**
+     * The line number in the Pre Processe rOutput
+     * @return
+     */
+    public int getVirtualLineNumber() {
+        return virtualLineNumber;
     }
     
     public TokenType getType() {
@@ -54,8 +64,8 @@ public class Token implements Comparable<Token> {
     }
     
     public Token addColumnAndLineNumber(int column, int lineNumber) {
-        this.column = column;
-        this.lineNumber = lineNumber;
+        this.virtualColumn = column;
+        this.virtualLineNumber = lineNumber;
         return this;
     }
     
@@ -68,6 +78,22 @@ public class Token implements Comparable<Token> {
     public String getRepresentation() {
         if(image != null) return image;
         return type.toString();
+    }
+    
+    public int getActualLineNumber() {
+        return actualLineNumber;
+    }
+    
+    public void setActualLineNumber(int actualLineNumber) {
+        this.actualLineNumber = actualLineNumber;
+    }
+    
+    public String getFilename() {
+        return filename;
+    }
+    
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
     
     @Override
@@ -92,13 +118,13 @@ public class Token implements Comparable<Token> {
     
     @Override
     public int compareTo(Token o) {
-        if(getLineNumber() != o.getLineNumber()) return getLineNumber() - o.getLineNumber();
-        return getColumn() - o.getColumn();
+        if(getVirtualLineNumber() != o.getVirtualLineNumber()) return getVirtualLineNumber() - o.getVirtualLineNumber();
+        return getVirtualColumn() - o.getVirtualColumn();
     }
     
     public String info() {
-        if(lineNumber > 0 && column >= 0) {
-            return toString() + String.format(" at ln: %d (c: %d)", lineNumber, column);
+        if(virtualLineNumber > 0 && virtualColumn >= 0) {
+            return toString() + String.format(" at ln: %d (c: %d)", virtualLineNumber, virtualColumn);
         }
         return toString();
     }

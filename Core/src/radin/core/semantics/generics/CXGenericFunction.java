@@ -105,8 +105,8 @@ public class CXGenericFunction extends CXFunctionPointer implements ICXGeneric<C
                 AbstractSyntaxNode modifiedTree = createModifiedTree(originalRelevantTree, types);
                 AbstractSyntaxNode oldId = modifiedTree.getDirectChildren().remove(1);
                 Token idToken = oldId.getToken();
-                Token newIdToken = new Token(TokenType.t_id, alteredName).addColumnAndLineNumber(idToken.getColumn(),
-                        idToken.getLineNumber());
+                Token newIdToken = new Token(TokenType.t_id, alteredName).addColumnAndLineNumber(idToken.getVirtualColumn(),
+                        idToken.getVirtualLineNumber());
                 modifiedTree.getDirectChildren().add(1, new AbstractSyntaxNode(ASTNodeType.id, newIdToken));
                 createdTrees.put(types, modifiedTree);
             }

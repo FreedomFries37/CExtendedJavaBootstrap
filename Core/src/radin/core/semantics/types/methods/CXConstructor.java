@@ -34,8 +34,8 @@ public class CXConstructor extends CXMethod {
         Token corr = corresponding.getChild(0).getToken();
         return new Token(TokenType.t_id,
                 "construct_" + parent.getTypeNameIdentifier().generateCDefinitionNoHash() + deterministicParameterHash(parameters) + '_').addColumnAndLineNumber(
-                corr.getColumn(),
-                corr.getLineNumber()
+                corr.getVirtualColumn(),
+                corr.getVirtualLineNumber()
         );
         
     }

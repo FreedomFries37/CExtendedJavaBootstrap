@@ -21,9 +21,10 @@ int main(int argc, std::String argv[]) {
 		println_s(argv[i]);
 	}
 	*/
+	std::Int i = new std::Int(3);
 	std::String hw = new std::String("Hello World!");
 	println_s(hw);
-	std::String more = hw->concat("\tsize = ")->concat_integer(hw->length());
+	std::String more = hw->concat("\tsize = ")->concat(new std::Int(hw->length()));
 	println_s(more);
 
 	return 0;

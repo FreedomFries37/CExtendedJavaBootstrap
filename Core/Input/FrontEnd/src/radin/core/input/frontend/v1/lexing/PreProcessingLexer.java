@@ -11,7 +11,6 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -535,8 +534,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         "\n#line " + restoreLineNumber + " \""+ this.filename + "\"\n";
     
                 fullText = fullText.replace("\t", " ".repeat(UniversalCompilerSettings.getInstance().getSettings().getTabSize()));
-                fullText = fullText.replaceAll("//.*\n", "\n");
-                fullText = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(fullText).replaceAll("");
+                //fullText = fullText.replaceAll("//.*\n", "\n");
+                //fullText = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(fullText).replaceAll("");
                 // fullText = fullText.replaceAll("/\\*.*\\*/", "");
                 replaceString(originalString, fullText);
                 return;
@@ -628,7 +627,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             // ICompilationSettings.debugLog.info("Previous line number is " + getPrevious()
                             // .getLineNumber());
                         }
-                        if(!createdTokens.isEmpty() && getPrevious().getLineNumber() == lineNumber && getPrevious().getColumn() >= 1) {
+                        if(!createdTokens.isEmpty() && getPrevious().getVirtualLineNumber() == lineNumber && getPrevious().getVirtualColumn() >= 1) {
                             
                             Token token = new Token(TokenType.t_reserved, "#");
                             token.addColumnAndLineNumber(column, lineNumber);
@@ -984,6 +983,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             tok.setPrevious(getPrevious());
             String representation = tok.getRepresentation();
             tok.addColumnAndLineNumber(column - representation.length(), lineNumber);
+            tok.setFilename(currentFile);
+            tok.setActualLineNumber(fileCurrentLineNumber.get(currentFile).getValue());
             //prevLineNumber = lineNumber;
             //prevColumn = column;
             createdTokens.add(tok);

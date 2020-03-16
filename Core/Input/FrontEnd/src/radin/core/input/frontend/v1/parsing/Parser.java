@@ -50,7 +50,7 @@ public class Parser extends BasicParser {
             
             
             output = new Token(TokenType.t_typename, output.getImage())
-                    .addColumnAndLineNumber(output.getColumn(), output.getLineNumber());
+                    .addColumnAndLineNumber(output.getVirtualColumn(), output.getVirtualLineNumber());
         }
         return output;
     }
@@ -123,7 +123,7 @@ public class Parser extends BasicParser {
     
     protected Token undoTypeName(Token other) {
         if (other.getType() != TokenType.t_typename) return other;
-        return new Token(TokenType.t_id, other.getImage()).addColumnAndLineNumber(other.getColumn(), other.getColumn());
+        return new Token(TokenType.t_id, other.getImage()).addColumnAndLineNumber(other.getVirtualColumn(), other.getVirtualColumn());
     }
     
     public CategoryNode parse() {
@@ -2129,9 +2129,13 @@ public class Parser extends BasicParser {
             
         }
         if (!consume(TokenType.t_semic)) {
+            /*
             if (!recoverableMissingError("Missing semi-colon", t_semic, t_lcurl)) {
                 return false;
             }
+          
+             */
+            return error("Missing semi-colon");
         }
     
         parent.addChild(child);

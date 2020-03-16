@@ -83,9 +83,9 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                 return;
             }
             inputString = text.toString().replace("\t", " ".repeat(settings.getTabSize()));
-            inputString = inputString.replaceAll("//.*\n", "\n");
+            //inputString = inputString.replaceAll("//.*\n", "\n");
             // inputString = inputString.replaceAll("/\\*.*\\*/", "");
-            inputString = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(inputString).replaceAll("");
+            //inputString = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(inputString).replaceAll("");
             inputString = "#include <prelude.h>\n" + inputString;
             errors = new LinkedList<>();
         }
@@ -414,13 +414,16 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
             
         }
         
-        for (CompilationNode compilationNode : failed) {
-            ErrorReader errorReader = new ErrorReader(compilationNode.file, compilationNode.inputString,
-                    compilationNode.getErrors());
-            errorReader.readErrors();
-        }
-        if(MultipleMainDefinitionsError.firstDefinition == null) {
-            throw new MissingMainFunctionError();
+        if(!failed.isEmpty()) {
+            for (CompilationNode compilationNode : failed) {
+                ErrorReader errorReader = new ErrorReader(compilationNode.file, compilationNode.inputString,
+                        compilationNode.getErrors());
+                errorReader.readErrors();
+            }
+        } else {
+            if (MultipleMainDefinitionsError.firstDefinition == null) {
+                throw new MissingMainFunctionError();
+            }
         }
         return failed.isEmpty();
     }

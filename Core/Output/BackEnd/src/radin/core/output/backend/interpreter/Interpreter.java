@@ -390,7 +390,7 @@ public class Interpreter {
                 NullableInstance<R, Instance<R>> value = backingValue.get(i);
                 output.setAt(i, value);
             }
-            return output;
+            return (Instance<T>) output.asPointer();
         }
         
         @Override
@@ -436,14 +436,19 @@ public class Interpreter {
         public void setPointer(Instance<R> pointer) {
             setAt(index, pointer);
         }
-        
+    
+        @Override
+        public PointerInstance<R> asPointer() {
+            return this;
+        }
+    
         @Override
         public String toString() {
             if (getSubType() == CXPrimitiveType.CHAR) {
                 String full = super.toString();
                 full = full.substring(1, full.length() - 1);
                 String output = full.substring(index);
-                return "\"" + output + "\"";
+                return "\"" + output + "\" (char*)";
             }
             return (getBackingValue() == null || getBackingValue().get(0) == null ? "[NULL] " : "") + "PointerInstance{" +
                     "type=" + getType() +
@@ -559,16 +564,18 @@ public class Interpreter {
     private HashMap<String, Instance<?>> globalAutoVariables;
     private Stack<PointerInstance<CXClassType>> thisStack = new Stack<>();
     
+    private Token nearestCurrentToken = null;
+    
     private class StackTraceInfo {
-        private String function;
+        private Token function;
         private HashMap<String, Instance<?>> stackVariables;
     
-        public StackTraceInfo(String function) {
+        public StackTraceInfo(Token function) {
             this.function = function;
             stackVariables = new HashMap<>();
         }
     
-        public String getFunction() {
+        public Token getFunction() {
             return function;
         }
     
@@ -578,13 +585,21 @@ public class Interpreter {
     
         @Override
         public String toString() {
-            return function;
+            if(function.getFilename() != null) return function.getImage() + "(" + function.getFilename() + ":" + function.getActualLineNumber() + ")";
+            return function.getImage();
         }
     }
     
-    private void startStackTraceFor(String name){
-        logger.info("Starting stack trace for " + name);
+    private void startStackTraceFor(Token name){
+        logger.info("Starting stack trace for " + name.getImage());
         stackTrace.push(new StackTraceInfo(name));
+    }
+    
+    private void startStackTraceFor(String modname, Token actual) {
+        Token output = new Token(actual.getType(), modname);
+        output.setActualLineNumber(actual.getActualLineNumber());
+        output.setFilename(actual.getFilename());
+        startStackTraceFor(output);
     }
     
     
@@ -789,16 +804,21 @@ public class Interpreter {
                 argv.setAt(i, createCharPointerFromString(args[i]));
             }
             push(argv);
-            startStackTraceFor("start");
+            startStackTraceFor(new Token(TokenType.t_id, "start"));
             if (!invoke(main)) return -1;
             stackTrace.pop();
             endClosure();
         } catch (FunctionReturned e) {
             return ((PrimitiveInstance<Number, CXPrimitiveType>) returnValue).backingValue.intValue();
         } catch (Throwable e) {
-            System.err.println("Error " + e.toString() + " thrown (in jodin):");
+            System.err.println("\nError " + e.toString() + " thrown (in jodin):");
+            StackTraceInfo peek = stackTrace.peek();
+            Token function = new Token(TokenType.t_id, peek.function.getImage());
+            function.setFilename(nearestCurrentToken.getFilename());
+            function.setActualLineNumber(nearestCurrentToken.getActualLineNumber());
+            System.err.println("\tat " + new StackTraceInfo(function));
             while (!stackTrace.empty()) {
-                String s = stackTrace.pop().function;
+                StackTraceInfo s = stackTrace.pop();
                 System.err.println("\tat " + s);
             }
             e.printStackTrace();
@@ -908,6 +928,7 @@ public class Interpreter {
     
     public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned {
         logger.info("Executing " + input);
+        nearestCurrentToken = input.findFirstToken();
         switch (input.getASTType()) {
             case operator:
                 break;
@@ -923,13 +944,19 @@ public class Interpreter {
                 PrimitiveInstance<?, ?> lhs, rhs;
                 if(lhsNull instanceof NullableInstance) {
                     lhs = (PrimitiveInstance<?, ?>) ((NullableInstance) lhsNull).getValue();
+                } else if(lhsNull instanceof ArrayInstance) {
+                    // in binary operations, treat arrays as pointers
+                    lhs = ((ArrayInstance) lhsNull).asPointer();
                 } else {
                     lhs = (PrimitiveInstance<?, ?>) lhsNull;
                 }
                 
                 if(rhsNull instanceof NullableInstance) {
                     rhs = (PrimitiveInstance<?, ?>) ((NullableInstance) rhsNull).getValue();
-                } else {
+                }else if(rhsNull instanceof ArrayInstance) {
+                    // in binary operations, treat arrays as pointers
+                    rhs = ((ArrayInstance) rhsNull).asPointer();
+                }  else {
                     rhs = (PrimitiveInstance<?, ?>) rhsNull;
                 }
                 
@@ -1177,12 +1204,13 @@ public class Interpreter {
             case parameter_list:
                 break;
             case function_call: {
-                
-                String funcCall = input.getASTChild(ASTNodeType.id).getToken().getImage();
+    
+                Token token = input.getASTChild(ASTNodeType.id).getToken();
+                String funcCall = token.getImage();
                 
                 if (funcCall.equals("calloc")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(funcCall);
+                    startStackTraceFor(token);
                     CXType cxType =
                             ((TypedAbstractSyntaxNode) input.getASTChild(ASTNodeType.sequence).getASTChild(ASTNodeType.sizeof).getASTNode()).getCxType();
                     PrimitiveInstance<Number, ?> size = (PrimitiveInstance<Number, ?>) pop();
@@ -1193,7 +1221,7 @@ public class Interpreter {
                     break;
                 } else if(funcCall.equals("free")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(funcCall);
+                    startStackTraceFor(token);
                     PointerInstance<?> pop = (PointerInstance<?>) pop();
                     logger.info("freeing object " + pop);
                     pop.setPointer(null);
@@ -1201,7 +1229,7 @@ public class Interpreter {
                     break;
                 } else if(funcCall.equals("printf")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(funcCall);
+                    startStackTraceFor(token);
                     PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) pop();
                     while (pop.getPointer() != null) {
                         PrimitiveInstance<Character, ?> pointer = (PrimitiveInstance<Character, ?>) pop.getPointer();
@@ -1249,13 +1277,15 @@ public class Interpreter {
                 
                 
                 TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
+                
+                
                 if (function == null) {
                     
                     throw new CompilationError("Symbol " + funcCall + " not " +
                             "defined", input.getASTChild(ASTNodeType.id).getToken());
                 } else {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(funcCall);
+                    startStackTraceFor(token);
                     try {
                         logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
                         if (!invoke(function)) return false;
@@ -1293,7 +1323,10 @@ public class Interpreter {
                     memStack.push(instance);
                 }
                 TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType(), idToken, types);
-                startStackTraceFor(classTypeInstance.getType() + "::" + idToken.getImage());
+                if(method == null) {
+                    throw new Error("Method " + idToken.getImage() + " not defined");
+                }
+                startStackTraceFor(classTypeInstance.getType() + "::" + idToken.getImage(), idToken);
                 try {
                     if (!invoke(method)) return false;
                     endClosure();
@@ -1332,9 +1365,13 @@ public class Interpreter {
                     cond = ((Number) pop.getBackingValue()).intValue() != 0;
                 }
                 if (cond) {
+                    logger.fine("Using true branch for if statement");
                     if (!invoke(input.getChild(1))) return false;
                 } else if (input.getChild(2).getASTType() != ASTNodeType.empty) {
+                    logger.fine("Using else branch for if statement");
                     if (!invoke(input.getChild(2))) return false;
+                } else {
+                    logger.fine("No branch for if statement");
                 }
             }
             break;
@@ -1560,10 +1597,10 @@ public class Interpreter {
                 //push(classTypeInstance);
                 ConstructorCallTag compilationTag = input.getCompilationTag(ConstructorCallTag.class);
                 CXConstructor cxConstructor = compilationTag.getConstructor();
-                startStackTraceFor(cxConstructor.getParent().toString() + "::<init>");
+                startStackTraceFor(cxConstructor.getParent().toString() + "::<init>", input.findFirstToken());
                 if (input.containsCompilationTag(PriorConstructorTag.class)) {
                     PriorConstructorTag prior = input.getCompilationTag(PriorConstructorTag.class);
-                    startStackTraceFor(prior.getPriorConstructor().toString());
+                    startStackTraceFor(prior.getPriorConstructor().toString(), input.findFirstToken());
                     if (!invoke(prior.getSequence())) return false;
                     if (!invoke(MethodTASNTracker.getInstance().get(prior.getPriorConstructor()))) return false;
                     //push(classTypeInstance);

@@ -84,6 +84,10 @@ in std {
 
 		public String concat_integer(long other);
 
+		public String concat(Object other);
+
+		public String concat(char c);
+
 		public const char* getCStr();
 
 		virtual public int length();
@@ -91,17 +95,17 @@ in std {
 		virtual public String toString();
     };
 
-class Int {
-	private int value;
+	class Int {
+		private int value;
 
-	public Int(int value);
+		public Int(int value);
 
-	public int getValue();
+		public int getValue();
 
-	public void setValue(int value);
+		public void setValue(int value);
 
-	virtual public std::String toString();
-};
+		virtual public std::String toString();
+	};
 
 
 }

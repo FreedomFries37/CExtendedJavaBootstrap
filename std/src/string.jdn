@@ -9,20 +9,37 @@ implement String {
 		this->length = strlen(bp);
 	}
 
+
 	void drop() {
-		// free(this->backing_ptr);
+		free(this->backingPtr);
 		super->drop();
 	}
 
 	String concat(String other) {
 		char next[this->length + other->length + 1];
+		//print("This length = ");
+		//println_s(new Int(this->length())->toString());
 		strcpy(next, this->backingPtr);
 		strcat(next, other->backingPtr);
 		return new String(next);
 	}
 
+	String concat(Object other) {
+		return this->concat(other->toString());
+	}
+
 	String concat(char* other) {
 		return this->concat(new String(other));
+	}
+
+	String concat(char c) {
+		char next[this->length + 1];
+		//print("This length = ");
+		//println_s(new Int(this->length())->toString());
+		strcpy(next, this->backingPtr);
+		next[this->length] = c;
+		next[this->length + 1] = (char) 0;
+		return new String(next);
 	}
 
 	const char* getCStr() {
@@ -66,12 +83,17 @@ char * strcpy ( char * destination, const char * source ) {
 	for(int i = 0; i < length; ++i) {
 		destination[i] = source[i];
 	}
+
+	destination[length] = (char) 0;
+	print("strcpy result: ");
+    println(destination);
 	return destination;
 }
 char * strncpy ( char * destination, const char * source, size_t num ) {
 	for(int i = 0; i < num; ++i) {
     	destination[i] = source[i];
     }
+
     return destination;
 }
 
@@ -85,11 +107,17 @@ src.len = 4;
 */
 char * strcat ( char * destination, const char * source ) {
 	size_t dest = strlen(destination);
+	print("Concatting (");
+	print(source);
+	print(") to (");
+	print(destination);
+	println(")");
+
 	size_t src = strlen(source);
 	for(int i = 0; i < src; ++i) {
     		destination[dest + i] = source[i];
     }
-    destination[dest + src - 1] = 0;
+    destination[dest + src] = 0;
     return destination;
 }
 char * strncat ( char * destination, const char * source, size_t num );

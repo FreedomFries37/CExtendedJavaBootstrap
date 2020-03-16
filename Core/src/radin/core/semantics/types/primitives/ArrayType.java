@@ -112,6 +112,11 @@ public class ArrayType extends AbstractCXPrimitiveType implements Deference {
     }
     
     @Override
+    public boolean isPrimitive() {
+        return false;
+    }
+    
+    @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
         return new ArrayType(baseType.getTypeRedirection(e), size);
     }
