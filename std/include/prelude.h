@@ -4,17 +4,10 @@
 #include <reflection.h>
 #include <primitives.h>
 
-class Char;
-class Int;
-class Short;
-class Long;
-
-class Double;
-class Float;
-
 
 in std class String;
 in std class ClassInfo;
+in std class Int;
 
 void* calloc(size_t size, size_t length);
 
@@ -29,6 +22,7 @@ void print_s(std::String o);
 void println_s(std::String o);
 
 const void* nullptr = (void*) 0;
+
 
 
 in std {
@@ -93,18 +87,25 @@ in std {
 		public const char* getCStr();
 
 		virtual public int length();
+
+		virtual public String toString();
     };
 
-    class Int {
-    	private int value;
+class Int {
+	private int value;
 
-    	public Int(int value);
+	public Int(int value);
 
-    	public Int getValue();
+	public int getValue();
 
-    	public void setValue(int value);
-    };
+	public void setValue(int value);
+
+	virtual public std::String toString();
+};
+
 
 }
+
+
 
 #endif

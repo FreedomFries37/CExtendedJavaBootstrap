@@ -75,23 +75,33 @@ in std {
 			return this->classHash == other->classHash;
 		}
 
-	}
 
+
+	}
 
 
 	implement Int {
 
-		Int(int value) {
-			this->value = value;
-		}
+    	Int(int value) {
+    		this->value = value;
+    	}
 
-        Int getValue() {
-        	return this->value;
-        }
+    	int getValue() {
+    		return this->value;
+    	}
 
-        void setValue(int value) {
-        	this->value = value;
-        }
+    	void setValue(int value) {
+    		this->value = value;
+    	}
 
-     }
+    	std::String toString() {
+    		return new std::String("number");
+    	}
+
+    }
+
+
+
+
 }
+

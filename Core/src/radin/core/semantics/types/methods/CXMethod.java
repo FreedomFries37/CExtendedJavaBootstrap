@@ -30,7 +30,7 @@ public class CXMethod implements CXEquivalent {
     private List<CXParameter> parameters;
     private AbstractSyntaxNode methodBody;
     
-   
+    
     
     public CXMethod(CXClassType parent, Visibility visibility, Token name, boolean isVirtual, CXType returnType,
                     List<CXParameter> parameters,
@@ -97,7 +97,9 @@ public class CXMethod implements CXEquivalent {
     }
     public List<CXParameter> getParametersExpanded() {
         LinkedList<CXParameter> cxParameters = new LinkedList<>(getParameters());
-        cxParameters.add(0, new CXParameter(new PointerType(CXPrimitiveType.VOID), methodThisParameterName));
+        if(UniversalCompilerSettings.getInstance().getSettings().isThisPassedOffAsParameter()) {
+            cxParameters.add(0, new CXParameter(new PointerType(CXPrimitiveType.VOID), methodThisParameterName));
+        }
         return cxParameters;
     }
     
@@ -107,7 +109,9 @@ public class CXMethod implements CXEquivalent {
     
     public CXFunctionPointer getFunctionPointer() {
         List<CXType> parameterTypes = new LinkedList<>(getParameterTypes());
-        parameterTypes.add(0, new PointerType(CXPrimitiveType.VOID));
+        if(UniversalCompilerSettings.getInstance().getSettings().isThisPassedOffAsParameter()) {
+            parameterTypes.add(0, new PointerType(CXPrimitiveType.VOID));
+        }
         return new CXFunctionPointer(returnType, parameterTypes);
     }
     

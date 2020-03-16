@@ -665,7 +665,38 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 boolean inString = true;
                 while (inString) {
                     if (match('\\')) {
-                        image += consumeNextChars(2);
+                        String escape = consumeNextChars(2);
+                        switch (escape.charAt(1)) {
+                            case 't': {
+                                image += '\t';
+                                break;
+                            }
+                            case 'n': {
+                                image += '\n';
+                                break;
+                            }
+                            case 'r': {
+                                image += '\r';
+                                break;
+                            }
+                            case '\'': {
+                                image += '\'';
+                                break;
+                            }
+                            case '\\': {
+                                image += '\\';
+                                break;
+                            }
+                            case '"': {
+                                image += '"';
+                                break;
+                            }
+                            case '?': {
+                                image += '?';
+                                break;
+                            }
+                        }
+                        //image += escape;
                     } else if (match('\n')) {
                         throw new TokenizationError("Incomplete String", getPrevious());
                     } else {

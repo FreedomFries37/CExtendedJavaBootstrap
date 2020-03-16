@@ -7,7 +7,9 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
+import radin.core.output.tags.ArrayWithSizeTag;
 import radin.core.output.tags.ConstructorCallTag;
+import radin.core.output.tags.MultiDimensionalArrayWithSizeTag;
 import radin.core.output.tags.PriorConstructorTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
@@ -61,6 +63,11 @@ public class Interpreter {
         abstract Instance<T> copy();
         
         abstract Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException;
+    
+        
+        public NullableInstance<T, ? extends Instance<T>> toNullable() {
+            return new NullableInstance<>(getType(), this);
+        }
     }
     
     public class PrimitiveInstance <R, P extends AbstractCXPrimitiveType> extends Instance<P> {
@@ -187,6 +194,8 @@ public class Interpreter {
             
             throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
         }
+    
+        
     }
     
     public class SegmentationFault extends Error {
@@ -255,11 +264,24 @@ public class Interpreter {
         }
         
         public void setValue(I value) {
+            if(value instanceof NullableInstance) {
+                this.value = ((NullableInstance<R, I>) value).value;
+            }
             this.value = value;
+        }
+    
+        @Override
+        public NullableInstance<R, ? extends Instance<R>> toNullable() {
+            return this;
         }
     }
     
     
+    /**
+     *
+     * @param <R> Type of subtype
+     * @param <T> Type of Array
+     */
     public class ArrayInstance <R extends CXType, T extends ArrayType> extends PrimitiveInstance<ArrayList<NullableInstance<R, Instance<R>>>,
             T> {
         
@@ -276,16 +298,33 @@ public class Interpreter {
         }
         
         public ArrayInstance(T type, R subType, ArrayList<? extends Instance<R>> other) {
-            super(type, new ArrayList<>(other.stream().map((i) -> new NullableInstance<>(subType, i)).collect(Collectors.toList())), true);
+            super(type,
+                    new ArrayList<NullableInstance<R, Instance<R>>>(other.size()),
+                    true);
+            for (int i = 0; i < other.size(); i++) {
+                getBackingValue().add(other.get(i) == null ? new NullableInstance<>(subType) :
+                        (NullableInstance<R, Instance<R>>) other.get(i).toNullable());
+            }
             this.subType = subType;
+            this.size = other.size();
         }
+    
+       
+        
+        
         
         public NullableInstance<R, Instance<R>> getAt(int index) {
+            if(index >= getBackingValue().size()) throw new SegmentationFault("Index " + index + " out of bounds of " +
+                    "size " + getBackingValue().size());
             return getBackingValue().get(index);
         }
         
         public void setAt(int index, Instance<R> value) {
-            getBackingValue().get(index).setValue(value);
+            if(value instanceof NullableInstance) {
+                getBackingValue().set(index, ((NullableInstance<R, Instance<R>>) value));
+            } else {
+                getBackingValue().get(index).setValue(value);
+            }
         }
         
         public PointerInstance<R> asPointer() {
@@ -345,7 +384,13 @@ public class Interpreter {
         
         @Override
         Instance<T> copy() {
-            return new ArrayInstance<>(getType(), getSubType(), getBackingValue());
+            ArrayList<NullableInstance<R, Instance<R>>> backingValue = getBackingValue();
+            ArrayInstance<R, T> output = new ArrayInstance<>(getType(), getSubType(), backingValue.size());
+            for (int i = 0; i < backingValue.size(); i++) {
+                NullableInstance<R, Instance<R>> value = backingValue.get(i);
+                output.setAt(i, value);
+            }
+            return output;
         }
         
         @Override
@@ -538,6 +583,7 @@ public class Interpreter {
     }
     
     private void startStackTraceFor(String name){
+        logger.info("Starting stack trace for " + name);
         stackTrace.push(new StackTraceInfo(name));
     }
     
@@ -689,6 +735,28 @@ public class Interpreter {
     public ArrayInstance<CXType, ArrayType> createArrayOfType(CXType type, int size) {
         return new ArrayInstance<>(new ArrayType(type), type, size);
     }
+    
+    
+    public ArrayInstance<? extends CXType, ArrayType> createArray(ArrayType type, List<Integer> sizes) {
+        if(sizes.size() == 1) return createArray(type.getBaseType(), sizes.get(0));
+        int thisSize = sizes.get(0);
+        List<Integer> restSizes = sizes.subList(1, sizes.size());
+        ArrayList<NullableInstance<ArrayType, ArrayInstance<?, ArrayType>>> subArrays = new ArrayList<>();
+        for (int i = 0; i < thisSize; i++) {
+            subArrays.set(i, new NullableInstance<>(((ArrayType) type.getBaseType()),
+                    createArray((ArrayType) type.getBaseType(),
+                    restSizes)));
+        }
+        ArrayInstance<ArrayType, ArrayType> output = new ArrayInstance<>(type, (ArrayType) type.getBaseType(),
+                thisSize);
+        for (int i = 0; i < thisSize; i++) {
+            output.setAt(i, subArrays.get(i).value);
+        }
+        return output;
+    }
+    
+    
+    
     
     public ArrayInstance<CXPrimitiveType, ArrayType> createCharArrayFromString(String s) {
         ArrayInstance<CXPrimitiveType, ArrayType> output = new ArrayInstance<>(new ArrayType(CXPrimitiveType.CHAR),
@@ -1009,7 +1077,22 @@ public class Interpreter {
             break;
             case declaration: {
                 String id = input.getASTChild(ASTNodeType.id).getToken().getImage();
-                addAutoVariable(id, createNewInstance(((TypedAbstractSyntaxNode) input.getASTNode()).getCxType()));
+                CXType cxType = ((TypedAbstractSyntaxNode) input.getASTNode()).getCxType();
+                if(cxType instanceof ArrayType && !(cxType instanceof PointerType)) {
+                    MultiDimensionalArrayWithSizeTag compilationTag = input.getCompilationTag(MultiDimensionalArrayWithSizeTag.class);
+                    List<Integer> sizes = new LinkedList<>();
+                    for (TypeAugmentedSemanticNode expression : compilationTag.getExpressions()) {
+                        if(!invoke(expression)) return false;
+                        PrimitiveInstance<Number, ?> pop = ((PrimitiveInstance<Number, ?>) pop());
+                        sizes.add(pop.backingValue.intValue());
+                    }
+    
+                    ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
+                    logger.info("Created a " + cxType + " array of size " + array.size);
+                    addAutoVariable(id, array);
+                } else {
+                    addAutoVariable(id, createNewInstance(cxType));
+                }
             }
             break;
             case assignment: {

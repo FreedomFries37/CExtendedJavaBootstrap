@@ -41,6 +41,18 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     private boolean isInRuntimeCompilationMode = false;
     
+    private boolean thisPassedOffAsParameter = true;
+    
+    @Override
+    public boolean isThisPassedOffAsParameter() {
+        return thisPassedOffAsParameter;
+    }
+    
+    @Override
+    public void setThisPassedOffAsParameter(boolean thisPassedOffAsParameter) {
+        this.thisPassedOffAsParameter = thisPassedOffAsParameter;
+    }
+    
     @Override
     public boolean isLookForMainFunction() {
         return lookForMainFunction;

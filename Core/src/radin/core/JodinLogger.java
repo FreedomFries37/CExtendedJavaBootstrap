@@ -92,6 +92,25 @@ public class JodinLogger {
         }
     }
     
+    public JodinLogger(JodinLogger parent, String filename, String subsystem) {
+        base = Logger.getLogger(subsystem);
+        base.setParent(parent.base);
+        base.setUseParentHandlers(true);
+        FileHandler fh;
+        
+        try {
+            fh = new FileHandler(filename);
+            base.addHandler(fh);
+            Formatter formatter = new JodinFormatter();
+            fh.setFormatter(formatter);
+            
+            base.info("Log Start");
+            base.setLevel(Level.ALL);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     
     public PrintStream divertOutput(Level severity, PrintStream other) {
         return new LoggerPrintStream(other, severity);

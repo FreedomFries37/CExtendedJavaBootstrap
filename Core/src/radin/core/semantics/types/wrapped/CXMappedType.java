@@ -74,6 +74,11 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
     }
     
     @Override
+    public TypeEnvironment getEnvironment() {
+        return environment;
+    }
+    
+    @Override
     public String infoDump() {
         return toString() + " in " + environment;
     }

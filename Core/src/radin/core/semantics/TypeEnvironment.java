@@ -35,6 +35,10 @@ public class TypeEnvironment {
     
     private static int environmentsCreated = 0;
     
+    private String environmentLogString(String message) {
+        return this.toString() + ": " + message;
+    }
+    
     private HashMap<String, CXType> typeDefinitions;
     private HashSet<CXCompoundType> namedCompoundTypes;
     private HashMap<String, CXCompoundType> namedCompoundTypesMap;
@@ -63,7 +67,7 @@ public class TypeEnvironment {
     }
     
     public TypeEnvironment() {
-        ICompilationSettings.debugLog.info("Type Environment " + environmentsCreated++ + " Created!");
+        ICompilationSettings.typeLog.info("Type Environment " + environmentsCreated++ + " Created!");
         // ICompilationSettings.debugLog.throwing("TypeEnvironment", "<init>", new Throwable());
         typeDefinitions = new HashMap<>();
         namedCompoundTypes = new HashSet<>();
@@ -79,7 +83,7 @@ public class TypeEnvironment {
     }
     
     public void resetToNone() {
-        ICompilationSettings.debugLog.finer("Type Environment Reset");
+        ICompilationSettings.typeLog.finer(environmentLogString("Type Environment Reset"));
         typeDefinitions = new HashMap<>();
         namedCompoundTypes = new HashSet<>();
         namedCompoundTypesMap = new HashMap<>();
@@ -175,6 +179,7 @@ public class TypeEnvironment {
         if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
         CXDelayedTypeDefinition delayedTypeDefinition = new CXDelayedTypeDefinition(cxIdentifier, tok, this);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
+        ICompilationSettings.typeLog.finest(environmentLogString("Added temp type " + delayedTypeDefinition));
         return getTempType(cxIdentifier);
     }
     
@@ -184,9 +189,9 @@ public class TypeEnvironment {
         if(identifier.getParentNamespace() != null)
             parent = namespaceTree.getNamespace(currentNamespace, identifier.getParentNamespace());
         else parent = currentNamespace;
-        ICompilationSettings.debugLog.finest("Getting temp type " + identifier);
+        ICompilationSettings.debugLog.finest(environmentLogString("Getting temp type " + identifier));
         CXIdentifier actual = new CXIdentifier(parent, identifier.getIdentifier());
-        ICompilationSettings.debugLog.finest("Rectified to " + actual);
+        ICompilationSettings.debugLog.finest(environmentLogString("Rectified to " + actual));
         
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
     }
@@ -197,7 +202,7 @@ public class TypeEnvironment {
         if(delayedTypeDefinitionHashMap.containsKey(cxIdentifier)) return getTempType(cxIdentifier);
         CXDeferredClassDefinition delayedTypeDefinition = new CXDeferredClassDefinition(tok, this, cxIdentifier);
         delayedTypeDefinitionHashMap.put(cxIdentifier, delayedTypeDefinition);
-        ICompilationSettings.debugLog.finest("Added deferred type " + delayedTypeDefinition);
+        ICompilationSettings.typeLog.finest(environmentLogString("Added deferred type " + delayedTypeDefinition));
         return getTempType(cxIdentifier);
     }
     
@@ -571,7 +576,7 @@ public class TypeEnvironment {
     }
     
     private CXCompoundType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
-        ICompilationSettings.debugLog.finest("in " + namespace + " creating compound type from ");
+        // ICompilationSettings.debugLog.finest("in " + namespace + " creating compound type from ");
         // ICompilationSettings.debugLog.finest("\n" + ast.toTreeForm());
         AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
         Token name = nameAST != null? nameAST.getToken() : null;
@@ -598,6 +603,8 @@ public class TypeEnvironment {
             if(!isAnonymous) {
                 addNamedCompoundType(type);
             }
+            
+            ICompilationSettings.typeLog.info(environmentLogString("Created new type " + type));
             
             output = type;
         } else {
@@ -703,6 +710,15 @@ public class TypeEnvironment {
             typesForNamespace.add(cxClassType);
             
             addNamedCompoundType(cxClassType);
+            ICompilationSettings.typeLog.info(environmentLogString("Created new class " + cxClassType));
+            ICompilationSettings.typeLog.info("Fields:");
+            for (var field : cxClassType.getAllFields()) {
+                ICompilationSettings.typeLog.info("\t+ " + field);
+            }
+            ICompilationSettings.typeLog.info("Methods:");
+            for (CXMethod allMethod : cxClassType.getAllMethods()) {
+                ICompilationSettings.typeLog.info("\t+ " + allMethod);
+            }
             allCreated.add(cxClassType);
             return cxClassType;
             

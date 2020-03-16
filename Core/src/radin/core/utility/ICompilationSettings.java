@@ -16,6 +16,7 @@ public interface ICompilationSettings<Front, Mid, Back> {
      * The logger for the interpreter
      */
     JodinLogger ilog = new JodinLogger("interpreter.log", "interpreter");
+    JodinLogger typeLog = new JodinLogger(debugLog,"types.log", "types");
     
     static File createFile(String filename) {
         String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();
@@ -76,6 +77,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
             }
         }
     }
+    
+    boolean isThisPassedOffAsParameter();
+    
+    void setThisPassedOffAsParameter(boolean thisPassedOffAsParameter);
     
     boolean isLookForMainFunction();
 

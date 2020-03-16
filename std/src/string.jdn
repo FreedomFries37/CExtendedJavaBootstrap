@@ -32,6 +32,14 @@ implement String {
 	String concat_integer(long other) {
 		return this;
 	}
+
+	int length() {
+		return this->length;
+	}
+
+	String toString() {
+		return this;
+	}
 }
 
 char* strdup(const char* str1) {
@@ -54,7 +62,8 @@ size_t strlen ( const char * str ) {
 }
 
 char * strcpy ( char * destination, const char * source ) {
-	for(int i = 0; i < strlen(source); ++i) {
+	size_t length = strlen(source);
+	for(int i = 0; i < length; ++i) {
 		destination[i] = source[i];
 	}
 	return destination;
@@ -66,11 +75,21 @@ char * strncpy ( char * destination, const char * source, size_t num ) {
     return destination;
 }
 
+/*
+
+dest.len = 3;
+src.len = 4;
+
+
+
+*/
 char * strcat ( char * destination, const char * source ) {
-	for(int i = strlen(destination); i < strlen(source); ++i) {
-    		destination[i] = source[i];
+	size_t dest = strlen(destination);
+	size_t src = strlen(source);
+	for(int i = 0; i < src; ++i) {
+    		destination[dest + i] = source[i];
     }
-    destination[strlen(destination) + strlen(source)] = 0;
+    destination[dest + src - 1] = 0;
     return destination;
 }
 char * strncat ( char * destination, const char * source, size_t num );
