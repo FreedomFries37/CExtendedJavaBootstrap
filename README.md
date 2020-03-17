@@ -12,6 +12,7 @@
     1. Classes
     2. Namespaces
     3. Modified entry point
+    4. Additional exact type sizes for primitives
 3. The Interpreter
 3. Future Plans
     - Jodin Compiler written in Jodin
@@ -132,6 +133,112 @@ int main(int argc, std::String args[])
 ```
 The compiler will let let you know if your main function is incorrect, or doesn't exist
 
+
+#### Additional exact type sizes for primitives
+In addition to the standard C primitives, additional type definitions exist to improve
+readability and portability of code. It is recommended to use these types over other the
+C primitives.
+These types are
+- Signed
+    - `i8` for range of −128 to +127
+    - `i16` for range of −32,768 to +32,767
+    - `i32` for range of −2,147,483,648 to +2,147,483,647
+    - `i64` for range of −9,223,372,036,854,775,808 to +9,223,372,036,854,775,807	
+    - `isize` (pointer size)
+- Unsigned
+    - `u8` for range of 0 to 255
+    - `u16` for range of 0 to 65,535
+    - `u32` for range of 0 to 4,294,967,295
+    - `u64` for range of 0 to 18,446,744,073,709,551,615
+    - `usize` (pointer size)
+- `bool` (equivalent to `u8`)
+- `size_t` (equivalent to `usize`)
+
+The Interpreter
+---
+
+Included as well is a jodin interpreter.
+
+This interpreter will allow for an alternate approach for bootstrapping the Jodin Compiler.
+
+Currently the interpreter works on a basic level, but is very slow. Improvements must be mad to make it actually usable.
+
+However, once its fully functioning, the Jodin compiler will be compiled as follows:
+
+![Bootstrap Theory](bootstraptheory.png)
+
+Future Plans
+---
+There are listed in no particular order.
+
+#### Jodin Compiler written in Jodin
+This is the next big step for Jodin, and will signify that it's hit a "mature" state. Once a compiler is
+successfuly written in Jodin that is either equal or a superset of the Java bootstrap, this will be
+the "beta" point of Jodin.
+
+##### Features needed for a self-hosted compiler
+These are the features that I have determined are necessary for work on the self-hosted compiler to begin.
+
+| Feature           | Implementation Status |
+|:------------------|----------------------:|
+| Generics          | AST Done                  |
+| Compilation Tags  | Completed                  |
+| Preamble          | Working State         |
+| Object base class | Completed             |
+| String class      | Work in progress      |
+| Exception Handling| None                  |
+| Interfaces        | None                  |
+| Implement Block   | Completed             |
+| Runtime Class Info| Works in a non static context                  |
+
+##### Preamable
+The preamble AST will be attached to the top of every file being compiled.
+
+The preamble will contain import important information, but most importantly will
+bring the `std::Object` base class into the file with `using std::Object as Object`, and set the
+default inherit to `std::Object`.
+
+The definition of Object will be as followed
+```
+
+in std class ClassInfo;
+
+in std class Object { // default inheritence is initially null
+    private ClassInfo info;
+    private long references; // if using garbage collection
+
+    public Object();
+
+    virtual public int hashcode();
+
+    virtual public int equals(Object other);
+    virtual public void drop();
+
+    virtual public std::String toString();
+};
+```
+
+
+#### Finely Tuned Importing
+Using the statement as a top level declaration `using namespace::identifer;` will automatically bring the declarations
+and fields of a class into the file. If the identifier has not been found yet, the file being compiled will be put
+on hold until the declaration is found.
+>In the case of a circular dependency, the compiler will attempt to be break the circle by checking if the class is ever
+>actually interacted with. If it isn't, its replaced with `in namespace class identifier;`. Otherwise it reports as an
+>error
+
+> If the namespace is `std`, then it will find the appropriate standard file in the standard library to include in the
+>output.
+
+
+Experimental Features
+---
+
+#### Stack trace
+Section coming son
+
+#### Reference Counting Garbage collectoin
+
 Code Examples
 ---
 
@@ -231,101 +338,6 @@ The Griff the dog says I have 4 legs!, also ARF
 The Griff the dog says I have 4 legs!, also ARF
 I'm a cat, shove off
 ```
-
-The Interpreter
----
-
-Included as well is a jodin interpreter.
-
-This interpreter will allow for an alternate approach for bootstrapping the Jodin Compiler.
-
-Currently the interpreter works on a basic level, but is very slow. Improvements must be mad to make it actually usable.
-
-However, once its fully functioning, the Jodin compiler will be compiled as follows:
-
-![Bootstrap Theory](bootstraptheory.png)
-
-Future Plans
----
-There are listed in no particular order.
-
-#### Jodin Compiler written in Jodin
-This is the next big step for Jodin, and will signify that it's hit a "mature" state. Once a compiler is
-successfuly written in Jodin that is either equal or a superset of the Java bootstrap, this will be
-the "beta" point of Jodin.
-
-##### Features needed for a self-hosted compiler
-These are the features that I have determined are necessary for work on the self-hosted compiler to begin.
-
-| Feature           | Implementation Status |
-|:------------------|----------------------:|
-| Generics          | None                  |
-| Compilation Tags  | Completed                  |
-| Preamble          | Working State         |
-| Object base class | Completed             |
-| String class      | Work in progress      |
-| Exception Handling| None                  |
-| Interfaces        | None                  |
-| Implement Block   | Completed             |
-| Runtime Class Info| Works in a non static context                  |
-
-##### Preamable
-The preamble AST will be attached to the top of every file being compiled.
-
-The preamble will contain import important information, but most importantly will
-bring the `std::Object` base class into the file with `using std::Object as Object`, and set the
-default inherit to `std::Object`.
-
-The definition of Object will be as followed
-```
-
-in std class ClassInfo;
-
-in std class Object { // default inheritence is initially null
-    private ClassInfo info;
-    private long references; // if using garbage collection
-
-    public Object() {
-        this->info = __GET_CLASS_INFO__(classid Object);
-    }
-
-    virtual public int hashcode() {
-        return (int) this;
-    }
-
-    virtual public int equals(Object other) {
-        return this == other;
-    }
-
-    [unsafe] // compilation tag that prevents typechecking
-    virtual public void drop() {
-        free (this->vtable);
-        free (this);
-    }
-};
-```
-
-
-#### Finely Tuned Importing
-Using the statement as a top level declaration `using namespace::identifer;` will automatically bring the declarations
-and fields of a class into the file. If the identifier has not been found yet, the file being compiled will be put
-on hold until the declaration is found.
->In the case of a circular dependency, the compiler will attempt to be break the circle by checking if the class is ever
->actually interacted with. If it isn't, its replaced with `in namespace class identifier;`. Otherwise it reports as an
->error
-
-> If the namespace is `std`, then it will find the appropriate standard file in the standard library to include in the
->output.
-
-
-Experimental Features
----
-
-#### Stack trace
-Section coming son
-
-#### Reference Counting Garbage collectoin
-
 ---
 ### Footnotes
 1. There will be some variation in the code, ie: all operations are put into parentheses, as
