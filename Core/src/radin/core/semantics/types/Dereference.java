@@ -1,6 +1,6 @@
 package radin.core.semantics.types;
 
-public interface Deference {
+public interface Dereference {
     CXType getDereferenceType();
 
 }

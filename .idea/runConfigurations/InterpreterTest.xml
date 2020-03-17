@@ -9,7 +9,7 @@
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.InterpreterEntrancePoint" />
     <module name="CExtendedJavaBootstrap" />
-    <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 5 interpreter_test.jdn" />
+    <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 1 interpreter_test.jdn" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

@@ -61,6 +61,23 @@ public abstract class ScopedTypeTracker implements IScopedTracker<VariableTypeTr
         }
     }
     
+    
+    public void typeTrackingClosureSuperLoad(CXClassType cxClassType) {
+        VariableTypeTracker next = getCurrentTracker().createInnerTypeTracker();
+        CXClassType ptr = cxClassType;
+        while(ptr != null) {
+            next = next.createInnerTypeTrackerLoad(ptr);
+            ptr = ptr.getParent();
+        }
+        trackerStack.push(next);
+        
+        ICompilationSettings.debugLog.finest("Scope Level: " + trackerStack.size() + " " + "#".repeat(trackerStack.size())
+                + "    Loading into " + cxClassType + " scope");
+        for (String s : next.allMethodsAvailable()) {
+            ICompilationSettings.debugLog.finest("Method Loaded: " + s);
+        }
+    }
+    
     public static TypeEnvironment getEnvironment() {
         return environment;
     }

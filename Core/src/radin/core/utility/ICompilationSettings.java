@@ -17,6 +17,7 @@ public interface ICompilationSettings<Front, Mid, Back> {
      */
     JodinLogger ilog = new JodinLogger("interpreter.log", "interpreter");
     JodinLogger typeLog = new JodinLogger(debugLog,"types.log", "types");
+    JodinLogger interpreterStateLogger = new JodinLogger("states.log", "interpreter.states");
     
     static File createFile(String filename) {
         String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();

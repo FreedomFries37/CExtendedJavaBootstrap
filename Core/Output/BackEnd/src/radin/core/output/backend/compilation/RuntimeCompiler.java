@@ -68,7 +68,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         cxClassTypes.add(0, classInfo);
         for (CXClassType cxClassType :
                 cxClassTypes) {
-            println("ClassInfo " + cxClassType.getCTypeName() + "_info = 0; // class_id = " + environment.getTypeId(cxClassType));
+            println("ClassInfo " + cxClassType.getCTypeName() + "_info = nullptr; // class_id = " + environment.getTypeId(cxClassType));
         }
         
         

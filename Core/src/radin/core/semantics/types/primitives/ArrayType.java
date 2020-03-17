@@ -4,13 +4,13 @@ import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.Deference;
+import radin.core.semantics.types.Dereference;
 import radin.core.semantics.types.ICXWrapper;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class ArrayType extends AbstractCXPrimitiveType implements Deference {
+public class ArrayType extends AbstractCXPrimitiveType implements Dereference {
 
     private CXType baseType;
     private AbstractSyntaxNode size;

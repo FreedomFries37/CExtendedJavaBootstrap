@@ -352,14 +352,14 @@ public class Interpreter {
                 StringBuilder output = new StringBuilder("\"");
                 
                 try {
-                    for (int i = 0; getAt(i).getValue() != null; i++) {
+                    for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
                         output.append(((PrimitiveInstance<Character, ?>) getAt(i).getValue()).backingValue);
                     }
                 }catch (IndexOutOfBoundsException e) {
                     throw new SegmentationFault(e);
                 }
                 
-                return output + "\"";
+                return output + "\" (true size = " + getSize() + ")";
             }
             return "ArrayInstance{" +
                     "type=" + getType() +
@@ -371,6 +371,7 @@ public class Interpreter {
         void copyFrom(Instance<?> other) {
             if (other instanceof ArrayInstance) {
                 this.setBackingValue(((ArrayInstance<R, T>) other).getBackingValue());
+                this.size = this.getBackingValue().size();
             } else {
                 assert other instanceof PrimitiveInstance;
                 if (((PrimitiveInstance<?, ?>) other).getBackingValue().toString().equals("0")) {
@@ -446,11 +447,15 @@ public class Interpreter {
         public String toString() {
             if (getSubType() == CXPrimitiveType.CHAR) {
                 String full = super.toString();
-                full = full.substring(1, full.length() - 1);
-                String output = full.substring(index);
-                return "\"" + output + "\" (char*)";
+                String output = full.substring(index + 1);
+                return "\"" + output + " (char*)";
             }
-            return (getBackingValue() == null || getBackingValue().get(0) == null ? "[NULL] " : "") + "PointerInstance{" +
+            if(getBackingValue().size() == 0) {
+                return "nullptr (type = " + getType() + ")";
+            }
+            return (getBackingValue() == null || getBackingValue().get(0) == null ?
+                    "[NULL] " : "") +
+                    "PointerInstance{" +
                     "type=" + getType() +
                     '}';
         }
@@ -563,6 +568,7 @@ public class Interpreter {
     private Stack<StackTraceInfo> stackTrace = new Stack<>();
     private HashMap<String, Instance<?>> globalAutoVariables;
     private Stack<PointerInstance<CXClassType>> thisStack = new Stack<>();
+    private Stack<Boolean> useThisStack = new Stack<>();
     
     private Token nearestCurrentToken = null;
     
@@ -602,6 +608,52 @@ public class Interpreter {
         startStackTraceFor(output);
     }
     
+    boolean disableLogging = false;
+    
+    public boolean callMethod(PointerInstance<CXClassType> ptr, String methodName, Instance<?>... params) {
+        for (Instance<?> param : params) {
+            push(param);
+        }
+    
+        thisStack.push(ptr);
+        useThisStack.push(true);
+    
+        createClosure();
+        Stack<CXType> types = new Stack<>();
+        Stack<Instance<?>> instances = new Stack<>();
+        for (int i = 0; i < params.length; i++) {
+            Instance<?> pop = pop();
+            types.push(pop.getType());
+            instances.push(pop);
+        }
+        for (Instance<?> instance : instances) {
+            memStack.push(instance);
+        }
+        Token idToken = new Token(TokenType.t_id, methodName);
+        CompoundInstance<CXClassType> classTypeInstance = (CompoundInstance<CXClassType>) ptr.getPointer();
+        
+        TypeAugmentedSemanticNode method = dynamicMethodLookup(ptr.getSubType(), idToken, types);
+        if(method == null) {
+            throw new Error("Method "+ classTypeInstance.getType() + "::" + idToken.getImage() + types + " not " +
+                    "defined");
+        }
+        startStackTraceFor(classTypeInstance.getType() + "::" + idToken.getImage(), idToken);
+        // logCurrentState();
+        try {
+            if (!invoke(method)) return false;
+            endClosure();
+        } catch (FunctionReturned functionReturned) {
+            endClosure();
+            push(returnValue);
+            returnValue = null;
+        
+        }
+        // logCurrentState();
+        stackTrace.pop();
+        thisStack.pop();
+        useThisStack.pop();
+        return true;
+    }
     
     
     public void addAutoVariable(String name, Instance<?> value) {
@@ -672,6 +724,51 @@ public class Interpreter {
         this.environment = environment;
         this.symbols = symbols;
         autoVariables.add(new HashMap<>());
+        logger.info("Adding symbols and global variables to symbol table");
+        /*List<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> entries =
+                new ArrayList<>(this.symbols.entrySet());
+                
+         */
+        useThisStack.push(false);
+        Queue<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> queue =
+                new ArrayDeque<>(this.symbols.entrySet());
+        
+        while (!queue.isEmpty()) {
+            Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol = queue.poll();
+    
+    
+            if (symbol.getValue().getASTType() == ASTNodeType.function_definition) {
+        
+            } else if (symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
+                // is a value;
+                if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
+                    try {
+                        Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                        logger.info("Generating usable value for " + symbol.getKey());
+                        if (!invoke(symbol.getValue())) throw new IllegalStateException();
+                        if(memStack.peek() == null) {
+                            logger.info("No usable value for " + symbol.getKey() + " created...");
+                            logger.info("Will retry later");
+                            queue.offer(symbol);
+                            continue;
+                        }
+                        logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
+                                "value " + memStack.peek());
+                        addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
+                        newInstance.copyFrom(pop());
+                    } catch (FunctionReturned functionReturned) {
+                        throw new IllegalStateException();
+                    }
+                } else {
+                    Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                    logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
+                    addAutoVariable(symbol.getKey().getToken().getImage(),
+                            newInstance);
+                }
+            }
+            
+        }
+        /*
         for (Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol : this.symbols) {
             if (symbol.getValue().getASTType() == ASTNodeType.function_definition) {
                 
@@ -680,8 +777,10 @@ public class Interpreter {
                 if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
                     try {
                         Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                        logger.info("Generating usable value for " + symbol.getKey());
                         if (!invoke(symbol.getValue())) throw new IllegalStateException();
-                        logger.fine("Added " + symbol.getKey().getToken() + " with value " + memStack.peek());
+                        logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
+                                "value " + memStack.peek());
                         addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
                         newInstance.copyFrom(pop());
                     } catch (FunctionReturned functionReturned) {
@@ -695,6 +794,8 @@ public class Interpreter {
                 }
             }
         }
+        
+         */
         globalAutoVariables = autoVariables.peek();
     }
     
@@ -708,9 +809,9 @@ public class Interpreter {
                     }
                 }
                 */
-                if(name.equals("this")) {
-                    return thisStack.
-                            peek();
+                if(name.equals("this") && useThisStack.peek()) {
+                    
+                    return thisStack.peek();
                 }
                 return autoVariables.peek().get(name);
             }
@@ -792,6 +893,81 @@ public class Interpreter {
         return createCharArrayFromString(s).asPointer();
     }
     
+    public  void logCurrentState() {
+        if(disableLogging) return;
+        disableLogging = true;
+        var logger = ICompilationSettings.interpreterStateLogger;
+        logger.info("WHILE EXECUTING AT " + nearestCurrentToken.getFilename() + "::" + nearestCurrentToken.getActualLineNumber());
+        int indent = 0;
+        for (StackTraceInfo stackTraceInfo : new LinkedList<>(stackTrace)) {
+            logger.info("   ".repeat(indent) + "Frame = " + stackTraceInfo.function.getImage());
+            if(indent < useThisStack.size() && useThisStack.get(indent)) {
+                String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", "this",
+                        thisStack.peek());
+                logger.info(msg);
+                int eqIndex = msg.indexOf('=');
+                
+                int thisStackIndex = 0;
+                for (int i = 0; i < indent; i++) {
+                    if(useThisStack.get(i)) {
+                        ++thisStackIndex;
+                    }
+                }
+                
+                
+                PointerInstance<CXClassType> thisInstance = thisStack.get(thisStackIndex);
+                CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
+                for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
+                    logger.info(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+                            stringInstanceEntry.getValue()));
+                }
+            }
+            for (Map.Entry<String, Instance<?>> instanceEntry : stackTraceInfo.getStackVariables().entrySet()) {
+                String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", instanceEntry.getKey(),
+                        instanceEntry.getValue());
+                logger.info(msg);
+                int eqIndex = msg.indexOf('=');
+                
+                if (instanceEntry.getValue() instanceof PointerInstance && ((PointerInstance<?>) instanceEntry.getValue()).getSubType() instanceof CXClassType) {
+                    PointerInstance<CXClassType> value = (PointerInstance<CXClassType>) instanceEntry.getValue();
+                    if(value.getPointer() == null) {
+                        continue;
+                    }
+                    try {
+                        callMethod(value, "toString");
+                    } catch (Throwable e) {
+                        continue;
+                    }
+                    PointerInstance<CXClassType> string = (PointerInstance<CXClassType>) pop();
+                    callMethod(string, "getCStr");
+                    PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
+                    logger.info(" ".repeat(eqIndex) + "  toString() = " + cString);
+                } else if(instanceEntry.getValue() instanceof ArrayInstance && !(instanceEntry.getValue() instanceof PointerInstance)) {
+                    var backingValue = ((ArrayInstance<?, ?>) instanceEntry.getValue()).getBackingValue();
+                    for (int i = 0; i < backingValue.size(); i++) {
+                        logger.info(" ".repeat(eqIndex) + "  [" + i + "]" + " " + backingValue.get(i));
+                    }
+                } else if (instanceEntry.getValue() instanceof CompoundInstance) {
+                    CompoundInstance<?> value = (CompoundInstance<?>) instanceEntry.getValue();
+                    for (Map.Entry<String, Instance<?>> stringInstanceEntry : value.fields.entrySet()) {
+                        logger.info(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+                                stringInstanceEntry.getValue()));
+                    }
+                }
+            }
+            
+            ++indent;
+        }
+        
+        logger.info("Memory Stack: ");
+        for (Instance<?> instance : memStack) {
+            logger.info(" + " + instance);
+        }
+        
+        // logger.info("Return Value: " + returnValue);
+        disableLogging = false;
+    }
+    
     
     public int run(String[] args) {
         try {
@@ -812,10 +988,13 @@ public class Interpreter {
             return ((PrimitiveInstance<Number, CXPrimitiveType>) returnValue).backingValue.intValue();
         } catch (Throwable e) {
             System.err.println("\nError " + e.toString() + " thrown (in jodin):");
+            logCurrentState();
             StackTraceInfo peek = stackTrace.peek();
             Token function = new Token(TokenType.t_id, peek.function.getImage());
-            function.setFilename(nearestCurrentToken.getFilename());
-            function.setActualLineNumber(nearestCurrentToken.getActualLineNumber());
+            if(nearestCurrentToken != null) {
+                function.setFilename(nearestCurrentToken.getFilename());
+                function.setActualLineNumber(nearestCurrentToken.getActualLineNumber());
+            }
             System.err.println("\tat " + new StackTraceInfo(function));
             while (!stackTrace.empty()) {
                 StackTraceInfo s = stackTrace.pop();
@@ -925,10 +1104,18 @@ public class Interpreter {
         }
     }
     
+    private Token closestToken(TypeAugmentedSemanticNode node) {
+        Token firstToken = node.findFirstToken();
+        if(firstToken == null) {
+            return closestToken(node.getParent());
+        }
+        return firstToken;
+    }
+    
     
     public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned {
         logger.info("Executing " + input);
-        nearestCurrentToken = input.findFirstToken();
+        nearestCurrentToken = closestToken(input);
         switch (input.getASTType()) {
             case operator:
                 break;
@@ -1117,6 +1304,7 @@ public class Interpreter {
                     ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
                     logger.info("Created a " + cxType + " array of size " + array.size);
                     addAutoVariable(id, array);
+                    logCurrentState();
                 } else {
                     addAutoVariable(id, createNewInstance(cxType));
                 }
@@ -1136,8 +1324,11 @@ public class Interpreter {
                 } else if (assignmentToken.getType() == TokenType.t_operator_assign) {
                 
                 } else return false;
+    
+                logCurrentState();
+                
+                break;
             }
-            break;
             case assignment_type:
                 break;
             case ternary:
@@ -1147,6 +1338,7 @@ public class Interpreter {
                 ArrayInstance<?, ?> arr = (ArrayInstance<?,?>) pop();
                 if (!invoke(input.getChild(1))) return false;
                 PrimitiveInstance<Number, ?> index = (PrimitiveInstance<Number, ?>) pop();
+                logger.info("Getting at index " + index + " of " + arr);
                 push(arr.getAt(index.backingValue.intValue()));
             }
             break;
@@ -1204,7 +1396,7 @@ public class Interpreter {
             case parameter_list:
                 break;
             case function_call: {
-    
+               
                 Token token = input.getASTChild(ASTNodeType.id).getToken();
                 String funcCall = token.getImage();
                 
@@ -1217,6 +1409,7 @@ public class Interpreter {
                     logger.info("Using simulated Calloc to creating an array of " + cxType + "...");
                     push(createArrayOfType(cxType, size.backingValue.intValue()));
                     logger.info("Array of " + cxType + "created with size " + size.backingValue.intValue() + " => " + memStack.peek());
+                    logCurrentState();
                     stackTrace.pop();
                     break;
                 } else if(funcCall.equals("free")) {
@@ -1272,6 +1465,7 @@ public class Interpreter {
                         pop = pop.getPointerOfOffset(1);
                     }
                     stackTrace.pop();
+                    logCurrentState();
                     break;
                 }
                 
@@ -1285,7 +1479,9 @@ public class Interpreter {
                             "defined", input.getASTChild(ASTNodeType.id).getToken());
                 } else {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                    useThisStack.push(false);
                     startStackTraceFor(token);
+                    logCurrentState();
                     try {
                         logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
                         if (!invoke(function)) return false;
@@ -1296,20 +1492,27 @@ public class Interpreter {
                         returnValue = null;
                     }
                 }
+                logCurrentState();
                 stackTrace.pop();
+                useThisStack.pop();
+                
             }
             break;
             case method_call:
                 // owner is pushed to stack
             {
+                
                 if (!invoke(input.getChild(0))) return false;
                 CompoundInstance<CXClassType> classTypeInstance = ((CompoundInstance<CXClassType>) pop());
                 
-                thisStack.push(classTypeInstance.toPointer());
+                
                 Token idToken = input.getASTChild(ASTNodeType.id).getToken();
                 int memstackPrevious = memStack.size();
                 int parameters = input.getASTChild(ASTNodeType.sequence).getChildren().size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+    
+                thisStack.push(classTypeInstance.toPointer());
+                useThisStack.push(true);
     
                 createClosure();
                 Stack<CXType> types = new Stack<>();
@@ -1324,9 +1527,11 @@ public class Interpreter {
                 }
                 TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType(), idToken, types);
                 if(method == null) {
-                    throw new Error("Method " + idToken.getImage() + " not defined");
+                    throw new Error("Method "+ classTypeInstance.getType() + "::" + idToken.getImage() + types + " not " +
+                            "defined");
                 }
                 startStackTraceFor(classTypeInstance.getType() + "::" + idToken.getImage(), idToken);
+                logCurrentState();
                 try {
                     if (!invoke(method)) return false;
                     endClosure();
@@ -1336,9 +1541,11 @@ public class Interpreter {
                     returnValue = null;
                    
                 }
+                logCurrentState();
                 stackTrace.pop();
                 thisStack.pop();
-                
+                useThisStack.pop();
+               
             }
             break;
             case field_get:
@@ -1441,6 +1648,14 @@ public class Interpreter {
             case constructor_definition:
             case function_definition:
                 createClosure();
+                if (input.containsCompilationTag(PriorConstructorTag.class)) {
+                    PriorConstructorTag prior = input.getCompilationTag(PriorConstructorTag.class);
+                    startStackTraceFor(prior.getPriorConstructor().toString(), input.findFirstToken());
+                    if (!invoke(prior.getSequence())) return false;
+                    if (!invoke(MethodTASNTracker.getInstance().get(prior.getPriorConstructor()))) return false;
+                    //push(classTypeInstance);
+                    stackTrace.pop();
+                }
                 List<TypeAugmentedSemanticNode> parameters = input.getASTChild(ASTNodeType.parameter_list).getChildren();
                 for (int i = parameters.size() - 1; i >= 0; i--) {
                     addAutoVariable(
@@ -1567,13 +1782,16 @@ public class Interpreter {
                 push(createNewInstance(LongPrimitive.create(), input.getCXType().getDataSize(environment)));
                 break;
             case constructor_call: {
+                
                 CXClassType subType = (CXClassType) ((PointerType) input.getCXType()).getSubType();
                 PointerInstance<CXClassType> classTypeInstance =
                         (PointerInstance<CXClassType>) createNewInstance(subType).toPointer();
                 
-                thisStack.push(classTypeInstance);
+               
                 int memstackPrevious = memStack.size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                thisStack.push(classTypeInstance);
+                useThisStack.push(true);
                 createClosure();
                 /*Stack<CXType> types = new Stack<>();
                 Stack<Instance<?>> instances = new Stack<>();
@@ -1598,14 +1816,8 @@ public class Interpreter {
                 ConstructorCallTag compilationTag = input.getCompilationTag(ConstructorCallTag.class);
                 CXConstructor cxConstructor = compilationTag.getConstructor();
                 startStackTraceFor(cxConstructor.getParent().toString() + "::<init>", input.findFirstToken());
-                if (input.containsCompilationTag(PriorConstructorTag.class)) {
-                    PriorConstructorTag prior = input.getCompilationTag(PriorConstructorTag.class);
-                    startStackTraceFor(prior.getPriorConstructor().toString(), input.findFirstToken());
-                    if (!invoke(prior.getSequence())) return false;
-                    if (!invoke(MethodTASNTracker.getInstance().get(prior.getPriorConstructor()))) return false;
-                    //push(classTypeInstance);
-                    stackTrace.pop();
-                }
+                logCurrentState();
+                
                 
                
                 
@@ -1619,8 +1831,10 @@ public class Interpreter {
     
                 stackTrace.pop();
                 thisStack.pop();
+                useThisStack.pop();
                 endClosure();
                 push(classTypeInstance);
+                logCurrentState();
             }
             break;
             case function_description:
@@ -1682,6 +1896,7 @@ public class Interpreter {
     public TypeAugmentedSemanticNode dynamicMethodLookup(CXClassType clazz, Token id, List<CXType> inputTypes) {
         ParameterTypeList parameterTypeList = new ParameterTypeList(inputTypes);
         CXMethod method = clazz.getMethod(id, parameterTypeList, null);
+        if(method == null) return null;
         return MethodTASNTracker.getInstance().get(method);
     }
     

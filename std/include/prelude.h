@@ -55,7 +55,7 @@ in std {
 
 		private String name;
 		private ClassInfo parent;
-		private int classHash;
+		private i32 classHash;
 
 		public ClassInfo();
 
@@ -71,6 +71,7 @@ in std {
 	class String{
 		char* backingPtr;
 		int length;
+		int cLength;
 
 		public String(const char* bp);
 
@@ -95,17 +96,7 @@ in std {
 		virtual public String toString();
     };
 
-	class Int {
-		private int value;
 
-		public Int(int value);
-
-		public int getValue();
-
-		public void setValue(int value);
-
-		virtual public std::String toString();
-	};
 
 
 }

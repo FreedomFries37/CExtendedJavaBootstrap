@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 struct s {
 	int a;
 	double c;
@@ -21,11 +23,15 @@ int main(int argc, std::String argv[]) {
 		println_s(argv[i]);
 	}
 	*/
-	std::Int i = new std::Int(3);
+
+	std::String bleh = new std::String();
 	std::String hw = new std::String("Hello World!");
 	println_s(hw);
+	std::Int i = new std::Int(3);
 	std::String more = hw->concat("\tsize = ")->concat(new std::Int(hw->length()));
 	println_s(more);
+
+	std::String charConcat = new std::String()->concat('i');
 
 	return 0;
 

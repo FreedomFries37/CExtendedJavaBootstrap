@@ -30,8 +30,6 @@ struct j_heap{
 
 struct j_heap jodin_heap;
 
-int i = 3;
-
 
 void panic(std::String message) {
 	println_s(message);

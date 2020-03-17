@@ -20,13 +20,16 @@ void println_s(std::String o) {
 	println(o->getCStr());
 }
 
+int get_hashcode_for(std::Object o);
 
 in std {
+
+
 	implement Object {
 		Object() { }
 
 		int hashcode() {
-			return (int) (void*) this;
+			return get_hashcode_for(this);
 		}
 
 		bool equals(Object other) {
@@ -80,34 +83,7 @@ in std {
 	}
 
 
-	implement Int {
 
-    	Int(int value) {
-    		this->value = value;
-    	}
-
-    	int getValue() {
-    		return this->value;
-    	}
-
-    	void setValue(int value) {
-    		this->value = value;
-    	}
-
-    	std::String toString() {
-    		int last = this->value % 10;
-    		Int tail = new Int(last);
-    		int first = this->value / 10;
-    		if(first > 0) {
-    			Int head = new Int(first);
-    			return head->toString()->concat(tail);
-    		} else {
-    			return tail->toString();
-    		}
-
-    	}
-
-    }
 
 
 

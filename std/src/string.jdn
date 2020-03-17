@@ -1,5 +1,5 @@
 #include <string.h>
-
+#include <stdint.h>
 
 in std
 implement String {
@@ -7,6 +7,7 @@ implement String {
 	String(const char* bp) {
 		this->backingPtr = strdup(bp);
 		this->length = strlen(bp);
+		this->cLength = this->length + 1;
 	}
 
 
@@ -17,8 +18,8 @@ implement String {
 
 	String concat(String other) {
 		char next[this->length + other->length + 1];
-		//print("This length = ");
-		//println_s(new Int(this->length())->toString());
+		// print("This length = ");
+		// println_s(new Int(this->length())->toString());
 		strcpy(next, this->backingPtr);
 		strcat(next, other->backingPtr);
 		return new String(next);
@@ -33,11 +34,12 @@ implement String {
 	}
 
 	String concat(char c) {
-		char next[this->length + 1];
+		char next[this->cLength + 1];
 		//print("This length = ");
 		//println_s(new Int(this->length())->toString());
 		strcpy(next, this->backingPtr);
 		next[this->length] = c;
+
 		next[this->length + 1] = (char) 0;
 		return new String(next);
 	}
@@ -84,15 +86,16 @@ char * strcpy ( char * destination, const char * source ) {
 		destination[i] = source[i];
 	}
 
-	destination[length] = (char) 0;
-	print("strcpy result: ");
-    println(destination);
+	// print("strcpy result: ");
+    // println(destination);
 	return destination;
 }
 char * strncpy ( char * destination, const char * source, size_t num ) {
 	for(int i = 0; i < num; ++i) {
     	destination[i] = source[i];
     }
+
+
 
     return destination;
 }
@@ -107,11 +110,6 @@ src.len = 4;
 */
 char * strcat ( char * destination, const char * source ) {
 	size_t dest = strlen(destination);
-	print("Concatting (");
-	print(source);
-	print(") to (");
-	print(destination);
-	println(")");
 
 	size_t src = strlen(source);
 	for(int i = 0; i < src; ++i) {
