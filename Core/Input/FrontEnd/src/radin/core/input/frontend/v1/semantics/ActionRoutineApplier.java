@@ -1,7 +1,10 @@
 package radin.core.input.frontend.v1.semantics;
 
+import radin.core.chaining.ICompilerProducer;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
+import radin.core.errorhandling.ICompilationErrorCollector;
+import radin.core.input.frontend.directastparsing.ASTParser;
 import radin.core.input.frontend.v1.MissingCategoryNodeError;
 import radin.core.input.frontend.v1.parsing.CategoryNode;
 import radin.core.input.frontend.v1.parsing.LeafNode;
@@ -10,36 +13,42 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
+import radin.core.semantics.TokenStoringAbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
 import radin.core.semantics.exceptions.TypeDoesNotExist;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
+import radin.core.semantics.types.compound.ICXClassType;
 import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.core.input.ISemanticAnalyzer;
 import radin.core.input.frontend.v1.InheritMissingError;
 import radin.core.semantics.types.wrapped.CXDeferredClassDefinition;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static radin.core.lexical.TokenType.t_id;
+import static radin.core.lexical.TokenType.t_typename;
 
 public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, AbstractSyntaxNode> {
     
-    public static final Token $_GLOBAL_$ = new Token(TokenType.t_id, "$GLOBAL$");
+    
+    public static final Token $_GLOBAL_$ = new Token(t_id, "$GLOBAL$");
     private static final AbstractSyntaxNode GLOBAL_NODE = getGlobal();
     private Stack<CategoryNode> catNodeStack;
     private Stack<String> stringErrors;
     private List<AbstractCompilationError> errors;
     private List<AbstractSyntaxNode> successOrder;
     private TypeEnvironment environment;
+    
     
     
     
@@ -70,6 +79,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     public void reset() {
         environment.resetNamespace();
         environment.resetToNone();
+    }
+    
+    @Override
+    public void clearErrors() {
+        errors.clear();
     }
     
     private CategoryNode currentCategoryNode() {
@@ -122,7 +136,15 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     
     @Override
     public AbstractSyntaxNode analyze(ParseNode tree) {
-        if(!enactActionRoutine(tree)) return null;
+        try {
+            if (!enactActionRoutine(tree)) return null;
+        } catch (AbstractCompilationError e) {
+            errors.add(e);
+            return null;
+        } catch (Error e) {
+            errors.add(new CompilationError(e, findFirstToken(tree)));
+            return null;
+        }
         try {
             return tree.getSynthesized();
         } catch (SynthesizedMissingException e) {
@@ -143,7 +165,27 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
     }
     
     public List<AbstractCompilationError> getStringErrors() {
-        return stringErrors.stream().map((o) -> new CompilationError(o, null)).collect(Collectors.toList());
+        return stringErrors.stream().filter(Objects::nonNull).map((o) -> new CompilationError(o, null)).collect(Collectors.toList());
+    }
+    
+    public static class ActionRoutineApplierFailure extends AbstractCompilationError {
+        public ActionRoutineApplierFailure(ParseNode on, String message) {
+            super("Although " + on + " is defined and parsable, semantics are broken for it",
+                    findFirstToken(on), message);
+        }
+    }
+    
+    private static Token findFirstToken(ParseNode node) {
+        if (node instanceof LeafNode) {
+            return ((LeafNode) node).getToken();
+        } else {
+            CategoryNode categoryNode = (CategoryNode) node;
+            for (ParseNode directChild : categoryNode.getDirectChildren()) {
+                Token firstToken = findFirstToken(directChild);
+                if(firstToken != null) return firstToken;
+            }
+        }
+        return null;
     }
     
     public boolean enactActionRoutine(ParseNode node) {
@@ -163,10 +205,16 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 stringErrors.push(null);
                 boolean b = enactActionRoutine(catNode);
                 if(!b) {
+                    
                     ICompilationSettings.debugLog.finer("Failed to enact action routine for " +
                             String.format("%-30s", node) +
                             (node.hasChildren()? "(CHILDREN = " + ((CategoryNode) node).getAllChildren() + ")" : "") +
                             (stringErrors.peek() == null ? "" : String.format("  %60s", "Error: " + stringErrors.peek())));
+                    if(stringErrors.peek() == null) {
+                        throw new ActionRoutineApplierFailure(node, "Failed to enact action routine for " + node);
+                    } else {
+                        throw new ActionRoutineApplierFailure(node, stringErrors.peek());
+                    }
                 } else {
                     if(!successOrder.contains(node.getSynthesized())) successOrder.add(node.getSynthesized());
                 }
@@ -247,6 +295,17 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
             case t_super:
                 node.setInherit(new AbstractSyntaxNode(ASTNodeType._super));
                 break;
+            case t_unsigned:
+            case t_long:
+            case t_short:
+            case t_int:
+            case t_char:
+            case t_void:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.specifier, token));
+                break;
+            case t_const:
+                node.setInherit(new AbstractSyntaxNode(ASTNodeType.qualifier, token));
+                break;
         }
         
         node.setSynthesized(node.getInherit());
@@ -260,6 +319,18 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
         while(cont) {
             try {
                 switch (node.getCategory()) {
+                    case "AST": {
+                        if (node.getInherit() instanceof TokenStoringAbstractSyntaxNode) {
+                            TokenStoringAbstractSyntaxNode tokenStoringAbstractSyntaxNode =
+                                    ((TokenStoringAbstractSyntaxNode) node.getInherit());
+                            ASTParser astParser = new ASTParser(environment, tokenStoringAbstractSyntaxNode.getTokens());
+                            
+                            
+                            CategoryNode parse = astParser.parse();
+                            node.setSynthesized(parse.getSynthesized());
+                        } else return false;
+                        return true;
+                    }
                     case "TopLevelDeclaration": {
                         if(node.hasChildCategory("FunctionDefinition")) {
                             getCatNode("FunctionDefinition").setInherit(
@@ -282,7 +353,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             }
                             return true;
                         }
-                        // MUST CONTINUE THROUGH INTO NEXT SECTION
+                        
+                        node.setSynthesized(node.getChild(0).getSynthesized());
+                        
+                        return true;
                     }
                     
                     case "AssignOperator":
@@ -438,8 +512,15 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             node.setSynthesized(getCatNode("CastExpression").getSynthesized());
                             return true;
                         } else if(node.firstIs(TokenType.t_sizeof)) {
-                            AbstractSyntaxNode typeName = getCatNode("TypeName").getSynthesized();
+                            AbstractSyntaxNode typeName = getCatNode("CanonicalType").getSynthesized();
+                            getCatNode("AbstractDeclarator").setInherit(typeName);
+                            typeName = getCatNode("AbstractDeclarator").getSynthesized();
                             CXType type = environment.getType(typeName);
+                            if(type instanceof PointerType && UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode()) {
+                                if(((PointerType) type).innerMostType() instanceof ICXClassType) {
+                                    type = ((PointerType) type).getSubType();
+                                }
+                            }
                             
                             node.setSynthesized(
                                     new TypedAbstractSyntaxNode(ASTNodeType.sizeof, type)
@@ -484,8 +565,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Atom": {
-                        if (node.firstIs(TokenType.t_id)) {
-                            AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        if (node.firstIs(t_id)) {
+                            AbstractSyntaxNode name = node.getLeafNode(t_id).getSynthesized();
                             AbstractSyntaxNode interact;
                             CategoryNode functionCall = getCatNode("FunctionCall");
                             functionCall.setInherit(GLOBAL_NODE, 0);
@@ -538,7 +619,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                 }
                                 
                                 
-                                AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
+                                AbstractSyntaxNode name = node.getLeafNode(t_id).getSynthesized();
                                 CategoryNode functionCall = getCatNode("FunctionCall");
                                 functionCall.setInherit(object, 0);
                                 functionCall.setInherit(name, 1);
@@ -689,7 +770,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "Specifier": {
                         
-                        if(node.firstIs(TokenType.t_id, TokenType.t_char, TokenType.t_int, TokenType.t_long,
+                        if(node.firstIs(t_id, TokenType.t_char, TokenType.t_int, TokenType.t_long,
                                 TokenType.t_float, TokenType.t_double, TokenType.t_unsigned, TokenType.t_void)) {
                             node.setSynthesized(
                                     new AbstractSyntaxNode(ASTNodeType.specifier, ((LeafNode) node.getChild(0)).getToken())
@@ -737,23 +818,44 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "DirectAbstractDeclarator": {
+                        CXType type = environment.getType(node.getInherit());
                         if(node.hasChildren()) {
                             AbstractSyntaxNode dir;
                             if(node.firstIs(TokenType.t_lbrac)) {
-                                dir = new AbstractSyntaxNode(ASTNodeType.array_type);
+                                CXType newType;
+                                AbstractSyntaxNode expression = AbstractSyntaxNode.EMPTY;
+                                
+                                
+                                if(node.hasChildCategory("Expression")) {
+                                    expression = node.getCategoryNode("Expression").getSynthesized();
+                                    newType = new ArrayType(type, expression);
+                                } else {
+                                    newType = new ArrayType(type);
+                                }
+                                
+                                node.getCategoryNode("DirectAbstractDeclarator", 2).setInherit(
+                                        new TypedAbstractSyntaxNode(
+                                                ASTNodeType.abstract_declarator,
+                                                newType,
+                                                expression
+                                        ),
+                                        0
+                                );
+                                node.getCategoryNode("DirectAbstractDeclarator", 2).setInherit(node.getInherit());
+                                // node.setSynthesized(node.getCategoryNode("DirectAbstractDeclarator", 2)
+                                // .getSynthesized());
+                                dir = new TypedAbstractSyntaxNode(ASTNodeType.array_type, newType);
                             } else return false;
                             
                             getCatNode("DirectAbstractDeclarator", 2).setInherit(dir);
                             node.setSynthesized(
                                     new AbstractSyntaxNode(ASTNodeType.abstract_declarator,
-                                            node.getInherit(),
                                             getCatNode("DirectAbstractDeclarator", 2)
                                                     .getSynthesized()
                                     )
                             );
                             
                         } else {
-                            CXType type = environment.getType(node.getInherit());
                             node.setSynthesized(node.getInherit().addType(type));
                         }
                         
@@ -782,12 +884,24 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "TypeDef": {
-                        AbstractSyntaxNode typeAST = getCatNode("TypeName").getSynthesized();
-                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        AbstractSyntaxNode typeAST = getCatNode("CanonicalType").getSynthesized();
+                        CategoryNode abstractDeclarator = getCatNode("AbstractDeclarator");
+                        abstractDeclarator.setInherit(typeAST);
+                        AbstractSyntaxNode abstractDec = abstractDeclarator.getSynthesized();
+                        CXType type;
+                        AbstractSyntaxNode id;
+                        if(node.hasChildToken(t_id)) {
+                            id = node.getLeafNode(t_id).getSynthesized();
+                            type = environment.addTypeDefinition(abstractDec, id.getToken().getImage());
+                        } else {
+                            type = environment.getType(abstractDec);
+                            id = node.getLeafNode(t_typename).getSynthesized();
+                            CXType original = environment.getType(id);
+                            if(!original.isExact(type, environment)) return error("Conflicting types for typedef of " + node.getLeafNode(t_typename).getToken().getImage());
+                        }
                         
-                        
-                        CXType type = environment.addTypeDefinition(typeAST, id.getToken().getImage());
-                        
+                       
+    
                         node.setSynthesized(
                                 new TypedAbstractSyntaxNode(ASTNodeType.typedef, type, id)
                         );
@@ -795,7 +909,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "StructOrUnionSpecifier": {
                         AbstractSyntaxNode structOrUnion = node.getCategoryNode("StructOrUnion").getSynthesized();
-                        LeafNode nameNode = node.getLeafNode(TokenType.t_id);
+                        LeafNode nameNode = node.getLeafNode(t_id);
                         if(nameNode == null) nameNode = node.getLeafNode(TokenType.t_typename);
                         AbstractSyntaxNode nameAST = nameNode != null? nameNode.getSynthesized() : null;
                         AbstractSyntaxNode mid;
@@ -818,13 +932,13 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         CXType type = environment.getType(mid);
                         
                         node.setSynthesized(
-                                new TypedAbstractSyntaxNode(mid.getType(), type, mid.getChild(0))
+                                new TypedAbstractSyntaxNode(mid.getTreeType(), type, mid.getChild(0))
                         );
                         
                         return true;
                     }
                     case "ClassSpecifier": {
-                        LeafNode nameNode = node.getLeafNode(TokenType.t_id);
+                        LeafNode nameNode = node.getLeafNode(t_id);
                         if(nameNode == null) nameNode = node.getLeafNode(TokenType.t_typename);
                         
                         AbstractSyntaxNode nameAST = nameNode != null? nameNode.getSynthesized() : null;
@@ -857,7 +971,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         
                     }
                     case "Declaration": {
-                        AbstractSyntaxNode declarationSpecifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        AbstractSyntaxNode declarationSpecifiers = getCatNode("CanonicalType").getSynthesized();
                         if(!(declarationSpecifiers instanceof TypedAbstractSyntaxNode)) {
                             declarationSpecifiers = declarationSpecifiers.addType(
                                     environment.getType(declarationSpecifiers)
@@ -960,11 +1074,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         getCatNode("DirectDeclaratorTail").setInherit(mid, 0);
                         getCatNode("DirectDeclaratorTail").setInherit(name, 1);
                         TypedAbstractSyntaxNode directDeclaratorTail = (TypedAbstractSyntaxNode) getCatNode("DirectDeclaratorTail").getSynthesized();
-                        if(directDeclaratorTail.getType() == ASTNodeType.function_description) {
+                        if(directDeclaratorTail.getTreeType() == ASTNodeType.function_description) {
                             // directDeclaratorTail.printTreeForm();
                             
                             if(directDeclaratorTail.getChildList().size() == 2 &&
-                                    directDeclaratorTail.getChild(0).getType() == ASTNodeType.declaration && directDeclaratorTail.getChild(1).getType() == ASTNodeType.parameter_list) {
+                                    directDeclaratorTail.getChild(0).getTreeType() == ASTNodeType.declaration && directDeclaratorTail.getChild(1).getTreeType() == ASTNodeType.parameter_list) {
                                 
                                 if(((TypedAbstractSyntaxNode) directDeclaratorTail.getChild(0)).getCxType().is(new PointerType(directDeclaratorTail.getCxType()), environment)) {
                                     
@@ -1048,7 +1162,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             } else
                                 return false;
                         } else {
-                            if(node.getInherit(0).getType() == ASTNodeType.declaration || node.getInherit(0).getType() == ASTNodeType.function_description)
+                            if(node.getInherit(0).getTreeType() == ASTNodeType.declaration || node.getInherit(0).getTreeType() == ASTNodeType.function_description)
                                 node.setSynthesized(
                                         node.getInherit(0)
                                 );
@@ -1075,7 +1189,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "FunctionDefinition": {
-                        AbstractSyntaxNode declarationSpecifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        AbstractSyntaxNode declarationSpecifiers = getCatNode("CanonicalType").getSynthesized();
                         CategoryNode declarator = getCatNode("Declarator");
                         declarator.setInherit(
                                 declarationSpecifiers
@@ -1253,13 +1367,13 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "ClassDeclaration": {
                         
-                        AbstractSyntaxNode name = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        AbstractSyntaxNode name = node.getLeafNode(t_id).getSynthesized();
                         
                         // environment.addTypeDefinition(new CXCompoundTypeNameIndirection
                         // (CXCompoundTypeNameIndirection.CompoundType._class, name.getToken().getImage()) ,name.getToken().getImage());
                         
-                        ICompilationSettings.debugLog.finer("Adding temp " + node.getLeafNode(TokenType.t_id).getToken());
-                        environment.addTemp(node.getLeafNode(TokenType.t_id).getToken());
+                        ICompilationSettings.debugLog.finer("Adding temp " + node.getLeafNode(t_id).getToken());
+                        environment.addTemp(node.getLeafNode(t_id).getToken());
                         
                         AbstractSyntaxNode declarations = getCatNode("ClassDeclarationList").getSynthesized();
                         
@@ -1333,7 +1447,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         if(node.hasChildCategory("Declaration")) {
                             inner = getCatNode("Declaration").getSynthesized();
                             
-                            if(inner.getChild(base).getType() == ASTNodeType.function_description) {
+                            if(inner.getChild(base).getTreeType() == ASTNodeType.function_description) {
                                 inner = inner.getChild(base);
                                 assert inner instanceof TypedAbstractSyntaxNode;
                                 CXType ret = ((TypedAbstractSyntaxNode) inner).getCxType();
@@ -1395,7 +1509,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "InIdentifier": {
-                        Token id = node.getLeafNode(TokenType.t_id).getToken();
+                        Token id = node.getLeafNode(t_id).getToken();
                         boolean push = false;
                         try{
                             node.setSynthesized(
@@ -1420,7 +1534,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         if(node.hasChildToken(TokenType.t_typename)) {
                             node.setSynthesized(node.getLeafNode(TokenType.t_typename).getSynthesized());
                         } else {
-                            AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                            AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
                             AbstractSyntaxNode next = getCatNode("NamespacedType", 2).getSynthesized();
                             node.setSynthesized(
                                     new AbstractSyntaxNode(ASTNodeType.namespaced, id, next)
@@ -1483,7 +1597,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "CompilationTag": {
-                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
                         AbstractSyntaxNode args = AbstractSyntaxNode.EMPTY;
                         
                         if(node.hasChildCategory("ArgsList")) {
@@ -1512,7 +1626,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Namespace": {
-                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
                         
                         if(node.hasChildCategory("Namespace")) {
                             node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.namespaced, id));
@@ -1526,9 +1640,96 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Alias": {
-                        AbstractSyntaxNode id = node.getLeafNode(TokenType.t_id).getSynthesized();
+                        AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
                         node.setSynthesized(
                                 new AbstractSyntaxNode(ASTNodeType.alias, id)
+                        );
+                        return true;
+                    }
+                    case "GenericDeclaration": {
+                        AbstractSyntaxNode identifierList = getCatNode("TypeParameterList").getSynthesized();
+                        List<AbstractSyntaxNode> parameterTypes = identifierList.getDirectChildren();
+                        List<String> typedefs = new LinkedList<>();
+                        for (AbstractSyntaxNode parameterType : parameterTypes) {
+                            AbstractSyntaxNode id = parameterType.getChild(0);
+                            CXType upperBound = environment.getDefaultInheritance();
+                            if(parameterType.getDirectChildren().size() > 1) {
+                                upperBound = environment.getType(node.getChild(1).getSynthesized());
+                            }
+                            String image = id.getToken().getImage();
+                            typedefs.add(image);
+                            CXParameterizedType parameterizedType = new CXParameterizedType((CXClassType) upperBound,
+                                    id.getToken(), environment);
+                            environment.addTypeDefinition(parameterizedType, image);
+                        }
+                        
+                        node.getChild(1).setInherit(AbstractSyntaxNode.EMPTY);
+                        AbstractSyntaxNode dec = node.getChild(1).getSynthesized();
+                        
+                        
+                        for (String typedef : typedefs) {
+                            environment.removeTypeDefinition(typedef);
+                            
+                        }
+                        
+                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.generic, identifierList, dec));
+                        
+                        return true;
+                    }
+                    case "IdentifierList": {
+                        TokenType tokenType = t_id;
+                        String HeadCatName = "IdentifierList";
+                        String TailCatName = "IdentifierListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, tokenType,
+                                HeadCatName, TailCatName);
+                        
+                        
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.id_list, array)
+                        );
+                        return true;
+                    }
+                    case "TypeParameter": {
+                        AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
+                        if(node.hasChildCategory("Inherit")) {
+                            AbstractSyntaxNode inherit = node.getCategoryNode("Inherit").getSynthesized();
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.parameter_type, id, inherit));
+                        } else {
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.parameter_type, id));
+                        }
+                        return true;
+                    }
+                    case "TypeParameterList": {
+                        String entry = "TypeParameter";
+                        String HeadCatName = "TypeParameterList";
+                        String TailCatName = "TypeParameterListTail";
+                        
+                        AbstractSyntaxNode[] array = foldList(node, entry,
+                                HeadCatName, TailCatName);
+                        
+                        
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.parameterized_types, array)
+                        );
+                        return true;
+                    }
+                    case "CanonicalType": {
+                        List<AbstractSyntaxNode> children = new LinkedList<>();
+                        for (ParseNode directChild : node.getDirectChildren()) {
+                            children.add(directChild.getSynthesized());
+                        }
+                        
+                        AbstractSyntaxNode abstractSyntaxNode;
+                        if(children.get(0).getChildList().isEmpty()) {
+                            abstractSyntaxNode = new AbstractSyntaxNode(ASTNodeType.qualifiers_and_specifiers,
+                                    children);
+                        } else {
+                            abstractSyntaxNode = children.get(0);
+                        }
+                        CXType cxType = environment.getType(abstractSyntaxNode);
+                        node.setSynthesized(
+                                abstractSyntaxNode.addType(cxType)
                         );
                         return true;
                     }
@@ -1541,6 +1742,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 if(!enactActionRoutine(e.node)) return false;
             } catch (InheritMissingError | MissingCategoryNodeError e) {
                 e.printStackTrace();
+                error(e.getMessage());
                 if(e instanceof MissingCategoryNodeError) {
                     node.printTreeForm();
                 }
@@ -1565,6 +1767,22 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
         while (listNode.hasChildren()) {
             
             childExpressions.add(listNode.getCategoryNode(entryCategory).getSynthesized());
+            
+            CategoryNode listNodeTail = listNode.getCategoryNode(tailCatName);
+            if(!listNodeTail.hasChildren()) break;
+            
+            CategoryNode next = listNodeTail.getCategoryNode(headCatName);
+            listNode = next;
+        }
+        return childExpressions.toArray(new AbstractSyntaxNode[0]);
+    }
+    
+    private AbstractSyntaxNode[] foldList(CategoryNode listNode, TokenType entryTokenType, String headCatName,
+                                          String tailCatName) throws SynthesizedMissingException {
+        List<AbstractSyntaxNode> childExpressions = new ArrayList<>();
+        while (listNode.hasChildren()) {
+            
+            childExpressions.add(listNode.getLeafNode(entryTokenType).getSynthesized());
             
             CategoryNode listNodeTail = listNode.getCategoryNode(tailCatName);
             if(!listNodeTail.hasChildren()) break;

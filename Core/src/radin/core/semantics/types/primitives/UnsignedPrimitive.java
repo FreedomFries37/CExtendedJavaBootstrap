@@ -37,6 +37,10 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
         }
     }
     
+    public AbstractCXPrimitiveType getPrimitiveCXType() {
+        return primitiveCXType;
+    }
+    
     @Override
     public String generateCDefinition() {
         return "unsigned " + primitiveCXType.generateCDefinition();
@@ -50,6 +54,11 @@ public class UnsignedPrimitive extends AbstractCXPrimitiveType {
     @Override
     public boolean isIntegral() {
         return true;
+    }
+    
+    @Override
+    public boolean isChar() {
+        return primitiveCXType.isChar();
     }
     
     @Override

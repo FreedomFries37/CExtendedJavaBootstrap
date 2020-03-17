@@ -3,13 +3,13 @@ package radin.core.output.midanalysis.constantexpressions;
 import radin.core.chaining.IToolChain;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.semantics.ASTNodeType;
-import radin.core.semantics.MeaningfulNode;
+import radin.core.semantics.ASTMeaningfulNode;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.List;
 
-public class ConstantExpressionDeterminer implements IToolChain<MeaningfulNode<?>, Number> {
+public class ConstantExpressionDeterminer implements IToolChain<ASTMeaningfulNode<?>, Number> {
     
     static Number performOp(Number rhs, Number lhs, String operator) {
         if(rhs instanceof Double) {
@@ -62,8 +62,8 @@ public class ConstantExpressionDeterminer implements IToolChain<MeaningfulNode<?
     }
     
     @Override
-    public Number invoke(MeaningfulNode<?> input) {
-        switch (input.getType()) {
+    public Number invoke(ASTMeaningfulNode<?> input) {
+        switch (input.getTreeType()) {
             case binop:
                 break;
             case uniop: {

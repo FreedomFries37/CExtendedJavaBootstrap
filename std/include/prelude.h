@@ -2,27 +2,31 @@
 #define __PRELUDE_HEADER__
 
 #include <reflection.h>
+#include <primitives.h>
 
 
 in std class String;
+in std class ClassInfo;
+in std class Int;
 
-typedef unsigned char bool;
+void* calloc(size_t size, size_t length);
 
 
-void* malloc(unsigned int sz);
-void* calloc(unsigned int num, unsigned int sz);
 void free(void* ptr);
+void exit(int status);
+void panic(std::String msg);
 
 void print(const char* c);
 void println(const char* c);
 void print_s(std::String o);
 void println_s(std::String o);
 
-const void* nullptr = 0;
+const void* nullptr = (void*) 0;
+
 
 
 in std {
-	// ClassInfo get_class(class_id id);
+	// ClassInfo get_class(class_id id);s
 
 	[setAsDefaultInheritance]
 	class Object { // default inheritence is initially null
@@ -44,18 +48,20 @@ in std {
 
 	};
 
+
+
 	class ClassInfo {
 
 
 		private String name;
 		private ClassInfo parent;
-		private int classHash;
+		private i32 classHash;
 
 		public ClassInfo();
 
 		public String getName();
 
-		public bool is(Object o);
+		public bool is_object(Object o);
 		private bool is_class(ClassInfo o);
 
 		virtual public bool equals(Object other);
@@ -65,9 +71,10 @@ in std {
 	class String{
 		char* backingPtr;
 		int length;
+		int cLength;
 
 		public String(const char* bp);
-
+		public String(char c);
 		public String();
 
 		virtual public void drop();
@@ -78,9 +85,22 @@ in std {
 
 		public String concat_integer(long other);
 
+		public String concat(Object other);
+
+		public String concat(char c);
+
 		public const char* getCStr();
+
+		virtual public int length();
+
+		virtual public String toString();
     };
 
+
+
+
 }
+
+
 
 #endif

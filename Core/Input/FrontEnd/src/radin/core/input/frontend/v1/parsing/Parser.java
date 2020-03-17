@@ -2,35 +2,41 @@ package radin.core.input.frontend.v1.parsing;
 
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
+import radin.core.semantics.TokenStoringAbstractSyntaxNode;
+import radin.core.utility.ICompilationSettings;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 import static radin.core.lexical.TokenType.*;
 
 public class Parser extends BasicParser {
     
-    private HashSet<String> typedefed;
+    
     private HashSet<String> compoundTypeNames;
-    private Stack<HashSet<String>> typedefStack;
+    private Stack<HashSet<String>> scopedTypedefStack;
     private Stack<HashSet<String>> compoundTypesStack;
+    private HashSet<String> noScopeTypeDef = new HashSet<>();
     
     public Parser() {
         super();
-        typedefed = new HashSet<>();
         compoundTypeNames = new HashSet<>();
-        typedefStack = new Stack<>();
+        scopedTypedefStack = new Stack<>();
+        
+        scopedTypedefStack.add(new HashSet<>());
         compoundTypesStack = new Stack<>();
+        
     }
-    
     
     
     public HashSet<String> getTypedefed() {
-        return typedefed;
+        return scopedTypedefStack.peek();
     }
     
     private boolean isTypeName(String image) {
-        return typedefed.contains(image);
+        return scopedTypedefStack.peek().contains(image) || noScopeTypeDef.contains(image);
     }
     
     private boolean isCompoundTypeName(String image) {
@@ -44,15 +50,30 @@ public class Parser extends BasicParser {
             
             
             output = new Token(TokenType.t_typename, output.getImage())
-                    .addColumnAndLineNumber(output.getColumn(), output.getLineNumber());
+                    .addColumnAndLineNumber(output.getVirtualColumn(), output.getVirtualLineNumber());
         }
         return output;
+    }
+    
+    public void typedefClosure() {
+        
+        scopedTypedefStack.push(new HashSet<>(scopedTypedefStack.peek()));
+       
+    }
+    
+    public void releaseTypeDefClosure() {
+        scopedTypedefStack.pop();
+        
+    }
+    
+    public void addTempTypeDef(String name) {
+        scopedTypedefStack.peek().add(name);
     }
     
     @Override
     protected void pushState() {
         super.pushState();
-        typedefStack.push(new HashSet<>(typedefed));
+        typedefClosure();
         compoundTypesStack.push(new HashSet<>(compoundTypeNames));
     }
     
@@ -60,7 +81,16 @@ public class Parser extends BasicParser {
     protected boolean popState() {
         boolean b = super.popState();
         if (b) {
-            typedefStack.pop();
+            HashSet<String> pop = scopedTypedefStack.pop();
+            pop.removeAll(scopedTypedefStack.peek());
+            
+            
+            scopedTypedefStack.peek().addAll(pop);
+            if(!pop.isEmpty() ){
+                ICompilationSettings.debugLog.finer("Typedefs added after state pop: " + pop);
+                ICompilationSettings.debugLog.finest("Known types: " + scopedTypedefStack.peek());
+            }
+            
             compoundTypesStack.pop();
         }
         return b;
@@ -70,7 +100,13 @@ public class Parser extends BasicParser {
     protected boolean applyState() {
         boolean b = super.applyState();
         if (b) {
-            typedefed = typedefStack.pop();
+            HashSet<String> peek = scopedTypedefStack.peek();
+            scopedTypedefStack.pop();
+            peek.removeAll(scopedTypedefStack.peek());
+            if(!peek.isEmpty()) {
+                ICompilationSettings.debugLog.finer("Typedefs lost after state application: " + peek);
+                ICompilationSettings.debugLog.finest("Known types: " + scopedTypedefStack.peek());
+            }
             compoundTypeNames = compoundTypesStack.pop();
         }
         return b;
@@ -78,15 +114,16 @@ public class Parser extends BasicParser {
     
     @Override
     public void reset() {
-        typedefed.clear();
         compoundTypeNames.clear();
-        typedefStack.clear();
+        scopedTypedefStack.clear();
+        scopedTypedefStack.add(new HashSet<>());
+        noScopeTypeDef.clear();
         compoundTypesStack.clear();
     }
     
     protected Token undoTypeName(Token other) {
         if (other.getType() != TokenType.t_typename) return other;
-        return new Token(TokenType.t_id, other.getImage()).addColumnAndLineNumber(other.getColumn(), other.getColumn());
+        return new Token(TokenType.t_id, other.getImage()).addColumnAndLineNumber(other.getVirtualColumn(), other.getVirtualColumn());
     }
     
     public CategoryNode parse() {
@@ -96,6 +133,98 @@ public class Parser extends BasicParser {
             return null;
         }
         return output;
+    }
+    
+    private boolean parseASTBlock(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("AST");
+        
+        if(!consume(t_ast)) return false;
+        if(!consume(t_lcurl)) return false;
+        List<Token> tokenList = new LinkedList<>();
+        int level = 0;
+        while (level >= 0) {
+            if(match(t_lcurl)) {
+                level++;
+            } else if(match(t_rcurl)) {
+                level--;
+            }
+            if(level >= 0) {
+                tokenList.add(getCurrent());
+                getNext();
+            }
+        }
+        child.setInherit(new TokenStoringAbstractSyntaxNode(tokenList));
+        if(!consume(t_rcurl)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseGenericDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("GenericDeclaration");
+        
+        if(!consume(t_for)) return false;
+        if(!consume(t_lt)) return false;
+        typedefClosure();
+        
+        if(!parseTypeParameterList(child)) return false;
+        if(!consume(t_gt)) return error("Missing matching >");
+        
+        /*
+        CategoryNode ptr = child.getCategoryNode("IdentifierList");
+        while (ptr != null) {
+            Token id = ptr.getLeafNode(t_id).getToken();
+            
+            ptr = ptr.getCategoryNode("IdentifierListTail");
+            if(ptr != null) {
+                if (ptr.hasChildCategory("IdentifierList")) {
+                    ptr = ptr.getCategoryNode("IdentifierList");
+                } else ptr = null;
+            }
+        }
+        */
+        
+        if(!parseTopLevelDeclaration(child)) return false;
+        
+        
+        releaseTypeDefClosure();
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseTypeParameter(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("TypeParameter");
+        
+        if(!match(t_id)) return error("Type Parameter must be a valid identifier");
+        consumeAndAddAsLeaf(t_id, child);
+        addTempTypeDef(child.getLeafNode(t_id).getToken().getImage());
+        if(match(t_colon)) {
+            if(!parseInherit(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseTypeParameterList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("TypeParameterList");
+        
+        if(!parseTypeParameter(child)) return false;
+        if(!parseTypeParameterListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseTypeParameterListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("TypeParameterListTail");
+        
+        if(consume(t_comma)) {
+            if (!parseTypeParameterList(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
     }
     
     private boolean parseTopLevelDecsList(CategoryNode parent) {
@@ -121,7 +250,7 @@ public class Parser extends BasicParser {
         switch (getCurrentType()) {
             case t_typedef: {
                 if (!parseTypeDef(child)) return false;
-                if (!consume(TokenType.t_semic)) return missingError("Missing semi-colon");
+                if (!consume(TokenType.t_semic)) return error("Missing semi-colon");
                 break;
             }
             case t_class:
@@ -146,7 +275,7 @@ public class Parser extends BasicParser {
             case t_const: {
                 Token corresponding = getCurrent();
                 if (!oneMustParse(child, this::parseFunctionDefinition, this::parseDeclaration)) {
-                    return absorbErrors("Could not parse declaration", true, corresponding);
+                    return error("Could not parse declaration", corresponding);
                     //return error("Could not parse declaration",true, corresponding);
                 }
                 break;
@@ -163,10 +292,18 @@ public class Parser extends BasicParser {
                 if (!parseUsing(child)) return false;
                 break;
             }
+            case t_ast: {
+                if(!parseASTBlock(child)) return false;
+                break;
+            }
+            case t_for: {
+                if(!parseGenericDeclaration(child)) return false;
+                break;
+            }
             default:
                 return error("Not a valid top level declaration");
         }
-        clearErrors();
+        clearTempErrors();
         
         parent.addChild(child);
         return true;
@@ -235,7 +372,7 @@ public class Parser extends BasicParser {
         }
         if (!parseNamespace(child)) return false;
         String id = getInnerMost(child.getCategoryNode("Namespace"));
-        typedefed.add(id);
+        scopedTypedefStack.peek().add(id);
         if (match(t_assign)) {
             if (!parseAlias(child)) return false;
         }
@@ -293,7 +430,7 @@ public class Parser extends BasicParser {
     private boolean parseFunctionDefinition(CategoryNode parent) {
         CategoryNode child = new CategoryNode("FunctionDefinition");
         
-        
+        /*
         switch (attemptParse(this::parseDeclarationSpecifiers, child)) {
             case PARSED:
             case ROLLBACK:
@@ -301,11 +438,19 @@ public class Parser extends BasicParser {
             case DESYNC:
                 return false;
         }
+        
+         */
+        if (!parseCanonicalType(child)) return false;
         if (!parseDeclarator(child)) return false;
         if (!match(TokenType.t_lcurl)) {
             if (!parseDeclarationList(child)) return false;
         }
-        if (!parseCompoundStatement(child)) return false;
+        if(match(t_lcurl)) {
+            forceParse();
+        }
+        if (!parseCompoundStatement(child)) {
+            return false;
+        }
         
         parent.addChild(child);
         return true;
@@ -403,12 +548,8 @@ public class Parser extends BasicParser {
         
         if (!consume(TokenType.t_lcurl)) return error("missing { for compound statement");
         //attemptParse(this::parseDeclarationList, child);
-        switch (attemptParse(this::parseStatementList, child)) {
-            case PARSED:
-            case ROLLBACK:
-                break;
-            case DESYNC:
-                return false;
+        if(!match(t_rcurl)) {
+            if(!parseStatementList(child)) return error("");
         }
         if (!consume(TokenType.t_rcurl)) return error("missing matching } for compound statement");
         
@@ -508,7 +649,7 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("StatementList");
         
         if (!parseStatement(child)) return false;
-        forceParse();
+        // forceParse();
         if (!parseStatementListTail(child)) return false;
         
         parent.addChild(child);
@@ -518,6 +659,10 @@ public class Parser extends BasicParser {
     private boolean parseStatementListTail(CategoryNode parent) {
         CategoryNode child = new CategoryNode("StatementListTail");
         
+        if(!match(t_rcurl)) {
+            if(!parseStatementList(child)) return false;
+        }
+        /*
         switch (attemptParse(this::parseStatementList, child)) {
             case PARSED:
             case ROLLBACK:
@@ -525,7 +670,7 @@ public class Parser extends BasicParser {
             case DESYNC:
                 return false;
         }
-        
+        */
         parent.addChild(child);
         return true;
     }
@@ -1125,7 +1270,7 @@ public class Parser extends BasicParser {
             case t_id:
             case t_new:
             case t_super:
-                {
+            {
                 if (!parseAtom(child)) return false;
                 if (!parseAtomTail(child)) return false;
                 break;
@@ -1133,13 +1278,14 @@ public class Parser extends BasicParser {
             case t_sizeof: {
                 consumeAndAddAsLeaf(child);
                 if (!consume(TokenType.t_lpar)) return false;
-                if (!parseTypeName(child)) return false;
+                if (!parseCanonicalType(child)) return false;
+                if (!parseAbstractDeclarator(child)) return false;
                 if (!consume(TokenType.t_rpar)) return false;
                 break;
             }
             case t_typeid: {
                 consumeAndAddAsLeaf(child);
-                if (!parseTypeName(child)) return false;
+                if (!parseAbstractTypeName(child)) return false;
                 break;
             }
             default:
@@ -1154,7 +1300,7 @@ public class Parser extends BasicParser {
         CategoryNode child = new CategoryNode("CastExpression");
         
         if (!consume(TokenType.t_lpar)) return false;
-        if (!parseTypeName(child)) return false;
+        if (!parseAbstractTypeName(child)) return false;
         if (!consume(TokenType.t_rpar)) return false;
         if (!parseFactor(child)) return false;
         
@@ -1216,7 +1362,7 @@ public class Parser extends BasicParser {
                 break;
             }
             default:
-                return false;
+                return error("Not a valid expression");
         }
         
         parent.addChild(child);
@@ -1325,15 +1471,160 @@ public class Parser extends BasicParser {
     
     // TYPES
     
-    private boolean parseTypeName(CategoryNode parent) {
+    protected boolean parseAbstractTypeName(CategoryNode parent) {
         CategoryNode output = new CategoryNode("TypeName");
         
         if (!parseSpecsAndQuals(output)) return false;
+        if(consume(t_lt)) {
+            
+            if(!consume(t_gt)) return missingError("Missing matching <");
+        }
         if (!parseAbstractDeclarator(output)) return false;
         
         parent.addChild(output);
         return true;
     }
+    
+    
+    protected boolean parseCanonicalType(CategoryNode parent) {
+        CategoryNode output = new CategoryNode("CanonicalType");
+        
+        consume(t_const);
+        
+        switch (getCurrentType()) {
+            case t_void:
+            case t_char:
+            case t_int:
+            case t_float:
+            case t_double: {
+                consumeAndAddAsLeaf(output);
+                break;
+            }
+            case t_unsigned: {
+                consumeAndAddAsLeaf(output);
+                switch (getCurrentType()) {
+                    case t_char:
+                    case t_int:
+                        consumeAndAddAsLeaf(output);
+                        break;
+                    case t_long:
+                        consumeAndAddAsLeaf(output);
+                        consumeAndAddAsLeaf(t_long, output);
+                        consumeAndAddAsLeaf(t_int, output);
+                        break;
+                    case t_short:
+                        consumeAndAddAsLeaf(output);
+                        consumeAndAddAsLeaf(t_int, output);
+                        break;
+                    default:
+                        return false;
+                }
+                break;
+            }
+            case t_short:
+                consumeAndAddAsLeaf(output);
+                if(consumeAndAddAsLeaf(t_unsigned, output)) {
+                    consumeAndAddAsLeaf(t_int, output);
+                } else {
+                    consumeAndAddAsLeaf(t_int, output);
+                }
+                break;
+            case t_long: {
+                consumeAndAddAsLeaf(output);
+                if(consumeAndAddAsLeaf(t_unsigned, output)) {
+                    consumeAndAddAsLeaf(t_int, output);
+                } else if(consumeAndAddAsLeaf(t_long, output)) {
+                    consumeAndAddAsLeaf(t_unsigned, output);
+                    consumeAndAddAsLeaf(t_int, output);
+                } else {
+                    consumeAndAddAsLeaf(t_int, output);
+                }
+                break;
+            }
+            
+            case t_class:
+                consumeAndAddAsLeaf(output);
+                if(match(t_id)) {
+                    Token t= getCurrent();
+                    consumeAndAddAsLeaf(output);
+                    scopedTypedefStack.peek().add(t.getImage());
+                } else {
+                    if (!parseNamespacedType(output)) return false;
+                }
+                break;
+            case t_union:
+            case t_struct: {
+                if (!parseStructOrUnionSpecifier(output)) return false;
+                break;
+            }
+            case t_id:
+            case t_typename: {
+                if(!parseNamespacedType(output)) return false;
+                break;
+            }
+            default:
+                return error("Not a valid type");
+        }
+        
+        if(consume(t_lt)) {
+            if(!match(t_gt)) {
+                if(!parseGenericInstanceTypeList(output)) return false;
+            }
+            if(!consume(t_gt)) return missingError("Missing matching >");
+        }
+        
+        
+        parent.addChild(output);
+        return true;
+    }
+    
+    private boolean parseGenericInstanceTypeList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("GenericInstanceTypeList");
+        
+        if(!parseGenericInstanceType(child)) return false;
+        if(!parseGenericInstanceTypeListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseGenericInstanceTypeListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("GenericInstanceTypeListTail");
+        
+        if(consume(t_comma)) {
+            if(!parseGenericInstanceTypeList(child)) return false;
+        }
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    /**
+     * Variance:
+     * -> ? : T -> covariance
+     * -> T     -> intervariance
+     * -> T : ? -> contravariance
+     * -> ?     -> equivalent to ? : std::Object
+     */
+    private boolean parseGenericInstanceType(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("GenericInstanceType");
+        
+        if(consumeAndAddAsLeaf(t_qmark, child)) {
+            if(consumeAndAddAsLeaf(t_colon, child)) {
+                if(!parseCanonicalType(child)) return error("Not a valid type");
+            }
+        } else {
+            if(!parseCanonicalType(child)) return error("Not a valid type");
+            if(consumeAndAddAsLeaf(t_colon, child)) {
+                if(!consumeAndAddAsLeaf(t_qmark, child)) return false;
+            }
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
     
     private boolean parseSpecsAndQuals(CategoryNode parent) {
         CategoryNode output = new CategoryNode("SpecsAndQuals");
@@ -1372,13 +1663,15 @@ public class Parser extends BasicParser {
         return true;
     }
     
-    private boolean parseNamespacedType(CategoryNode parent) {
+    protected boolean parseNamespacedType(CategoryNode parent) {
         CategoryNode child = new CategoryNode("NamespacedType");
         
         switch (getCurrentType()) {
             case t_id:
                 consumeAndAddAsLeaf(child);
-                if (!consume(t_namespace)) return error("Not a valid type");
+                if (!consume(t_namespace)) {
+                    return error("Not a valid type");
+                }
                 if (!parseNamespacedType(child)) return false;
                 break;
             case t_typename:
@@ -1562,10 +1855,12 @@ public class Parser extends BasicParser {
         CategoryNode output = new CategoryNode("ClassSpecifier");
         
         if (!consume(TokenType.t_class)) return false;
-        if (!match(TokenType.t_id)) return false;
+        Token token = undoTypeName(getCurrent());
+        if (token.getType() != t_id) return error("Class specifier must have a valid ID");
         String image = getCurrent().getImage();
-        consumeAndAddAsLeaf(output);
-        typedefed.add(image);
+        output.addChild(new LeafNode(token));
+        getNext();
+        scopedTypedefStack.peek().add(image);
         
         
         parent.addChild(output);
@@ -1594,7 +1889,7 @@ public class Parser extends BasicParser {
         return true;
     }
     
-    private boolean parseDirectAbstractDeclarator(CategoryNode parent) {
+    protected boolean parseDirectAbstractDeclarator(CategoryNode parent) {
         CategoryNode child = new CategoryNode("DirectAbstractDeclarator");
         
         switch (getCurrentType()) {
@@ -1642,16 +1937,27 @@ public class Parser extends BasicParser {
         
         if (!consume(TokenType.t_typedef)) return false;
         forceParse();
-        if (!parseTypeName(child)) return error("Can't typedef this");
+        if (!parseCanonicalType(child)) return false;
+        if (!parseAbstractDeclarator(child)) return false;
         if (!match(TokenType.t_id)) {
             if (match(t_literal)) return error("Can't typedef a literal");
-            if (match(t_typename)) return error("ID already exists as a type");
-            return error("Can't typedef a " + getCurrentType());
+            if (match(t_typename)) {
+                consumeAndAddAsLeaf(child);
+                // return error("ID already exists as a type");
+            }
+            
+            if (match(t_semic)) {
+                if(scopedTypedefStack.peek().contains(getPrevious().getImage())) {
+                    parent.addChild(child);
+                    return true;
+                }
+            } else
+                return error("Can't typedef a " + getCurrentType());
         }
         String typename = getCurrent().getImage();
         consumeAndAddAsLeaf(child);
         
-        typedefed.add(typename);
+        scopedTypedefStack.peek().add(typename);
         
         parent.addChild(child);
         return true;
@@ -1809,19 +2115,29 @@ public class Parser extends BasicParser {
         return true;
     }
     
+    
+    
     private boolean parseDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Declaration");
         
-        if (!parseDeclarationSpecifiers(child)) return false;
-        if (!match(TokenType.t_semic)) {
+        boolean isCompoundTypeDeclaration =
+                getCurrentType() == t_class || getCurrentType() == t_struct || getCurrentType() == t_union;
+    
+        if (!parseCanonicalType(child)) return false;
+        if(!match(t_semic)) {
             if (!parseInitDeclaratorList(child)) return false;
+            
         }
         if (!consume(TokenType.t_semic)) {
+            /*
             if (!recoverableMissingError("Missing semi-colon", t_semic, t_lcurl)) {
                 return false;
             }
+          
+             */
+            return error("Missing semi-colon");
         }
-        
+    
         parent.addChild(child);
         return true;
     }
@@ -1919,7 +2235,7 @@ public class Parser extends BasicParser {
         return true;
     }
     
-    private boolean parseParameterTypeList(CategoryNode parent) {
+    protected boolean parseParameterTypeList(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ParameterTypeList");
         
         if (!parseParameterList(child)) return false;
@@ -1941,7 +2257,7 @@ public class Parser extends BasicParser {
         return true;
     }
     
-    private boolean parseParameterDeclaration(CategoryNode parent) {
+    protected boolean parseParameterDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ParameterDeclaration");
         
         if (!parseDeclarationSpecifiers(child)) return false;
@@ -2019,7 +2335,7 @@ public class Parser extends BasicParser {
         
         
         String name = child.getLeafNode(TokenType.t_id).getToken().getImage();
-        typedefed.add(name);
+        noScopeTypeDef.add(name);
         boolean forced = false;
         if (match(TokenType.t_colon)) {
             forceParse();
@@ -2045,7 +2361,7 @@ public class Parser extends BasicParser {
         
         if (!consume(TokenType.t_colon)) return false;
         if (!consumeAndAddAsLeaf(TokenType.t_typename, child)) {
-            if (!parseTypeName(child))
+            if (!parseAbstractTypeName(child))
                 return error("Not a proper typename for inherit");
         }
         

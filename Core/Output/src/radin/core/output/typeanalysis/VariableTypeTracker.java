@@ -1,16 +1,19 @@
 package radin.core.output.typeanalysis;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.RedeclareError;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.compound.ICXClassType;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.output.typeanalysis.errors.ClassNotDefinedError;
 import radin.core.output.typeanalysis.errors.IdentifierDoesNotExistError;
 import radin.core.output.typeanalysis.errors.RedeclarationError;
+import radin.core.semantics.types.wrapped.CXMappedType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -112,7 +115,11 @@ public class VariableTypeTracker {
             MethodKey methodKey = (MethodKey) o;
             return parameterTypeList.equals(methodKey.parameterTypeList, environment);
         }
-        
+    
+        public ParameterTypeList getParameterTypeList() {
+            return parameterTypeList;
+        }
+    
         @Override
         public int hashCode() {
             int result = super.hashCode();
@@ -513,6 +520,8 @@ public class VariableTypeTracker {
         if(methodVisible(parent, name, typeList)) {
             assert parent instanceof CXClassType;
             System.out.println(((CXClassType) parent).classInfo());
+            
+            System.out.println("New: " +  typeList);
             throw new RedeclareError(name);
         }
         methodEntries.put(key, typeTrackerEntry);
@@ -558,6 +567,12 @@ public class VariableTypeTracker {
         }
         return null;
     }
+    
+    
+    
+    
+    
+    
     
     public static VariableTypeTracker getTracker(CXClassType cxClassType) {
         return classTrackers.get(cxClassType);

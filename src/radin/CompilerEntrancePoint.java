@@ -7,6 +7,7 @@ import radin.core.chaining.ToolChainFactory;
 import radin.core.input.FrontEndUnit;
 import radin.core.input.IParser;
 import radin.core.input.Tokenizer;
+import radin.core.input.frontend.directastparsing.ASTParser;
 import radin.core.input.frontend.v1.lexing.PreProcessingLexer;
 import radin.core.input.frontend.v1.parsing.ParseNode;
 import radin.core.input.frontend.v1.parsing.Parser;
@@ -21,6 +22,7 @@ import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
 import radin.core.output.typeanalysis.TypeAnalyzer;
+import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.CompilationSettings;
@@ -53,8 +55,10 @@ public class CompilerEntrancePoint {
                 new CompilationSettings<>();
         setCompilationSettings(compilationSettings);
         // UniversalCompilerSettings.getInstance().setSettings(compilationSettings);
+        
         List<String> filenamesStrings = new LinkedList<>();
         Iterator<String> argsIterator = Arrays.stream(args).iterator();
+        Integer arch = null;
         while (argsIterator.hasNext()) {
             String argument = argsIterator.next();
             
@@ -65,8 +69,35 @@ public class CompilerEntrancePoint {
                         compilationSettings.setExperimental(true);
                         break;
                     }
+                    case "--ast": {
+                        compilationSettings.setOutputAST(true);
+                        break;
+                    }
+                    case "--tast": {
+                        compilationSettings.setOutputTAST(true);
+                        break;
+                    }
+                    case "--directory":
+                    case "-D": {
+                        String dir = argsIterator.next();
+                        compilationSettings.setDirectory(dir);
+                        break;
+                    }
                     case "-P": {
                         compilationSettings.setOutputPostprocessingOutput(true);
+                        break;
+                    }
+                    case "--arch": {
+                        if (!argsIterator.hasNext()) {
+                            System.err.println("Expected an argument");
+                            System.exit(-1);
+                        }
+                        int a = Integer.parseInt(argsIterator.next());
+                        if(a != 32 && a != 64) {
+                            System.err.println("Must be either 32 or 64");
+                            System.exit(-1);
+                        }
+                        arch = a;
                         break;
                     }
                     case "--debug-level": {
@@ -112,13 +143,35 @@ public class CompilerEntrancePoint {
             }
             
         }
+    
+    
+        String property = System.getProperty("os.arch");
+        if(arch == null) {
+            if (property == null) {
+                arch = 32;
+            } else {
+                arch = property.contains("64") ? 64 : 32;
+            }
+        }
         
+    
+    
         if(System.getenv("MSFT") != null) {
             UniversalCompilerSettings.getInstance().getSettings().setDirectivesMustStartAtColumn1(false);
         }
         
         
         PreProcessingLexer lex = new PreProcessingLexer();
+        
+        if(arch == 64) {
+            ICompilationSettings.debugLog.config("Using 64-bit mode");
+            lex.define("__64_bit__");
+        } else {
+            ICompilationSettings.debugLog.config("Using 32-bit mode");
+        }
+        
+        
+        
         IParser<Token, ParseNode> parser = new Parser();
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         TypeAnalyzer.setEnvironment(environment);
@@ -155,11 +208,11 @@ public class CompilerEntrancePoint {
             String jodinHome = System.getenv("JODIN_HOME");
             Stream<Path> pathStream = Files.find(Paths.get(jodinHome), Integer.MAX_VALUE, (p, bfa) -> bfa.isRegularFile());
             List<File> fileList = pathStream.map((p) -> new File(p.toUri())).collect(Collectors.toList());
-            fileList.removeIf((f) -> !f.getName().endsWith(".cx"));
+            fileList.removeIf((f) -> !f.getName().endsWith(".jdn"));
             files.addAll(fileList);
         }
         
-        MultipleFileHandler multipleFileHandler = new MultipleFileHandler(
+        MultipleFileHandler<Boolean> multipleFileHandler = new MultipleFileHandler<>(
                 files,
                 compilationSettings
         );
@@ -172,8 +225,8 @@ public class CompilerEntrancePoint {
             RuntimeCompiler runtimeCompiler = new RuntimeCompiler(environment);
             runtimeCompiler.compile();
             
-            File runtimeFile = new File("runtime.cx");
-            multipleFileHandler = new MultipleFileHandler(
+            File runtimeFile = new File("runtime.jdn");
+            multipleFileHandler = new MultipleFileHandler<Boolean>(
                     Collections.singletonList(runtimeFile),
                     compilationSettings
             );

@@ -75,6 +75,10 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
     }
     
     
+    @Override
+    public boolean equals(CXType obj) {
+        return equals((Object) obj);
+    }
     
     @Override
     public boolean equals(Object o) {
@@ -108,6 +112,8 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         }
     }
     
+    
+    
     public static CXPrimitiveType get(String primitive) {
         switch (primitive) {
             case "char": return CHAR;
@@ -135,6 +141,10 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
         return myPrimitive.floatingPoint;
     }
     
+    @Override
+    public boolean isChar() {
+        return this == CHAR;
+    }
     
     /**
      *

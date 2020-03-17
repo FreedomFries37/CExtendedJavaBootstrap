@@ -1,5 +1,6 @@
 package radin.core.output.midanalysis.typeanalysis.analyzers;
 
+import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.tags.ImplementMethodTag;
 import radin.core.output.typeanalysis.TypeAnalyzer;
@@ -56,6 +57,7 @@ public class ImplementationTypeAnalyzer extends TypeAnalyzer {
                     child.setFailurePoint(true);
                     throw new MethodDoesNotExistError(child.getASTChild(ASTNodeType.id).getToken());
                 }
+                MethodTASNTracker.getInstance().add(corresponding, child);
                 ICompilationSettings.debugLog.info("Implementation found for " + corresponding);
                 ICompilationSettings.debugLog.finest(child.toTreeForm());
                 child.addCompilationTag(new ImplementMethodTag(corresponding));
@@ -79,7 +81,7 @@ public class ImplementationTypeAnalyzer extends TypeAnalyzer {
                     child.setFailurePoint(true);
                     throw new MethodDoesNotExistError(child.getASTChild(ASTNodeType.id).getToken());
                 }
-    
+                MethodTASNTracker.getInstance().add(corresponding, child);
                 ICompilationSettings.debugLog.info("Implementation found for " + corresponding);
                 ICompilationSettings.debugLog.finest(child.toTreeForm());
                 child.addCompilationTag(new ImplementMethodTag(corresponding));

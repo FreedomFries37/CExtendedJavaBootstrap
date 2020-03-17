@@ -2,13 +2,15 @@ package radin.core.semantics.types.primitives;
 
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.Dereference;
 import radin.core.semantics.types.ICXWrapper;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class ArrayType extends AbstractCXPrimitiveType {
+public class ArrayType extends AbstractCXPrimitiveType implements Dereference {
 
     private CXType baseType;
     private AbstractSyntaxNode size;
@@ -27,6 +29,10 @@ public class ArrayType extends AbstractCXPrimitiveType {
         return baseType;
     }
     
+    @Override
+    public CXType getDereferenceType() {
+        return getBaseType();
+    }
     
     public AbstractSyntaxNode getSize() {
         return size;
@@ -56,6 +62,18 @@ public class ArrayType extends AbstractCXPrimitiveType {
             return baseType.generateCDeclaration() + " " + identifier + "[" + "$REPLACE ME$" + "]";
         }
         return baseType.generateCDeclaration() + " " + identifier + "[]";
+    }
+    
+    @Override
+    public String toString() {
+        if(size == null) return baseType.toString() + "[]";
+        return baseType.toString() + "[" + size.toTreeForm().replaceAll("\\s+", " ");
+    }
+    
+    @Override
+    public String ASTableDeclaration() {
+        if(size == null) return baseType.ASTableDeclaration() + "[]";
+        return baseType.ASTableDeclaration() + "[" + size.toTreeForm().replaceAll("\\s+", " ");
     }
     
     /**
@@ -90,6 +108,11 @@ public class ArrayType extends AbstractCXPrimitiveType {
     
     @Override
     public boolean isIntegral() {
+        return false;
+    }
+    
+    @Override
+    public boolean isPrimitive() {
         return false;
     }
     
@@ -135,6 +158,16 @@ public class ArrayType extends AbstractCXPrimitiveType {
         return output;
     }
     
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     *
+     * @return Such a string
+     */
+    @Override
+    public String getSafeTypeString() {
+        return baseType.getSafeTypeString() + "_a";
+    }
+    
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(!(other instanceof ArrayType || other instanceof PointerType)) {
@@ -148,5 +181,15 @@ public class ArrayType extends AbstractCXPrimitiveType {
         }
         return e.is(this.baseType, baseType);
         //return this.baseType.is(baseType, e);
+    }
+    
+    @Override
+    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+        return new ArrayType(baseType.propagateGenericReplacement(original, replacement), size);
+    }
+    
+    @Override
+    public TypeEnvironment getEnvironment() {
+        return baseType.getEnvironment();
     }
 }

@@ -1,25 +1,39 @@
 package radin.core.semantics.types.primitives;
 
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.CXClassType;
+import radin.core.semantics.types.wrapped.CXMappedType;
 
-public class PointerType extends AbstractCXPrimitiveType {
+public class PointerType extends ArrayType {
     
-    private CXType subType;
+    
     
     public PointerType(CXType subType) {
-        this.subType = subType;
+        super(subType);
     }
     
     public CXType getSubType() {
-        return subType;
+        return getDereferenceType();
     }
+    
     
     @Override
     public String generateCDefinition() {
-        return subType.getTypeIndirection().generateCDefinition() + "*";
+        return getSubType().generateCDefinition() + "*";
     }
     
+    @Override
+    public String generateCDeclaration() {
+        return getSubType().generateCDeclaration() + "*";
+    }
+    
+    @Override
+    public String ASTableDeclaration() {
+        if(getSubType() instanceof CXClassType) return getSubType().ASTableDeclaration();
+        return getSubType().ASTableDeclaration() + "*";
+    }
     
     @Override
     public boolean isValid(TypeEnvironment e) {
@@ -38,10 +52,14 @@ public class PointerType extends AbstractCXPrimitiveType {
             return false;
             // return abstractCXPrimitiveType.isIntegral();
         }
+        if(other instanceof CXMappedType) {
+            ((CXMappedType) other).update();
+            return is(((CXMappedType) other).getWrappedType(), e, strictPrimitiveEquality);
+        }
         if(!(other instanceof ArrayType || other instanceof PointerType)) {
             return false;
         }
-        if(this.subType == CXPrimitiveType.VOID){
+        if(this.getSubType() == CXPrimitiveType.VOID){
                 return true;
         }
        
@@ -55,12 +73,12 @@ public class PointerType extends AbstractCXPrimitiveType {
             return true;
         }
         
-        return e.is(this.subType, subType);
+        return e.is(this.getSubType(), subType);
     }
     
     @Override
     public String infoDump() {
-        return "(" + subType.infoDump() + ")*";
+        return "(" + getSubType().infoDump() + ")*";
     }
     
     @Override
@@ -70,16 +88,38 @@ public class PointerType extends AbstractCXPrimitiveType {
     
     @Override
     public String toString() {
-        return subType.toString() + "*";
+        return getSubType().toString() + "*";
+    }
+    
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     *
+     * @return Such a string
+     */
+    @Override
+    public String getSafeTypeString() {
+        return getSubType().getSafeTypeString() + "_p";
+    }
+    
+    public CXType innerMostType() {
+        if(getSubType() instanceof PointerType) {
+            return ((PointerType) getSubType()).innerMostType();
+        }
+        return getSubType();
     }
     
     @Override
     public CXType getTypeRedirection(TypeEnvironment e) {
-        return new PointerType(subType.getTypeRedirection(e));
+        return new PointerType(getSubType().getTypeRedirection(e));
     }
     
     @Override
     public CXType getCTypeIndirection() {
-        return new PointerType(subType.getCTypeIndirection());
+        return new PointerType(getSubType().getCTypeIndirection());
+    }
+    
+    @Override
+    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+        return new PointerType(getSubType().propagateGenericReplacement(original, replacement));
     }
 }

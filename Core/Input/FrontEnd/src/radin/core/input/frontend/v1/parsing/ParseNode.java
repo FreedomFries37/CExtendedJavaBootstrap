@@ -65,6 +65,7 @@ public abstract class ParseNode extends AbstractTree<ParseNode> {
     }
     
     
+    
     public abstract boolean hasChildren();
     
     public String toString() { return getData(); }

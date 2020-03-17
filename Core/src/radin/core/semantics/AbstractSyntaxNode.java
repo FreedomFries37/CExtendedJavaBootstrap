@@ -6,7 +6,9 @@ import radin.core.semantics.types.CXType;
 
 import java.util.*;
 
-public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
+public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> implements Iterable<AbstractSyntaxNode>{
+    
+    public static final HashMap<String, ASTNodeType> cleanNameToType = new HashMap<>();
     
     private ASTNodeType type;
     private Token token;
@@ -40,7 +42,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     }
     
     public TypedAbstractSyntaxNode addType(CXType type) {
-        return new TypedAbstractSyntaxNode(this.getType(), type, childList);
+        return new TypedAbstractSyntaxNode(this.getTreeType(), type, childList);
     }
     
     public static AbstractSyntaxNode unroll(ASTNodeType type, AbstractSyntaxNode first, AbstractSyntaxNode unrolled) {
@@ -57,7 +59,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
         for (AbstractSyntaxNode abstractSyntaxNode : node.getChildList()) {
             childrensChildren.addAll(abstractSyntaxNode.getChildList());
         }
-        return new AbstractSyntaxNode(node.getType(), childrensChildren);
+        return new AbstractSyntaxNode(node.getTreeType(), childrensChildren);
     }
     
     public AbstractSyntaxNode(AbstractSyntaxNode other,
@@ -67,7 +69,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     
     public AbstractSyntaxNode(AbstractSyntaxNode other,
                               boolean addFirst, AbstractSyntaxNode add, AbstractSyntaxNode... additionalChildren) {
-        this(other.type);
+        this(other.type, other.token);
         if(!addFirst) {
             childList.addAll(other.getChildList());
             if(add != EMPTY) childList.add(add);
@@ -75,6 +77,21 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
         }else {
             if(add != EMPTY) childList.add(add);
             childList.addAll(Arrays.asList(additionalChildren));
+            childList.addAll(other.getChildList());
+        }
+    }
+    
+    public AbstractSyntaxNode(AbstractSyntaxNode other, List<AbstractSyntaxNode> additionalChildren) {
+        this(other, false, additionalChildren);
+    }
+    
+    public AbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, List<AbstractSyntaxNode> additionalChildren) {
+        this(other.type, other.token);
+        if(!addFirst) {
+            childList.addAll(other.getChildList());
+            childList.addAll(additionalChildren);
+        }else {
+            childList.addAll(additionalChildren);
             childList.addAll(other.getChildList());
         }
     }
@@ -98,7 +115,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     }
     
     @Override
-    public ASTNodeType getType() {
+    public ASTNodeType getTreeType() {
         return type;
     }
     
@@ -121,7 +138,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     
     public AbstractSyntaxNode getChild(ASTNodeType type) {
         for (AbstractSyntaxNode abstractSyntaxNode : childList) {
-            if(abstractSyntaxNode.getType().equals(type)) return abstractSyntaxNode;
+            if(abstractSyntaxNode.getTreeType().equals(type)) return abstractSyntaxNode;
         }
         return null;
     }
@@ -129,7 +146,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     public List<AbstractSyntaxNode> getChildren(ASTNodeType type){
         List<AbstractSyntaxNode> output = new LinkedList<>();
         for (AbstractSyntaxNode abstractSyntaxNode : childList) {
-            if(abstractSyntaxNode.getType().equals(type)) output.add(abstractSyntaxNode);
+            if(abstractSyntaxNode.getTreeType().equals(type)) output.add(abstractSyntaxNode);
         }
         return output;
     }
@@ -142,13 +159,18 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
     
     
     protected String toTreeForm(int indent, String hint) {
-        StringBuilder output = new StringBuilder(String.format("%s%15s", indentString(indent),  "(" + hint + ")"));
+        StringBuilder output = new StringBuilder(indentString(indent));
         
         return treeFormHelper(indent, output);
     }
     
     private String treeFormHelper(int indent, StringBuilder output) {
         Iterator<String> hints = this.hints.iterator();
+        if (childList.isEmpty()) {
+            output.append(";");
+        } else {
+            output.append(" {");
+        }
         for (AbstractSyntaxNode child : childList) {
             output.append("\n");
             if(hints.hasNext()) {
@@ -156,6 +178,9 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
             } else {
                 output.append(child.toTreeForm(indent + 1));
             }
+        }
+        if(!childList.isEmpty()) {
+            output.append("\n").append(getIndent(indent)).append("}");
         }
         return output.toString();
     }
@@ -209,7 +234,7 @@ public class AbstractSyntaxNode extends MeaningfulNode<AbstractSyntaxNode> imple
         return childList;
     }
     
-    public List<? super AbstractSyntaxNode> getMutableChildren() {
+    public List<AbstractSyntaxNode> getMutableChildren() {
         return childList;
     }
 }

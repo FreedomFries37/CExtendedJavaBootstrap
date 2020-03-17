@@ -34,4 +34,9 @@ public class LeafNode extends ParseNode {
         parseNodes.add(this);
         return parseNodes;
     }
+    
+    @Override
+    public List<ParseNode> getMutableChildren() {
+        return getDirectChildren();
+    }
 }

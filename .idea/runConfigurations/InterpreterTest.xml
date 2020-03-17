@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="InterpreterTest" type="Application" factoryName="Application">
+    <envs>
+      <env name="EXPERIMENTAL" value="true" />
+      <env name="MSFT" value="true" />
+      <env name="JODIN_INCLUDE" value="std\include" />
+      <env name="JODIN_HOME" value="std\src" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="radin.InterpreterEntrancePoint" />
+    <module name="CExtendedJavaBootstrap" />
+    <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 5 interpreter_test.jdn" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

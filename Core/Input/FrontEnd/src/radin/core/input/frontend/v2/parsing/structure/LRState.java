@@ -88,7 +88,7 @@ public class LRState<T> {
             if (item.isFinished()) {
                 LRActionWithLRState<T> objectLRActionWithLRState = new LRActionWithLRState<>(Action.REDUCE, null,
                         item.getBackingProduction());
-                for (NonTerminal<T> tNonTerminal : item.getLookaheadSet()) {
+                for (Terminal<T> tNonTerminal : item.getLookaheadSet()) {
                     output.add(new Pair<>(tNonTerminal, objectLRActionWithLRState));
                     List<ParsableObject<?>> reduced = new LinkedList<>(item.getRhs());
                     reduced.add(tNonTerminal);

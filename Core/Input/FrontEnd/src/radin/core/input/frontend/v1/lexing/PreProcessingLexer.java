@@ -11,7 +11,6 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -72,8 +71,9 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             for (int i = 0; i < this.args.size(); i++) {
                 String thisArg = this.args.get(i);
                 String replace = args[i].trim().replaceAll("\\s+", " ");
-                
-                output = output.replaceAll("(\\W)" + thisArg + "(\\W)", "$1" + replace + "$2");
+    
+                output = output.replaceAll("#" + thisArg + "(\\W|$)", "\"" + replace + "\"$2");
+                output = output.replaceAll("([^\\w#])" + thisArg + "(\\W)", "$1" + replace + "$2");
                 output = output.replaceAll("##" + thisArg + "\\W", replace + "$1");
                 output = output.replaceAll("##" + thisArg + "$", replace);
                 output = output.replaceAll("\\W" + thisArg + "##", "$1" + replace + "##");
@@ -149,6 +149,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         compilationErrors = new LinkedList<>();
         fileCurrentLineNumber = new HashMap<>();
     }
+    
+    
     
     @Override
     public List<AbstractCompilationError> getErrors() {
@@ -532,8 +534,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         "\n#line " + restoreLineNumber + " \""+ this.filename + "\"\n";
     
                 fullText = fullText.replace("\t", " ".repeat(UniversalCompilerSettings.getInstance().getSettings().getTabSize()));
-                fullText = fullText.replaceAll("//.*\n", "\n");
-                fullText = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(fullText).replaceAll("");
+                //fullText = fullText.replaceAll("//.*\n", "\n");
+                //fullText = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(fullText).replaceAll("");
                 // fullText = fullText.replaceAll("/\\*.*\\*/", "");
                 replaceString(originalString, fullText);
                 return;
@@ -554,6 +556,15 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             default:
                 return;
         }
+    }
+    
+    public void define(String name) {
+        defines.put(name, new Define(name));
+    }
+    
+    public void define(String name, Object value) {
+        Define define = new Define(name, value.toString());
+        defines.put(name, define);
     }
     
     
@@ -616,7 +627,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             // ICompilationSettings.debugLog.info("Previous line number is " + getPrevious()
                             // .getLineNumber());
                         }
-                        if(!createdTokens.isEmpty() && getPrevious().getLineNumber() == lineNumber) {
+                        if(!createdTokens.isEmpty() && getPrevious().getVirtualLineNumber() == lineNumber && getPrevious().getVirtualColumn() >= 1) {
                             
                             Token token = new Token(TokenType.t_reserved, "#");
                             token.addColumnAndLineNumber(column, lineNumber);
@@ -653,7 +664,38 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 boolean inString = true;
                 while (inString) {
                     if (match('\\')) {
-                        image += consumeNextChars(2);
+                        String escape = consumeNextChars(2);
+                        switch (escape.charAt(1)) {
+                            case 't': {
+                                image += '\t';
+                                break;
+                            }
+                            case 'n': {
+                                image += '\n';
+                                break;
+                            }
+                            case 'r': {
+                                image += '\r';
+                                break;
+                            }
+                            case '\'': {
+                                image += '\'';
+                                break;
+                            }
+                            case '\\': {
+                                image += '\\';
+                                break;
+                            }
+                            case '"': {
+                                image += '"';
+                                break;
+                            }
+                            case '?': {
+                                image += '?';
+                                break;
+                            }
+                        }
+                        //image += escape;
                     } else if (match('\n')) {
                         throw new TokenizationError("Incomplete String", getPrevious());
                     } else {
@@ -914,7 +956,14 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
                     consumeNextChars(2);
                     return new Token(TokenType.t_literal, "'" + str);
+                } case '$': {
+                    return new Token(TokenType.t_dollar);
                 }
+                case '@': {
+                    return new Token(TokenType.t_at);
+                }
+                default:
+                    return null;
             }
         }
     }
@@ -934,6 +983,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             tok.setPrevious(getPrevious());
             String representation = tok.getRepresentation();
             tok.addColumnAndLineNumber(column - representation.length(), lineNumber);
+            tok.setFilename(currentFile);
+            tok.setActualLineNumber(fileCurrentLineNumber.get(currentFile).getValue());
             //prevLineNumber = lineNumber;
             //prevColumn = column;
             createdTokens.add(tok);
@@ -973,6 +1024,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         HashMap<String, Define> output = new HashMap<>();
         
         output.put("__LINE__", new FunctionDefine("__LINE__", () -> "" + lineNumber ));
+        output.put("__FILE__", new FunctionDefine("__FILE__", () -> "\"" + currentFile + '"' ));
         output.put("defined", new FunctionDefine("defined", false, Collections.singletonList("X"),
                 (String[] args) -> defines.containsKey(args[0]) ? "1" : "0" ));
         

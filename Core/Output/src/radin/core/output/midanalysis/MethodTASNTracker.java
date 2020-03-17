@@ -29,6 +29,14 @@ public class MethodTASNTracker {
     }
     
     public TypeAugmentedSemanticNode get(CXMethod method) {
-        return methodToTreeMap.getOrDefault(method, null);
+        TypeAugmentedSemanticNode output = methodToTreeMap.getOrDefault(method, null);
+        if(output == null) {
+            for (CXMethod cxMethod : methodToTreeMap.keySet()) {
+                if(cxMethod.getCFunctionName().equals(method.getCFunctionName())) {
+                    return methodToTreeMap.get(cxMethod);
+                }
+            }
+        }
+        return output;
     }
 }

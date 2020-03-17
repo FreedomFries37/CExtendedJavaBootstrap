@@ -46,6 +46,16 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
     
     protected abstract CXType getType();
     
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     *
+     * @return Such a string
+     */
+    @Override
+    public String getSafeTypeString() {
+        return corresponding.getImage(); // Guaranteed to be in \w+ form, thanks to the parser and lexer
+    }
+    
     @Override
     public boolean isPrimitive() {
         if(!update()) throw new BadDelayedTypeAccessError();
@@ -64,6 +74,11 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
     }
     
     @Override
+    public TypeEnvironment getEnvironment() {
+        return environment;
+    }
+    
+    @Override
     public String infoDump() {
         return toString() + " in " + environment;
     }
@@ -73,5 +88,10 @@ public abstract class CXMappedType extends CXType implements ICXWrapper {
         public BadDelayedTypeAccessError() {
             super(corresponding, "This type never created");
         }
+    }
+    
+    @Override
+    public String ASTableDeclaration() {
+        return toString();
     }
 }

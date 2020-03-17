@@ -41,6 +41,8 @@ public class CXIdentifier implements CXEquivalent {
         return identifier;
     }
     
+    
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

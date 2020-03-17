@@ -66,6 +66,7 @@ public class ErrorReader {
         String outputedFileName = null;
         for (AbstractCompilationError error : errors) {
             // System.out.println(error.getError());
+            if(error == null) continue;
             ICompilationSettings.debugLog.warning(error.getClass().getSimpleName() + ": " + error.getMessage());
     
             List<AbstractCompilationError.ErrorInformation> infoMessages = new LinkedList<>();
@@ -76,11 +77,12 @@ public class ErrorReader {
             boolean errorPrinted = false;
     
             for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {
+                
                 if(errorInformation.getToken() == null) {
                     System.out.println(errorInformation.getInfo());
                     continue;
                 }
-                int i = errorInformation.getToken().getLineNumber() - 1;
+                int i = errorInformation.getToken().getVirtualLineNumber() - 1;
                 if( i < 0) i = 0;
                 LineHolder lineInfo = lines.get(i);
                 
@@ -169,7 +171,7 @@ public class ErrorReader {
         List<Integer> columns = new LinkedList<>();
         for (AbstractCompilationError.ErrorInformation information : informations) {
             int imageLength = information.getToken().getRepresentation().length();
-            columns.add(information.getToken().getColumn() + imageLength/2);
+            columns.add(information.getToken().getVirtualColumn() + imageLength/2);
         }
         columns.sort(Integer::compareTo);
         int maxSize = lineHolder.contents.length();

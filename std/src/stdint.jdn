@@ -1,0 +1,45 @@
+#include <stdint.h>
+
+in std{
+implement Int {
+
+	Int(int value) {
+		this->value = value;
+	}
+
+	int getValue() {
+		return this->value;
+	}
+
+	void setValue(int value) {
+		this->value = value;
+	}
+
+	std::String toString() {
+		if(this->value < 0) return new std::String('-')->concat(this->abs()->toString());
+		int last = this->value % 10;
+		Int tail = new Int(last);
+		int first = this->value / 10;
+		if(first > 0) {
+			Int head = new Int(first);
+			return head->toString()->concat(tail);
+		} else {
+			return new std::String()->concat((char) ('0' + tail->getValue()));
+		}
+
+
+	}
+
+	Int abs() {
+		if (this->value >= 0) return this;
+		return new Int(this->value * -1);
+	}
+
+   	Int pow(int exp) {
+		if(exp < 0) return new Int(0);
+		if(exp == 0) return new Int(1);
+		return new Int(this->value * this->pow(exp - 1)->value);
+   	}
+
+}
+}

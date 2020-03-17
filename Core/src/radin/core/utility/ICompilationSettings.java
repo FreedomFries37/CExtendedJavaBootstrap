@@ -5,10 +5,47 @@ import radin.core.IFrontEndUnit;
 import radin.core.JodinLogger;
 import radin.core.chaining.IToolChain;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
 
 public interface ICompilationSettings<Front, Mid, Back> {
+    
+    JodinLogger debugLog = new JodinLogger("debug.log");
+    /**
+     * The logger for the interpreter
+     */
+    JodinLogger ilog = new JodinLogger("interpreter.log", "interpreter");
+    JodinLogger typeLog = new JodinLogger(debugLog,"types.log", "types");
+    JodinLogger interpreterStateLogger = new JodinLogger("states.log", "interpreter.states");
+    
+    static File createFile(String filename) {
+        String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();
+        if(directory.equals("")) {
+            ICompilationSettings.debugLog.info("Created file " + filename);
+            return new File(filename);
+        } else {
+            File dir = new File(directory);
+            dir.mkdirs();
+            if(!dir.exists()) {
+                ICompilationSettings.debugLog.severe("Did not create file " + filename + " in " + dir);
+                return null;
+            }
+            
+            ICompilationSettings.debugLog.info("Created file " + filename + " in " + dir.getAbsolutePath());
+            File file = new File(dir, filename);
+            File parentFile = file.getParentFile();
+            parentFile.mkdirs();
+            if(!parentFile.exists()) {
+                return null;
+            }
+            return file;
+        }
+    }
+    
+    String getDirectory();
+    
+    void setDirectory(String directory);
     
     /**
      * Use experimental settings while compiling
@@ -42,33 +79,40 @@ public interface ICompilationSettings<Front, Mid, Back> {
         }
     }
     
-    boolean isLookForMainFunction();
+    boolean isThisPassedOffAsParameter();
     
+    void setThisPassedOffAsParameter(boolean thisPassedOffAsParameter);
+    
+    boolean isLookForMainFunction();
+
     void setLookForMainFunction(boolean lookForMainFunction);
     
+    int getOptimizationLevel();
+
     /**
      * Optimize output code
      * @param value
      */
     @ExperimentalSetting(useIntegerValue = true)
     void setOptimizationLevel(int value);
-    int getOptimizationLevel();
     
+    boolean getUseStackTrace();
+
     /**
      * All function calls now run through a stack
      *
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setUseStackTrace(boolean value);
-    boolean getUseStackTrace();
     
+    boolean getUseTryCatch();
+
     /**
      * Compile with added option of try/catch blocks
      * @param value
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setUseTryCatch(boolean value);
-    boolean getUseTryCatch();
     
     /**
      * string literals are automatically turned into string objects
@@ -76,8 +120,8 @@ public interface ICompilationSettings<Front, Mid, Back> {
      */
     @ExperimentalSetting(useBooleanValue = true)
     void setAutoCreateStrings(boolean value);
-    boolean autoCreateStrings();
     
+    boolean autoCreateStrings();
     
     String getIndent();
     
@@ -112,12 +156,12 @@ public interface ICompilationSettings<Front, Mid, Back> {
     
     void setTabSize(int tabSize);
     
-    JodinLogger debugLog = new JodinLogger("debug.log");
-    
     default void setLogLevel(Level logLevel) {
         debugLog.setLevel(logLevel);
+        ilog.setLevel(logLevel);
+        typeLog.setLevel(logLevel);
+        interpreterStateLogger.setLevel(logLevel);
     }
-    
     
     boolean isOutputPostprocessingOutput();
     
@@ -156,4 +200,17 @@ public interface ICompilationSettings<Front, Mid, Back> {
     boolean isInRuntimeCompilationMode();
     
     void setInRuntimeCompilationMode(boolean inRuntimeCompilationMode);
+    
+    boolean isOutputAST();
+    
+    void setOutputAST(boolean outputAST);
+    
+    boolean isOutputTAST();
+    
+    void setOutputTAST(boolean outputTAST);
+    
+    enum SupportedWordSize {
+        arch64,
+        arch32
+    }
 }

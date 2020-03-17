@@ -3,8 +3,7 @@
 
 typedef unsigned long class_id;
 in std {
-	class ClassInfo;
-	ClassInfo __get_class(class_id id);
+	class ClassInfo __get_class(class_id id);
 }
 // Compiler has created a reflection.cx file
 

@@ -1,0 +1,143 @@
+#include <string.h>
+#include <stdint.h>
+
+in std
+implement String {
+	String() : this("") { }
+	String(const char* bp) {
+		this->backingPtr = strdup(bp);
+		this->length = strlen(bp);
+		this->cLength = this->length + 1;
+	}
+	String(char c) {
+		this->backingPtr = calloc(sizeof(char), 2);
+		this->backingPtr[0] = c;
+		this->length = 1;
+		this->cLength = this->length + 1;
+	}
+
+
+	void drop() {
+		free(this->backingPtr);
+		super->drop();
+	}
+
+	String concat(String other) {
+		char next[this->length + other->length + 1];
+		// print("This length = ");
+		// println_s(new Int(this->length())->toString());
+		strcpy(next, this->backingPtr);
+		strcat(next, other->backingPtr);
+		return new String(next);
+	}
+
+	String concat(Object other) {
+		return this->concat(other->toString());
+	}
+
+	String concat(char* other) {
+		return this->concat(new String(other));
+	}
+
+	String concat(char c) {
+		char next[this->cLength + 1];
+		//print("This length = ");
+		//println_s(new Int(this->length())->toString());
+		strcpy(next, this->backingPtr);
+		next[this->length] = c;
+
+		next[this->length + 1] = (char) 0;
+		return new String(next);
+	}
+
+	const char* getCStr() {
+		return this->backingPtr;
+	}
+
+	String concat_integer(long other) {
+		return this;
+	}
+
+	int length() {
+		return this->length;
+	}
+
+	String toString() {
+		return this;
+	}
+}
+
+char* strdup(const char* str1) {
+	size_t length = strlen(str1);
+	char* output = calloc(sizeof(char), length + 1);
+	for(int i = 0; i < length; ++i) {
+		output[i] = str1[i];
+	}
+	return output;
+}
+
+size_t strlen ( const char * str ) {
+	const char* ptr = str;
+	size_t output = 0;
+	while(*ptr != 0) {
+		++ptr;
+		++output;
+	}
+	return output;
+}
+
+char * strcpy ( char * destination, const char * source ) {
+	size_t length = strlen(source);
+	for(int i = 0; i < length; ++i) {
+		destination[i] = source[i];
+	}
+
+	// print("strcpy result: ");
+    // println(destination);
+	return destination;
+}
+char * strncpy ( char * destination, const char * source, size_t num ) {
+	for(int i = 0; i < num; ++i) {
+    	destination[i] = source[i];
+    }
+
+
+
+    return destination;
+}
+
+/*
+
+dest.len = 3;
+src.len = 4;
+
+
+
+*/
+char * strcat ( char * destination, const char * source ) {
+	size_t dest = strlen(destination);
+
+	size_t src = strlen(source);
+	for(int i = 0; i < src; ++i) {
+    		destination[dest + i] = source[i];
+    }
+    destination[dest + src] = 0;
+    return destination;
+}
+char * strncat ( char * destination, const char * source, size_t num );
+
+
+int strcmp ( const char * str1, const char * str2 ) {
+	char* ptr1, *ptr2;
+	while(ptr1 != nullptr || ptr2 != nullptr) {
+		if(*ptr1 < *ptr2) {
+			return -1;
+		} else if(*ptr1 > *ptr2) {
+			return 1;
+		}
+	}
+	return 0;
+}
+int strcoll ( const char * str1, const char * str2 );
+int strncmp ( const char * str1, const char * str2, size_t num );
+size_t strxfrm ( char * destination, const char * source, size_t num );

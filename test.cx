@@ -34,7 +34,7 @@ class derived : parent {
 typedef double __double
 typedef __double meep
 
-int main(int argc, char* argv[]) { // use this type of comment
+int main(int argc, char* argv[]) { // use this treeType of comment
 
 	parent p1 = parent(14);
 	parent p2 = parent(17);

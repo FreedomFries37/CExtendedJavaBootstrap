@@ -219,8 +219,14 @@ BasicParser implements IParser<Token, ParseNode> {
         return false;
     }
     
+    public void clearTempErrors() {
+        tempErrors.clear();
+    }
+    
+    @Override
     public void clearErrors() {
         tempErrors.clear();
+        allErrors.clear();
     }
     
     @Override
@@ -249,12 +255,15 @@ BasicParser implements IParser<Token, ParseNode> {
                 applyState();
                 suppressErrors.pop();
                 forceParse.pop();
-                clearErrors();
+                clearTempErrors();
                 return AttemptStatus.ROLLBACK;
             } else {
+                allErrors.addAll(tempErrors);
+                tempErrors.clear();
                 popState();
                 suppressErrors.pop();
                 forceParse.pop();
+                
                 
                 return AttemptStatus.DESYNC;
             }
@@ -264,7 +273,7 @@ BasicParser implements IParser<Token, ParseNode> {
         popState();
         suppressErrors.pop();
         forceParse.pop();
-        clearErrors();
+        clearTempErrors();
         return AttemptStatus.PARSED;
     }
     

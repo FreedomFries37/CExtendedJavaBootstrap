@@ -14,8 +14,13 @@ import java.util.List;
 
 public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanticNode> {
     
-   
+    
     private TypeAugmentedSemanticNode head;
+    
+    @Override
+    public List<TypeAugmentedSemanticNode> getMutableChildren() {
+        return head.getMutableChildren();
+    }
     
     public TypeAugmentedSemanticTree(AbstractSyntaxNode headAST, TypeEnvironment environment) {
         this.head = convertAST(headAST, environment);
@@ -32,7 +37,7 @@ public class TypeAugmentedSemanticTree extends AbstractTree<TypeAugmentedSemanti
             if(type instanceof CXCompoundTypeNameIndirection) {
                 CXType newType = e.getNamedCompoundType(((CXCompoundTypeNameIndirection) type).getTypename());
                 if(newType != null) {
-                    head = new TypedAbstractSyntaxNode(head.getType(), newType, head.getChildList());
+                    head = new TypedAbstractSyntaxNode(head.getTreeType(), newType, head.getChildList());
                     TypeAugmentedSemanticNode output = new TypeAugmentedSemanticNode(head, children);
                     output.addCompilationTag(new TypeDefHelperTag(type));
                     return output;

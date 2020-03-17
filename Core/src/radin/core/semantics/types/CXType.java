@@ -3,11 +3,14 @@ package radin.core.semantics.types;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
 import radin.core.semantics.types.wrapped.CXMappedType;
 import radin.core.utility.ICompilationSettings;
+
+import java.util.Objects;
 
 /**
  * Base type for any CXType. This needs to be inherited for a type to be properly tracked
@@ -161,5 +164,40 @@ public abstract class CXType implements CXEquivalent {
         return new PointerType(this);
     }
     
+    public String ASTableDeclaration() {
+        return toString();
+    }
     
+    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+        return this;
+    }
+    
+    /**
+     * Creates a modified version of the C Declaration that matches the pattern {@code \W+}
+     * @return Such a string
+     */
+    public String getSafeTypeString() {
+        return generateCDeclaration().replaceAll("\\W", "_");
+    }
+    
+    public TypeEnvironment getEnvironment() {
+        return null;
+    }
+    
+    private static TypeEnvironment basicEnvironment = null;
+    public boolean equals(CXType obj) {
+        if(this == obj) return true;
+        TypeEnvironment e;
+        if(this.getEnvironment() != null) {
+            e = getEnvironment();
+        } else if(obj.getEnvironment() != null) {
+            e = obj.getEnvironment();
+        } else {
+            if(basicEnvironment == null) {
+                basicEnvironment = TypeEnvironment.getStandardEnvironment();
+            }
+            e = basicEnvironment;
+        }
+        return this.isExact(obj, e);
+    }
 }

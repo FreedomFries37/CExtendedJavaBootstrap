@@ -3,7 +3,7 @@ package radin.core.output.midanalysis;
 import radin.core.lexical.Token;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
-import radin.core.semantics.MeaningfulNode;
+import radin.core.semantics.ASTMeaningfulNode;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSemanticNode> {
+public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSemanticNode> {
     
     private AbstractSyntaxNode astNode;
     
@@ -27,6 +27,8 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
     private boolean isFailurePoint = false;
     
     private HashSet<ICompilationTag> compilationTags;
+    
+    public final static TypeAugmentedSemanticNode EMPTY = new TypeAugmentedSemanticNode(AbstractSyntaxNode.EMPTY);
     
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode base) {
@@ -114,7 +116,7 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
     }
     
     public ASTNodeType getASTType() {
-        return astNode.getType();
+        return astNode.getTreeType();
     }
     
     public CXType getCXType() {
@@ -152,18 +154,41 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
         return astNode.hasChild(type);
     }
     
+    /**
+     * Gets any child node of this node that has this type, including itself
+     * @param type the child to check
+     * @return a list of nodes that is either this or is a descendent of this with the parameter type
+     */
     public List<TypeAugmentedSemanticNode> getAllChildren(ASTNodeType type) {
         List<TypeAugmentedSemanticNode> output = new LinkedList<>();
-        if(this.astNode.getType() == type) output.add(this);
+        if(this.astNode.getTreeType() == type) output.add(this);
         for (TypeAugmentedSemanticNode child : children) {
             output.addAll(child.getAllChildren(type));
         }
         return output;
     }
     
+    /**
+     * Gets any child node of this node that has this type, including itself
+     * @param type the child to check
+     * @param maxDepth the deepest layer to check, where 0 is just itself
+     * @return a list of nodes that is either this or is a descendent of this with the parameter type
+     */
+    public List<TypeAugmentedSemanticNode> getAllChildren(ASTNodeType type, int maxDepth) {
+        
+        List<TypeAugmentedSemanticNode> output = new LinkedList<>();
+        if(this.astNode.getTreeType() == type) output.add(this);
+        if(maxDepth > 0) {
+            for (TypeAugmentedSemanticNode child : children) {
+                output.addAll(child.getAllChildren(type, maxDepth - 1));
+            }
+        }
+        return output;
+    }
+    
     public TypeAugmentedSemanticNode getASTChild(ASTNodeType type) {
         for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
-            if(typeAugmentedSemanticNode.astNode.getType() == type) return typeAugmentedSemanticNode;
+            if(typeAugmentedSemanticNode.astNode.getTreeType() == type) return typeAugmentedSemanticNode;
         }
         return null;
     }
@@ -171,7 +196,7 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
     
     public TypeAugmentedSemanticNode getASTChild(ASTNodeType type, String image) {
         for (TypeAugmentedSemanticNode typeAugmentedSemanticNode : children) {
-            if(typeAugmentedSemanticNode.astNode.getType() == type &&
+            if(typeAugmentedSemanticNode.astNode.getTreeType() == type &&
                     typeAugmentedSemanticNode.astNode.hasToken() &&
                     typeAugmentedSemanticNode.astNode.getToken().getImage().equals(image)) {
                 return typeAugmentedSemanticNode;
@@ -231,7 +256,7 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
     }
     
     @Override
-    public ASTNodeType getType() {
+    public ASTNodeType getTreeType() {
         return getASTType();
     }
     
@@ -292,6 +317,11 @@ public class TypeAugmentedSemanticNode extends MeaningfulNode<TypeAugmentedSeman
             if(childFirst != null) return childFirst;
         }
         return null;
+    }
+    
+    @Override
+    public List<TypeAugmentedSemanticNode> getMutableChildren() {
+        return children;
     }
     
     public TypeAugmentedSemanticNode getDeepestFailureNode() {

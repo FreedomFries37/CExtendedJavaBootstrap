@@ -13,10 +13,7 @@ import radin.core.output.typeanalysis.errors.IllegalAccessError;
 import radin.core.output.typeanalysis.errors.*;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
-import radin.core.semantics.types.CXCompoundTypeNameIndirection;
-import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.ICXWrapper;
-import radin.core.semantics.types.TypedAbstractSyntaxNode;
+import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -25,6 +22,7 @@ import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 import radin.core.semantics.types.wrapped.CXDynamicTypeDefinition;
+import radin.core.semantics.types.wrapped.CXMappedType;
 import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Reference;
@@ -43,7 +41,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         if(node.isTypedExpression()) return true;
         
-        if(node.getASTNode().getType() == ASTNodeType._super) {
+        if(node.getASTNode().getTreeType() == ASTNodeType._super) {
             node.setType(getCurrentTracker().getType("super"));
             return true;
         }
@@ -53,7 +51,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.literal) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.literal) {
             String image = node.getToken().getImage();
             Pattern floatingPoint = Pattern.compile("-?\\d+\\.\\d*|\\d*\\.\\d+");
             Pattern integer = Pattern.compile("\\d+|0b[01]+|0x[a-fA-F]+");
@@ -78,12 +76,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.string) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.string) {
             node.setType(new PointerType(CXPrimitiveType.CHAR));
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.id) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.id) {
             String image = node.getToken().getImage();
             if(!getCurrentTracker().variableExists(image)) {
                 throw new IdentifierDoesNotExistError(image);
@@ -97,7 +95,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.binop) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.binop) {
             Token opToken = node.getASTChild(ASTNodeType.operator).getToken();
             TypeAugmentedSemanticNode lhs = node.getChild(1);
             TypeAugmentedSemanticNode rhs = node.getChild(2);
@@ -116,7 +114,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             }
             if(isComparison(opToken.getType())) {
                 if(getEnvironment().isStandardBooleanDefined()) {
-                    node.setType(getEnvironment().getTypeDefinition("boolean"));
+                    node.setType(getEnvironment().getTypeDefinition("bool"));
                 } else {
                     node.setType(UnsignedPrimitive.createUnsignedShort());
                 }
@@ -141,7 +139,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.indirection) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.indirection) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)){
                 setIsFailurePoint(child);
@@ -172,7 +170,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.addressof) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.addressof) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             
             if(!determineTypes(child)) {
@@ -186,7 +184,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.uniop) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.uniop) {
             TypeAugmentedSemanticNode child = node.getChild(1);
             if(!determineTypes(child)) {
                 setIsFailurePoint(child);
@@ -198,7 +196,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.postop) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.postop) {
             TypeAugmentedSemanticNode child = node.getChild(0);
             if(!determineTypes(child)) {
                 setIsFailurePoint(child);
@@ -209,7 +207,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.cast) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.cast) {
             assert node.getASTNode() instanceof TypedAbstractSyntaxNode;
             CXType castType = ((TypedAbstractSyntaxNode) node.getASTNode()).getCxType();
             TypeAugmentedSemanticNode child = node.getChild(0);
@@ -219,17 +217,20 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             }
             CXType fromCXType = child.getCXType();
             
-            if(!is(castType, fromCXType)) throw new IllegalCastError(fromCXType, castType, child.findFirstToken());
+            if(!environment.is(castType, CXPrimitiveType.VOID.toPointer()) &&
+                    !is(castType, fromCXType)) {
+                throw new IllegalCastError(fromCXType, castType, child.findFirstToken());
+            }
             //if(!castType.is(fromCXType, getEnvironment())) throw new IllegalCastError(fromCXType, castType);
             node.setType(castType);
             node.setLValue(child.isLValue());
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.array_reference) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.array_reference) {
             TypeAugmentedSemanticNode lhs = node.getChild(0);
             TypeAugmentedSemanticNode rhs = node.getChild(1);
-    
+     
             if(!determineTypes(lhs)) {
                 setIsFailurePoint(lhs);
                 return false;
@@ -267,7 +268,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.function_call) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.function_call) {
             /*
             if(node.getChild(0).getASTType() != ASTNodeType.id) {
             
@@ -300,7 +301,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.field_get) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.field_get) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             
@@ -308,6 +309,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             assert objectInteraction.getCXType() instanceof CXCompoundType || objectInteraction.getCXType() instanceof ConstantType;
             String name =node.getChild(1).getToken().getImage();
+            
+            ICompilationSettings.debugLog.fine("Checking if " + objectInteraction.getCXType() + " has field " + name + "...");
             CXType parentType;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 parentType = objectInteraction.getCXType();
@@ -331,24 +334,41 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 if(!UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode())
                     throw new IllegalAccessError(parentType, name, node.getChild(0).findFirstToken());
                 else {
-                    node.setType(CXPrimitiveType.VOID.toPointer());
-                    node.setLValue(true);
-                    return true;
+                    if(parentType instanceof CXClassType) {
+                        typeTrackingClosureSuperLoad(((CXClassType) parentType));
+                        if(!getCurrentTracker().fieldVisible((CXCompoundType) parentType, name)) {
+                            throw new IllegalAccessError(parentType, name, node.getChild(0).findFirstToken());
+                        } else {
+                            nextType = getCurrentTracker().getFieldType(((CXClassType) parentType), name);
+                            releaseTrackingClosure();
+                        }
+                    }else {
+                        node.setType(CXPrimitiveType.VOID.toPointer());
+                        node.setLValue(true);
+                        return true;
+                    }
                 }
             }
-            if(objectInteraction.getCXType() instanceof CXClassType) {
-                nextType = getCurrentTracker().getFieldType(((CXClassType) parentType), name);
-            } else {
-                nextType = getCurrentTracker().getFieldType((CXCompoundType) parentType, name);
+            else {
+                if (objectInteraction.getCXType() instanceof CXClassType) {
+                    nextType = getCurrentTracker().getFieldType(((CXClassType) parentType), name);
+                } else {
+                    nextType = getCurrentTracker().getFieldType((CXCompoundType) parentType, name);
+                }
+            }
+            
+            if(nextType instanceof CXMappedType) {
+                ((CXMappedType) nextType).update();
             }
             
             if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             node.setType(nextType);
+            ICompilationSettings.debugLog.fine("Found. Field Type = " + nextType);
             node.setLValue(objectInteraction.isLValue());
             return true;
         }
         
-        if(node.getASTNode().getType() == ASTNodeType.method_call) {
+        if(node.getASTNode().getTreeType() == ASTNodeType.method_call) {
             TypeAugmentedSemanticNode objectInteraction = node.getChild(0);
             if(!determineTypes(objectInteraction)) {
                 throw new IllegalAccessError(node.getChild(0).getToken());
@@ -382,7 +402,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             CXType cxClass;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 cxClass = objectInteraction.getCXType();
-            } else {
+            }
+            
+            else {
                 cxClass = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(getEnvironment());
             }
             
@@ -482,7 +504,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     }
     
     public void single_op(TypeAugmentedSemanticNode node, TypeAugmentedSemanticNode child, CXType childCXType) {
-        if(!childCXType.isPrimitive()) throw new IllegalTypesForOperationError(node.getToken(),
+        if(!(childCXType.isPrimitive() || childCXType instanceof PointerType)) throw new IllegalTypesForOperationError(node.getToken(),
                 childCXType);
         Token opToken = node.getASTChild(ASTNodeType.operator).getToken();
         if(opToken.getType() == TokenType.t_inc || opToken.getType() == TokenType.t_dec) {
@@ -508,7 +530,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     }
     
     private boolean canBinaryOp(CXType left, CXType right) {
-        return left.isPrimitive() && right.isPrimitive();
+        
+        return (left instanceof Dereference || left.isPrimitive()) && (right.isPrimitive() || right instanceof Dereference);
     }
     
     private boolean isComparison(TokenType operator) {

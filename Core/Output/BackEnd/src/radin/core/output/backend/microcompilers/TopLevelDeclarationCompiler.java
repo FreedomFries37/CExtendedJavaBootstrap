@@ -166,7 +166,7 @@ public class TopLevelDeclarationCompiler extends AbstractCompiler {
                     break;
                 }
                 default:
-                    break;
+                    return false;
             }
         }
         

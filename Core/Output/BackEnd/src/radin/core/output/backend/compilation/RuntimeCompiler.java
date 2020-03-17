@@ -6,10 +6,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.utility.UniversalCompilerSettings;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,9 +20,11 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     
     
     private TypeEnvironment environment;
+    private String entrancePoint = "main";
+    private String jodinEntrancePoint = "__main";
     
     public RuntimeCompiler(TypeEnvironment environment) throws IOException {
-        super(new PrintWriter(new FileWriter(new File("runtime.cx"))), 0);
+        super(new PrintWriter(new FileWriter(new File("runtime.jdn"))), 0);
         this.environment = environment;
     }
     
@@ -37,8 +36,24 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     @Override
     public boolean compile() {
         
+        if(System.getenv("JODIN_HOME") != null) {
+            File baseRuntimeFile = new File(new File(System.getenv("JODIN_HOME")), "runtime.i");
+            try {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(baseRuntimeFile));
+                
+                while (bufferedReader.ready()) {
+                    println(bufferedReader.readLine());
+                }
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
         println("void __init_reflection();");
-        println("int __main(int argc, std::String argv[]);");
+        println("void __init_heap();");
+        println("void __free_heap();");
+        println("int " + jodinEntrancePoint + "(int argc, std::String argv[]);");
         println("in std {");
         setIndent(getIndent() + 1);
         List<CXClassType> cxClassTypes = environment.getAllCreated().stream().filter(distinctBy((t) -> environment.getTypeId(t))).collect(Collectors.toList());
@@ -53,7 +68,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         cxClassTypes.add(0, classInfo);
         for (CXClassType cxClassType :
                 cxClassTypes) {
-            println("ClassInfo " + cxClassType.getCTypeName() + "_info = 0; // class_id = " + environment.getTypeId(cxClassType));
+            println("ClassInfo " + cxClassType.getCTypeName() + "_info = nullptr; // class_id = " + environment.getTypeId(cxClassType));
         }
         
         
@@ -71,13 +86,15 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         setIndent(getIndent() - 1);
         println("}");
         
-        println("int main(int argc, char* argv[]) {");
+        println("int " + entrancePoint + "(int argc, char* argv[]) {");
         setIndent(getIndent() + 1);
+        println("__init_heap();");
         println("__init_reflection();");
         println("std::String args[argc];");
         println("for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);");
-        println("int output = __main(argc, args);");
+        println("int output = " + jodinEntrancePoint + "(argc, args);");
         println("for (int i = 0; i < argc; i++) args[i]->drop();");
+        println("__free_heap();");
         println("return output;");
         setIndent(getIndent() - 1);
         println("}");
@@ -120,6 +137,14 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         flush();
         close();
         return true;
+    }
+    
+    public void setEntrancePoint(String entrancePoint) {
+        this.entrancePoint = entrancePoint;
+    }
+    
+    public void setJodinEntrancePoint(String jodinEntrancePoint) {
+        this.jodinEntrancePoint = jodinEntrancePoint;
     }
     
     @Override

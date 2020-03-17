@@ -1,0 +1,63 @@
+#include "LinkedList.h"
+
+ast {
+  function_definition [int] {
+      empty;
+      id $main;
+      params {
+        dec [int] {
+          id $argc;
+        }
+        dec [std::String[]] {
+          id $argv;
+          empty;
+        }
+      }
+      compound_statement {
+        declarations {
+          initialized_declaration {
+            dec [bool] {
+              id $val;
+            }
+            func_call {
+              id $boolean_test;
+              sequence;
+            }
+          }
+        }
+        for {
+          declarations {
+            initialized_declaration {
+              dec [int] {
+                id $i;
+              }
+              literal $0;
+            }
+          }
+          binop {
+            op::@<;
+            id $i;
+            id $argc;
+          }
+          postop {
+            id $i;
+            op::@++;
+          }
+          compound_statement {
+            func_call {
+              id $println_s;
+              sequence {
+                arr_get {
+                  id $argv;
+                  id $i;
+                }
+              }
+            }
+          }
+        }
+        return {
+          id $val;
+        }
+      }
+    }
+}

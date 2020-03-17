@@ -13,7 +13,7 @@ public abstract class AbstractCXPrimitiveType extends CXType {
     public boolean isFloatingPoint() {
         return false;
     }
-    
+    public boolean isChar() { return false; }
     public boolean isNumber() {
         return isIntegral() || isFloatingPoint();
     }

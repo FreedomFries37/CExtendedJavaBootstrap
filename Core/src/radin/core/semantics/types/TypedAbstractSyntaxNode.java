@@ -46,6 +46,23 @@ public class TypedAbstractSyntaxNode extends AbstractSyntaxNode {
         this.cxType = cxType;
     }
     
+    public TypedAbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, CXType cxType,
+                                   List<AbstractSyntaxNode> additionalChildren) {
+        super(other, addFirst, additionalChildren);
+        if(cxType == null)
+            throw new NullCXTypeError();
+        this.cxType = cxType;
+    }
+    
+    public TypedAbstractSyntaxNode(AbstractSyntaxNode other, CXType cxType,
+                                   List<AbstractSyntaxNode> additionalChildren) {
+        super(other, additionalChildren);
+        if(cxType == null)
+            throw new NullCXTypeError();
+        this.cxType = cxType;
+    }
+    
+    
     public TypedAbstractSyntaxNode(ASTNodeType type, Token token, CXType cxType) {
         super(type, token);
         if(cxType == null)
@@ -64,6 +81,6 @@ public class TypedAbstractSyntaxNode extends AbstractSyntaxNode {
     
     @Override
     public String toString() {
-        return super.toString() + " [" + getCxType() + "]";
+        return super.toString() + " [" + getCxType().ASTableDeclaration() + "]";
     }
 }

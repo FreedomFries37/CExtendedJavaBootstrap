@@ -9,15 +9,15 @@ public class Item<T> {
     private Production backingProduction;
     private Symbol lhs;
     private List<ParsableObject<?>> rhs;
-    private Set<NonTerminal<T>> lookaheadSet;
+    private Set<Terminal<T>> lookaheadSet;
     
     private Item(int location, Symbol lhs, List<ParsableObject<?>> rhs,
-                 Set<NonTerminal<T>> lookaheadSet) {
+                 Set<Terminal<T>> lookaheadSet) {
         this(location, lhs, rhs, lookaheadSet, null);
     }
     
     private Item(int location, Symbol lhs, List<ParsableObject<?>> rhs,
-                 Set<NonTerminal<T>> lookaheadSet, Production backingProduction) {
+                 Set<Terminal<T>> lookaheadSet, Production backingProduction) {
         this.location = location;
         this.lhs = lhs;
         this.rhs = rhs;
@@ -25,7 +25,7 @@ public class Item<T> {
         this.backingProduction = backingProduction;
     }
     
-    public Item(Production production, Set<NonTerminal<T>> lookaheadSet) {
+    public Item(Production production, Set<Terminal<T>> lookaheadSet) {
         this(0, production.getLhs(), production.getRhs(), lookaheadSet, production);
     }
     
@@ -45,7 +45,7 @@ public class Item<T> {
         return rhs;
     }
     
-    public Set<NonTerminal<T>> getLookaheadSet() {
+    public Set<Terminal<T>> getLookaheadSet() {
         return lookaheadSet;
     }
     

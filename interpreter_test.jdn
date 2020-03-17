@@ -1,0 +1,49 @@
+#include <stdint.h>
+
+struct s {
+	int a;
+	double c;
+};
+
+char c = '\n';
+char b = 'a';
+
+void hello_world() {
+	int a = 3;
+	int b = 5;
+
+	int c = a + b;
+	int *c_ptr = &c;
+}
+
+int main(int argc, std::String argv[]) {
+
+/*
+	for(int i = 0; i < argc; ++i) {
+		println_s(argv[i]);
+	}
+	*/
+
+	std::String bleh = new std::String();
+	std::String hw = new std::String("Hello World!");
+	println_s(hw);
+	std::Int i = new std::Int(3);
+	std::String more = hw->concat("\tsize = ")->concat(new std::Int(hw->length()));
+	println_s(more);
+
+	std::String charConcat = new std::String()->concat('i');
+
+	i32 a = 5235;
+	i64 b = 23121;
+
+
+	i32 c = -1 * a * b;
+	std::Int d = new std::Int(c);
+	println_s(d->toString());
+
+	std::Int i32Size = new std::Int(sizeof(i32));
+	println_s(i32Size->toString());
+
+	return 0;
+
+}

@@ -11,7 +11,9 @@ import radin.core.utility.Reference;
 
 import java.util.List;
 
-public interface ICXClassType extends ICXCompoundType {
+public interface ICXClassType extends ICXCompoundType, CXCallable {
+    
+    CXType getAsCXType();
     
     TypeEnvironment getEnvironment();
     
@@ -35,8 +37,6 @@ public interface ICXClassType extends ICXCompoundType {
     
     CXConstructor getConstructor(ParameterTypeList parameterTypeList);
     
-    CXMethod getMethod(Token name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual);
-    
     void generateSuperMethods(String vtablename);
     
     CXMethod getSuperMethod(String name, ParameterTypeList typeList);
@@ -46,6 +46,8 @@ public interface ICXClassType extends ICXCompoundType {
     CXStructType getStructEquivalent();
     
     List<CXMethod> getGeneratedSupers();
+    
+    boolean canInstantiateDirectly();
     
     class ClassFieldDeclaration extends FieldDeclaration {
         private Visibility visibility;

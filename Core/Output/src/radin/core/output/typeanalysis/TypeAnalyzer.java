@@ -50,6 +50,11 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         }
     }
     
+    @Override
+    public boolean hasErrors() {
+        return !getErrors().isEmpty();
+    }
+    
     public static TypeAnalyzer getInstance() {
         return new EmptyTypeAnalyzer(null);
     }
@@ -79,6 +84,8 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         }
         return null;
     }
+    
+    
     
     public static HashMap<CXMethod, TypeAugmentedSemanticNode> getMethods() {
         return methods;
@@ -209,6 +216,11 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         other.trackerStack = trackerStack;
         ((TypeAnalyzer) other).errors = errors;
         return other.determineTypes();
+    }
+    
+    @Override
+    public void clearErrors() {
+        errors.clear();
     }
     
     @Override
