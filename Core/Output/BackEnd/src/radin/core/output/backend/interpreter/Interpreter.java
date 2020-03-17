@@ -83,7 +83,7 @@ public class Interpreter {
         public PrimitiveInstance(P type, R backingValue, boolean unsigned) {
             super(type);
             this.backingValue = backingValue;
-            if (backingValue == null) logger.warning("Shouldn't set backing value to null");
+            if (backingValue == null) if(log) logger.warning("Shouldn't set backing value to null");
             this.unsigned = unsigned;
         }
         
@@ -617,6 +617,7 @@ public class Interpreter {
     private Stack<Boolean> useThisStack = new Stack<>();
     
     private Token nearestCurrentToken = null;
+    private boolean log = System.getenv("LOG_INTERPRETER") != null && System.getenv("LOG_INTERPRETER").equals("true");
     
     private class StackTraceInfo {
         private Token function;
@@ -643,7 +644,7 @@ public class Interpreter {
     }
     
     private void startStackTraceFor(Token name){
-        logger.info("Starting stack trace for " + name.getImage());
+        if(log) logger.info("Starting stack trace for " + name.getImage());
         stackTrace.push(new StackTraceInfo(name));
     }
     
@@ -729,7 +730,7 @@ public class Interpreter {
     
     public void endClosure() {
         autoVariables.pop();
-        logger.info("Available variables: " + autoVariables.peek().keySet());
+        if(log) logger.info("Available variables: " + autoVariables.peek().keySet());
         int previousSize = previousMemStackSize.pop();
         while (memStack.size() > previousSize) {
             memStack.pop();
@@ -737,7 +738,7 @@ public class Interpreter {
     }
     
     public void push(Instance<?> val) {
-        logger.fine("Value was pushed to stack: " + val);
+        if(log) logger.fine("Value was pushed to stack: " + val);
         memStack.push(val);
     }
     
@@ -750,7 +751,7 @@ public class Interpreter {
     }
     
     public Instance<?> pop() {
-        logger.fine("Value was popped from stack: " + memStack.peek());
+        if(log) logger.fine("Value was popped from stack: " + memStack.peek());
         Instance<?> pop = memStack.pop();
         if(pop instanceof NullableInstance) {
             if(((NullableInstance) pop).getValue() != null) return ((NullableInstance) pop).getValue();
@@ -760,7 +761,7 @@ public class Interpreter {
     
     /*
     public Instance<?> pop() {
-        logger.fine("Value was popped from stack: " + memStack.peek());
+        if(log) logger.fine("Value was popped from stack: " + memStack.peek());
         return memStack.pop();
     }
     
@@ -770,7 +771,7 @@ public class Interpreter {
         this.environment = environment;
         this.symbols = symbols;
         autoVariables.add(new HashMap<>());
-        logger.info("Adding symbols and global variables to symbol table");
+        if(log) logger.info("Adding symbols and global variables to symbol table");
         /*List<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> entries =
                 new ArrayList<>(this.symbols.entrySet());
                 
@@ -790,15 +791,15 @@ public class Interpreter {
                 if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
                     try {
                         Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                        logger.info("Generating usable value for " + symbol.getKey());
+                        if(log) logger.info("Generating usable value for " + symbol.getKey());
                         if (!invoke(symbol.getValue())) throw new IllegalStateException();
                         if(memStack.peek() == null) {
-                            logger.info("No usable value for " + symbol.getKey() + " created...");
-                            logger.info("Will retry later");
+                            if(log) logger.info("No usable value for " + symbol.getKey() + " created...");
+                            if(log) logger.info("Will retry later");
                             queue.offer(symbol);
                             continue;
                         }
-                        logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
+                        if(log) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
                                 "value " + memStack.peek());
                         addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
                         newInstance.copyFrom(pop());
@@ -807,7 +808,7 @@ public class Interpreter {
                     }
                 } else {
                     Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                    logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
+                    if(log) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
                     addAutoVariable(symbol.getKey().getToken().getImage(),
                             newInstance);
                 }
@@ -823,9 +824,9 @@ public class Interpreter {
                 if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
                     try {
                         Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                        logger.info("Generating usable value for " + symbol.getKey());
+                        if(log) logger.info("Generating usable value for " + symbol.getKey());
                         if (!invoke(symbol.getValue())) throw new IllegalStateException();
-                        logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
+                        if(log) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
                                 "value " + memStack.peek());
                         addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
                         newInstance.copyFrom(pop());
@@ -834,7 +835,7 @@ public class Interpreter {
                     }
                 } else {
                     Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                    logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
+                    if(log) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
                     addAutoVariable(symbol.getKey().getToken().getImage(),
                             newInstance);
                 }
@@ -931,7 +932,7 @@ public class Interpreter {
             );
         }
         output.setAt(output.size - 1, null);
-        logger.fine("Created Jodin-Style string " + output);
+        if(log) logger.fine("Created Jodin-Style string " + output);
         return output;
     }
     
@@ -942,18 +943,18 @@ public class Interpreter {
     
     
     public void logCurrentState() {
-        if(System.getenv("DEBUG") != null) {
+        if(log) {
             if (disableLogging) return;
             disableLogging = true;
-            var logger = ICompilationSettings.interpreterStateLogger;
-            logger.finest("WHILE EXECUTING AT " + nearestCurrentToken.getFilename() + "::" + nearestCurrentToken.getActualLineNumber());
+            logger = ICompilationSettings.interpreterStateLogger;
+            if(log) logger.finest("WHILE EXECUTING AT " + nearestCurrentToken.getFilename() + "::" + nearestCurrentToken.getActualLineNumber());
             int indent = 0;
             for (StackTraceInfo stackTraceInfo : new LinkedList<>(stackTrace)) {
-                logger.finest("   ".repeat(indent) + "Frame = " + stackTraceInfo.function.getImage());
+                if(log) logger.finest("   ".repeat(indent) + "Frame = " + stackTraceInfo.function.getImage());
                 if (indent < useThisStack.size() && useThisStack.get(indent)) {
                     String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", "this",
                             thisStack.peek());
-                    logger.finest(msg);
+                    if(log) logger.finest(msg);
                     int eqIndex = msg.indexOf('=');
             
                     int thisStackIndex = 0;
@@ -967,14 +968,14 @@ public class Interpreter {
                     PointerInstance<CXClassType> thisInstance = thisStack.get(thisStackIndex);
                     CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
                     for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
-                        logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+                        if(log) logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
                                 stringInstanceEntry.getValue()));
                     }
                 }
                 for (Map.Entry<String, Instance<?>> instanceEntry : stackTraceInfo.getStackVariables().entrySet()) {
                     String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", instanceEntry.getKey(),
                             instanceEntry.getValue());
-                    logger.finest(msg);
+                    if(log) logger.finest(msg);
                     int eqIndex = msg.indexOf('=');
             
                     if (instanceEntry.getValue() instanceof PointerInstance && ((PointerInstance<?>) instanceEntry.getValue()).getSubType() instanceof CXClassType) {
@@ -990,16 +991,16 @@ public class Interpreter {
                         PointerInstance<CXClassType> string = (PointerInstance<CXClassType>) pop();
                         callMethod(string, "getCStr");
                         PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
-                        logger.finest(" ".repeat(eqIndex) + "  toString() = " + cString);
+                        if(log) logger.finest(" ".repeat(eqIndex) + "  toString() = " + cString);
                     } else if (instanceEntry.getValue() instanceof ArrayInstance && !(instanceEntry.getValue() instanceof PointerInstance)) {
                         var backingValue = ((ArrayInstance<?, ?>) instanceEntry.getValue()).getBackingValue();
                         for (int i = 0; i < backingValue.size(); i++) {
-                            logger.finest(" ".repeat(eqIndex) + "  [" + i + "]" + " " + backingValue.get(i));
+                            if(log) logger.finest(" ".repeat(eqIndex) + "  [" + i + "]" + " " + backingValue.get(i));
                         }
                     } else if (instanceEntry.getValue() instanceof CompoundInstance) {
                         CompoundInstance<?> value = (CompoundInstance<?>) instanceEntry.getValue();
                         for (Map.Entry<String, Instance<?>> stringInstanceEntry : value.fields.entrySet()) {
-                            logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+                            if(log) logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
                                     stringInstanceEntry.getValue()));
                         }
                     }
@@ -1008,12 +1009,12 @@ public class Interpreter {
                 ++indent;
             }
     
-            logger.finest("Memory Stack: ");
+            if(log) logger.finest("Memory Stack: ");
             for (Instance<?> instance : memStack) {
-                logger.finest(" + " + instance);
+                if(log) logger.finest(" + " + instance);
             }
     
-            // logger.finest("Return Value: " + returnValue);
+            // if(log) logger.finest("Return Value: " + returnValue);
             disableLogging = false;
         }
     }
@@ -1167,7 +1168,7 @@ public class Interpreter {
     
     
     public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned {
-        // logger.info("Executing " + input);
+        // if(log) logger.info("Executing " + input);
         nearestCurrentToken = closestToken(input);
         switch (input.getASTType()) {
             case operator:
@@ -1222,13 +1223,13 @@ public class Interpreter {
                 }
                 
                 
-                logger.fine("Performing " + op + " on " + lhs + " and " + rhs);
+                if(log) logger.fine("Performing " + op + " on " + lhs + " and " + rhs);
                 
                 
                 
                 Instance<?> createdValue;
                 if (lhs instanceof PointerInstance && rhs instanceof PointerInstance) {
-                    logger.finer("Comparing two pointers");
+                    if(log) logger.finer("Comparing two pointers");
                     createdValue = opOnObjects(op.getType(), lhs, rhs);
                 } else if (
                         (lhs == null ||
@@ -1239,9 +1240,9 @@ public class Interpreter {
                                                 rhs.backingValue instanceof Character && ((Character) rhs.backingValue).charValue() == 0)
                 ) {
                     if(rhs.backingValue instanceof Character) {
-                        logger.finer("Comparing a character to a ptr");
+                        if(log) logger.finer("Comparing a character to a ptr");
                     } else {
-                        logger.finer("Comparing an integral to a ptr");
+                        if(log) logger.finer("Comparing an integral to a ptr");
                     }
                     createdValue = new PrimitiveInstance<>(LongPrimitive.create(), opOnIntegral(
                             op.getType(),
@@ -1251,7 +1252,7 @@ public class Interpreter {
                     // createdValue = null;
                 } else if ((rhs == null ||
                         rhs.getBackingValue() == null) && lhs.getType().isIntegral() && ((Number) lhs.backingValue).longValue() == 0) {
-                    logger.finer("Comparing a ptr to an integral");
+                    if(log) logger.finer("Comparing a ptr to an integral");
                     createdValue = new PrimitiveInstance<>(LongPrimitive.create(), opOnIntegral(
                             op.getType(),
                             ((Number) lhs.backingValue).longValue(),
@@ -1259,13 +1260,13 @@ public class Interpreter {
                     ),
                             lhs.unsigned);
                 } else if (lhs.getType().isFloatingPoint()) {
-                    logger.finer("Operation is on floating points");
+                    if(log) logger.finer("Operation is on floating points");
                     createdValue = new PrimitiveInstance<>(lhs.getType(),
                             opOnFloatingPoint(op.getType(), ((Number) lhs.backingValue).doubleValue(),
                                     ((Number) rhs.backingValue).doubleValue()),
                             lhs.unsigned);
                 } else {
-                    logger.finer("Operation is on integrals");
+                    if(log) logger.finer("Operation is on integrals");
                     try {
                         if(lhs.getType() == CXPrimitiveType.CHAR) {
                             PrimitiveInstance<Number, ?> lhsCasted =
@@ -1380,7 +1381,7 @@ public class Interpreter {
                     }
     
                     ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
-                    logger.info("Created a " + cxType + " array of size " + array.size);
+                    if(log) logger.info("Created a " + cxType + " array of size " + array.size);
                     addAutoVariable(id, array);
                     logCurrentState();
                 } else {
@@ -1396,7 +1397,7 @@ public class Interpreter {
                 Instance<?> rhs = pop().copy();
                 
                 Token assignmentToken = input.getASTChild(ASTNodeType.assignment_type).getToken();
-                logger.fine("Assigning " + rhs + " to " + lhs + " using " + assignmentToken);
+                if(log) logger.fine("Assigning " + rhs + " to " + lhs + " using " + assignmentToken);
                 if (assignmentToken.getType() == TokenType.t_assign) {
                     lhs.copyFrom(rhs);
                 } else if (assignmentToken.getType() == TokenType.t_operator_assign) {
@@ -1416,7 +1417,7 @@ public class Interpreter {
                 ArrayInstance<?, ?> arr = (ArrayInstance<?,?>) pop();
                 if (!invoke(input.getChild(1))) return false;
                 PrimitiveInstance<Number, ?> index = (PrimitiveInstance<Number, ?>) pop();
-                logger.info("Getting at index " + index + " of " + arr);
+                if(log) logger.info("Getting at index " + index + " of " + arr);
                 push(arr.getAt(index.backingValue.intValue()));
             }
             break;
@@ -1484,9 +1485,9 @@ public class Interpreter {
                     CXType cxType =
                             ((TypedAbstractSyntaxNode) input.getASTChild(ASTNodeType.sequence).getASTChild(ASTNodeType.sizeof).getASTNode()).getCxType();
                     PrimitiveInstance<Number, ?> size = (PrimitiveInstance<Number, ?>) pop();
-                    logger.info("Using simulated Calloc to creating an array of " + cxType + "...");
+                    if(log) logger.info("Using simulated Calloc to creating an array of " + cxType + "...");
                     push(createArrayOfType(cxType, size.backingValue.intValue()));
-                    logger.info("Array of " + cxType + "created with size " + size.backingValue.intValue() + " => " + memStack.peek());
+                    if(log) logger.info("Array of " + cxType + "created with size " + size.backingValue.intValue() + " => " + memStack.peek());
                     logCurrentState();
                     stackTrace.pop();
                     break;
@@ -1494,7 +1495,7 @@ public class Interpreter {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
                     PointerInstance<?> pop = (PointerInstance<?>) pop();
-                    logger.info("freeing object " + pop);
+                    if(log) logger.info("freeing object " + pop);
                     pop.setPointer(null);
                     stackTrace.pop();
                     break;
@@ -1561,7 +1562,7 @@ public class Interpreter {
                     startStackTraceFor(token);
                     logCurrentState();
                     try {
-                        logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
+                        if(log) logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
                         if (!invoke(function)) return false;
                     } catch (FunctionReturned functionReturned) {
                         if (returnValue != null) {
@@ -1643,13 +1644,13 @@ public class Interpreter {
                 PrimitiveInstance<?, ?> pop = (PrimitiveInstance<Number, ?>) pop();
                 boolean cond = pop.isTrue();
                 if (cond) {
-                    logger.fine("Using true branch for if statement");
+                    if(log) logger.fine("Using true branch for if statement");
                     if (!invoke(input.getChild(1))) return false;
                 } else if (input.getChild(2).getASTType() != ASTNodeType.empty) {
-                    logger.fine("Using else branch for if statement");
+                    if(log) logger.fine("Using else branch for if statement");
                     if (!invoke(input.getChild(2))) return false;
                 } else {
-                    logger.fine("No branch for if statement");
+                    if(log) logger.fine("No branch for if statement");
                 }
             }
             break;
@@ -1697,7 +1698,7 @@ public class Interpreter {
                 if (input.getChildren().size() > 0) {
                     if (!invoke(input.getChild(0))) return false;
                     returnValue = pop();
-                    logger.fine("Function to return " + returnValue);
+                    if(log) logger.fine("Function to return " + returnValue);
                 }
                 throw new FunctionReturned();
             case constructor_definition:
@@ -1773,7 +1774,7 @@ public class Interpreter {
                     }
                 }
                 PointerInstance<?> pointerInstance = (PointerInstance<?>) og;
-                logger.finer("Getting indirection of " + pointerInstance.getType() + " => " + pointerInstance.getPointer());
+                if(log) logger.finer("Getting indirection of " + pointerInstance.getType() + " => " + pointerInstance.getPointer());
                 push(pointerInstance.getPointer());
                 break;
             case addressof:
@@ -1878,7 +1879,7 @@ public class Interpreter {
                 
                
                 
-                logger.info("Calling constructor for " + cxConstructor.getParent());
+                if(log) logger.info("Calling constructor for " + cxConstructor.getParent());
                 TypeAugmentedSemanticNode cons = MethodTASNTracker.getInstance().get(cxConstructor);
                 try {
                     if (!invoke(cons)) return false;
