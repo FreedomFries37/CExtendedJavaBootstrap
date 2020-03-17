@@ -74,7 +74,7 @@ in std {
 		int cLength;
 
 		public String(const char* bp);
-
+		public String(char c);
 		public String();
 
 		virtual public void drop();

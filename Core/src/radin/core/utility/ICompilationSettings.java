@@ -159,6 +159,8 @@ public interface ICompilationSettings<Front, Mid, Back> {
     default void setLogLevel(Level logLevel) {
         debugLog.setLevel(logLevel);
         ilog.setLevel(logLevel);
+        typeLog.setLevel(logLevel);
+        interpreterStateLogger.setLevel(logLevel);
     }
     
     boolean isOutputPostprocessingOutput();

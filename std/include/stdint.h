@@ -13,6 +13,10 @@ in std {
 		public void setValue(int value);
 
 		virtual public std::String toString();
+
+		public Int abs();
+
+		public Int pow(int exp);
 	};
 
 }

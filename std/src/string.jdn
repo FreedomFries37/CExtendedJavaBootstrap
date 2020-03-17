@@ -9,6 +9,12 @@ implement String {
 		this->length = strlen(bp);
 		this->cLength = this->length + 1;
 	}
+	String(char c) {
+		this->backingPtr = calloc(sizeof(char), 2);
+		this->backingPtr[0] = c;
+		this->length = 1;
+		this->cLength = this->length + 1;
+	}
 
 
 	void drop() {

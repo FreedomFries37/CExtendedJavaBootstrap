@@ -893,79 +893,83 @@ public class Interpreter {
         return createCharArrayFromString(s).asPointer();
     }
     
-    public  void logCurrentState() {
-        if(disableLogging) return;
-        disableLogging = true;
-        var logger = ICompilationSettings.interpreterStateLogger;
-        logger.info("WHILE EXECUTING AT " + nearestCurrentToken.getFilename() + "::" + nearestCurrentToken.getActualLineNumber());
-        int indent = 0;
-        for (StackTraceInfo stackTraceInfo : new LinkedList<>(stackTrace)) {
-            logger.info("   ".repeat(indent) + "Frame = " + stackTraceInfo.function.getImage());
-            if(indent < useThisStack.size() && useThisStack.get(indent)) {
-                String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", "this",
-                        thisStack.peek());
-                logger.info(msg);
-                int eqIndex = msg.indexOf('=');
-                
-                int thisStackIndex = 0;
-                for (int i = 0; i < indent; i++) {
-                    if(useThisStack.get(i)) {
-                        ++thisStackIndex;
+    
+    
+    public void logCurrentState() {
+        if(System.getenv("DEBUG") != null) {
+            if (disableLogging) return;
+            disableLogging = true;
+            var logger = ICompilationSettings.interpreterStateLogger;
+            logger.finest("WHILE EXECUTING AT " + nearestCurrentToken.getFilename() + "::" + nearestCurrentToken.getActualLineNumber());
+            int indent = 0;
+            for (StackTraceInfo stackTraceInfo : new LinkedList<>(stackTrace)) {
+                logger.finest("   ".repeat(indent) + "Frame = " + stackTraceInfo.function.getImage());
+                if (indent < useThisStack.size() && useThisStack.get(indent)) {
+                    String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", "this",
+                            thisStack.peek());
+                    logger.finest(msg);
+                    int eqIndex = msg.indexOf('=');
+            
+                    int thisStackIndex = 0;
+                    for (int i = 0; i < indent; i++) {
+                        if (useThisStack.get(i)) {
+                            ++thisStackIndex;
+                        }
                     }
-                }
-                
-                
-                PointerInstance<CXClassType> thisInstance = thisStack.get(thisStackIndex);
-                CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
-                for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
-                    logger.info(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
-                            stringInstanceEntry.getValue()));
-                }
-            }
-            for (Map.Entry<String, Instance<?>> instanceEntry : stackTraceInfo.getStackVariables().entrySet()) {
-                String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", instanceEntry.getKey(),
-                        instanceEntry.getValue());
-                logger.info(msg);
-                int eqIndex = msg.indexOf('=');
-                
-                if (instanceEntry.getValue() instanceof PointerInstance && ((PointerInstance<?>) instanceEntry.getValue()).getSubType() instanceof CXClassType) {
-                    PointerInstance<CXClassType> value = (PointerInstance<CXClassType>) instanceEntry.getValue();
-                    if(value.getPointer() == null) {
-                        continue;
-                    }
-                    try {
-                        callMethod(value, "toString");
-                    } catch (Throwable e) {
-                        continue;
-                    }
-                    PointerInstance<CXClassType> string = (PointerInstance<CXClassType>) pop();
-                    callMethod(string, "getCStr");
-                    PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
-                    logger.info(" ".repeat(eqIndex) + "  toString() = " + cString);
-                } else if(instanceEntry.getValue() instanceof ArrayInstance && !(instanceEntry.getValue() instanceof PointerInstance)) {
-                    var backingValue = ((ArrayInstance<?, ?>) instanceEntry.getValue()).getBackingValue();
-                    for (int i = 0; i < backingValue.size(); i++) {
-                        logger.info(" ".repeat(eqIndex) + "  [" + i + "]" + " " + backingValue.get(i));
-                    }
-                } else if (instanceEntry.getValue() instanceof CompoundInstance) {
-                    CompoundInstance<?> value = (CompoundInstance<?>) instanceEntry.getValue();
-                    for (Map.Entry<String, Instance<?>> stringInstanceEntry : value.fields.entrySet()) {
-                        logger.info(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+            
+            
+                    PointerInstance<CXClassType> thisInstance = thisStack.get(thisStackIndex);
+                    CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
+                    for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
+                        logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
                                 stringInstanceEntry.getValue()));
                     }
                 }
-            }
+                for (Map.Entry<String, Instance<?>> instanceEntry : stackTraceInfo.getStackVariables().entrySet()) {
+                    String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", instanceEntry.getKey(),
+                            instanceEntry.getValue());
+                    logger.finest(msg);
+                    int eqIndex = msg.indexOf('=');
             
-            ++indent;
-        }
+                    if (instanceEntry.getValue() instanceof PointerInstance && ((PointerInstance<?>) instanceEntry.getValue()).getSubType() instanceof CXClassType) {
+                        PointerInstance<CXClassType> value = (PointerInstance<CXClassType>) instanceEntry.getValue();
+                        if (value.getPointer() == null) {
+                            continue;
+                        }
+                        try {
+                            callMethod(value, "toString");
+                        } catch (Throwable e) {
+                            continue;
+                        }
+                        PointerInstance<CXClassType> string = (PointerInstance<CXClassType>) pop();
+                        callMethod(string, "getCStr");
+                        PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
+                        logger.finest(" ".repeat(eqIndex) + "  toString() = " + cString);
+                    } else if (instanceEntry.getValue() instanceof ArrayInstance && !(instanceEntry.getValue() instanceof PointerInstance)) {
+                        var backingValue = ((ArrayInstance<?, ?>) instanceEntry.getValue()).getBackingValue();
+                        for (int i = 0; i < backingValue.size(); i++) {
+                            logger.finest(" ".repeat(eqIndex) + "  [" + i + "]" + " " + backingValue.get(i));
+                        }
+                    } else if (instanceEntry.getValue() instanceof CompoundInstance) {
+                        CompoundInstance<?> value = (CompoundInstance<?>) instanceEntry.getValue();
+                        for (Map.Entry<String, Instance<?>> stringInstanceEntry : value.fields.entrySet()) {
+                            logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+                                    stringInstanceEntry.getValue()));
+                        }
+                    }
+                }
         
-        logger.info("Memory Stack: ");
-        for (Instance<?> instance : memStack) {
-            logger.info(" + " + instance);
+                ++indent;
+            }
+    
+            logger.finest("Memory Stack: ");
+            for (Instance<?> instance : memStack) {
+                logger.finest(" + " + instance);
+            }
+    
+            // logger.finest("Return Value: " + returnValue);
+            disableLogging = false;
         }
-        
-        // logger.info("Return Value: " + returnValue);
-        disableLogging = false;
     }
     
     
@@ -1779,7 +1783,7 @@ public class Interpreter {
                 endLexicalScope();
                 break;
             case sizeof:
-                push(createNewInstance(LongPrimitive.create(), input.getCXType().getDataSize(environment)));
+                push(createNewInstance(LongPrimitive.create(), ((TypedAbstractSyntaxNode) input.getASTNode()).getCxType().getDataSize(environment)));
                 break;
             case constructor_call: {
                 
