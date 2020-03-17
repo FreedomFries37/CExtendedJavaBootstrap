@@ -315,14 +315,22 @@ public class Interpreter {
             this.size = size;
         }
         
-        public ArrayInstance(T type, R subType, ArrayList<? extends Instance<R>> other) {
+        public ArrayInstance(T type, R subType, ArrayList<NullableInstance<R, Instance<R>>> other) {
             super(type,
-                    new ArrayList<NullableInstance<R, Instance<R>>>(other.size()),
+                    other,
                     true);
+            /*
             for (int i = 0; i < other.size(); i++) {
-                getBackingValue().add(other.get(i) == null ? new NullableInstance<>(subType) :
-                        (NullableInstance<R, Instance<R>>) other.get(i).toNullable());
+                NullableInstance<R, Instance<R>> nullableInstance = other.get(i);
+                if(nullableInstance == null) {
+                    getBackingValue().add(new NullableInstance<R, Instance<R>>(subType));
+                } else {
+                    getBackingValue().add(nullableInstance);
+                }
+                // getBackingValue().add(other.get(i) == null ? new NullableInstance<>(subType) : other.get(i));
             }
+            
+             */
             this.subType = subType;
             this.size = other.size();
         }
@@ -338,7 +346,9 @@ public class Interpreter {
         }
         
         public void setAt(int index, Instance<R> value) {
-            if(value instanceof NullableInstance) {
+            if(value == null) {
+                getBackingValue().set(index, new NullableInstance<>(subType));
+            } else if(value instanceof NullableInstance) {
                 getBackingValue().set(index, ((NullableInstance<R, Instance<R>>) value));
             } else {
                 getBackingValue().get(index).setValue(value);
@@ -347,7 +357,7 @@ public class Interpreter {
         
         public PointerInstance<R> asPointer() {
             return new PointerInstance<>(subType,
-                    new ArrayList<Instance<R>>(
+                    new ArrayList<NullableInstance<R, Instance<R>>>(
                             getBackingValue()
                     ), 0);
         }
@@ -431,11 +441,13 @@ public class Interpreter {
         private int index = 0;
         
         public PointerInstance(R type, Instance<R> pointer) {
-            super(type.toPointer(), type, new ArrayList<>(Collections.singletonList(null)));
+            super(type.toPointer(), type, new ArrayList<>(Collections.singletonList(new NullableInstance<>(type))));
             setAt(0, pointer);
         }
         
-        public PointerInstance(R type, ArrayList<? extends Instance<R>> backing, int offset) {
+        public PointerInstance(R type,
+                               ArrayList<NullableInstance<R, Instance<R>>> backing,
+                               int offset) {
             super(type.toPointer(), type, backing);
             index = offset;
         }
@@ -446,7 +458,8 @@ public class Interpreter {
         }
         
         public PointerInstance(PointerType type) {
-            super(type, (R) type.getSubType(), new ArrayList<>(Collections.singletonList(null)));
+            super(type, (R) type.getSubType(),
+                    new ArrayList<>(Collections.singletonList(new NullableInstance<>((R) type.getSubType()))));
         }
         
         
@@ -1154,7 +1167,7 @@ public class Interpreter {
     
     
     public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned {
-        logger.info("Executing " + input);
+        // logger.info("Executing " + input);
         nearestCurrentToken = closestToken(input);
         switch (input.getASTType()) {
             case operator:
@@ -1628,14 +1641,7 @@ public class Interpreter {
             case if_cond: {
                 if (!invoke(input.getChild(0))) return false;
                 PrimitiveInstance<?, ?> pop = (PrimitiveInstance<Number, ?>) pop();
-                boolean cond;
-                if (pop.getBackingValue() instanceof Double || pop.getBackingValue() instanceof Float) {
-                    cond = ((Number) pop.getBackingValue()).doubleValue() != 0;
-                } else if(pop.getBackingValue() instanceof Character) {
-                    cond = ((Character) pop.getBackingValue()).charValue() != (char) 0;
-                }else {
-                    cond = ((Number) pop.getBackingValue()).intValue() != 0;
-                }
+                boolean cond = pop.isTrue();
                 if (cond) {
                     logger.fine("Using true branch for if statement");
                     if (!invoke(input.getChild(1))) return false;
@@ -1651,14 +1657,7 @@ public class Interpreter {
                 while (true) {
                     if (!invoke(input.getChild(0))) return false;
                     PrimitiveInstance<?, ?> pop = (PrimitiveInstance<Number, ?>) pop();
-                    boolean cond;
-                    if (pop.getBackingValue() instanceof Double || pop.getBackingValue() instanceof Float) {
-                        cond = ((Number) pop.getBackingValue()).doubleValue() != 0;
-                    } else if (pop.getBackingValue() instanceof Character) {
-                        cond = ((Character) pop.getBackingValue()).charValue() != '\0';
-                    } else {
-                        cond = ((Number) pop.getBackingValue()).intValue() != 0;
-                    }
+                    boolean cond = pop.isTrue();
                     if (!cond) break;
                     if (!invoke(input.getChild(1))) return false;
                 }
@@ -1669,12 +1668,7 @@ public class Interpreter {
                     if (!invoke(input.getChild(0))) return false;
                     if (!invoke(input.getChild(1))) return false;
                     PrimitiveInstance<Number, ?> pop = (PrimitiveInstance<Number, ?>) pop();
-                    boolean cond;
-                    if (pop.getBackingValue() instanceof Double || pop.getBackingValue() instanceof Float) {
-                        cond = pop.getBackingValue().doubleValue() != 0;
-                    } else {
-                        cond = pop.getBackingValue().intValue() != 0;
-                    }
+                    boolean cond = pop.isTrue();
                     if (!cond) break;
                 }
                 break;
@@ -1684,12 +1678,8 @@ public class Interpreter {
                 while (true) {
                     if (!invoke(input.getChild(1))) return false;
                     PrimitiveInstance<Number, ?> pop = (PrimitiveInstance<Number, ?>) pop();
-                    boolean cond;
-                    if (pop.getBackingValue() instanceof Double || pop.getBackingValue() instanceof Float) {
-                        cond = pop.getBackingValue().doubleValue() != 0;
-                    } else {
-                        cond = pop.getBackingValue().intValue() != 0;
-                    }
+                    boolean cond = pop.isTrue();
+                    
                     if (!cond) break;
                     try {
                         if (!invoke(input.getChild(3))) return false;
