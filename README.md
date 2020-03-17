@@ -12,6 +12,7 @@
     1. Classes
     2. Namespaces
     3. Modified entry point
+3. The Interpreter
 3. Future Plans
     - Jodin Compiler written in Jodin
     - Finely Tuned Importing
@@ -230,6 +231,19 @@ The Griff the dog says I have 4 legs!, also ARF
 The Griff the dog says I have 4 legs!, also ARF
 I'm a cat, shove off
 ```
+
+The Interpreter
+---
+
+Included as well is a jodin interpreter.
+
+This interpreter will allow for an alternate approach for bootstrapping the Jodin Compiler.
+
+Currently the interpreter works on a basic level, but is very slow. Improvements must be mad to make it actually usable.
+
+However, once its fully functioning, the Jodin compiler will be compiled as follows:
+
+![Bootstrap Theory](bootstraptheory.png)
 
 Future Plans
 ---
