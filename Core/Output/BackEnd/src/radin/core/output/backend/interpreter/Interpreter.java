@@ -63,6 +63,11 @@ public class Interpreter {
         abstract Instance<T> copy();
         
         abstract Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException;
+        
+        boolean isTrue() {
+            return !isFalse();
+        }
+        abstract boolean isFalse();
     
         
         public NullableInstance<T, ? extends Instance<T>> toNullable() {
@@ -111,6 +116,14 @@ public class Interpreter {
                     Objects.equals(backingValue, that.backingValue);
         }
         
+    
+        @Override
+        boolean isFalse() {
+            if(backingValue instanceof Number) return ((Number) this.backingValue).doubleValue() == 0 && ((Number) this.backingValue).longValue() == 0;
+            if(backingValue instanceof Character) return ((Character) backingValue).charValue() == 0;
+            return true;
+        }
+    
         @Override
         public int hashCode() {
             return Objects.hash(backingValue, unsigned);
@@ -234,8 +247,13 @@ public class Interpreter {
                 value = (I) instance;
             }
         }
-        
-        
+    
+        @Override
+        boolean isFalse() {
+            if(value == null) return true;
+            return value.isFalse();
+        }
+    
         @Override
         void copyFrom(Instance<?> other) {
             if(value== null) value = (I) other;
@@ -333,7 +351,12 @@ public class Interpreter {
                             getBackingValue()
                     ), 0);
         }
-        
+    
+        @Override
+        boolean isFalse() {
+            return getBackingValue().size() == 0;
+        }
+    
         public int getSize() {
             return size;
         }
@@ -459,7 +482,12 @@ public class Interpreter {
                     "type=" + getType() +
                     '}';
         }
-        
+    
+        @Override
+        boolean isFalse() {
+            return super.isFalse() || getPointer() == null;
+        }
+    
         @Override
         Instance<PointerType> copy() {
             return new PointerInstance<>(getSubType(), getBackingValue(), index);
@@ -502,7 +530,12 @@ public class Interpreter {
                 this.fields.replace(s, ((CompoundInstance<CXCompoundType>) other).fields.get(s));
             }
         }
-        
+    
+        @Override
+        boolean isFalse() {
+            return false;
+        }
+    
         @Override
         Instance<T> copy() {
             CompoundInstance<T> tCompoundInstance = new CompoundInstance<>(getType());
@@ -974,6 +1007,7 @@ public class Interpreter {
     
     
     public int run(String[] args) {
+        long startTime = System.currentTimeMillis();
         try {
             createClosure();
             
@@ -989,6 +1023,8 @@ public class Interpreter {
             stackTrace.pop();
             endClosure();
         } catch (FunctionReturned e) {
+            double elapsed = (double) (System.currentTimeMillis() - startTime) / 1000;
+            System.out.println("Finished in " + elapsed + " sec");
             return ((PrimitiveInstance<Number, CXPrimitiveType>) returnValue).backingValue.intValue();
         } catch (Throwable e) {
             System.err.println("\nError " + e.toString() + " thrown (in jodin):");
@@ -1127,8 +1163,8 @@ public class Interpreter {
                 Token op = input.getChild(0).getToken();
                 if (!invoke(input.getChild(1))) return false;
                 Instance<?> lhsNull = pop();
-                if (!invoke(input.getChild(2))) return false;
-                Instance<?> rhsNull = pop();
+               
+               
                 
                 
                 
@@ -1137,10 +1173,31 @@ public class Interpreter {
                     lhs = (PrimitiveInstance<?, ?>) ((NullableInstance) lhsNull).getValue();
                 } else if(lhsNull instanceof ArrayInstance) {
                     // in binary operations, treat arrays as pointers
-                    lhs = ((ArrayInstance) lhsNull).asPointer();
+                    lhs = ((ArrayInstance<?, ?>) lhsNull).asPointer();
                 } else {
                     lhs = (PrimitiveInstance<?, ?>) lhsNull;
                 }
+    
+               // short circuit evaluation
+                if(op.getType() == TokenType.t_dand) {
+                    if(lhs.isFalse()) {
+                        push(
+                                new PrimitiveInstance<>(lhs.getType(), 0, false)
+                        );
+                        break;
+                    }
+                   
+                } else if (op.getType() == TokenType.t_dor) {
+                    if(lhs.isTrue()) {
+                        push(
+                                new PrimitiveInstance<>(lhs.getType(), 1, false)
+                        );
+                        break;
+                    }
+                }
+    
+                if (!invoke(input.getChild(2))) return false;
+                Instance<?> rhsNull = pop();
                 
                 if(rhsNull instanceof NullableInstance) {
                     rhs = (PrimitiveInstance<?, ?>) ((NullableInstance) rhsNull).getValue();
@@ -1210,6 +1267,10 @@ public class Interpreter {
                             createdValue = mid.castTo(CXPrimitiveType.CHAR);
                         }else {
                             PrimitiveInstance<Number, ?> casted = (PrimitiveInstance<Number, ?>) rhs.castTo(lhs.getType());
+                            
+                            
+                            
+                            
                             
                             createdValue = new PrimitiveInstance<>(lhs.getType(), opOnIntegral(op.getType(),
                                     ((Number) lhs.backingValue).longValue(),
@@ -1726,6 +1787,8 @@ public class Interpreter {
                 push(pointerInstance.getPointer());
                 break;
             case addressof:
+                if(!invoke(input.getChild(0))) return false;
+                push(pop().toPointer());
                 break;
             case cast: {
                 if (!invoke(input.getChild(0))) return false;

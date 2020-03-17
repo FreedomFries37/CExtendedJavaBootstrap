@@ -47,6 +47,14 @@ in std {
 		ClassInfo getClass() {
 			return this->info;
 		}
+
+		void print() {
+			print_s(this->toString());
+		}
+        void println() {
+        	this->print();
+        	println(nullptr);
+        }
 	}
 
 	implement ClassInfo {

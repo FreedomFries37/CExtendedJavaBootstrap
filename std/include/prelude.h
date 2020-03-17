@@ -45,6 +45,9 @@ in std {
 
 		public ClassInfo getClass();
 
+		virtual public void print();
+		public void println();
+
 
 	};
 
