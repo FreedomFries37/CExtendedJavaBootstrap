@@ -723,6 +723,7 @@ public class Interpreter {
     
     public void startLexicalScope() {
         autoVariables.push(new HashMap<>(autoVariables.peek()));
+        //autoVariables.push(autoVariables.peek());
     }
     
     public void endLexicalScope() {
