@@ -28,6 +28,7 @@ import radin.core.semantics.types.primitives.*;
 import radin.core.utility.ICompilationSettings;
 
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -381,7 +382,7 @@ public class Interpreter {
         
         @Override
         public String toString() {
-            if (subType.equals(CXPrimitiveType.CHAR)) {
+            if (subType == CXPrimitiveType.CHAR) {
                 StringBuilder output = new StringBuilder("\"");
                 
                 try {
@@ -617,7 +618,7 @@ public class Interpreter {
     private Stack<Boolean> useThisStack = new Stack<>();
     
     private Token nearestCurrentToken = null;
-    private boolean log = System.getenv("LOG_INTERPRETER") != null && System.getenv("LOG_INTERPRETER").equals("true");
+    private boolean log;
     
     private class StackTraceInfo {
         private Token function;
@@ -771,6 +772,10 @@ public class Interpreter {
         this.environment = environment;
         this.symbols = symbols;
         autoVariables.add(new HashMap<>());
+        log = System.getenv("LOG_INTERPRETER") != null && System.getenv("LOG_INTERPRETER").equals("true");
+        if(log) {
+            System.out.println("Logging Interpreter information");
+        }
         if(log) logger.info("Adding symbols and global variables to symbol table");
         /*List<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> entries =
                 new ArrayList<>(this.symbols.entrySet());
@@ -946,7 +951,8 @@ public class Interpreter {
         if(log) {
             if (disableLogging) return;
             disableLogging = true;
-            logger = ICompilationSettings.interpreterStateLogger;
+            JodinLogger logger = ICompilationSettings.interpreterStateLogger;
+            
             if(log) logger.finest("WHILE EXECUTING AT " + nearestCurrentToken.getFilename() + "::" + nearestCurrentToken.getActualLineNumber());
             int indent = 0;
             for (StackTraceInfo stackTraceInfo : new LinkedList<>(stackTrace)) {
@@ -1022,6 +1028,7 @@ public class Interpreter {
     
     public int run(String[] args) {
         long startTime = System.currentTimeMillis();
+        System.out.println("Running Interpreter...");
         try {
             createClosure();
             
