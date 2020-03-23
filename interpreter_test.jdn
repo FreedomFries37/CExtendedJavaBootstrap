@@ -49,6 +49,12 @@ class SimpleGraph {
 
 };
 
+class WeightedGraph : SimpleGraph {
+	public WeightedGraph(int nodes) : super(nodes) {
+
+	}
+};
+
 int main(int argc, std::String argv[]) {
 
 
@@ -56,7 +62,7 @@ int main(int argc, std::String argv[]) {
 		println_s(argv[i]);
 	}
 
-	SimpleGraph g = new SimpleGraph(3);
+	SimpleGraph g = new WeightedGraph(8);
 	g->addEdge(0, 1);
 	g->println();
 

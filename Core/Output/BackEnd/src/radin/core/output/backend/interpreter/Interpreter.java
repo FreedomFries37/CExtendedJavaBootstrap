@@ -1810,6 +1810,14 @@ public class Interpreter {
             case constructor_definition:
             case function_definition:
                 createClosure();
+                List<TypeAugmentedSemanticNode> parameters = input.getASTChild(ASTNodeType.parameter_list).getChildren();
+                for (int i = parameters.size() - 1; i >= 0; i--) {
+                    addAutoVariable(
+                            parameters.get(i).getASTChild(ASTNodeType.id).getToken().getImage(),
+                            pop().copy()
+                    );
+                }
+                
                 if (input.containsCompilationTag(PriorConstructorTag.class)) {
                     PriorConstructorTag prior = input.getCompilationTag(PriorConstructorTag.class);
                     startStackTraceFor(prior.getPriorConstructor().toString(), input.findFirstToken());
@@ -1818,13 +1826,7 @@ public class Interpreter {
                     //push(classTypeInstance);
                     stackTrace.pop();
                 }
-                List<TypeAugmentedSemanticNode> parameters = input.getASTChild(ASTNodeType.parameter_list).getChildren();
-                for (int i = parameters.size() - 1; i >= 0; i--) {
-                    addAutoVariable(
-                            parameters.get(i).getASTChild(ASTNodeType.id).getToken().getImage(),
-                            pop().copy()
-                    );
-                }
+                
                 
                 try {
                     if (!invoke(input.getASTChild(ASTNodeType.compound_statement))) return false;
