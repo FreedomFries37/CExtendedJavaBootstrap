@@ -34,7 +34,7 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
     
     
         ICompilationSettings.debugLog.finest("Determining validity of assigning to a " + lhs.getCXType());
-        if(lhs.getCXType() instanceof ConstantType) {
+        if(lhs.getCXType() instanceof ConstantType || lhs.getCXType().isStrictlyArray()) {
             
             if(lhs.getASTType() == ASTNodeType.id)
                 throw new ConstModificationError(lhs.getToken().getImage(), lhs.getCXType());
@@ -42,6 +42,9 @@ public class AssignmentTypeAnalyzer extends TypeAnalyzer {
                 throw new ConstModificationError(lhs.getCXType());
             }
         }
+        
+        
+        
         CXType rhsType;
         if(rhs.getASTType() != ASTNodeType.assignment) {
             analyzer = new ExpressionTypeAnalyzer(rhs);

@@ -69,7 +69,7 @@ public class Interpreter {
             return !isFalse();
         }
         abstract boolean isFalse();
-    
+        
         
         public NullableInstance<T, ? extends Instance<T>> toNullable() {
             return new NullableInstance<>(getType(), this);
@@ -103,9 +103,15 @@ public class Interpreter {
         
         @Override
         void copyFrom(Instance<?> other) {
-            assert other instanceof PrimitiveInstance;
-            
-            this.backingValue = ((PrimitiveInstance<R, P>) other).backingValue;
+            if(other instanceof NullableInstance) {
+                other = ((NullableInstance) other).getValue();
+            }
+           
+            if(other == null) {
+                this.backingValue = (R) Integer.valueOf(0);
+            } else {
+                this.backingValue = ((PrimitiveInstance<R, P>) other).backingValue;
+            }
         }
         
         @Override
@@ -117,14 +123,14 @@ public class Interpreter {
                     Objects.equals(backingValue, that.backingValue);
         }
         
-    
+        
         @Override
         boolean isFalse() {
             if(backingValue instanceof Number) return ((Number) this.backingValue).doubleValue() == 0 && ((Number) this.backingValue).longValue() == 0;
             if(backingValue instanceof Character) return ((Character) backingValue).charValue() == 0;
             return true;
         }
-    
+        
         @Override
         public int hashCode() {
             return Objects.hash(backingValue, unsigned);
@@ -208,7 +214,7 @@ public class Interpreter {
             
             throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
         }
-    
+        
         
     }
     
@@ -248,15 +254,18 @@ public class Interpreter {
                 value = (I) instance;
             }
         }
-    
+        
         @Override
         boolean isFalse() {
             if(value == null) return true;
             return value.isFalse();
         }
-    
+        
         @Override
         void copyFrom(Instance<?> other) {
+            if(!environment.is(other.getType(), getType())) {
+                throw new IllegalStateException();
+            }
             if(value== null) value = (I) other;
             else value.copyFrom(other);
         }
@@ -268,7 +277,9 @@ public class Interpreter {
         
         @Override
         Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            return new NullableInstance<R, Instance<R>>((R) castingTo, value);
+            if(value == null) return new NullableInstance<R, Instance<R>>((R) castingTo, value);
+            Instance<?> casted = value.castTo(castingTo);
+            return new NullableInstance<R, Instance<R>>((R) castingTo, (Instance<R>) casted);
         }
         
         @Override
@@ -288,7 +299,7 @@ public class Interpreter {
             }
             this.value = value;
         }
-    
+        
         @Override
         public NullableInstance<R, ? extends Instance<R>> toNullable() {
             return this;
@@ -335,8 +346,8 @@ public class Interpreter {
             this.subType = subType;
             this.size = other.size();
         }
-    
-       
+        
+        
         
         
         
@@ -362,12 +373,12 @@ public class Interpreter {
                             getBackingValue()
                     ), 0);
         }
-    
+        
         @Override
         boolean isFalse() {
             return getBackingValue().size() == 0;
         }
-    
+        
         public int getSize() {
             return size;
         }
@@ -405,15 +416,16 @@ public class Interpreter {
         void copyFrom(Instance<?> other) {
             if (other instanceof ArrayInstance) {
                 this.setBackingValue(((ArrayInstance<R, T>) other).getBackingValue());
-                this.size = this.getBackingValue().size();
+                
             } else {
                 assert other instanceof PrimitiveInstance;
                 if (((PrimitiveInstance<?, ?>) other).getBackingValue().toString().equals("0")) {
-                    this.setBackingValue(null);
+                    this.setBackingValue(new ArrayList<>()); // should, in effect, set as a nullptr
                 } else {
                     throw new IllegalStateException();
                 }
             }
+            this.size = this.getBackingValue().size();
         }
         
         
@@ -474,12 +486,12 @@ public class Interpreter {
         public void setPointer(Instance<R> pointer) {
             setAt(index, pointer);
         }
-    
+        
         @Override
         public PointerInstance<R> asPointer() {
             return this;
         }
-    
+        
         @Override
         public String toString() {
             if (getSubType() == CXPrimitiveType.CHAR) {
@@ -496,12 +508,12 @@ public class Interpreter {
                     "type=" + getType() +
                     '}';
         }
-    
+        
         @Override
         boolean isFalse() {
             return super.isFalse() || getPointer() == null;
         }
-    
+        
         @Override
         Instance<PointerType> copy() {
             return new PointerInstance<>(getSubType(), getBackingValue(), index);
@@ -544,12 +556,12 @@ public class Interpreter {
                 this.fields.replace(s, ((CompoundInstance<CXCompoundType>) other).fields.get(s));
             }
         }
-    
+        
         @Override
         boolean isFalse() {
             return false;
         }
-    
+        
         @Override
         Instance<T> copy() {
             CompoundInstance<T> tCompoundInstance = new CompoundInstance<>(getType());
@@ -605,6 +617,31 @@ public class Interpreter {
         return null;
     }
     
+    
+    private class StackTraceInfo {
+        private Token function;
+        private HashMap<String, Instance<?>> stackVariables;
+        
+        public StackTraceInfo(Token function) {
+            this.function = function;
+            stackVariables = new HashMap<>();
+        }
+        
+        public Token getFunction() {
+            return function;
+        }
+        
+        public HashMap<String, Instance<?>> getStackVariables() {
+            return stackVariables;
+        }
+        
+        @Override
+        public String toString() {
+            if(function.getFilename() != null) return function.getImage() + "(" + function.getFilename() + ":" + function.getActualLineNumber() + ")";
+            return function.getImage();
+        }
+    }
+    
     private TypeEnvironment environment;
     private SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols;
     
@@ -617,32 +654,139 @@ public class Interpreter {
     private Stack<PointerInstance<CXClassType>> thisStack = new Stack<>();
     private Stack<Boolean> useThisStack = new Stack<>();
     
+    
     private Token nearestCurrentToken = null;
     private boolean log;
     
-    private class StackTraceInfo {
-        private Token function;
-        private HashMap<String, Instance<?>> stackVariables;
     
-        public StackTraceInfo(Token function) {
-            this.function = function;
-            stackVariables = new HashMap<>();
+    public Interpreter(TypeEnvironment environment, SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols) {
+        this.environment = environment;
+        this.symbols = symbols;
+        autoVariables.add(new HashMap<>());
+        log = System.getenv("LOG_INTERPRETER") != null && System.getenv("LOG_INTERPRETER").equals("true");
+        if(log) {
+            System.out.println("Logging Interpreter information");
         }
-    
-        public Token getFunction() {
-            return function;
+        if(log) logger.info("Adding symbols and global variables to symbol table");
+        /*List<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> entries =
+                new ArrayList<>(this.symbols.entrySet());
+                
+         */
+        useThisStack.push(false);
+        Queue<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> queue =
+                new ArrayDeque<>(this.symbols.entrySet());
+        
+        while (!queue.isEmpty()) {
+            Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol = queue.poll();
+            
+            
+            if (symbol.getValue().getASTType() == ASTNodeType.function_definition) {
+            
+            } else if (symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
+                // is a value;
+                if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
+                    try {
+                        Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                        if(log) logger.info("Generating usable value for " + symbol.getKey());
+                        if (!invoke(symbol.getValue())) throw new IllegalStateException();
+                        if(memStack.peek() == null) {
+                            if(log) logger.info("No usable value for " + symbol.getKey() + " created...");
+                            if(log) logger.info("Will retry later");
+                            queue.offer(symbol);
+                            continue;
+                        }
+                        if(log) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
+                                "value " + memStack.peek());
+                        addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
+                        newInstance.copyFrom(pop());
+                    } catch (FunctionReturned functionReturned) {
+                        throw new IllegalStateException();
+                    }
+                } else {
+                    Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                    if(log) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
+                    addAutoVariable(symbol.getKey().getToken().getImage(),
+                            newInstance);
+                }
+            }
+            
         }
-    
-        public HashMap<String, Instance<?>> getStackVariables() {
-            return stackVariables;
+        /*
+        for (Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol : this.symbols) {
+            if (symbol.getValue().getASTType() == ASTNodeType.function_definition) {
+            
+            } else if (symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
+                // is a value;
+                if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
+                    try {
+                        Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                        if(log) logger.info("Generating usable value for " + symbol.getKey());
+                        if (!invoke(symbol.getValue())) throw new IllegalStateException();
+                        if(log) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
+                                "value " + memStack.peek());
+                        addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
+                        newInstance.copyFrom(pop());
+                    } catch (FunctionReturned functionReturned) {
+                        throw new IllegalStateException();
+                    }
+                } else {
+                    Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
+                    if(log) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
+                    addAutoVariable(symbol.getKey().getToken().getImage(),
+                            newInstance);
+                }
+            }
         }
-    
-        @Override
-        public String toString() {
-            if(function.getFilename() != null) return function.getImage() + "(" + function.getFilename() + ":" + function.getActualLineNumber() + ")";
-            return function.getImage();
-        }
+        
+         */
+        globalAutoVariables = autoVariables.peek();
     }
+    
+    public int run(String[] args) {
+        long startTime = System.currentTimeMillis();
+        if(args.length == 0)
+            System.out.println("Running Interpreter...");
+        else {
+            System.out.println("Running Interpreter with args " + Arrays.deepToString(args) + "...");
+        }
+        try {
+            createClosure();
+            
+            TypeAugmentedSemanticNode main = getSymbol("start");
+            push(createNewInstance(CXPrimitiveType.INTEGER, args.length));
+            ArrayInstance<PointerType, ArrayType> argv = createArray(CXPrimitiveType.CHAR.toPointer(), args.length);
+            for (int i = 0; i < args.length; i++) {
+                argv.setAt(i, createCharPointerFromString(args[i]));
+            }
+            push(argv);
+            startStackTraceFor(new Token(TokenType.t_id, "start"));
+            if (!invoke(main)) return -1;
+            stackTrace.pop();
+            endClosure();
+        } catch (FunctionReturned e) {
+            double elapsed = (double) (System.currentTimeMillis() - startTime) / 1000;
+            System.out.println("Finished in " + elapsed + " sec");
+            return ((PrimitiveInstance<Number, CXPrimitiveType>) returnValue).backingValue.intValue();
+        } catch (Throwable e) {
+            System.err.println("\nError " + e.toString() + " thrown (in jodin):");
+            logCurrentState();
+            StackTraceInfo peek = stackTrace.peek();
+            Token function = new Token(TokenType.t_id, peek.function.getImage());
+            if(nearestCurrentToken != null) {
+                function.setFilename(nearestCurrentToken.getFilename());
+                function.setActualLineNumber(nearestCurrentToken.getActualLineNumber());
+            }
+            System.err.println("\tat " + new StackTraceInfo(function));
+            while (!stackTrace.empty()) {
+                StackTraceInfo s = stackTrace.pop();
+                System.err.println("\tat " + s);
+            }
+            e.printStackTrace();
+        }
+        return -1;
+    }
+    
+    
     
     private void startStackTraceFor(Token name){
         if(log) logger.info("Starting stack trace for " + name.getImage());
@@ -662,10 +806,10 @@ public class Interpreter {
         for (Instance<?> param : params) {
             push(param);
         }
-    
+        
         thisStack.push(ptr);
         useThisStack.push(true);
-    
+        
         createClosure();
         Stack<CXType> types = new Stack<>();
         Stack<Instance<?>> instances = new Stack<>();
@@ -694,7 +838,7 @@ public class Interpreter {
             endClosure();
             push(returnValue);
             returnValue = null;
-        
+            
         }
         // logCurrentState();
         stackTrace.pop();
@@ -769,88 +913,6 @@ public class Interpreter {
     
      */
     
-    public Interpreter(TypeEnvironment environment, SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols) {
-        this.environment = environment;
-        this.symbols = symbols;
-        autoVariables.add(new HashMap<>());
-        log = System.getenv("LOG_INTERPRETER") != null && System.getenv("LOG_INTERPRETER").equals("true");
-        if(log) {
-            System.out.println("Logging Interpreter information");
-        }
-        if(log) logger.info("Adding symbols and global variables to symbol table");
-        /*List<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> entries =
-                new ArrayList<>(this.symbols.entrySet());
-                
-         */
-        useThisStack.push(false);
-        Queue<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> queue =
-                new ArrayDeque<>(this.symbols.entrySet());
-        
-        while (!queue.isEmpty()) {
-            Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol = queue.poll();
-    
-    
-            if (symbol.getValue().getASTType() == ASTNodeType.function_definition) {
-        
-            } else if (symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
-                // is a value;
-                if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
-                    try {
-                        Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                        if(log) logger.info("Generating usable value for " + symbol.getKey());
-                        if (!invoke(symbol.getValue())) throw new IllegalStateException();
-                        if(memStack.peek() == null) {
-                            if(log) logger.info("No usable value for " + symbol.getKey() + " created...");
-                            if(log) logger.info("Will retry later");
-                            queue.offer(symbol);
-                            continue;
-                        }
-                        if(log) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
-                                "value " + memStack.peek());
-                        addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
-                        newInstance.copyFrom(pop());
-                    } catch (FunctionReturned functionReturned) {
-                        throw new IllegalStateException();
-                    }
-                } else {
-                    Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                    if(log) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
-                    addAutoVariable(symbol.getKey().getToken().getImage(),
-                            newInstance);
-                }
-            }
-            
-        }
-        /*
-        for (Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol : this.symbols) {
-            if (symbol.getValue().getASTType() == ASTNodeType.function_definition) {
-                
-            } else if (symbol.getValue().getASTType() != ASTNodeType.constructor_definition) {
-                // is a value;
-                if (symbol.getValue().getTreeType() != ASTNodeType.empty) {
-                    try {
-                        Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                        if(log) logger.info("Generating usable value for " + symbol.getKey());
-                        if (!invoke(symbol.getValue())) throw new IllegalStateException();
-                        if(log) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
-                                "value " + memStack.peek());
-                        addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
-                        newInstance.copyFrom(pop());
-                    } catch (FunctionReturned functionReturned) {
-                        throw new IllegalStateException();
-                    }
-                } else {
-                    Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
-                    if(log) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
-                    addAutoVariable(symbol.getKey().getToken().getImage(),
-                            newInstance);
-                }
-            }
-        }
-        
-         */
-        globalAutoVariables = autoVariables.peek();
-    }
     
     protected Instance<?> getInstance(TypeAugmentedSemanticNode node) {
         switch (node.getASTType()) {
@@ -890,7 +952,7 @@ public class Interpreter {
     }
     
     private class FunctionReturned extends Throwable {
-        
+    
     }
     
     private TypeAugmentedSemanticNode getSymbol(String s) {
@@ -898,7 +960,22 @@ public class Interpreter {
     }
     
     public <T extends CXType> ArrayInstance<T, ArrayType> createArray(T type, int size) {
-        return new ArrayInstance<>(new ArrayType(type), type, size);
+        ArrayInstance<T, ArrayType> output = new ArrayInstance<>(new ArrayType(type), type, size);
+        if(type.isPrimitive()) {
+            try {
+                Instance<T> instance = (Instance<T>) createNewInstance(CXPrimitiveType.INTEGER, 0).castTo(type);
+                for (int i = 0; i < size; i++) {
+                    
+                    
+                    output.getAt(i).setValue(instance.copy());
+                    
+                    
+                }
+            } catch (InvalidPrimitiveException e) {
+                e.printStackTrace();
+            }
+        }
+        return output;
     }
     
     public ArrayInstance<CXType, ArrayType> createArrayOfType(CXType type, int size) {
@@ -914,7 +991,7 @@ public class Interpreter {
         for (int i = 0; i < thisSize; i++) {
             subArrays.set(i, new NullableInstance<>(((ArrayType) type.getBaseType()),
                     createArray((ArrayType) type.getBaseType(),
-                    restSizes)));
+                            restSizes)));
         }
         ArrayInstance<ArrayType, ArrayType> output = new ArrayInstance<>(type, (ArrayType) type.getBaseType(),
                 thisSize);
@@ -963,15 +1040,15 @@ public class Interpreter {
                             thisStack.peek());
                     if(log) logger.finest(msg);
                     int eqIndex = msg.indexOf('=');
-            
+                    
                     int thisStackIndex = 0;
                     for (int i = 0; i < indent; i++) {
                         if (useThisStack.get(i)) {
                             ++thisStackIndex;
                         }
                     }
-            
-            
+                    
+                    
                     PointerInstance<CXClassType> thisInstance = thisStack.get(thisStackIndex);
                     CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
                     for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
@@ -984,7 +1061,7 @@ public class Interpreter {
                             instanceEntry.getValue());
                     if(log) logger.finest(msg);
                     int eqIndex = msg.indexOf('=');
-            
+                    
                     if (instanceEntry.getValue() instanceof PointerInstance && ((PointerInstance<?>) instanceEntry.getValue()).getSubType() instanceof CXClassType) {
                         PointerInstance<CXClassType> value = (PointerInstance<CXClassType>) instanceEntry.getValue();
                         if (value.getPointer() == null) {
@@ -1012,61 +1089,22 @@ public class Interpreter {
                         }
                     }
                 }
-        
+                
                 ++indent;
             }
-    
+            
             if(log) logger.finest("Memory Stack: ");
             for (Instance<?> instance : memStack) {
                 if(log) logger.finest(" + " + instance);
             }
-    
+            
             // if(log) logger.finest("Return Value: " + returnValue);
             disableLogging = false;
         }
     }
     
     
-    public int run(String[] args) {
-        long startTime = System.currentTimeMillis();
-        System.out.println("Running Interpreter...");
-        try {
-            createClosure();
-            
-            TypeAugmentedSemanticNode main = getSymbol("start");
-            push(createNewInstance(CXPrimitiveType.INTEGER, args.length));
-            ArrayInstance<PointerType, ArrayType> argv = createArray(CXPrimitiveType.CHAR.toPointer(), args.length);
-            for (int i = 0; i < args.length; i++) {
-                argv.setAt(i, createCharPointerFromString(args[i]));
-            }
-            push(argv);
-            startStackTraceFor(new Token(TokenType.t_id, "start"));
-            if (!invoke(main)) return -1;
-            stackTrace.pop();
-            endClosure();
-        } catch (FunctionReturned e) {
-            double elapsed = (double) (System.currentTimeMillis() - startTime) / 1000;
-            System.out.println("Finished in " + elapsed + " sec");
-            return ((PrimitiveInstance<Number, CXPrimitiveType>) returnValue).backingValue.intValue();
-        } catch (Throwable e) {
-            System.err.println("\nError " + e.toString() + " thrown (in jodin):");
-            logCurrentState();
-            StackTraceInfo peek = stackTrace.peek();
-            Token function = new Token(TokenType.t_id, peek.function.getImage());
-            if(nearestCurrentToken != null) {
-                function.setFilename(nearestCurrentToken.getFilename());
-                function.setActualLineNumber(nearestCurrentToken.getActualLineNumber());
-            }
-            System.err.println("\tat " + new StackTraceInfo(function));
-            while (!stackTrace.empty()) {
-                StackTraceInfo s = stackTrace.pop();
-                System.err.println("\tat " + s);
-            }
-            e.printStackTrace();
-        }
-        return -1;
-    }
-    
+   
     private Instance<?> opOnObjects(TokenType op, Instance<?> lhs, Instance<?> rhs) {
         switch (op) {
             case t_lte:
@@ -1185,8 +1223,8 @@ public class Interpreter {
                 Token op = input.getChild(0).getToken();
                 if (!invoke(input.getChild(1))) return false;
                 Instance<?> lhsNull = pop();
-               
-               
+                
+                
                 
                 
                 
@@ -1199,8 +1237,8 @@ public class Interpreter {
                 } else {
                     lhs = (PrimitiveInstance<?, ?>) lhsNull;
                 }
-    
-               // short circuit evaluation
+                
+                // short circuit evaluation
                 if(op.getType() == TokenType.t_dand) {
                     if(lhs.isFalse()) {
                         push(
@@ -1208,7 +1246,7 @@ public class Interpreter {
                         );
                         break;
                     }
-                   
+                    
                 } else if (op.getType() == TokenType.t_dor) {
                     if(lhs.isTrue()) {
                         push(
@@ -1217,7 +1255,7 @@ public class Interpreter {
                         break;
                     }
                 }
-    
+                
                 if (!invoke(input.getChild(2))) return false;
                 Instance<?> rhsNull = pop();
                 
@@ -1387,7 +1425,7 @@ public class Interpreter {
                         PrimitiveInstance<Number, ?> pop = ((PrimitiveInstance<Number, ?>) pop());
                         sizes.add(pop.backingValue.intValue());
                     }
-    
+                    
                     ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
                     if(log) logger.info("Created a " + cxType + " array of size " + array.size);
                     addAutoVariable(id, array);
@@ -1402,8 +1440,18 @@ public class Interpreter {
                 // LHS should be pushed
                 Instance<?> lhs = pop();
                 if (!invoke(input.getChild(2))) return false;
-                Instance<?> rhs = pop().copy();
+                Instance<?> rhs = null;
+                rhs = pop().copy();
                 
+                /*try {
+                    
+                    // rhs = rhs.castTo(lhs.getType());
+                } catch (InvalidPrimitiveException e) {
+                    return false;
+                }
+                
+                 */
+    
                 Token assignmentToken = input.getASTChild(ASTNodeType.assignment_type).getToken();
                 if(log) logger.fine("Assigning " + rhs + " to " + lhs + " using " + assignmentToken);
                 if (assignmentToken.getType() == TokenType.t_assign) {
@@ -1411,7 +1459,7 @@ public class Interpreter {
                 } else if (assignmentToken.getType() == TokenType.t_operator_assign) {
                 
                 } else return false;
-    
+                
                 logCurrentState();
                 
                 break;
@@ -1483,7 +1531,7 @@ public class Interpreter {
             case parameter_list:
                 break;
             case function_call: {
-               
+                
                 Token token = input.getASTChild(ASTNodeType.id).getToken();
                 String funcCall = token.getImage();
                 
@@ -1554,6 +1602,13 @@ public class Interpreter {
                     stackTrace.pop();
                     logCurrentState();
                     break;
+                } else if(funcCall.equals("get_hashcode_for")) {
+                    if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                    startStackTraceFor(token);
+                    push(createNewInstance(CXPrimitiveType.INTEGER, pop().hashCode()));
+                    stackTrace.pop();
+                    logCurrentState();
+                    break;
                 }
                 
                 
@@ -1597,10 +1652,10 @@ public class Interpreter {
                 int memstackPrevious = memStack.size();
                 int parameters = input.getASTChild(ASTNodeType.sequence).getChildren().size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-    
+                
                 thisStack.push(classTypeInstance.toPointer());
                 useThisStack.push(true);
-    
+                
                 createClosure();
                 Stack<CXType> types = new Stack<>();
                 Stack<Instance<?>> instances = new Stack<>();
@@ -1626,13 +1681,13 @@ public class Interpreter {
                     endClosure();
                     push(returnValue);
                     returnValue = null;
-                   
+                    
                 }
                 logCurrentState();
                 stackTrace.pop();
                 thisStack.pop();
                 useThisStack.pop();
-               
+                
             }
             break;
             case field_get:
@@ -1853,7 +1908,7 @@ public class Interpreter {
                 PointerInstance<CXClassType> classTypeInstance =
                         (PointerInstance<CXClassType>) createNewInstance(subType).toPointer();
                 
-               
+                
                 int memstackPrevious = memStack.size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                 thisStack.push(classTypeInstance);
@@ -1885,7 +1940,7 @@ public class Interpreter {
                 logCurrentState();
                 
                 
-               
+                
                 
                 if(log) logger.info("Calling constructor for " + cxConstructor.getParent());
                 TypeAugmentedSemanticNode cons = MethodTASNTracker.getInstance().get(cxConstructor);
@@ -1894,7 +1949,7 @@ public class Interpreter {
                 } catch (FunctionReturned e) {
                 
                 }
-    
+                
                 stackTrace.pop();
                 thisStack.pop();
                 useThisStack.pop();
