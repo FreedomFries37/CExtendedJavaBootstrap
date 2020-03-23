@@ -1,5 +1,6 @@
 package radin.core.output.backend.interpreter;
 
+import jdk.jshell.spi.ExecutionControl;
 import radin.core.JodinLogger;
 import radin.core.SymbolTable;
 import radin.core.errorhandling.CompilationError;
@@ -7,10 +8,7 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.output.midanalysis.MethodTASNTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
-import radin.core.output.tags.ArrayWithSizeTag;
-import radin.core.output.tags.ConstructorCallTag;
-import radin.core.output.tags.MultiDimensionalArrayWithSizeTag;
-import radin.core.output.tags.PriorConstructorTag;
+import radin.core.output.tags.*;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
@@ -106,7 +104,7 @@ public class Interpreter {
             if(other instanceof NullableInstance) {
                 other = ((NullableInstance) other).getValue();
             }
-           
+            
             if(other == null) {
                 this.backingValue = (R) Integer.valueOf(0);
             } else {
@@ -1104,7 +1102,7 @@ public class Interpreter {
     }
     
     
-   
+    
     private Instance<?> opOnObjects(TokenType op, Instance<?> lhs, Instance<?> rhs) {
         switch (op) {
             case t_lte:
@@ -1451,7 +1449,7 @@ public class Interpreter {
                 }
                 
                  */
-    
+                
                 Token assignmentToken = input.getASTChild(ASTNodeType.assignment_type).getToken();
                 if(log) logger.fine("Assigning " + rhs + " to " + lhs + " using " + assignmentToken);
                 if (assignmentToken.getType() == TokenType.t_assign) {
@@ -1644,50 +1642,95 @@ public class Interpreter {
                 // owner is pushed to stack
             {
                 
-                if (!invoke(input.getChild(0))) return false;
-                CompoundInstance<CXClassType> classTypeInstance = ((CompoundInstance<CXClassType>) pop());
-                
-                
-                Token idToken = input.getASTChild(ASTNodeType.id).getToken();
-                int memstackPrevious = memStack.size();
-                int parameters = input.getASTChild(ASTNodeType.sequence).getChildren().size();
-                if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                
-                thisStack.push(classTypeInstance.toPointer());
-                useThisStack.push(true);
-                
-                createClosure();
-                Stack<CXType> types = new Stack<>();
-                Stack<Instance<?>> instances = new Stack<>();
-                for (int i = 0; i < parameters; i++) {
-                    Instance<?> pop = pop();
-                    types.push(pop.getType());
-                    instances.push(pop);
-                }
-                for (Instance<?> instance : instances) {
-                    memStack.push(instance);
-                }
-                TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType(), idToken, types);
-                if(method == null) {
-                    throw new Error("Method "+ classTypeInstance.getType() + "::" + idToken.getImage() + types + " not " +
-                            "defined");
-                }
-                startStackTraceFor(classTypeInstance.getType() + "::" + idToken.getImage(), idToken);
-                logCurrentState();
-                try {
-                    if (!invoke(method)) return false;
-                    endClosure();
-                } catch (FunctionReturned functionReturned) {
-                    endClosure();
-                    push(returnValue);
-                    returnValue = null;
+                if (input.containsCompilationTag(SuperCallTag.class)) {
+                    CompoundInstance<CXClassType> classTypeInstance = ((CompoundInstance) thisStack.peek().asPointer().getPointer());
+                    PointerInstance<CXClassType> superPointer = new PointerInstance<>(classTypeInstance.getType().getParent().toPointer());
+                    superPointer.setBackingValue(classTypeInstance.toPointer().getBackingValue());
+    
+                    int parameters = input.getASTChild(ASTNodeType.sequence).getChildren().size();
+                    if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+    
+                    thisStack.push(superPointer);
+                    useThisStack.push(true);
+                    Token idToken = input.getASTChild(ASTNodeType.id).getToken();
+    
+                    createClosure();
+                    Stack<CXType> types = new Stack<>();
+                    Stack<Instance<?>> instances = new Stack<>();
+                    for (int i = 0; i < parameters; i++) {
+                        Instance<?> pop = pop();
+                        types.push(pop.getType());
+                        instances.push(pop);
+                    }
+                    for (Instance<?> instance : instances) {
+                        memStack.push(instance);
+                    }
+                    TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType().getParent(), idToken, types);
+                    if (method == null) {
+                        throw new Error("Method " + classTypeInstance.getType().getParent() + "::" + idToken.getImage() + types + " not " +
+                                "defined");
+                    }
+                    startStackTraceFor(classTypeInstance.getType().getParent() + "::" + idToken.getImage(), idToken);
+                    logCurrentState();
+                    try {
+                        if (!invoke(method)) return false;
+                        endClosure();
+                    } catch (FunctionReturned functionReturned) {
+                        endClosure();
+                        push(returnValue);
+                        returnValue = null;
+        
+                    }
+                    logCurrentState();
+                    stackTrace.pop();
+                    thisStack.pop();
+                    useThisStack.pop();
+                    // throw new UnsupportedOperationException("Super calls not yet implemented");
+                } else  {
+                    if (!invoke(input.getChild(0))) return false;
+                    CompoundInstance<CXClassType> classTypeInstance = ((CompoundInstance<CXClassType>) pop());
                     
+                    
+                    Token idToken = input.getASTChild(ASTNodeType.id).getToken();
+                    int memstackPrevious = memStack.size();
+                    int parameters = input.getASTChild(ASTNodeType.sequence).getChildren().size();
+                    if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                    
+                    thisStack.push(classTypeInstance.toPointer());
+                    useThisStack.push(true);
+                    
+                    createClosure();
+                    Stack<CXType> types = new Stack<>();
+                    Stack<Instance<?>> instances = new Stack<>();
+                    for (int i = 0; i < parameters; i++) {
+                        Instance<?> pop = pop();
+                        types.push(pop.getType());
+                        instances.push(pop);
+                    }
+                    for (Instance<?> instance : instances) {
+                        memStack.push(instance);
+                    }
+                    TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType(), idToken, types);
+                    if (method == null) {
+                        throw new Error("Method " + classTypeInstance.getType() + "::" + idToken.getImage() + types + " not " +
+                                "defined");
+                    }
+                    startStackTraceFor(classTypeInstance.getType() + "::" + idToken.getImage(), idToken);
+                    logCurrentState();
+                    try {
+                        if (!invoke(method)) return false;
+                        endClosure();
+                    } catch (FunctionReturned functionReturned) {
+                        endClosure();
+                        push(returnValue);
+                        returnValue = null;
+                        
+                    }
+                    logCurrentState();
+                    stackTrace.pop();
+                    thisStack.pop();
+                    useThisStack.pop();
                 }
-                logCurrentState();
-                stackTrace.pop();
-                thisStack.pop();
-                useThisStack.pop();
-                
             }
             break;
             case field_get:

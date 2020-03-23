@@ -18,9 +18,8 @@ implement String {
 
 
 	void drop() {
-		// super->drop();
 		free(this->backingPtr);
-
+		super->drop();
 	}
 
 	String concat(String other) {

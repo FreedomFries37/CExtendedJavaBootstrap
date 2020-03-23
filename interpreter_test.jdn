@@ -56,8 +56,8 @@ int main(int argc, std::String argv[]) {
 		println_s(argv[i]);
 	}
 
-	SimpleGraph g = new SimpleGraph(15);
-	g->addEdge(0, 5);
+	SimpleGraph g = new SimpleGraph(3);
+	g->addEdge(0, 1);
 	g->println();
 
 	return 0;
