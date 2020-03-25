@@ -12,6 +12,10 @@ This file is compiled with special rules, significantly that words starting with
 #define HEAP_SIZE (MB(128))
 #endif
 
+#ifndef STRING_TYPE
+#define STRING_TYPE char*
+#endif
+
 #include <string.h>
 #include <primitives.h>
 
@@ -31,10 +35,12 @@ struct j_heap{
 struct j_heap jodin_heap;
 
 
-void panic(std::String message) {
-	println_s(message);
+void panic(STRING_TYPE message) {
+	std::String fixed = new std::String(message); // whether the STRING type is a char* or a std::String, this always works
+	println_s(fixed);
 	exit(-1);
 }
+
 
 void assert_failure(const char* file, int linenumber, const char* message) {
 	print(file);
@@ -73,48 +79,48 @@ void __init_heap();
 void __free_heap();
 int main(int argc, std::String argv[]);
 in std {
-    ClassInfo class_std_ClassInfo1769835005_info = nullptr; // class_id = 1
-    ClassInfo class_std_Object1408311492_info = nullptr; // class_id = 0
-    ClassInfo class_std_String1276929010_info = nullptr; // class_id = 2
-    ClassInfo class_std_Int531263404_info = nullptr; // class_id = 3
-    ClassInfo class_SimpleGraph1719673065_info = nullptr; // class_id = 8
-    ClassInfo class_WeightedGraph1486872412_info = nullptr; // class_id = 9
+    ClassInfo class_std_ClassInfo1572911331_info = nullptr; // class_id = 1
+    ClassInfo class_std_Object1934434844_info = nullptr; // class_id = 0
+    ClassInfo class_std_String2065817326_info = nullptr; // class_id = 2
+    ClassInfo class_std_Int420957556_info = nullptr; // class_id = 3
+    ClassInfo class_SimpleGraph189132032_info = nullptr; // class_id = 8
+    ClassInfo class_WeightedGraph899289787_info = nullptr; // class_id = 9
     ClassInfo __get_class(class_id id) {
-        if (id == 1) return class_std_ClassInfo1769835005_info;
-        if (id == 0) return class_std_Object1408311492_info;
-        if (id == 2) return class_std_String1276929010_info;
-        if (id == 3) return class_std_Int531263404_info;
-        if (id == 8) return class_SimpleGraph1719673065_info;
-        if (id == 9) return class_WeightedGraph1486872412_info;
+        if (id == 1) return class_std_ClassInfo1572911331_info;
+        if (id == 0) return class_std_Object1934434844_info;
+        if (id == 2) return class_std_String2065817326_info;
+        if (id == 3) return class_std_Int420957556_info;
+        if (id == 8) return class_SimpleGraph189132032_info;
+        if (id == 9) return class_WeightedGraph899289787_info;
         return nullptr;
     }
 }
 void __init_reflection() {
-    class_std_ClassInfo1769835005_info = new std::ClassInfo();
-    class_std_ClassInfo1769835005_info->name = new std::String("std::ClassInfo");
-    class_std_ClassInfo1769835005_info->classHash = 969689693;
-    class_std_ClassInfo1769835005_info->info = class_std_ClassInfo1769835005_info;
-    class_std_Object1408311492_info = new std::ClassInfo();
-    class_std_Object1408311492_info->name = new std::String("std::Object");
-    class_std_Object1408311492_info->classHash = -707983292;
-    class_std_String1276929010_info = new std::ClassInfo();
-    class_std_String1276929010_info->name = new std::String("std::String");
-    class_std_String1276929010_info->classHash = -930093646;
-    class_std_Int531263404_info = new std::ClassInfo();
-    class_std_Int531263404_info->name = new std::String("std::Int");
-    class_std_Int531263404_info->classHash = -710703660;
-    class_SimpleGraph1719673065_info = new std::ClassInfo();
-    class_SimpleGraph1719673065_info->name = new std::String("SimpleGraph");
-    class_SimpleGraph1719673065_info->classHash = 1770257463;
-    class_WeightedGraph1486872412_info = new std::ClassInfo();
-    class_WeightedGraph1486872412_info->name = new std::String("WeightedGraph");
-    class_WeightedGraph1486872412_info->classHash = 1151595484;
-    class_std_ClassInfo1769835005_info->parent = __get_class(0);
-    class_std_Object1408311492_info->parent = nullptr;
-    class_std_String1276929010_info->parent = __get_class(0);
-    class_std_Int531263404_info->parent = __get_class(0);
-    class_SimpleGraph1719673065_info->parent = __get_class(0);
-    class_WeightedGraph1486872412_info->parent = __get_class(8);
+    class_std_ClassInfo1572911331_info = new std::ClassInfo();
+    class_std_ClassInfo1572911331_info->name = new std::String("std::ClassInfo");
+    class_std_ClassInfo1572911331_info->classHash = 1515611005;
+    class_std_ClassInfo1572911331_info->info = class_std_ClassInfo1572911331_info;
+    class_std_Object1934434844_info = new std::ClassInfo();
+    class_std_Object1934434844_info->name = new std::String("std::Object");
+    class_std_Object1934434844_info->classHash = -162061980;
+    class_std_String2065817326_info = new std::ClassInfo();
+    class_std_String2065817326_info->name = new std::String("std::String");
+    class_std_String2065817326_info->classHash = -384172334;
+    class_std_Int420957556_info = new std::ClassInfo();
+    class_std_Int420957556_info->name = new std::String("std::Int");
+    class_std_Int420957556_info->classHash = -164782348;
+    class_SimpleGraph189132032_info = new std::ClassInfo();
+    class_SimpleGraph189132032_info->name = new std::String("SimpleGraph");
+    class_SimpleGraph189132032_info->classHash = -1568125696;
+    class_WeightedGraph899289787_info = new std::ClassInfo();
+    class_WeightedGraph899289787_info->name = new std::String("WeightedGraph");
+    class_WeightedGraph899289787_info->classHash = 2108179621;
+    class_std_ClassInfo1572911331_info->parent = __get_class(0);
+    class_std_Object1934434844_info->parent = nullptr;
+    class_std_String2065817326_info->parent = __get_class(0);
+    class_std_Int420957556_info->parent = __get_class(0);
+    class_SimpleGraph189132032_info->parent = __get_class(0);
+    class_WeightedGraph899289787_info->parent = __get_class(8);
 }
 int start(int argc, char* argv[]) {
     __init_heap();

@@ -37,7 +37,8 @@ in std {
 		}
 
 		String toString() {
-			return this->getClass()->getName()->concat("@")->concat(this->hashcode());
+			return new String("instance");
+			// return this->getClass()->getName()->concat("@")->concat(this->hashcode());
 		}
 
 		void drop() {

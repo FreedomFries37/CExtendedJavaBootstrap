@@ -18,7 +18,7 @@ void hello_world() {
 
 
 class SimpleGraph {
-	private int nodes;
+	int nodes;
 	int** adjacency;
 
 	public SimpleGraph(int nodes) {
@@ -50,8 +50,13 @@ class SimpleGraph {
 };
 
 class WeightedGraph : SimpleGraph {
-	public WeightedGraph(int nodes) : super(nodes) {
+	public WeightedGraph(int nodes) : super(nodes) { }
 
+	virtual public void addEdge(int from, int to, int weight) {
+		if(from < 0 || from >= this->nodes) panic("Index out of bounds");
+		if(to < 0 || to >= this->nodes) panic("Index out of bounds");
+		this->adjacency[from][to] = weight;
+        this->adjacency[to][from] = weight;
 	}
 };
 
@@ -62,8 +67,9 @@ int main(int argc, std::String argv[]) {
 		println_s(argv[i]);
 	}
 
-	SimpleGraph g = new WeightedGraph(8);
-	g->addEdge(0, 1);
+	WeightedGraph g = new WeightedGraph(8);
+	g->addEdge(0, 1, 3);
+	g->addEdge(20, 15, 5);
 	g->println();
 
 	return 0;

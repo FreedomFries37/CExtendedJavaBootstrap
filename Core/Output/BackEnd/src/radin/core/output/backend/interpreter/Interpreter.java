@@ -697,7 +697,7 @@ public class Interpreter {
                                 "value " + memStack.peek());
                         addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
                         newInstance.copyFrom(pop());
-                    } catch (FunctionReturned functionReturned) {
+                    } catch (FunctionReturned | EarlyExit functionReturned) {
                         throw new IllegalStateException();
                     }
                 } else {
@@ -765,6 +765,10 @@ public class Interpreter {
             double elapsed = (double) (System.currentTimeMillis() - startTime) / 1000;
             System.out.println("Finished in " + elapsed + " sec");
             return ((PrimitiveInstance<Number, CXPrimitiveType>) returnValue).backingValue.intValue();
+        } catch (EarlyExit e) {
+            double elapsed = (double) (System.currentTimeMillis() - startTime) / 1000;
+            System.out.println("Exited after " + elapsed + " sec");
+            return e.code;
         } catch (Throwable e) {
             System.err.println("\nError " + e.toString() + " thrown (in jodin):");
             logCurrentState();
@@ -800,7 +804,7 @@ public class Interpreter {
     
     boolean disableLogging = false;
     
-    public boolean callMethod(PointerInstance<CXClassType> ptr, String methodName, Instance<?>... params) {
+    public boolean callMethod(PointerInstance<CXClassType> ptr, String methodName, Instance<?>... params) throws EarlyExit {
         for (Instance<?> param : params) {
             push(param);
         }
@@ -836,7 +840,6 @@ public class Interpreter {
             endClosure();
             push(returnValue);
             returnValue = null;
-            
         }
         // logCurrentState();
         stackTrace.pop();
@@ -951,6 +954,18 @@ public class Interpreter {
     
     private class FunctionReturned extends Throwable {
     
+    }
+    
+    private class EarlyExit extends Throwable {
+        private final int code;
+    
+        public EarlyExit(int code) {
+            this.code = code;
+        }
+    
+        public int getCode() {
+            return code;
+        }
     }
     
     private TypeAugmentedSemanticNode getSymbol(String s) {
@@ -1071,7 +1086,11 @@ public class Interpreter {
                             continue;
                         }
                         PointerInstance<CXClassType> string = (PointerInstance<CXClassType>) pop();
-                        callMethod(string, "getCStr");
+                        try {
+                            callMethod(string, "getCStr");
+                        } catch (EarlyExit earlyExit) {
+                            System.exit(earlyExit.code);
+                        }
                         PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
                         if(log) logger.finest(" ".repeat(eqIndex) + "  toString() = " + cString);
                     } else if (instanceEntry.getValue() instanceof ArrayInstance && !(instanceEntry.getValue() instanceof PointerInstance)) {
@@ -1211,7 +1230,7 @@ public class Interpreter {
     }
     
     
-    public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned {
+    public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned, EarlyExit {
         // if(log) logger.info("Executing " + input);
         nearestCurrentToken = closestToken(input);
         switch (input.getASTType()) {
@@ -1607,6 +1626,11 @@ public class Interpreter {
                     stackTrace.pop();
                     logCurrentState();
                     break;
+                } else if(funcCall.equals("exit")) {
+                    if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                    PrimitiveInstance<? extends Number, ?> pop = (PrimitiveInstance<? extends Number, ?>) pop();
+                    int exitCode = pop.getBackingValue().intValue();
+                    throw new EarlyExit(exitCode);
                 }
                 
                 
@@ -1662,8 +1686,8 @@ public class Interpreter {
                         types.push(pop.getType());
                         instances.push(pop);
                     }
-                    for (Instance<?> instance : instances) {
-                        memStack.push(instance);
+                    while(!instances.isEmpty()) {
+                        memStack.push(instances.pop());
                     }
                     TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType().getParent(), idToken, types);
                     if (method == null) {
@@ -1707,8 +1731,8 @@ public class Interpreter {
                         types.push(pop.getType());
                         instances.push(pop);
                     }
-                    for (Instance<?> instance : instances) {
-                        memStack.push(instance);
+                    while(!instances.isEmpty()) {
+                        memStack.push(instances.pop());
                     }
                     TypeAugmentedSemanticNode method = dynamicMethodLookup(classTypeInstance.getType(), idToken, types);
                     if (method == null) {
@@ -1811,12 +1835,23 @@ public class Interpreter {
             case function_definition:
                 createClosure();
                 List<TypeAugmentedSemanticNode> parameters = input.getASTChild(ASTNodeType.parameter_list).getChildren();
+                
                 for (int i = parameters.size() - 1; i >= 0; i--) {
                     addAutoVariable(
                             parameters.get(i).getASTChild(ASTNodeType.id).getToken().getImage(),
                             pop().copy()
                     );
                 }
+                
+                /*
+                for (int i = 0; i< parameters.size(); ++i) {
+                    addAutoVariable(
+                            parameters.get(i).getASTChild(ASTNodeType.id).getToken().getImage(),
+                            pop().copy()
+                    );
+                }
+                
+                 */
                 
                 if (input.containsCompilationTag(PriorConstructorTag.class)) {
                     PriorConstructorTag prior = input.getCompilationTag(PriorConstructorTag.class);
