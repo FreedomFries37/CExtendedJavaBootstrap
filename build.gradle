@@ -1,0 +1,21 @@
+apply plugin: 'idea'
+//and standard one
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        java {
+            srcDir('src')
+        }
+    }
+}
+
+dependencies {
+    implementation project(':Core')
+    implementation project(':Input')
+    implementation project(':Output')
+    implementation project(':BackEnd')
+    implementation project(':FrontEnd')
+    implementation project(':MidAnalysis')
+    implementation project(':Combo')
+}
