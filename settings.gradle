@@ -1,0 +1,8 @@
+rootProject.name = 'Jodin'
+include 'Core'
+include 'Input'
+include 'Output'
+include 'BackEnd'
+include 'FrontEnd'
+include 'MidAnalysis'
+include 'Combo'
