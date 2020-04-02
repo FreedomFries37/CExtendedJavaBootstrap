@@ -8,7 +8,7 @@
       <env name="LOG_INTERPRETER" value="false" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.InterpreterEntrancePoint" />
-    <module name="CExtendedJavaBootstrap" />
+    <module name="Jodin.main" />
     <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 5 interpreter_test.jdn -a hello world &quot;my name is&quot;" />
     <method v="2">
       <option name="Make" enabled="true" />
