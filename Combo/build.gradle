@@ -1,0 +1,16 @@
+apply plugin: 'idea'
+//and standard one
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        java {
+            srcDir('src')
+        }
+    }
+}
+
+dependencies {
+    implementation project(':Core')
+    implementation project(':Output')
+}
