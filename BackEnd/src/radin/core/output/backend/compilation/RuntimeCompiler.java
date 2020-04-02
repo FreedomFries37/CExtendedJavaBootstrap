@@ -82,19 +82,6 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
         println("}");
         setIndent(getIndent() - 1);
         println("}");
-        
-        println("int " + entrancePoint + "(int argc, char* argv[]) {");
-        setIndent(getIndent() + 1);
-        println("__init_heap();");
-        println("__init_reflection();");
-        println("std::String args[argc];");
-        println("for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);");
-        println("int output = " + jodinEntrancePoint + "(argc, args);");
-        println("for (int i = 0; i < argc; i++) args[i]->drop();");
-        println("__free_heap();");
-        println("return output;");
-        setIndent(getIndent() - 1);
-        println("}");
     
         println("void __init_reflection() {");
         setIndent(getIndent() + 1);
@@ -117,20 +104,35 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     
         for (CXClassType cxClassType :
                 cxClassTypes) {
-            
+        
             String identifier = cxClassType.getCTypeName() + "_info";
             if(cxClassType.getParent() == null) {
                 println(identifier + "->parent = nullptr;");
             } else {
                 println(identifier + "->parent = __get_class(" + environment.getTypeId(cxClassType.getParent()) + ");");
             }
-            
+        
         }
-        
+    
         setIndent(getIndent() - 1);
-        
-        
+    
+    
         println("}");
+        
+        println("int " + entrancePoint + "(int argc, char* argv[]) {");
+        setIndent(getIndent() + 1);
+        println("__init_heap();");
+        println("__init_reflection();");
+        println("std::String args[argc];");
+        println("for (int i = 0; i < argc; i++) args[i] = new std::String(argv[i]);");
+        println("int output = " + jodinEntrancePoint + "(argc, args);");
+        println("for (int i = 0; i < argc; i++) args[i]->drop();");
+        println("__free_heap();");
+        println("return output;");
+        setIndent(getIndent() - 1);
+        println("}");
+    
+        
         flush();
         close();
         return true;

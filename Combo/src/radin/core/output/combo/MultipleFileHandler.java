@@ -22,13 +22,168 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
+public class MultipleFileHandler <Output> implements ICompilationErrorCollector {
     
+    private final long compileStartTime;
     private ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Output> settings;
-    
-    
     private List<AbstractCompilationError> fullErrors;
     private boolean stateChanged = true;
+    private IFrontEndUnit<? extends AbstractSyntaxNode> frontEndUnit;
+    private IToolChain<? super AbstractSyntaxNode, ? extends TypeAugmentedSemanticNode> midToolChain;
+    private IToolChain<? super TypeAugmentedSemanticNode, ? extends Output> backToolChain;
+    private List<Output> generatedOutputs = new LinkedList<>();
+    private HashSet<CompilationNode> nodes;
+    private int compileAttempt;
+    private HashMap<CompilationNode, List<CXClassType>> directingMap;
+    private HashMap<CompilationNode, List<CXIdentifier>> dependencies;
+    private HashMap<CXClassType, CompilationNode> classToFile;
+    private int numberFilesToCompile;
+    
+    public MultipleFileHandler(List<File> files, ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
+            Output> settings) {
+        this.settings = settings;
+        compileStartTime = System.currentTimeMillis();
+        fullErrors = new LinkedList<>();
+        nodes = new HashSet<>();
+        frontEndUnit = settings.getFrontEndUnit();
+        if (frontEndUnit == null) {
+            ICompilationSettings.debugLog.severe("Front End Missing!");
+            System.exit(-1);
+        }
+        midToolChain = settings.getMidToolChain();
+        if (midToolChain == null) {
+            ICompilationSettings.debugLog.severe("Mid tool chain (AST -> TAST) Missing!");
+            System.exit(-1);
+        }
+        backToolChain = settings.getBackToolChain();
+        if (backToolChain == null) {
+            ICompilationSettings.debugLog.severe("Back tool chain (TAST -> output) Missing!");
+            System.exit(-1);
+        }
+        
+        dependencies = new HashMap<>();
+        numberFilesToCompile = 0;
+        for (File file : files) {
+            
+            CompilationNode e = new CompilationNode(file, TypeAnalyzer.getEnvironment());
+            nodes.add(e);
+            dependencies.put(e, new LinkedList<>());
+            numberFilesToCompile++;
+        }
+        
+        directingMap = new HashMap<>();
+        classToFile = new HashMap<>();
+        
+    }
+
+    public List<Output> getGeneratedOutputs() {
+        return generatedOutputs;
+    }
+
+    public boolean compileAll() {
+        compileAttempt = 0;
+        CompilationNode last = null;
+        List<CompilationNode> failed = new LinkedList<>();
+        CompilationNode firstInCycle = null;
+        Set<CompilationNode> explored = new HashSet<>();
+        double filesCompiled = 0;
+        while (!nodes.isEmpty()) {
+            
+            
+            compileAttempt++;
+            CompilationNode next = ((CompilationNode) nodes.toArray()[0]);
+            nodes.remove(next);
+    
+            
+            
+            stateChanged = !next.equals(last);
+            if (firstInCycle == null) {
+                firstInCycle = next;
+                explored.clear();
+            } else if (firstInCycle == next) {
+                if (explored.equals(new HashSet<>(nodes))) {
+                    ICompilationSettings.debugLog.severe("Attempted to compile project and made no progress");
+                    ICompilationSettings.debugLog.severe("Compilation Failed");
+                    
+                    return false;
+                }
+            }
+            
+            next.getErrors().clear();
+            
+            ICompilationSettings.debugLog.info("Attempting to compile " + next.getFile());
+            CompilationResult compilationResult = next.attemptCompile();
+            var createdClasses = next.environment.getCreatedClasses();
+            
+            directingMap.putIfAbsent(next, new LinkedList<>());
+            List<CXClassType> cxClassTypes = directingMap.get(next);
+            if (cxClassTypes != null) {
+                List<CXClassType> newClasses = new LinkedList<>(createdClasses);
+                newClasses.removeAll(cxClassTypes);
+                if (newClasses.size() > 0) {
+                    ICompilationSettings.debugLog.info("In " + next.file + ":");
+                    for (CXClassType newClass : newClasses) {
+                        if (!classToFile.containsKey(newClass)) {
+                            ICompilationSettings.debugLog.info("\t+" + newClass + " <- " + newClass.getParent());
+                            cxClassTypes.add(newClass);
+                            classToFile.put(newClass, next);
+                        }
+                    }
+                }
+            }
+            
+            switch (compilationResult) {
+                case ErroredOut:
+                    ICompilationSettings.debugLog.warning("Erroring out of " + next.getFile());
+                    for (AbstractCompilationError error : next.getErrors()) {
+                        ICompilationSettings.debugLog.throwing("MultipleFileHandler", "attemptCompile", error);
+                    }
+                    nodes.add(next);
+                    break;
+                case Completed:
+                    ICompilationSettings.debugLog.info("Compiled " + next.getFile());
+                    if (firstInCycle == next) {
+                        firstInCycle = null;
+                    }
+                    filesCompiled += 1;
+                    double percent = (filesCompiled)/numberFilesToCompile * 100;
+                    System.out.printf("[%3.0f%%] Compiled %s\n", percent, next.file);;
+                    break;
+                case Failed: {
+                    ICompilationSettings.debugLog.severe("Failed to compile " + next.getFile());
+                    for (AbstractCompilationError error : next.getErrors()) {
+                        ICompilationSettings.debugLog.throwing("MultipleFileHandler", "attemptCompile", error);
+                    }
+                    failed.add(next);
+                }
+                break;
+            }
+            
+            // AFTER COMPILE ATTEMPT
+            explored.add(next);
+            last = next;
+            
+        }
+        
+        if (!failed.isEmpty()) {
+            for (CompilationNode compilationNode : failed) {
+                ErrorReader errorReader = new ErrorReader(compilationNode.file, compilationNode.inputString,
+                        compilationNode.getErrors());
+                errorReader.readErrors();
+            }
+        } else {
+            if (MultipleMainDefinitionsError.firstDefinition == null) {
+                throw new MissingMainFunctionError();
+            }
+        }
+        return failed.isEmpty();
+    }
+
+    @Override
+    public List<AbstractCompilationError> getErrors() {
+        return fullErrors;
+    }
+    
     
     private enum CompilationResult {
         ErroredOut,
@@ -36,15 +191,8 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
         Failed
     }
     
-    private final long compileStartTime;
-    
-    private IFrontEndUnit<? extends AbstractSyntaxNode> frontEndUnit;
-    private IToolChain<? super AbstractSyntaxNode, ? extends TypeAugmentedSemanticNode> midToolChain;
-    private IToolChain<? super TypeAugmentedSemanticNode, ? extends Output> backToolChain;
-    
-    private List<Output> generatedOutputs = new LinkedList<>();
-    
     private class CompilationNode implements ICompilationErrorCollector {
+        
         private String file;
         private AbstractSyntaxNode astTree;
         private TypeAugmentedSemanticNode typedTree;
@@ -94,12 +242,8 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
         }
         
         @Override
-        public String toString() {
-            return "CompilationNode{" +
-                    "file='" + file + '\'' +
-                    ", lastCompileAttemptTime=" + lastCompileAttemptTime +
-                    ", isCompleted=" + isCompleted +
-                    '}';
+        public int hashCode() {
+            return Objects.hash(file);
         }
         
         @Override
@@ -111,15 +255,19 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
         }
         
         @Override
-        public int hashCode() {
-            return Objects.hash(file);
+        public String toString() {
+            return "CompilationNode{" +
+                    "file='" + file + '\'' +
+                    ", lastCompileAttemptTime=" + lastCompileAttemptTime +
+                    ", isCompleted=" + isCompleted +
+                    '}';
         }
         
         public CompilationResult attemptCompile() {
             try {
                 lastCompileAttemptTime = compileAttempt;
                 
-                if(astTree == null) {
+                if (astTree == null) {
                     frontEndUnit.reset();
                     frontEndUnit.clearErrors();
                     ICompilationSettings.debugLog.finer("Creating AST for " + file);
@@ -130,7 +278,7 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                     astTree = frontEndUnit.invoke();
                     inputString = frontEndUnit.getUsedString();
                     
-                    if(UniversalCompilerSettings.getInstance().getSettings().isOutputPostprocessingOutput()){
+                    if (UniversalCompilerSettings.getInstance().getSettings().isOutputPostprocessingOutput()) {
                         try {
                             File preProcessingOutput = ICompilationSettings.createFile(file + ".ppo");
                             FileWriter fileWriter = new FileWriter(preProcessingOutput);
@@ -139,13 +287,13 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                             ICompilationSettings.debugLog.info("Created PreProcessor Output File " + preProcessingOutput.getName());
                             fileWriter.close();
                         } catch (IOException e) {
-                            ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " +file + ".ppo");
+                            ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " + file + ".ppo");
                         }
                     }
                     
-                    if(astTree != null && UniversalCompilerSettings.getInstance().getSettings().isOutputAST()) {
+                    if (astTree != null && UniversalCompilerSettings.getInstance().getSettings().isOutputAST()) {
                         File astOutput = ICompilationSettings.createFile("ast/" + new File(file).getName() + ".ast");
-                        try{
+                        try {
                             PrintWriter fileWriter = new PrintWriter(new FileWriter(astOutput));
                             fileWriter.println("ast {");
                             fileWriter.println(astTree.toTreeForm());
@@ -154,7 +302,7 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                             ICompilationSettings.debugLog.info("Created AST File " + astOutput);
                             fileWriter.close();
                         } catch (IOException e) {
-                            ICompilationSettings.debugLog.warning("Couldn't create AST file at " +file + ".ast");
+                            ICompilationSettings.debugLog.warning("Couldn't create AST file at " + file + ".ast");
                         }
                     }
                     
@@ -172,7 +320,7 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                 
                 
                 TypeAugmentedSemanticNode invoke;
-                if(typedTree == null) {
+                if (typedTree == null) {
                     midToolChain.reset();
                     // ICompilationSettings.debugLog.finer("Setting environment");
                     // midToolChain.setVariable("environment", environment);
@@ -180,16 +328,16 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
                     midToolChain.clearErrors();
                     
                     invoke = midToolChain.invoke(astTree);
-                    if(invoke != null && UniversalCompilerSettings.getInstance().getSettings().isOutputTAST()) {
+                    if (invoke != null && UniversalCompilerSettings.getInstance().getSettings().isOutputTAST()) {
                         File astOutput = ICompilationSettings.createFile("ast/" + new File(file).getName() + ".tast");
-                        try{
+                        try {
                             PrintWriter fileWriter = new PrintWriter(new FileWriter(astOutput));
                             fileWriter.println(invoke.toTreeForm());
                             fileWriter.flush();
                             ICompilationSettings.debugLog.info("Created TAST File " + astOutput);
                             fileWriter.close();
                         } catch (IOException e) {
-                            ICompilationSettings.debugLog.warning("Couldn't create AST file at " +file + ".ast");
+                            ICompilationSettings.debugLog.warning("Couldn't create AST file at " + file + ".ast");
                         }
                     }
                     
@@ -261,7 +409,7 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
             Stream<CXIdentifier> cxIdentifiers = dependencies.get(this).stream();
             long dependencyCount = dependencies.get(this).size();
             for (CXClassType cxClassType : classToFile.keySet()) {
-                if(cxIdentifiers.anyMatch(o -> o.equals(cxClassType.getTypeNameIdentifier()))) {
+                if (cxIdentifiers.anyMatch(o -> o.equals(cxClassType.getTypeNameIdentifier()))) {
                     --dependencyCount;
                 }
             }
@@ -269,15 +417,10 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
         }
         
         
-        
         @Override
         public List<AbstractCompilationError> getErrors() {
             return errors;
         }
-    }
-    
-    public List<Output> getGeneratedOutputs() {
-        return generatedOutputs;
     }
     
     private class NodeComparator implements Comparator<CompilationNode> {
@@ -292,147 +435,5 @@ public class MultipleFileHandler<Output> implements ICompilationErrorCollector {
             return Double.compare(lhs, rhs);
         }
     }
-    
-    private HashSet<CompilationNode> nodes;
-    private int compileAttempt;
-    private HashMap<CompilationNode, List<CXClassType>> directingMap;
-    private HashMap<CompilationNode, List<CXIdentifier>> dependencies;
-    private HashMap<CXClassType, CompilationNode> classToFile;
-    
-    
-    
-    public MultipleFileHandler(List<File> files, ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
-            Output> settings) {
-        this.settings = settings;
-        compileStartTime = System.currentTimeMillis();
-        fullErrors = new LinkedList<>();
-        nodes = new HashSet<>();
-        frontEndUnit = settings.getFrontEndUnit();
-        if(frontEndUnit == null) {
-            ICompilationSettings.debugLog.severe("Front End Missing!");
-            System.exit(-1);
-        }
-        midToolChain = settings.getMidToolChain();
-        if(midToolChain == null) {
-            ICompilationSettings.debugLog.severe("Mid tool chain (AST -> TAST) Missing!");
-            System.exit(-1);
-        }
-        backToolChain = settings.getBackToolChain();
-        if(backToolChain == null) {
-            ICompilationSettings.debugLog.severe("Back tool chain (TAST -> output) Missing!");
-            System.exit(-1);
-        }
-        
-        dependencies = new HashMap<>();
-        
-        for (File file : files) {
-            
-            CompilationNode e = new CompilationNode(file, TypeAnalyzer.getEnvironment());
-            nodes.add(e);
-            dependencies.put(e, new LinkedList<>());
-        }
-        
-        directingMap = new HashMap<>();
-        classToFile = new HashMap<>();
-    }
-    
-    public boolean compileAll() {
-        compileAttempt = 0;
-        CompilationNode last = null;
-        List<CompilationNode> failed = new LinkedList<>();
-        CompilationNode firstInCycle = null;
-        Set<CompilationNode> explored = new HashSet<>();
-        while (!nodes.isEmpty()) {
-            compileAttempt++;
-            CompilationNode next = ((CompilationNode) nodes.toArray()[0]);
-            nodes.remove(next);
-            
-            stateChanged = !next.equals(last);
-            if(firstInCycle == null) {
-                firstInCycle = next;
-                explored.clear();
-            } else if(firstInCycle == next) {
-                if(explored.equals(new HashSet<>(nodes))) {
-                    ICompilationSettings.debugLog.severe("Attempted to compile project and made no progress");
-                    ICompilationSettings.debugLog.severe("Compilation Failed");
-                    
-                    return false;
-                }
-            }
-            
-            next.getErrors().clear();
-            
-            ICompilationSettings.debugLog.info("Attempting to compile " + next.getFile());
-            CompilationResult compilationResult = next.attemptCompile();
-            var createdClasses = next.environment.getCreatedClasses();
-            
-            directingMap.putIfAbsent(next, new LinkedList<>());
-            List<CXClassType> cxClassTypes = directingMap.get(next);
-            if(cxClassTypes != null) {
-                List<CXClassType> newClasses = new LinkedList<>(createdClasses);
-                newClasses.removeAll(cxClassTypes);
-                if(newClasses.size() > 0) {
-                    ICompilationSettings.debugLog.info("In " + next.file + ":");
-                    for (CXClassType newClass : newClasses) {
-                        if(!classToFile.containsKey(newClass)) {
-                            ICompilationSettings.debugLog.info("\t+" + newClass + " <- " + newClass.getParent());
-                            cxClassTypes.add(newClass);
-                            classToFile.put(newClass, next);
-                        }
-                    }
-                }
-            }
-            
-            switch (compilationResult) {
-                case ErroredOut:
-                    ICompilationSettings.debugLog.warning("Erroring out of " + next.getFile());
-                    for (AbstractCompilationError error : next.getErrors()) {
-                        ICompilationSettings.debugLog.throwing("MultipleFileHandler", "attemptCompile", error);
-                    }
-                    nodes.add(next);
-                    break;
-                case Completed:
-                    ICompilationSettings.debugLog.info("Compiled " + next.getFile());
-                    if(firstInCycle == next) {
-                        firstInCycle = null;
-                    }
-                    break;
-                case Failed: {
-                    ICompilationSettings.debugLog.severe("Failed to compile " + next.getFile());
-                    for (AbstractCompilationError error : next.getErrors()) {
-                        ICompilationSettings.debugLog.throwing("MultipleFileHandler", "attemptCompile", error);
-                    }
-                    failed.add(next);
-                }
-                break;
-            }
-            
-            // AFTER COMPILE ATTEMPT
-            explored.add(next);
-            last = next;
-            
-        }
-        
-        if(!failed.isEmpty()) {
-            for (CompilationNode compilationNode : failed) {
-                ErrorReader errorReader = new ErrorReader(compilationNode.file, compilationNode.inputString,
-                        compilationNode.getErrors());
-                errorReader.readErrors();
-            }
-        } else {
-            if (MultipleMainDefinitionsError.firstDefinition == null) {
-                throw new MissingMainFunctionError();
-            }
-        }
-        return failed.isEmpty();
-    }
-    
-    
-    
-    @Override
-    public List<AbstractCompilationError> getErrors() {
-        return fullErrors;
-    }
-    
     
 }

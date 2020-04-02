@@ -45,6 +45,9 @@ in std {
 
 		public ClassInfo getClass();
 
+		virtual public void print();
+		public void println();
+
 
 	};
 
@@ -76,6 +79,7 @@ in std {
 		public String(const char* bp);
 		public String(char c);
 		public String();
+		public String(String other);
 
 		virtual public void drop();
 

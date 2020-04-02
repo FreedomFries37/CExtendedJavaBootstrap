@@ -37,7 +37,8 @@ in std {
 		}
 
 		String toString() {
-			return this->getClass()->getName()->concat("@")->concat(this->hashcode());
+			return new String("instance");
+			// return this->getClass()->getName()->concat("@")->concat(this->hashcode());
 		}
 
 		void drop() {
@@ -47,6 +48,14 @@ in std {
 		ClassInfo getClass() {
 			return this->info;
 		}
+
+		void print() {
+			print_s(this->toString());
+		}
+        void println() {
+        	this->print();
+        	println(nullptr);
+        }
 	}
 
 	implement ClassInfo {

@@ -165,8 +165,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
                 if(astType == ASTNodeType.function_definition) {
                     CXMethod method = cxClassType.getMethod(name, parameterTypeList, null);
                     MethodTASNTracker.getInstance().add(method,
-                            clsLevelDec.getASTChild(ASTNodeType.function_definition)
-                                    .getASTChild(ASTNodeType.compound_statement));
+                            clsLevelDec.getASTChild(ASTNodeType.function_definition));
                 }
             } else if(clsLevelDec.hasASTChild(ASTNodeType.constructor_definition)) {
                 TypeAugmentedSemanticNode def = clsLevelDec.getASTChild(ASTNodeType.constructor_definition);

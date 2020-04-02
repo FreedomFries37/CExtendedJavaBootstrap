@@ -146,9 +146,12 @@ public class InterpreterEntrancePoint {
                 }
             } else {
                 filenamesStrings.add(argument);
+                /*
                 while (argsIterator.hasNext()) {
                     filenamesStrings.add(argsIterator.next());
                 }
+                
+                 */
             }
             
         }
