@@ -25,6 +25,8 @@ public class ArrayType extends AbstractCXPrimitiveType implements Dereference {
         this.size = size;
     }
     
+    
+    
     public CXType getBaseType() {
         return baseType;
     }
@@ -67,7 +69,7 @@ public class ArrayType extends AbstractCXPrimitiveType implements Dereference {
     @Override
     public String toString() {
         if(size == null) return baseType.toString() + "[]";
-        return baseType.toString() + "[" + size.toTreeForm().replaceAll("\\s+", " ");
+        return baseType.toString() + "[" + size.toTreeForm().replaceAll("\\s+", " ") + "]";
     }
     
     @Override

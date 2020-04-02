@@ -79,6 +79,7 @@ in std {
 		public String(const char* bp);
 		public String(char c);
 		public String();
+		public String(String other);
 
 		virtual public void drop();
 
