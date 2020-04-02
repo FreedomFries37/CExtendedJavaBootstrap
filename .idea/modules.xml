@@ -2,14 +2,30 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Core/Output/BackEnd/BackEnd.iml" filepath="$PROJECT_DIR$/Core/Output/BackEnd/BackEnd.iml" />
-      <module fileurl="file://$PROJECT_DIR$/CExtendedJavaBootstrap.iml" filepath="$PROJECT_DIR$/CExtendedJavaBootstrap.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Core/Output/Combo/Combo.iml" filepath="$PROJECT_DIR$/Core/Output/Combo/Combo.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Core/Core.iml" filepath="$PROJECT_DIR$/Core/Core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Core/Input/FrontEnd/FrontEnd.iml" filepath="$PROJECT_DIR$/Core/Input/FrontEnd/FrontEnd.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Core/Input/Input.iml" filepath="$PROJECT_DIR$/Core/Input/Input.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Core/Output/MidAnalysis/MidAnalysis.iml" filepath="$PROJECT_DIR$/Core/Output/MidAnalysis/MidAnalysis.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Core/Output/Output.iml" filepath="$PROJECT_DIR$/Core/Output/Output.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Jodin.iml" filepath="$PROJECT_DIR$/.idea/modules/Jodin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/BackEnd/Jodin.BackEnd.iml" filepath="$PROJECT_DIR$/.idea/modules/BackEnd/Jodin.BackEnd.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/BackEnd/Jodin.BackEnd.main.iml" filepath="$PROJECT_DIR$/.idea/modules/BackEnd/Jodin.BackEnd.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/BackEnd/Jodin.BackEnd.test.iml" filepath="$PROJECT_DIR$/.idea/modules/BackEnd/Jodin.BackEnd.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Combo/Jodin.Combo.iml" filepath="$PROJECT_DIR$/.idea/modules/Combo/Jodin.Combo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Combo/Jodin.Combo.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Combo/Jodin.Combo.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Combo/Jodin.Combo.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Combo/Jodin.Combo.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Core/Jodin.Core.iml" filepath="$PROJECT_DIR$/.idea/modules/Core/Jodin.Core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Core/Jodin.Core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Core/Jodin.Core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Core/Jodin.Core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Core/Jodin.Core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FrontEnd/Jodin.FrontEnd.iml" filepath="$PROJECT_DIR$/.idea/modules/FrontEnd/Jodin.FrontEnd.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FrontEnd/Jodin.FrontEnd.main.iml" filepath="$PROJECT_DIR$/.idea/modules/FrontEnd/Jodin.FrontEnd.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FrontEnd/Jodin.FrontEnd.test.iml" filepath="$PROJECT_DIR$/.idea/modules/FrontEnd/Jodin.FrontEnd.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Input/Jodin.Input.iml" filepath="$PROJECT_DIR$/.idea/modules/Input/Jodin.Input.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Input/Jodin.Input.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Input/Jodin.Input.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Input/Jodin.Input.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Input/Jodin.Input.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/MidAnalysis/Jodin.MidAnalysis.iml" filepath="$PROJECT_DIR$/.idea/modules/MidAnalysis/Jodin.MidAnalysis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/MidAnalysis/Jodin.MidAnalysis.main.iml" filepath="$PROJECT_DIR$/.idea/modules/MidAnalysis/Jodin.MidAnalysis.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/MidAnalysis/Jodin.MidAnalysis.test.iml" filepath="$PROJECT_DIR$/.idea/modules/MidAnalysis/Jodin.MidAnalysis.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Output/Jodin.Output.iml" filepath="$PROJECT_DIR$/.idea/modules/Output/Jodin.Output.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Output/Jodin.Output.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Output/Jodin.Output.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Output/Jodin.Output.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Output/Jodin.Output.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Jodin.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Jodin.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Jodin.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Jodin.test.iml" />
     </modules>
   </component>
 </project>
