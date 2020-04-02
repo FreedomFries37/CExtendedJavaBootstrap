@@ -532,9 +532,7 @@ public class Parser extends BasicParser {
         }
         if (!consume(TokenType.t_semic)) {
             
-            if (!recoverableMissingError("Missing semi-colon", t_semic, t_rcurl)) {
-                return false;
-            }
+            return error("Missing semi-colon");
         }
         
         parent.addChild(child);

@@ -911,7 +911,9 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 case ']':
                     return new Token(TokenType.t_rbrac);
                 case '.': {
-                    if (consume("")) return new Token(TokenType.t_ellipsis);
+                    if (consume("..")) {
+                        return new Token(TokenType.t_ellipsis);
+                    }
                     return new Token(TokenType.t_dot);
                 }
                 case '~': {

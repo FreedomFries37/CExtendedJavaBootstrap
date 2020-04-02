@@ -9,8 +9,8 @@
       <env name="LOG_INTERPRETER" value="false" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.InterpreterEntrancePoint" />
-    <module name="CExtendedJavaBootstrap" />
-    <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 0 interpreter_speed_test.jdn" />
+    <module name="Jodin.main" />
+    <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 5 interpreter_speed_test.jdn" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
