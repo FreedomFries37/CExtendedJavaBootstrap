@@ -1,13 +1,10 @@
 package radin;
 
-import radin.core.ErrorReader;
 import radin.core.IFrontEndUnit;
-import radin.core.chaining.IToolChain;
 import radin.core.chaining.ToolChainFactory;
 import radin.core.input.FrontEndUnit;
 import radin.core.input.IParser;
 import radin.core.input.Tokenizer;
-import radin.core.input.frontend.directastparsing.ASTParser;
 import radin.core.input.frontend.v1.lexing.PreProcessingLexer;
 import radin.core.input.frontend.v1.parsing.ParseNode;
 import radin.core.input.frontend.v1.parsing.Parser;
@@ -17,21 +14,17 @@ import radin.core.output.backend.compilation.FileCompiler;
 import radin.core.output.backend.compilation.RuntimeCompiler;
 import radin.core.output.backend.microcompilers.FunctionCompiler;
 import radin.core.output.combo.MultipleFileHandler;
-import radin.core.output.midanalysis.ScopedTypeTracker;
 import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
 import radin.core.output.typeanalysis.TypeAnalyzer;
-import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.CompilationSettings;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.UniversalCompilerSettings;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -7,7 +7,7 @@
       <env name="JODIN_HOME" value="std\src" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.InterpreterEntrancePoint" />
-    <module name="CExtendedJavaBootstrap" />
+    <module name="Jodin.main" />
     <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 5 test_project/main.jdn" />
     <method v="2">
       <option name="Make" enabled="true" />
