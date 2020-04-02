@@ -15,6 +15,9 @@ implement String {
 		this->length = 1;
 		this->cLength = this->length + 1;
 	}
+	String(String other) : this(other->backingPtr) {
+
+	}
 
 
 	void drop() {

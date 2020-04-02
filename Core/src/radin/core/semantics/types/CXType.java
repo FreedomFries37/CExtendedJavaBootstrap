@@ -4,13 +4,9 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.PointerType;
-import radin.core.semantics.types.wrapped.CXDelayedTypeDefinition;
-import radin.core.semantics.types.wrapped.CXMappedType;
-import radin.core.utility.ICompilationSettings;
-
-import java.util.Objects;
 
 /**
  * Base type for any CXType. This needs to be inherited for a type to be properly tracked
@@ -104,13 +100,35 @@ public abstract class CXType implements CXEquivalent {
      * @return whether the types are both equivalent to the exact same type
      */
     public boolean isExact(CXType other, TypeEnvironment e) {
-        ICompilationSettings.debugLog.finest("Checking if " + this.infoDump() + " =s= " + other.infoDump());
+        // ICompilationSettings.debugLog.finest("Checking if " + this.infoDump() + " =s= " + other.infoDump());
         boolean leftLTE = e.isStrict(this, other);
-        ICompilationSettings.debugLog.finest("Left direction = " + leftLTE);
+        // ICompilationSettings.debugLog.finest("Left direction = " + leftLTE);
         if(!leftLTE) return false;
         boolean rightLTE = e.isStrict(other, this);
-        ICompilationSettings.debugLog.finest("Right direction = " + rightLTE);
+        // ICompilationSettings.debugLog.finest("Right direction = " + rightLTE);
         return rightLTE;
+    }
+    
+    /**
+     * Determines whether the type is an array in memory, and therefore can't be set to another value
+     * @return such a value
+     */
+    public boolean isStrictlyArray() {
+        if(this instanceof ICXWrapper) {
+            return ((ICXWrapper) this).getWrappedType().isStrictlyArray();
+        }
+        return this instanceof ArrayType && !(this instanceof PointerType);
+    }
+    
+    /**
+     * Determines whether this type can be treated as a pointer
+     * @return such a value
+     */
+    public boolean canBeTreatedAsPointer() {
+        if(this instanceof ICXWrapper) {
+            return ((ICXWrapper) this).getWrappedType().canBeTreatedAsPointer();
+        }
+        return this instanceof ArrayType;
     }
     
     @Override
