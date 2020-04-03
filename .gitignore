@@ -35,3 +35,10 @@ runtime.jdn
 # Gradle
 .gradle
 /target/
+
+
+/*/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+.gradletasknamecache
