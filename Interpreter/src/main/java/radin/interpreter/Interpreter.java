@@ -1573,7 +1573,7 @@ public class Interpreter {
                     pop.setPointer(null);
                     stackTrace.pop();
                     break;
-                } else if(funcCall.equals("printf")) {
+                } else if(funcCall.equals("_interpreter_print")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
                     PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) pop();

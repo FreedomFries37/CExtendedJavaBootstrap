@@ -37,16 +37,18 @@ void exit(int code);
 
 class File {
 
-	void flush();
-	void close();
+	virtual public bool exists();
+	virtual public bool create();
 
-
-
-	char read();
-	void write(char c);
-	void change_position(size_t position);
+	virtual public void flush();
+	virtual public void close();
+	virtual public char read();
+	virtual public void write(char c);
+	virtual public void change_position(size_t position);
 };
 
+File access_file(std::String file);
+File access_fd(int fd);
 
 // Device management
 
@@ -58,6 +60,11 @@ u64 time();
 
 // Communication management
 void print(char* str);
+
+// Jodin stuff
+
+int get_hashcode_for(std::Object o);
+
 
 }
 

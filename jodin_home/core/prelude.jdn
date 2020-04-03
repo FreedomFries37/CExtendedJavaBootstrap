@@ -1,6 +1,6 @@
 #include <prelude.h>
 #include <string.h>
-
+#include <system/toolchain.h>
 
 
 void println(const char* c) {
@@ -16,7 +16,7 @@ void println_s(std::String o) {
 	println(o->getCStr());
 }
 
-int get_hashcode_for(std::Object o);
+
 
 in std {
 
