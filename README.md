@@ -1,5 +1,5 @@
 
-# CExtended (Jodin) Java Bootstrap
+# Jodin Java Bootstrap
 
 ![Java CI with Gradle](https://github.com/JoshuaRadin37/CExtendedJavaBootstrap/workflows/Java%20CI%20with%20Gradle/badge.svg)
 
@@ -11,16 +11,19 @@
 
 1. Basics
 2. Main Additions to C
-    1. Classes
-    2. Namespaces
-    3. Modified entry point
-    4. Additional exact type sizes for primitives
+    - Classes
+    - Namespaces
+    - Modified entry point
+    - Additional exact type sizes for primitives
 3. The Interpreter
-3. Future Plans
+4. Portability
+    - Standard Library
+    - Toolchains for portability
+4. Future Plans
     - Jodin Compiler written in Jodin
     - Finely Tuned Importing
-4. Code Examples
-4. Experimental Features
+5. Code Examples
+6. Experimental Features
     
 
 ### Basics
@@ -168,6 +171,51 @@ Currently the interpreter works on a basic level, but is very slow. Improvements
 However, once its fully functioning, the Jodin compiler will be compiled as follows:
 
 ![Bootstrap Theory](bootstraptheory.png)
+
+Portability
+---
+
+#### The Standard Library
+
+Included with Jodin is a set of common header files. Along with this, there are a few `core` files that are included with
+every Jodin project that allows for the common header files to function.
+
+The goal is for the standard library headers to be a superset of what's available in C.
+
+
+#### Toolchains for Portability
+
+
+A toolchain is a directory layout that is either in the new `$JODIN_HOME/toolchains` folder, or in a local directory named `.toolchains`. In this directory, there is also a config file, like so:
+
+```
+type = interpreter					# either interpreter or compiler
+toolchain = ./interpreter                         # relative position of the current toolchain
+experimental = false
+opt-level = 0
+trycatch = false
+stacktrace = true
+autostring = false
+```
+
+Each toolchain at the minimum must have the following structure
+```
+- TOOLCHAIN/
+    - include/
+       -toolchain/
+           - defines.h
+       - host_hook.h/
+    - src/
+       - toolchain.jdn
+```
+
+>This is subject to change
+
+The `defines.h` file defines some types for the core library
+The `host_hook.h` file is where the toolchain defines all of the functions that it won't define, but the host, for example the Interpter, will.
+The `toolchain.jdn` file is where the `system/toolchain.h` file in the standard library headers is implemented. Every in the `system/toolchain.h` must be defined as part of the toolchain.
+
+With the `core` source files, `toolchain` source files, and the generated `runtime.jdn` file created by the compiler, every Jodin project can now be compiled without having to adjust any code, as all potential differing code is taken care of by the toolchain.
 
 Future Plans
 ---
