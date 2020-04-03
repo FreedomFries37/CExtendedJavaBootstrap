@@ -198,7 +198,7 @@ public class CompilerEntrancePoint {
         }
         
         if(System.getenv("JODIN_HOME") != null) {
-            String jodinHome = System.getenv("JODIN_HOME");
+            String jodinHome = System.getenv("JODIN_HOME") + "/core";
             Stream<Path> pathStream = Files.find(Paths.get(jodinHome), Integer.MAX_VALUE, (p, bfa) -> bfa.isRegularFile());
             List<File> fileList = pathStream.map((p) -> new File(p.toUri())).collect(Collectors.toList());
             fileList.removeIf((f) -> !f.getName().endsWith(".jdn"));
@@ -218,7 +218,7 @@ public class CompilerEntrancePoint {
             RuntimeCompiler runtimeCompiler = new RuntimeCompiler(environment);
             runtimeCompiler.compile();
             
-            File runtimeFile = new File("runtime.jdn");
+            File runtimeFile = ICompilationSettings.getBuildFile("runtime.jdn");
             multipleFileHandler = new MultipleFileHandler<Boolean>(
                     Collections.singletonList(runtimeFile),
                     compilationSettings

@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/Core" />
             <option value="$PROJECT_DIR$/FrontEnd" />
             <option value="$PROJECT_DIR$/Input" />
+            <option value="$PROJECT_DIR$/InterpreterBackend" />
             <option value="$PROJECT_DIR$/MidAnalysis" />
             <option value="$PROJECT_DIR$/Output" />
           </set>

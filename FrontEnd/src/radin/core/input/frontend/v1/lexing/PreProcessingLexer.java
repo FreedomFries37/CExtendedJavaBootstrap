@@ -71,7 +71,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             for (int i = 0; i < this.args.size(); i++) {
                 String thisArg = this.args.get(i);
                 String replace = args[i].trim().replaceAll("\\s+", " ");
-    
+                
                 output = output.replaceAll("#" + thisArg + "(\\W|$)", "\"" + replace + "\"$2");
                 output = output.replaceAll("([^\\w#])" + thisArg + "(\\W)", "$1" + replace + "$2");
                 output = output.replaceAll("##" + thisArg + "\\W", replace + "$1");
@@ -101,23 +101,23 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         
         private Function<String[], String> argsFunction;
         private Supplier<String> nonArgsFunction;
-    
+        
         public FunctionDefine(String identifier, Supplier<String> nonArgsFunction) {
             super(identifier);
             this.nonArgsFunction = nonArgsFunction;
         }
-    
+        
         public FunctionDefine(String identifier, boolean isVararg, List<String> args, Function<String[], String> argsFunction) {
             super(identifier, isVararg, args, null);
             this.argsFunction = argsFunction;
         }
-    
+        
         @Override
         public String invoke() {
             if(numArgs != 0) throw new IllegalArgumentException();
             return nonArgsFunction.get();
         }
-    
+        
         @Override
         public String invoke(String[] args) {
             if(args.length < numArgs) throw new IllegalArgumentException();
@@ -191,7 +191,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         ++index;
                     }
                     if(output.charAt(index) != '(') {
-        
+                        
                         break;
                     } else {
                         collected += output.charAt(index++);
@@ -201,7 +201,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         while (!(output.charAt(index) == ')' && parens == 0)) {
                             char c = output.charAt(index++);
                             collected += c;
-    
+                            
                             if (c == '(') {
                                 currentArgument += c;
                                 parens++;
@@ -214,12 +214,12 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                                 }
                                 currentArgument += c;
                             }
-    
+                            
                         }
                         collected += output.charAt(index);
                         collectedArguments.add(currentArgument);
                         collectedArguments.removeIf(String::isBlank);
-    
+                        
                         String invoke = d.invoke(collectedArguments.toArray(new String[0]));
                         output = output.replace(collected, invoke);
                     }
@@ -228,7 +228,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 }
             }
         }  while (!output.equals(prev));
-    
+        
         return output;
     }
     
@@ -447,6 +447,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 if(!((arguments.charAt(0) == arguments.charAt(arguments.length() - 1) && arguments.charAt(0) == '"') ||
                         (arguments.charAt(0) == '<' && arguments.charAt(arguments.length() - 1) == '>')))
                     throw new IllegalArgumentException();
+                
                 String filename = arguments.substring(1, arguments.length() - 1);
                 
                 boolean isLocal = arguments.charAt(0) == '"';
@@ -470,38 +471,28 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
                 } else {
                     ICompilationSettings.debugLog.finer("Include is non-local");
-                    String jodin_include = System.getenv("JODIN_INCLUDE");
-                    if (jodin_include != null) {
+                    
+                    File[] locations = UniversalCompilerSettings.getInstance().getSettings().includeDirectories();
+                    
+                    
+                    file = null;
+                    for (File dir : locations) {
                         
                         
-                        String[] locations = jodin_include.split(";");
-                        file = null;
-                        for (String location : locations) {
-                            try {
-                                File dir = new File(location).getCanonicalFile();
-                                if (!dir.isDirectory()) {
-                                    if (dir.getName().equals(filename)) {
-                                        file = dir;
-                                        break;
-                                    }
-                                } else {
-                                    Path path = Paths.get(dir.getPath(), filename);
-                                    file = new File(path.toUri());
-                                    if (file.exists()) {
-                                        break;
-                                    } else {
-                                        file = null;
-                                    }
-                                }
-                            } catch (IOException e) {
-                                ICompilationSettings.debugLog.severe("Non-local include searched failed");
-                                throw new RuntimeException(location + " for include does not exist");
-                            }
+                        Path path = Paths.get(dir.getPath(), filename);
+                        file = new File(path.toUri());
+                        if (file.exists()) {
+                            break;
+                        } else {
+                            file = null;
                         }
-                    } else {
-                        file = null;
+                        
+                        
                     }
                 }
+                
+                
+                
                 
                 if(file == null || !file.exists()) {
                     throw new CompilationError("File does not exist", closestToken);
@@ -532,7 +523,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 int restoreLineNumber = getLine();
                 String fullText = "#line " + 1 + " \""+ filename + "\"\n" + text.toString() +
                         "\n#line " + restoreLineNumber + " \""+ this.filename + "\"\n";
-    
+                
                 fullText = fullText.replace("\t", " ".repeat(UniversalCompilerSettings.getInstance().getSettings().getTabSize()));
                 //fullText = fullText.replaceAll("//.*\n", "\n");
                 //fullText = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(fullText).replaceAll("");

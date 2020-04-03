@@ -3,6 +3,7 @@ package radin.core.output.backend.compilation;
 import radin.core.output.backend.microcompilers.IndentPrintWriter;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXClassType;
+import radin.core.utility.ICompilationSettings;
 import radin.core.utility.UniversalCompilerSettings;
 
 import java.io.*;
@@ -13,6 +14,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static radin.core.utility.ICompilationSettings.createBuildFile;
+
 public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler {
     
     
@@ -21,7 +24,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     private String jodinEntrancePoint = "__main";
     
     public RuntimeCompiler(TypeEnvironment environment) throws IOException {
-        super(new PrintWriter(new FileWriter(new File("runtime.jdn"))), 0);
+        super(new PrintWriter(new FileWriter(createBuildFile("runtime.jdn"))), 0);
         this.environment = environment;
     }
     
@@ -34,7 +37,8 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     public boolean compile() {
         
         if(System.getenv("JODIN_HOME") != null) {
-            File baseRuntimeFile = new File(new File(System.getenv("JODIN_HOME")), "runtime.i");
+            File baseRuntimeFile = ICompilationSettings.getCoreFile("runtime.i");
+            if(baseRuntimeFile == null) throw new NullPointerException("JODIN_HOME not set, can't create runtime");
             try {
                 BufferedReader bufferedReader = new BufferedReader(new FileReader(baseRuntimeFile));
                 

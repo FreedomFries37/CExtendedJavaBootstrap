@@ -238,8 +238,8 @@ public class InterpreterEntrancePoint {
             runtimeCompiler.setEntrancePoint("start");
             runtimeCompiler.setJodinEntrancePoint("main");
             runtimeCompiler.compile();
-            
-            File runtimeFile = new File("runtime.jdn");
+    
+            File runtimeFile = ICompilationSettings.getBuildFile("runtime.jdn");
             List<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> generatedOutputs =
                     multipleFileHandler.getGeneratedOutputs();
             multipleFileHandler = new MultipleFileHandler<> (
