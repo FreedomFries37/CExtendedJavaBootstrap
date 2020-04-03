@@ -94,8 +94,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance"><a href="AbstractCompiler.html" title="class in radin.core.output.backend.compilation">radin.core.output.backend.compilation.AbstractCompiler</a>
-<div class="inheritance">radin.core.output.backend.compilation.FileCompiler</div>
+<div class="inheritance"><a href="AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a>
+<div class="inheritance">FileCompiler</div>
 </div>
 </div>
 <section class="description">
@@ -158,7 +158,7 @@ extends <a href="AbstractCompiler.html" title="class in radin.core.output.backen
 <tbody>
 <tr class="altColor" id="i0">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compile(TypeAugmentedSemanticNode)">compile</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i1">
@@ -177,9 +177,9 @@ extends <a href="AbstractCompiler.html" title="class in radin.core.output.backen
 </div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.output.backend.compilation.<a href="AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a></h3>
-<a id="methods.inherited.from.class.radin.core.output.backend.compilation.AbstractCompiler">
+<a id="methods.inherited.from.class.AbstractCompiler">
 <!--   -->
-</a><code><a href="AbstractCompiler.html#close()">close</a>, <a href="AbstractCompiler.html#compileToString(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compileToString</a>, <a href="AbstractCompiler.html#flush()">flush</a>, <a href="AbstractCompiler.html#getErrors()">getErrors</a>, <a href="AbstractCompiler.html#getPrintWriter()">getPrintWriter</a>, <a href="AbstractCompiler.html#getSettings()">getSettings</a>, <a href="AbstractCompiler.html#invoke(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">invoke</a>, <a href="AbstractCompiler.html#print(java.lang.Object)">print</a>, <a href="AbstractCompiler.html#print(java.lang.String)">print</a>, <a href="AbstractCompiler.html#print(radin.core.lexical.Token)">print</a>, <a href="AbstractCompiler.html#printf(java.lang.String,java.lang.Object...)">printf</a>, <a href="AbstractCompiler.html#printf(java.util.Locale,java.lang.String,java.lang.Object...)">printf</a>, <a href="AbstractCompiler.html#println()">println</a>, <a href="AbstractCompiler.html#println(java.lang.Object)">println</a>, <a href="AbstractCompiler.html#println(java.lang.String)">println</a>, <a href="AbstractCompiler.html#setPrintWriter(java.io.PrintWriter)">setPrintWriter</a>, <a href="AbstractCompiler.html#setSettings(radin.core.utility.ICompilationSettings)">setSettings</a></code></div>
+</a><code><a href="AbstractCompiler.html#close()">close</a>, <a href="AbstractCompiler.html#compileToString(TypeAugmentedSemanticNode)">compileToString</a>, <a href="AbstractCompiler.html#flush()">flush</a>, <a href="AbstractCompiler.html#getErrors()">getErrors</a>, <a href="AbstractCompiler.html#getPrintWriter()">getPrintWriter</a>, <a href="AbstractCompiler.html#getSettings()">getSettings</a>, <a href="AbstractCompiler.html#invoke(TypeAugmentedSemanticNode)">invoke</a>, <a href="AbstractCompiler.html#print(java.lang.Object)">print</a>, <a href="AbstractCompiler.html#print(java.lang.String)">print</a>, <a href="AbstractCompiler.html#print(radin.core.lexical.Token)">print</a>, <a href="AbstractCompiler.html#printf(java.lang.String,java.lang.Object...)">printf</a>, <a href="AbstractCompiler.html#printf(java.util.Locale,java.lang.String,java.lang.Object...)">printf</a>, <a href="AbstractCompiler.html#println()">println</a>, <a href="AbstractCompiler.html#println(java.lang.Object)">println</a>, <a href="AbstractCompiler.html#println(java.lang.String)">println</a>, <a href="AbstractCompiler.html#setPrintWriter(java.io.PrintWriter)">setPrintWriter</a>, <a href="AbstractCompiler.html#setSettings(radin.core.utility.ICompilationSettings)">setSettings</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></h3>
 <a id="methods.inherited.from.class.java.lang.Object">
@@ -244,11 +244,11 @@ extends <a href="AbstractCompiler.html" title="class in radin.core.output.backen
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></h3>
+<h3><a id="compile(TypeAugmentedSemanticNode)">compile</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">compile</span>&#8203;(<span class="arguments"><a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="AbstractCompiler.html#compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></code>&nbsp;in class&nbsp;<code><a href="AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a></code></dd>
+<dd><code><a href="AbstractCompiler.html#compile(TypeAugmentedSemanticNode)">compile</a></code>&nbsp;in class&nbsp;<code><a href="AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a></code></dd>
 </dl>
 </section>
 </li>

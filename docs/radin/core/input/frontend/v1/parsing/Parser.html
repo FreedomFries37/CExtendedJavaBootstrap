@@ -94,8 +94,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance"><a href="BasicParser.html" title="class in radin.core.input.frontend.v1.parsing">radin.core.input.frontend.v1.parsing.BasicParser</a>
-<div class="inheritance">radin.core.input.frontend.v1.parsing.Parser</div>
+<div class="inheritance"><a href="BasicParser.html" title="class in radin.core.input.frontend.v1.parsing">BasicParser</a>
+<div class="inheritance">Parser</div>
 </div>
 </div>
 <section class="description">
@@ -117,7 +117,7 @@ extends <a href="BasicParser.html" title="class in radin.core.input.frontend.v1.
 <h2>Nested Class Summary</h2>
 <div class="inheritedList">
 <h2>Nested classes/interfaces inherited from class&nbsp;radin.core.input.frontend.v1.parsing.<a href="BasicParser.html" title="class in radin.core.input.frontend.v1.parsing">BasicParser</a></h2>
-<a id="nested.classes.inherited.from.class.radin.core.input.frontend.v1.parsing.BasicParser">
+<a id="nested.classes.inherited.from.class.BasicParser">
 <!--   -->
 </a><code><a href="BasicParser.AttemptStatus.html" title="enum in radin.core.input.frontend.v1.parsing">BasicParser.AttemptStatus</a>, <a href="BasicParser.IllegalAttemptStatus.html" title="class in radin.core.input.frontend.v1.parsing">BasicParser.IllegalAttemptStatus</a>, <a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a></code></div>
 </section>
@@ -130,7 +130,7 @@ extends <a href="BasicParser.html" title="class in radin.core.input.frontend.v1.
 <h2>Field Summary</h2>
 <div class="inheritedList">
 <h3>Fields inherited from class&nbsp;radin.core.input.frontend.v1.parsing.<a href="BasicParser.html" title="class in radin.core.input.frontend.v1.parsing">BasicParser</a></h3>
-<a id="fields.inherited.from.class.radin.core.input.frontend.v1.parsing.BasicParser">
+<a id="fields.inherited.from.class.BasicParser">
 <!--   -->
 </a><code><a href="BasicParser.html#lexer">lexer</a>, <a href="BasicParser.html#states">states</a></code></div>
 </section>
@@ -224,9 +224,9 @@ extends <a href="BasicParser.html" title="class in radin.core.input.frontend.v1.
 </div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.input.frontend.v1.parsing.<a href="BasicParser.html" title="class in radin.core.input.frontend.v1.parsing">BasicParser</a></h3>
-<a id="methods.inherited.from.class.radin.core.input.frontend.v1.parsing.BasicParser">
+<a id="methods.inherited.from.class.BasicParser">
 <!--   -->
-</a><code><a href="BasicParser.html#absorbErrors(java.lang.String)">absorbErrors</a>, <a href="BasicParser.html#absorbErrors(java.lang.String,boolean)">absorbErrors</a>, <a href="BasicParser.html#absorbErrors(java.lang.String,boolean,radin.core.lexical.Token)">absorbErrors</a>, <a href="BasicParser.html#absorbErrors(java.lang.String,radin.core.lexical.Token)">absorbErrors</a>, <a href="BasicParser.html#addAsLeaf(radin.core.input.frontend.v1.parsing.CategoryNode,radin.core.lexical.Token)">addAsLeaf</a>, <a href="BasicParser.html#attemptParse(radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction,radin.core.input.frontend.v1.parsing.CategoryNode)">attemptParse</a>, <a href="BasicParser.html#clearErrors()">clearErrors</a>, <a href="BasicParser.html#consume(radin.core.lexical.TokenType)">consume</a>, <a href="BasicParser.html#consumeAndAddAsLeaf(radin.core.input.frontend.v1.parsing.CategoryNode)">consumeAndAddAsLeaf</a>, <a href="BasicParser.html#consumeAndAddAsLeaf(radin.core.lexical.TokenType,radin.core.input.frontend.v1.parsing.CategoryNode)">consumeAndAddAsLeaf</a>, <a href="BasicParser.html#error(java.lang.String)">error</a>, <a href="BasicParser.html#error(java.lang.String,boolean)">error</a>, <a href="BasicParser.html#error(java.lang.String,boolean,radin.core.lexical.Token)">error</a>, <a href="BasicParser.html#error(java.lang.String,radin.core.lexical.Token)">error</a>, <a href="BasicParser.html#forceParse()">forceParse</a>, <a href="BasicParser.html#getCurrentType()">getCurrentType</a>, <a href="BasicParser.html#getErrors()">getErrors</a>, <a href="BasicParser.html#getNext()">getNext</a>, <a href="BasicParser.html#getNextType()">getNextType</a>, <a href="BasicParser.html#getTokenizer()">getTokenizer</a>, <a href="BasicParser.html#match(radin.core.lexical.TokenType)">match</a>, <a href="BasicParser.html#missingError(java.lang.String)">missingError</a>, <a href="BasicParser.html#next()">next</a>, <a href="BasicParser.html#oneMustParse(radin.core.input.frontend.v1.parsing.CategoryNode,radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction,radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction...)">oneMustParse</a>, <a href="BasicParser.html#recoverableMissingError(java.lang.String,radin.core.lexical.TokenType,radin.core.lexical.TokenType...)">recoverableMissingError</a>, <a href="BasicParser.html#setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></code></div>
+</a><code><a href="BasicParser.html#absorbErrors(java.lang.String)">absorbErrors</a>, <a href="BasicParser.html#absorbErrors(java.lang.String,boolean)">absorbErrors</a>, <a href="BasicParser.html#absorbErrors(java.lang.String,boolean,radin.core.lexical.Token)">absorbErrors</a>, <a href="BasicParser.html#absorbErrors(java.lang.String,radin.core.lexical.Token)">absorbErrors</a>, <a href="BasicParser.html#addAsLeaf(CategoryNode,radin.core.lexical.Token)">addAsLeaf</a>, <a href="BasicParser.html#attemptParse(BasicParser.ParseFunction,CategoryNode)">attemptParse</a>, <a href="BasicParser.html#clearErrors()">clearErrors</a>, <a href="BasicParser.html#consume(radin.core.lexical.TokenType)">consume</a>, <a href="BasicParser.html#consumeAndAddAsLeaf(CategoryNode)">consumeAndAddAsLeaf</a>, <a href="BasicParser.html#consumeAndAddAsLeaf(radin.core.lexical.TokenType,CategoryNode)">consumeAndAddAsLeaf</a>, <a href="BasicParser.html#error(java.lang.String)">error</a>, <a href="BasicParser.html#error(java.lang.String,boolean)">error</a>, <a href="BasicParser.html#error(java.lang.String,boolean,radin.core.lexical.Token)">error</a>, <a href="BasicParser.html#error(java.lang.String,radin.core.lexical.Token)">error</a>, <a href="BasicParser.html#forceParse()">forceParse</a>, <a href="BasicParser.html#getCurrentType()">getCurrentType</a>, <a href="BasicParser.html#getErrors()">getErrors</a>, <a href="BasicParser.html#getNext()">getNext</a>, <a href="BasicParser.html#getNextType()">getNextType</a>, <a href="BasicParser.html#getTokenizer()">getTokenizer</a>, <a href="BasicParser.html#match(radin.core.lexical.TokenType)">match</a>, <a href="BasicParser.html#missingError(java.lang.String)">missingError</a>, <a href="BasicParser.html#next()">next</a>, <a href="BasicParser.html#oneMustParse(CategoryNode,BasicParser.ParseFunction,BasicParser.ParseFunction...)">oneMustParse</a>, <a href="BasicParser.html#recoverableMissingError(java.lang.String,radin.core.lexical.TokenType,radin.core.lexical.TokenType...)">recoverableMissingError</a>, <a href="BasicParser.html#setTokenizer(ITokenizer)">setTokenizer</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></h3>
 <a id="methods.inherited.from.class.java.lang.Object">
@@ -239,7 +239,7 @@ extends <a href="BasicParser.html" title="class in radin.core.input.frontend.v1.
 </a><code><a href="../../../../errorhandling/ICompilationErrorCollector.html#hasErrors()">hasErrors</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from interface&nbsp;radin.core.input.<a href="../../../IParser.html" title="interface in radin.core.input">IParser</a></h3>
-<a id="methods.inherited.from.class.radin.core.input.IParser">
+<a id="methods.inherited.from.class.IParser">
 <!--   -->
 </a><code><a href="../../../IParser.html#getFirst()">getFirst</a>, <a href="../../../IParser.html#getLast()">getLast</a>, <a href="../../../IParser.html#getPrevious()">getPrevious</a></code></div>
 </section>

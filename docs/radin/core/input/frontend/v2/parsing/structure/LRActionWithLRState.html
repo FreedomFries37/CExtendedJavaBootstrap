@@ -88,8 +88,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance"><a href="LRActionRecord.html" title="class in radin.core.input.frontend.v2.parsing.structure">radin.core.input.frontend.v2.parsing.structure.LRActionRecord</a>&lt;<a href="LRState.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRState</a>&lt;T&gt;&gt;
-<div class="inheritance">radin.core.input.frontend.v2.parsing.structure.LRActionWithLRState&lt;T&gt;</div>
+<div class="inheritance"><a href="LRActionRecord.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRActionRecord</a>&lt;<a href="LRState.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRState</a>&lt;T&gt;&gt;
+<div class="inheritance">LRActionWithLRState&lt;T&gt;</div>
 </div>
 </div>
 <section class="description">
@@ -107,7 +107,7 @@ extends <a href="LRActionRecord.html" title="class in radin.core.input.frontend.
 <h2>Field Summary</h2>
 <div class="inheritedList">
 <h3>Fields inherited from class&nbsp;radin.core.input.frontend.v2.parsing.structure.<a href="LRActionRecord.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRActionRecord</a></h3>
-<a id="fields.inherited.from.class.radin.core.input.frontend.v2.parsing.structure.LRActionRecord">
+<a id="fields.inherited.from.class.LRActionRecord">
 <!--   -->
 </a><code><a href="LRActionRecord.html#action">action</a>, <a href="LRActionRecord.html#production">production</a></code></div>
 </section>
@@ -129,7 +129,7 @@ extends <a href="LRActionRecord.html" title="class in radin.core.input.frontend.
 </thead>
 <tbody>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(radin.core.input.frontend.v2.parsing.structure.Action,radin.core.input.frontend.v2.parsing.structure.LRState,radin.core.input.frontend.v2.parsing.structure.Production)">LRActionWithLRState</a></span>&#8203;(<a href="Action.html" title="enum in radin.core.input.frontend.v2.parsing.structure">Action</a>&nbsp;action,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(Action,LRState,Production)">LRActionWithLRState</a></span>&#8203;(<a href="Action.html" title="enum in radin.core.input.frontend.v2.parsing.structure">Action</a>&nbsp;action,
 <a href="LRState.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRState</a>&lt;<a href="LRActionWithLRState.html" title="treeType parameter in LRActionWithLRState">T</a>&gt;&nbsp;nextState,
 <a href="Production.html" title="class in radin.core.input.frontend.v2.parsing.structure">Production</a>&nbsp;production)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -147,7 +147,7 @@ extends <a href="LRActionRecord.html" title="class in radin.core.input.frontend.
 <h2>Method Summary</h2>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.input.frontend.v2.parsing.structure.<a href="LRActionRecord.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRActionRecord</a></h3>
-<a id="methods.inherited.from.class.radin.core.input.frontend.v2.parsing.structure.LRActionRecord">
+<a id="methods.inherited.from.class.LRActionRecord">
 <!--   -->
 </a><code><a href="LRActionRecord.html#getAction()">getAction</a>, <a href="LRActionRecord.html#getNextState()">getNextState</a>, <a href="LRActionRecord.html#getProduction()">getProduction</a>, <a href="LRActionRecord.html#toString()">toString</a></code></div>
 <div class="inheritedList">
@@ -170,7 +170,7 @@ extends <a href="LRActionRecord.html" title="class in radin.core.input.frontend.
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(radin.core.input.frontend.v2.parsing.structure.Action,radin.core.input.frontend.v2.parsing.structure.LRState,radin.core.input.frontend.v2.parsing.structure.Production)">LRActionWithLRState</a></h3>
+<h3><a id="&lt;init&gt;(Action,LRState,Production)">LRActionWithLRState</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">LRActionWithLRState</span>&#8203;(<span class="arguments"><a href="Action.html" title="enum in radin.core.input.frontend.v2.parsing.structure">Action</a>&nbsp;action,
 <a href="LRState.html" title="class in radin.core.input.frontend.v2.parsing.structure">LRState</a>&lt;<a href="LRActionWithLRState.html" title="treeType parameter in LRActionWithLRState">T</a>&gt;&nbsp;nextState,
 <a href="Production.html" title="class in radin.core.input.frontend.v2.parsing.structure">Production</a>&nbsp;production)</span></div>

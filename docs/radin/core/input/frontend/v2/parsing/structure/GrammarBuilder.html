@@ -94,7 +94,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance">radin.core.input.frontend.v2.parsing.structure.GrammarBuilder&lt;T&gt;</div>
+<div class="inheritance">GrammarBuilder&lt;T&gt;</div>
 </div>
 <section class="description">
 <dl>
@@ -133,7 +133,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(radin.core.input.frontend.v2.parsing.structure.GrammarBuilder)">GrammarBuilder</a></span>&#8203;(<a href="GrammarBuilder.html" title="class in radin.core.input.frontend.v2.parsing.structure">GrammarBuilder</a>&lt;? extends <a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&gt;&nbsp;inherit)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(GrammarBuilder)">GrammarBuilder</a></span>&#8203;(<a href="GrammarBuilder.html" title="class in radin.core.input.frontend.v2.parsing.structure">GrammarBuilder</a>&lt;? extends <a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&gt;&nbsp;inherit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -167,19 +167,19 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 </tr>
 <tr class="rowColor" id="i1">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addProduction(radin.core.input.frontend.v2.parsing.structure.Symbol,java.lang.Object...)">addProduction</a></span>&#8203;(<a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;lhs,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addProduction(Symbol,java.lang.Object...)">addProduction</a></span>&#8203;(<a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;lhs,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>...&nbsp;rhs)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i2">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addProduction(radin.core.input.frontend.v2.parsing.structure.Symbol,radin.core.input.frontend.v2.parsing.structure.ParsableObject...)">addProduction</a></span>&#8203;(<a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;lhs,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addProduction(Symbol,ParsableObject...)">addProduction</a></span>&#8203;(<a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;lhs,
 <a href="ParsableObject.html" title="class in radin.core.input.frontend.v2.parsing.structure">ParsableObject</a>&lt;?&gt;...&nbsp;rhs)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i3">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#inherit(radin.core.input.frontend.v2.parsing.structure.GrammarBuilder)">inherit</a></span>&#8203;(<a href="GrammarBuilder.html" title="class in radin.core.input.frontend.v2.parsing.structure">GrammarBuilder</a>&lt;? extends <a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&gt;&nbsp;other)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#inherit(GrammarBuilder)">inherit</a></span>&#8203;(<a href="GrammarBuilder.html" title="class in radin.core.input.frontend.v2.parsing.structure">GrammarBuilder</a>&lt;? extends <a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&gt;&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i4">
@@ -188,7 +188,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i5">
-<td class="colFirst"><code>radin.core.input.frontend.v2.parsing.structure.GrammarBuilder.GrammarBuilderTerminal</code></td>
+<td class="colFirst"><code>GrammarBuilder.GrammarBuilderTerminal</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#nonTerminal(T)">nonTerminal</a></span>&#8203;(<a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&nbsp;o)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -199,7 +199,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 </tr>
 <tr class="rowColor" id="i7">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setStartingSymbol(radin.core.input.frontend.v2.parsing.structure.Symbol)">setStartingSymbol</a></span>&#8203;(<a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;startingSymbol)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setStartingSymbol(Symbol)">setStartingSymbol</a></span>&#8203;(<a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;startingSymbol)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i8">
@@ -247,7 +247,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(radin.core.input.frontend.v2.parsing.structure.GrammarBuilder)">GrammarBuilder</a></h3>
+<h3><a id="&lt;init&gt;(GrammarBuilder)">GrammarBuilder</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">GrammarBuilder</span>&#8203;(<span class="arguments"><a href="GrammarBuilder.html" title="class in radin.core.input.frontend.v2.parsing.structure">GrammarBuilder</a>&lt;? extends <a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&gt;&nbsp;inherit)</span></div>
 </section>
 </li>
@@ -269,7 +269,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="inherit(radin.core.input.frontend.v2.parsing.structure.GrammarBuilder)">inherit</a></h3>
+<h3><a id="inherit(GrammarBuilder)">inherit</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">inherit</span>&#8203;(<span class="arguments"><a href="GrammarBuilder.html" title="class in radin.core.input.frontend.v2.parsing.structure">GrammarBuilder</a>&lt;? extends <a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&gt;&nbsp;other)</span></div>
 </section>
 </li>
@@ -278,12 +278,12 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 <h3><a id="nonTerminal(java.lang.Object)">
 <!--   -->
 </a><a id="nonTerminal(T)">nonTerminal</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">radin.core.input.frontend.v2.parsing.structure.GrammarBuilder.GrammarBuilderTerminal</span>&nbsp;<span class="memberName">nonTerminal</span>&#8203;(<span class="arguments"><a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&nbsp;o)</span></div>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">GrammarBuilder.GrammarBuilderTerminal</span>&nbsp;<span class="memberName">nonTerminal</span>&#8203;(<span class="arguments"><a href="GrammarBuilder.html" title="treeType parameter in GrammarBuilder">T</a>&nbsp;o)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="setStartingSymbol(radin.core.input.frontend.v2.parsing.structure.Symbol)">setStartingSymbol</a></h3>
+<h3><a id="setStartingSymbol(Symbol)">setStartingSymbol</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">setStartingSymbol</span>&#8203;(<span class="arguments"><a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;startingSymbol)</span></div>
 </section>
 </li>
@@ -296,14 +296,14 @@ extends <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/ja
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="addProduction(radin.core.input.frontend.v2.parsing.structure.Symbol,java.lang.Object...)">addProduction</a></h3>
+<h3><a id="addProduction(Symbol,java.lang.Object...)">addProduction</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">addProduction</span>&#8203;(<span class="arguments"><a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;lhs,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>...&nbsp;rhs)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="addProduction(radin.core.input.frontend.v2.parsing.structure.Symbol,radin.core.input.frontend.v2.parsing.structure.ParsableObject...)">addProduction</a></h3>
+<h3><a id="addProduction(Symbol,ParsableObject...)">addProduction</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">addProduction</span>&#8203;(<span class="arguments"><a href="Symbol.html" title="class in radin.core.input.frontend.v2.parsing.structure">Symbol</a>&nbsp;lhs,
 <a href="ParsableObject.html" title="class in radin.core.input.frontend.v2.parsing.structure">ParsableObject</a>&lt;?&gt;...&nbsp;rhs)</span></div>
 </section>

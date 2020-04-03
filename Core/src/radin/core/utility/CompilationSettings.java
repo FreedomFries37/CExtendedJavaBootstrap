@@ -4,6 +4,8 @@ import radin.core.IFrontEndUnit;
 import radin.core.chaining.IToolChain;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class CompilationSettings<Front, Mid, Back> implements ICompilationSettings<Front, Mid, Back> {
     
@@ -42,6 +44,46 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     private boolean isInRuntimeCompilationMode = false;
     
     private boolean thisPassedOffAsParameter = true;
+    
+    private ArrayList<File> includeDirectories = new ArrayList<>();
+    private ArrayList<File> sourceFiles = new ArrayList<>();
+    
+    {
+        try {
+            addIncludeDirectories(ICompilationSettings.defaultInclude());
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+    }
+    
+    @Override
+    public File[] includeDirectories() {
+        return includeDirectories.toArray(new File[0]);
+    }
+    
+    @Override
+    public void addIncludeDirectories(String dir) throws IOException {
+        File dirFile = new File(dir);
+        if (!dirFile.exists() || !dirFile.isDirectory()) throw new IOException();
+        
+        includeDirectories.add(dirFile);
+    }
+    
+    @Override
+    public File[] getAdditionalSources() {
+        return sourceFiles.toArray(new File[0]);
+    }
+    
+    @Override
+    public void addAdditionalSource(String sourceFile) throws IOException {
+        File srcFile = new File(sourceFile);
+        if (!srcFile.exists() || !srcFile.isFile()) {
+            throw new IOException();
+        }
+        
+        sourceFiles.add(srcFile);
+    }
     
     @Override
     public boolean isThisPassedOffAsParameter() {

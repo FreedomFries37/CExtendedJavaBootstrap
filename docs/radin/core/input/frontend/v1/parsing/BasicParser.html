@@ -94,7 +94,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance">radin.core.input.frontend.v1.parsing.BasicParser</div>
+<div class="inheritance">BasicParser</div>
 </div>
 <section class="description">
 <dl>
@@ -250,7 +250,7 @@ boolean&nbsp;includeTemps,
 </tr>
 <tr class="altColor" id="i4">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addAsLeaf(radin.core.input.frontend.v1.parsing.CategoryNode,radin.core.lexical.Token)">addAsLeaf</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addAsLeaf(CategoryNode,radin.core.lexical.Token)">addAsLeaf</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent,
 <a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>&nbsp;t)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -261,7 +261,7 @@ boolean&nbsp;includeTemps,
 </tr>
 <tr class="altColor" id="i6">
 <td class="colFirst"><code>protected <a href="BasicParser.AttemptStatus.html" title="enum in radin.core.input.frontend.v1.parsing">BasicParser.AttemptStatus</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#attemptParse(radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction,radin.core.input.frontend.v1.parsing.CategoryNode)">attemptParse</a></span>&#8203;(<a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>&nbsp;function,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#attemptParse(BasicParser.ParseFunction,CategoryNode)">attemptParse</a></span>&#8203;(<a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>&nbsp;function,
 <a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -277,12 +277,12 @@ boolean&nbsp;includeTemps,
 </tr>
 <tr class="rowColor" id="i9">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#consumeAndAddAsLeaf(radin.core.input.frontend.v1.parsing.CategoryNode)">consumeAndAddAsLeaf</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#consumeAndAddAsLeaf(CategoryNode)">consumeAndAddAsLeaf</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i10">
 <td class="colFirst"><code>protected boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#consumeAndAddAsLeaf(radin.core.lexical.TokenType,radin.core.input.frontend.v1.parsing.CategoryNode)">consumeAndAddAsLeaf</a></span>&#8203;(<a href="../../../../lexical/TokenType.html" title="enum in radin.core.lexical">TokenType</a>&nbsp;t_id,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#consumeAndAddAsLeaf(radin.core.lexical.TokenType,CategoryNode)">consumeAndAddAsLeaf</a></span>&#8203;(<a href="../../../../lexical/TokenType.html" title="enum in radin.core.lexical">TokenType</a>&nbsp;t_id,
 <a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -362,7 +362,7 @@ boolean&nbsp;release,
 </tr>
 <tr class="rowColor" id="i25">
 <td class="colFirst"><code>protected boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#oneMustParse(radin.core.input.frontend.v1.parsing.CategoryNode,radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction,radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction...)">oneMustParse</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#oneMustParse(CategoryNode,BasicParser.ParseFunction,BasicParser.ParseFunction...)">oneMustParse</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent,
 <a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>&nbsp;parseFunction,
 <a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>...&nbsp;functions)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -388,7 +388,7 @@ boolean&nbsp;release,
 </tr>
 <tr class="rowColor" id="i29">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></span>&#8203;(<a href="../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>&gt;&nbsp;t)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setTokenizer(ITokenizer)">setTokenizer</a></span>&#8203;(<a href="../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>&gt;&nbsp;t)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -407,7 +407,7 @@ boolean&nbsp;release,
 </a><code><a href="../../../../errorhandling/ICompilationErrorCollector.html#hasErrors()">hasErrors</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from interface&nbsp;radin.core.input.<a href="../../../IParser.html" title="interface in radin.core.input">IParser</a></h3>
-<a id="methods.inherited.from.class.radin.core.input.IParser">
+<a id="methods.inherited.from.class.IParser">
 <!--   -->
 </a><code><a href="../../../IParser.html#getFirst()">getFirst</a>, <a href="../../../IParser.html#getLast()">getLast</a>, <a href="../../../IParser.html#getPrevious()">getPrevious</a>, <a href="../../../IParser.html#parse()">parse</a>, <a href="../../../IParser.html#reset()">reset</a></code></div>
 </section>
@@ -463,11 +463,11 @@ boolean&nbsp;release,
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></h3>
+<h3><a id="setTokenizer(ITokenizer)">setTokenizer</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">setTokenizer</span>&#8203;(<span class="arguments"><a href="../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>&gt;&nbsp;t)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../IParser.html#setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></code>&nbsp;in interface&nbsp;<code><a href="../../../IParser.html" title="interface in radin.core.input">IParser</a>&lt;<a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>,&#8203;<a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>&gt;</code></dd>
+<dd><code><a href="../../../IParser.html#setTokenizer(ITokenizer)">setTokenizer</a></code>&nbsp;in interface&nbsp;<code><a href="../../../IParser.html" title="interface in radin.core.input">IParser</a>&lt;<a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>,&#8203;<a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -539,20 +539,20 @@ boolean&nbsp;release,
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="consumeAndAddAsLeaf(radin.core.input.frontend.v1.parsing.CategoryNode)">consumeAndAddAsLeaf</a></h3>
+<h3><a id="consumeAndAddAsLeaf(CategoryNode)">consumeAndAddAsLeaf</a></h3>
 <div class="memberSignature"><span class="modifiers">protected final</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">consumeAndAddAsLeaf</span>&#8203;(<span class="arguments"><a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="addAsLeaf(radin.core.input.frontend.v1.parsing.CategoryNode,radin.core.lexical.Token)">addAsLeaf</a></h3>
+<h3><a id="addAsLeaf(CategoryNode,radin.core.lexical.Token)">addAsLeaf</a></h3>
 <div class="memberSignature"><span class="modifiers">protected final</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">addAsLeaf</span>&#8203;(<span class="arguments"><a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent,
 <a href="../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>&nbsp;t)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="consumeAndAddAsLeaf(radin.core.lexical.TokenType,radin.core.input.frontend.v1.parsing.CategoryNode)">consumeAndAddAsLeaf</a></h3>
+<h3><a id="consumeAndAddAsLeaf(radin.core.lexical.TokenType,CategoryNode)">consumeAndAddAsLeaf</a></h3>
 <div class="memberSignature"><span class="modifiers">protected final</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">consumeAndAddAsLeaf</span>&#8203;(<span class="arguments"><a href="../../../../lexical/TokenType.html" title="enum in radin.core.lexical">TokenType</a>&nbsp;t_id,
 <a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</span></div>
 </section>
@@ -653,14 +653,14 @@ boolean&nbsp;includeTemps,
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="attemptParse(radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction,radin.core.input.frontend.v1.parsing.CategoryNode)">attemptParse</a></h3>
+<h3><a id="attemptParse(BasicParser.ParseFunction,CategoryNode)">attemptParse</a></h3>
 <div class="memberSignature"><span class="modifiers">protected final</span>&nbsp;<span class="returnType"><a href="BasicParser.AttemptStatus.html" title="enum in radin.core.input.frontend.v1.parsing">BasicParser.AttemptStatus</a></span>&nbsp;<span class="memberName">attemptParse</span>&#8203;(<span class="arguments"><a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>&nbsp;function,
 <a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="oneMustParse(radin.core.input.frontend.v1.parsing.CategoryNode,radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction,radin.core.input.frontend.v1.parsing.BasicParser.ParseFunction...)">oneMustParse</a></h3>
+<h3><a id="oneMustParse(CategoryNode,BasicParser.ParseFunction,BasicParser.ParseFunction...)">oneMustParse</a></h3>
 <div class="memberSignature"><span class="modifiers">protected final</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">oneMustParse</span>&#8203;(<span class="arguments"><a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;parent,
 <a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>&nbsp;parseFunction,
 <a href="BasicParser.ParseFunction.html" title="interface in radin.core.input.frontend.v1.parsing">BasicParser.ParseFunction</a>...&nbsp;functions)</span></div>

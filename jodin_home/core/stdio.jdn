@@ -1,0 +1,49 @@
+#include <stdio.h>
+
+in std
+implement FileWriter {
+
+	FileWriter(FILE f) {
+		this->f = f;
+	}
+
+	void writeln() {
+		this->f->write('\n');
+	}
+
+	void write(char c) {
+		this->f->write(c);
+	}
+	void writeln(char c) {
+		this->f->write(c);
+		this->writeln();
+	}
+
+
+	void write(std::String s) {
+		size_t length = s->length();
+		const char* c_str = s->getCStr();
+		for(int i = 0; i < length; ++i) {
+			this->write(c_str[i]);
+		}
+	}
+	void writeln(std::String s) {
+		this->write(s);
+		this->writeln();
+	}
+
+	void write(std::Object o) {
+		this->write(o->toString());
+	}
+	void writeln(std::Object o) {
+		this->writeln(o->toString());
+	}
+
+	void flush() {
+		this->f->flush();
+	}
+
+	void close() {
+		this->f->close();
+	}
+}

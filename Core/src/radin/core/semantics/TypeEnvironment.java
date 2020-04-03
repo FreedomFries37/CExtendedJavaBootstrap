@@ -347,7 +347,10 @@ public class TypeEnvironment {
             if(output != null) throw new AmbiguousIdentifierError(tok, Arrays.asList(temp, output));
             output = temp;
         }
-        List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(currentNamespace);
+        List<CXCompoundType> typesForNamespace = new LinkedList<>(namespaceTree.getTypesForNamespace(currentNamespace));
+        if(currentNamespace != null) {
+            typesForNamespace.addAll(namespaceTree.getBaseObjects());
+        }
         if(typesForNamespace == null) {
             throw new TypeDoesNotExist(typenameImage.getImage());
         }

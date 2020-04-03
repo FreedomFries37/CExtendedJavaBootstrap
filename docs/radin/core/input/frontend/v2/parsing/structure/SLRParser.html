@@ -94,7 +94,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance">radin.core.input.frontend.v2.parsing.structure.SLRParser&lt;Input,&#8203;Check&gt;</div>
+<div class="inheritance">SLRParser&lt;Input,&#8203;Check&gt;</div>
 </div>
 <section class="description">
 <dl>
@@ -152,7 +152,7 @@ implements <a href="../../../../IParser.html" title="interface in radin.core.inp
 </thead>
 <tbody>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(radin.core.input.frontend.v2.parsing.structure.SLRParser.Map,radin.core.input.ITokenizer,radin.core.input.frontend.v2.parsing.structure.SLRData)">SLRParser</a></span>&#8203;(<a href="SLRParser.Map.html" title="interface in radin.core.input.frontend.v2.parsing.structure">SLRParser.Map</a>&lt;? super <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>,&#8203;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;&nbsp;mappingFunction,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(SLRParser.Map,ITokenizer,SLRData)">SLRParser</a></span>&#8203;(<a href="SLRParser.Map.html" title="interface in radin.core.input.frontend.v2.parsing.structure">SLRParser.Map</a>&lt;? super <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>,&#8203;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;&nbsp;mappingFunction,
 <a href="../../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>&gt;&nbsp;tokenizer,
 <a href="SLRData.html" title="class in radin.core.input.frontend.v2.parsing.structure">SLRData</a>&lt;<a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;&nbsp;slrData)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -202,7 +202,7 @@ implements <a href="../../../../IParser.html" title="interface in radin.core.inp
 </tr>
 <tr class="altColor" id="i4">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></span>&#8203;(<a href="../../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>&gt;&nbsp;tokenizer)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setTokenizer(ITokenizer)">setTokenizer</a></span>&#8203;(<a href="../../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>&gt;&nbsp;tokenizer)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -221,7 +221,7 @@ implements <a href="../../../../IParser.html" title="interface in radin.core.inp
 </a><code><a href="../../../../../errorhandling/ICompilationErrorCollector.html#hasErrors()">hasErrors</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from interface&nbsp;radin.core.input.<a href="../../../../IParser.html" title="interface in radin.core.input">IParser</a></h3>
-<a id="methods.inherited.from.class.radin.core.input.IParser">
+<a id="methods.inherited.from.class.IParser">
 <!--   -->
 </a><code><a href="../../../../IParser.html#getCurrent()">getCurrent</a>, <a href="../../../../IParser.html#getFirst()">getFirst</a>, <a href="../../../../IParser.html#getLast()">getLast</a>, <a href="../../../../IParser.html#getNext()">getNext</a>, <a href="../../../../IParser.html#getPrevious()">getPrevious</a></code></div>
 </section>
@@ -239,7 +239,7 @@ implements <a href="../../../../IParser.html" title="interface in radin.core.inp
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(radin.core.input.frontend.v2.parsing.structure.SLRParser.Map,radin.core.input.ITokenizer,radin.core.input.frontend.v2.parsing.structure.SLRData)">SLRParser</a></h3>
+<h3><a id="&lt;init&gt;(SLRParser.Map,ITokenizer,SLRData)">SLRParser</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">SLRParser</span>&#8203;(<span class="arguments"><a href="SLRParser.Map.html" title="interface in radin.core.input.frontend.v2.parsing.structure">SLRParser.Map</a>&lt;? super <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>,&#8203;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;&nbsp;mappingFunction,
 <a href="../../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>&gt;&nbsp;tokenizer,
 <a href="SLRData.html" title="class in radin.core.input.frontend.v2.parsing.structure">SLRData</a>&lt;<a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;&nbsp;slrData)</span></div>
@@ -277,11 +277,11 @@ implements <a href="../../../../IParser.html" title="interface in radin.core.inp
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></h3>
+<h3><a id="setTokenizer(ITokenizer)">setTokenizer</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">setTokenizer</span>&#8203;(<span class="arguments"><a href="../../../../ITokenizer.html" title="interface in radin.core.input">ITokenizer</a>&lt;? extends <a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a>&gt;&nbsp;tokenizer)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../../IParser.html#setTokenizer(radin.core.input.ITokenizer)">setTokenizer</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../IParser.html" title="interface in radin.core.input">IParser</a>&lt;<a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a> extends <a href="../../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>,&#8203;<a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;</code></dd>
+<dd><code><a href="../../../../IParser.html#setTokenizer(ITokenizer)">setTokenizer</a></code>&nbsp;in interface&nbsp;<code><a href="../../../../IParser.html" title="interface in radin.core.input">IParser</a>&lt;<a href="SLRParser.html" title="treeType parameter in SLRParser">Input</a> extends <a href="../../../../../lexical/Token.html" title="class in radin.core.lexical">Token</a>,&#8203;<a href="SLRParser.html" title="treeType parameter in SLRParser">Check</a>&gt;</code></dd>
 </dl>
 </section>
 </li>

@@ -1,0 +1,8 @@
+type = interpreter					# either interpreter or compiler
+toolchain = ./interpreter
+experimental = false
+opt-level = 0
+trycatch = false
+stacktrace = true
+autostring = false
+
