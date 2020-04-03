@@ -2,8 +2,28 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="Jodin.BackEnd.main" target="13" />
+      <module name="Jodin.BackEnd.test" target="13" />
+      <module name="Jodin.Combo.main" target="13" />
+      <module name="Jodin.Combo.test" target="13" />
+      <module name="Jodin.Core.main" target="13" />
+      <module name="Jodin.Core.test" target="13" />
+      <module name="Jodin.FrontEnd.main" target="13" />
+      <module name="Jodin.FrontEnd.test" target="13" />
+      <module name="Jodin.Input.main" target="13" />
+      <module name="Jodin.Input.test" target="13" />
+      <module name="Jodin.Interpreter.main" target="13" />
+      <module name="Jodin.Interpreter.test" target="13" />
       <module name="Jodin.InterpreterBackend.main" target="13" />
       <module name="Jodin.InterpreterBackend.test" target="13" />
+      <module name="Jodin.main" target="13" />
+      <module name="Jodin.MidAnalysis.main" target="13" />
+      <module name="Jodin.MidAnalysis.test" target="13" />
+      <module name="Jodin.Output.main" target="13" />
+      <module name="Jodin.Output.test" target="13" />
+      <module name="Jodin.test" target="13" />
+      <module name="Jodin.ToolchainRunner.main" target="13" />
+      <module name="Jodin.ToolchainRunner.test" target="13" />
     </bytecodeTargetLevel>
   </component>
 </project>
