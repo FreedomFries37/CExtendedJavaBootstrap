@@ -14,6 +14,7 @@
 
 # Package Files #
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
@@ -33,3 +34,4 @@ runtime.jdn
 
 # Gradle
 .gradle
+/target/

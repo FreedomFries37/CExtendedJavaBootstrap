@@ -94,7 +94,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance">radin.core.output.backend.compilation.AbstractCompiler</div>
+<div class="inheritance">AbstractCompiler</div>
 </div>
 <section class="description">
 <dl>
@@ -162,12 +162,12 @@ implements <a href="../../../chaining/ICompilerFunction.html" title="interface i
 </tr>
 <tr class="rowColor" id="i1">
 <td class="colFirst"><code>abstract boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compile(TypeAugmentedSemanticNode)">compile</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i2">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compileToString(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compileToString</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compileToString(TypeAugmentedSemanticNode)">compileToString</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i3">
@@ -192,7 +192,7 @@ implements <a href="../../../chaining/ICompilerFunction.html" title="interface i
 </tr>
 <tr class="rowColor" id="i7">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang" class="externalLink">Boolean</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#invoke(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">invoke</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;input)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#invoke(TypeAugmentedSemanticNode)">invoke</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;input)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i8">
@@ -305,13 +305,13 @@ implements <a href="../../../chaining/ICompilerFunction.html" title="interface i
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></h3>
+<h3><a id="compile(TypeAugmentedSemanticNode)">compile</a></h3>
 <div class="memberSignature"><span class="modifiers">public abstract</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">compile</span>&#8203;(<span class="arguments"><a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="invoke(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">invoke</a></h3>
+<h3><a id="invoke(TypeAugmentedSemanticNode)">invoke</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Boolean.html?is-external=true" title="class or interface in java.lang" class="externalLink">Boolean</a></span>&nbsp;<span class="memberName">invoke</span>&#8203;(<span class="arguments"><a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;input)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
@@ -331,7 +331,7 @@ implements <a href="../../../chaining/ICompilerFunction.html" title="interface i
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="compileToString(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compileToString</a></h3>
+<h3><a id="compileToString(TypeAugmentedSemanticNode)">compileToString</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></span>&nbsp;<span class="memberName">compileToString</span>&#8203;(<span class="arguments"><a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
 </section>
 </li>

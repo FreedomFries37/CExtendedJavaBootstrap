@@ -2,22 +2,22 @@ package radin;
 
 import radin.core.IFrontEndUnit;
 import radin.core.chaining.ToolChainFactory;
-import radin.core.input.FrontEndUnit;
-import radin.core.input.IParser;
-import radin.core.input.Tokenizer;
-import radin.core.input.frontend.v1.lexing.PreProcessingLexer;
-import radin.core.input.frontend.v1.parsing.ParseNode;
-import radin.core.input.frontend.v1.parsing.Parser;
-import radin.core.input.frontend.v1.semantics.ActionRoutineApplier;
+import radin.input.FrontEndUnit;
+import radin.input.IParser;
+import radin.input.Tokenizer;
+import radin.frontend.v1.lexing.PreProcessingLexer;
+import radin.frontend.v1.parsing.ParseNode;
+import radin.frontend.v1.parsing.Parser;
+import radin.frontend.v1.semantics.ActionRoutineApplier;
 import radin.core.lexical.Token;
-import radin.core.output.backend.compilation.FileCompiler;
-import radin.core.output.backend.compilation.RuntimeCompiler;
-import radin.core.output.backend.microcompilers.FunctionCompiler;
-import radin.core.output.combo.MultipleFileHandler;
-import radin.core.output.midanalysis.TypeAugmentedSemanticNode;
-import radin.core.output.midanalysis.TypeAugmentedSemanticTree;
-import radin.core.output.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
-import radin.core.output.typeanalysis.TypeAnalyzer;
+import radin.backend.compilation.FileCompiler;
+import radin.backend.compilation.RuntimeCompiler;
+import radin.backend.microcompilers.FunctionCompiler;
+import radin.combo.MultipleFileHandler;
+import radin.midanalysis.TypeAugmentedSemanticNode;
+import radin.midanalysis.TypeAugmentedSemanticTree;
+import radin.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
+import radin.output.typeanalysis.TypeAnalyzer;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.CompilationSettings;
@@ -198,7 +198,7 @@ public class CompilerEntrancePoint {
         }
         
         if(System.getenv("JODIN_HOME") != null) {
-            String jodinHome = System.getenv("JODIN_HOME");
+            String jodinHome = System.getenv("JODIN_HOME") + "/core";
             Stream<Path> pathStream = Files.find(Paths.get(jodinHome), Integer.MAX_VALUE, (p, bfa) -> bfa.isRegularFile());
             List<File> fileList = pathStream.map((p) -> new File(p.toUri())).collect(Collectors.toList());
             fileList.removeIf((f) -> !f.getName().endsWith(".jdn"));
@@ -218,7 +218,7 @@ public class CompilerEntrancePoint {
             RuntimeCompiler runtimeCompiler = new RuntimeCompiler(environment);
             runtimeCompiler.compile();
             
-            File runtimeFile = new File("runtime.jdn");
+            File runtimeFile = ICompilationSettings.getBuildFile("runtime.jdn");
             multipleFileHandler = new MultipleFileHandler<Boolean>(
                     Collections.singletonList(runtimeFile),
                     compilationSettings

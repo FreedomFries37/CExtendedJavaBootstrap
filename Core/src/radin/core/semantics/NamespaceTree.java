@@ -108,6 +108,10 @@ public class NamespaceTree {
         return node.getRelatedTypes();
     }
     
+    public List<CXCompoundType> getBaseObjects() {
+        return baseObjects;
+    }
+    
     private Node getNode(CXIdentifier currentNamespace) {
         if(currentNamespace == null) return null;
         if(currentNamespace.getParentNamespace() == null) {

@@ -1,0 +1,49 @@
+#include <system/toolchain.h>
+#include <host_hook.h>
+
+
+void print(const char* c) {
+	_interpreter_print(c);
+}
+
+
+
+class InterpreterFile : std::File {
+	private int fd;
+	private std::String path;
+	private int position;
+
+	public InterpreterFile(std::String path) {
+		this->fd = _open_file(path);
+		this->path = path;
+	}
+
+
+
+	virtual public void flush() {
+		_flush_file(this->fd);
+	}
+	virtual public void close() {
+		_close_file(this->fd);
+	}
+	virtual public char read() {
+		bool error;
+		char output = _read_file(this->fd, this->position++, &error);
+		if(error) {
+			panic(new std::String("Error reading from file"));
+		}
+		return output;
+	}
+	virtual public void write(char c) {
+		if(!_write_file(this->fd)) {
+			panic(new std::String("Error writing to file"));
+		}
+	}
+	virtual public void change_position(size_t position) {
+		this->position = position;
+	}
+};
+
+in std File access_file(std::String file) {
+	return new InterpreterFile(file);
+}

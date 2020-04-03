@@ -1,0 +1,97 @@
+#include <prelude.h>
+#include <string.h>
+#include <system/toolchain.h>
+
+
+void println(const char* c) {
+	if(c != nullptr) {
+		print(c);
+	}
+	print("\n");
+}
+void print_s(std::String o) {
+	print(o->getCStr());
+}
+void println_s(std::String o) {
+	println(o->getCStr());
+}
+
+
+
+in std {
+
+
+	implement Object {
+		Object() { }
+
+		int hashcode() {
+			return get_hashcode_for(this);
+		}
+
+		bool equals(Object other) {
+			return this == other;
+		}
+
+		String toString() {
+			return new String("instance");
+			// return this->getClass()->getName()->concat("@")->concat(this->hashcode());
+		}
+
+		void drop() {
+			free(this);
+		}
+
+		ClassInfo getClass() {
+			return this->info;
+		}
+
+		void print() {
+			print_s(this->toString());
+		}
+        void println() {
+        	this->print();
+        	println(nullptr);
+        }
+	}
+
+	implement ClassInfo {
+
+		ClassInfo() { }
+
+
+		String getName() { return this->name; }
+
+		bool is_object(Object o) {
+			if(o == nullptr) return false;
+			return this->is_class(o->getClass());
+		}
+
+		bool is_class(ClassInfo o) {
+			if (o->equals(this)) return true;
+			if (o->parent != nullptr) {
+				 return this->is_class(o->parent);
+			}
+			return false;
+		}
+
+		bool equals(Object other) {
+			if (!other) return false;
+			if (!this->getClass()->is_object(other)) return false;
+			return this->equals((ClassInfo) other);
+		}
+		bool equals(ClassInfo other) {
+			return this->classHash == other->classHash;
+		}
+
+
+
+	}
+
+
+
+
+
+
+
+}
+

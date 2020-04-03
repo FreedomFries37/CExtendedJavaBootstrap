@@ -18,4 +18,5 @@ dependencies {
     implementation project(':FrontEnd')
     implementation project(':MidAnalysis')
     implementation project(':Combo')
+    implementation project(':Interpreter')
 }
