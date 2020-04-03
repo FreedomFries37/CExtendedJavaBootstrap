@@ -12,5 +12,13 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    implementation project(":Core")
+    implementation project(':Core')
+    implementation project(':Input')
+    implementation project(':Output')
+    implementation project(':BackEnd')
+    implementation project(':FrontEnd')
+    implementation project(':MidAnalysis')
+    implementation project(':Combo')
+    implementation project(':Interpreter')
+
 }

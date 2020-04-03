@@ -53,6 +53,43 @@ public interface ICompilationSettings<Front, Mid, Back> {
         }
     }
     
+    default void copySettingsTo(ICompilationSettings<?, ?, ?> other) {
+        setDirectory(other.getDirectory());
+        for (File file : other.includeDirectories()) {
+            try {
+                addIncludeDirectories(file.getPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        for (File additionalSource : other.getAdditionalSources()) {
+            try {
+                addAdditionalSourceDirectory(additionalSource.getPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Level level = debugLog.getLevel();
+        debugLog.setLevel(Level.OFF);
+        setThisPassedOffAsParameter(other.isThisPassedOffAsParameter());
+        setLookForMainFunction(other.isLookForMainFunction());
+        setOptimizationLevel(other.getOptimizationLevel());
+        setUseStackTrace(other.getUseStackTrace());
+        setUseTryCatch(other.getUseTryCatch());
+        setIndent(other.getIndent());
+        setvTableName(other.getvTableName());
+        setShowErrorStackTrace(other.isShowErrorStackTrace());
+        setTabSize(other.getTabSize());
+        setOutputPostprocessingOutput(other.isOutputPostprocessingOutput());
+        setHideClassPrivateDeclarations(other.isHideClassPrivateDeclarations());
+        setAllowUseStatements(other.isAllowUseStatements());
+        setDirectivesMustStartAtColumn1(other.isDirectivesMustStartAtColumn1());
+        setInRuntimeCompilationMode(other.isInRuntimeCompilationMode());
+        setOutputAST(other.isOutputAST());
+        setOutputTAST(other.isOutputTAST());
+        debugLog.setLevel(level);
+    }
+    
     static File createBuildFile(String filename) {
         return createFile("target/" + filename);
     }

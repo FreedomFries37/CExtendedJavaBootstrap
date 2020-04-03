@@ -48,7 +48,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             
             CXStructType vTable = cxClassType.getVTable();
             getCurrentTracker().addBasicCompoundType(vTable);
-            getCurrentTracker().addPrivateField(cxClassType, getCompilationSettings().getvTableName(),
+            getCurrentTracker().addPrivateField(cxClassType, UniversalCompilerSettings.getInstance().getSettings().getvTableName(),
                     new PointerType(vTable));
             
             getCurrentTracker().addVariable("__this", new PointerType(CXPrimitiveType.VOID));

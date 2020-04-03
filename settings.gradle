@@ -6,6 +6,6 @@ include 'BackEnd'
 include 'FrontEnd'
 include 'MidAnalysis'
 include 'Combo'
-include 'InterpreterBackend'
+include 'Interpreter'
 include 'ToolchainRunner'
 

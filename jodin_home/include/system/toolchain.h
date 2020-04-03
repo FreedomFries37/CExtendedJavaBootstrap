@@ -8,38 +8,44 @@ work with the operating system
 
 #ifndef __TOOLCHAIN__HEADER__
 #define __TOOLCHAIN__HEADER__
+
+#include <toolchain/defines.h>
+
+
 in std {
 // Process Control
 
-virtual class AbstractProcess {
+class Process {
 	private status_t status;
 	private String command;
-	private String[] args;
-	private String[] env;
+	private String* args; // null terminated
+	private String* env; // null terminated
 
 	public Process(std::String command);
-	public Process(std::String command, std::String[] args);
-	public Process(std::String command, std::String[] args, std::String[] env);
+	public Process(std::String command, std::String args[]);
+	public Process(std::String command, std::String args[], std::String env[]);
 
-	virtual public int fork();
-	virtual public int await();
+	public int fork();
+	public int await();
 
-	virtual public void wait();
-}
+	public void wait();
+};
 
 void exit(int code);
 
 // File management
 
-virtual class AbstractFile {
+class File {
 
-	virtual void flush();
-	virtual void close();
+	void flush();
+	void close();
 
-	virtual char read();
-	virtual void write(char c);
-	virtual void change_position(usize position);
-}
+
+
+	char read();
+	void write(char c);
+	void change_position(size_t position);
+};
 
 
 // Device management
@@ -51,6 +57,7 @@ u64 time();
 
 
 // Communication management
+void print(char* str);
 
 }
 

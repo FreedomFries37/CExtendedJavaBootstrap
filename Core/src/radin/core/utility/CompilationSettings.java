@@ -78,7 +78,9 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     @Override
     public void addAdditionalSource(String sourceFile) throws IOException {
         File srcFile = new File(sourceFile);
-        if (!srcFile.exists() || !srcFile.isFile()) throw new IOException();
+        if (!srcFile.exists() || !srcFile.isFile()) {
+            throw new IOException();
+        }
         
         sourceFiles.add(srcFile);
     }

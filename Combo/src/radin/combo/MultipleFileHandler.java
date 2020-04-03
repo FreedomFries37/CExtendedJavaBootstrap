@@ -75,6 +75,25 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
         classToFile = new HashMap<>();
         
     }
+    
+    public void addFile(File file) {
+        CompilationNode e = new CompilationNode(file, TypeAnalyzer.getEnvironment());
+        nodes.add(e);
+        dependencies.put(e, new LinkedList<>());
+        numberFilesToCompile++;
+    }
+    
+    public void addFiles(Collection<File> files) {
+        for (File file : files) {
+            addFile(file);
+        }
+    }
+    
+    public void addFiles(File[] files) {
+        for (File file : files) {
+            addFile(file);
+        }
+    }
 
     public List<Output> getGeneratedOutputs() {
         return generatedOutputs;

@@ -1,3 +1,8 @@
 type = interpreter					# either interpreter or compiler
-sources = ./interpreter/src
-include = ./interpreter/include
+toolchain = ./interpreter
+experimental = false
+opt-level = 0
+trycatch = false
+stacktrace = true
+autostring = false
+

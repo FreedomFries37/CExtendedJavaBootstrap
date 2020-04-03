@@ -1,0 +1,13 @@
+#ifndef __HOST_HOOK__HEADER__
+#define __HOST_HOOK__HEADER__
+
+/*
+
+This file will be the "interpreter hook", which is basically the list of functions that the interpreter will have to
+do, as it requires system interaction of some kind
+
+*/
+
+void _interpreter_print(char * c);
+
+#endif

@@ -2,11 +2,7 @@
 #include <string.h>
 
 
-void printf(const char* c);
 
-void print(const char* c) {
-	printf(c);
-}
 void println(const char* c) {
 	if(c != nullptr) {
 		print(c);
