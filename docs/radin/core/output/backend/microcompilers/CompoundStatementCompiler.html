@@ -94,9 +94,9 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance"><a href="../compilation/AbstractCompiler.html" title="class in radin.core.output.backend.compilation">radin.core.output.backend.compilation.AbstractCompiler</a>
-<div class="inheritance"><a href="../compilation/AbstractIndentedOutputCompiler.html" title="class in radin.core.output.backend.compilation">radin.core.output.backend.compilation.AbstractIndentedOutputCompiler</a>
-<div class="inheritance">radin.core.output.backend.microcompilers.CompoundStatementCompiler</div>
+<div class="inheritance"><a href="../compilation/AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a>
+<div class="inheritance"><a href="../compilation/AbstractIndentedOutputCompiler.html" title="class in radin.core.output.backend.compilation">AbstractIndentedOutputCompiler</a>
+<div class="inheritance">CompoundStatementCompiler</div>
 </div>
 </div>
 </div>
@@ -157,7 +157,7 @@ int&nbsp;indent)</code></th>
 <tbody>
 <tr class="altColor" id="i0">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#compile(TypeAugmentedSemanticNode)">compile</a></span>&#8203;(<a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -166,14 +166,14 @@ int&nbsp;indent)</code></th>
 </div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.output.backend.compilation.<a href="../compilation/AbstractIndentedOutputCompiler.html" title="class in radin.core.output.backend.compilation">AbstractIndentedOutputCompiler</a></h3>
-<a id="methods.inherited.from.class.radin.core.output.backend.compilation.AbstractIndentedOutputCompiler">
+<a id="methods.inherited.from.class.AbstractIndentedOutputCompiler">
 <!--   -->
 </a><code><a href="../compilation/AbstractIndentedOutputCompiler.html#getIndent()">getIndent</a>, <a href="../compilation/AbstractIndentedOutputCompiler.html#getPrintWriter()">getPrintWriter</a>, <a href="../compilation/AbstractIndentedOutputCompiler.html#setIndent(int)">setIndent</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.output.backend.compilation.<a href="../compilation/AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a></h3>
-<a id="methods.inherited.from.class.radin.core.output.backend.compilation.AbstractCompiler">
+<a id="methods.inherited.from.class.AbstractCompiler">
 <!--   -->
-</a><code><a href="../compilation/AbstractCompiler.html#close()">close</a>, <a href="../compilation/AbstractCompiler.html#compileToString(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compileToString</a>, <a href="../compilation/AbstractCompiler.html#flush()">flush</a>, <a href="../compilation/AbstractCompiler.html#getErrors()">getErrors</a>, <a href="../compilation/AbstractCompiler.html#getSettings()">getSettings</a>, <a href="../compilation/AbstractCompiler.html#invoke(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">invoke</a>, <a href="../compilation/AbstractCompiler.html#print(java.lang.Object)">print</a>, <a href="../compilation/AbstractCompiler.html#print(java.lang.String)">print</a>, <a href="../compilation/AbstractCompiler.html#print(radin.core.lexical.Token)">print</a>, <a href="../compilation/AbstractCompiler.html#printf(java.lang.String,java.lang.Object...)">printf</a>, <a href="../compilation/AbstractCompiler.html#printf(java.util.Locale,java.lang.String,java.lang.Object...)">printf</a>, <a href="../compilation/AbstractCompiler.html#println()">println</a>, <a href="../compilation/AbstractCompiler.html#println(java.lang.Object)">println</a>, <a href="../compilation/AbstractCompiler.html#println(java.lang.String)">println</a>, <a href="../compilation/AbstractCompiler.html#setPrintWriter(java.io.PrintWriter)">setPrintWriter</a>, <a href="../compilation/AbstractCompiler.html#setSettings(radin.core.utility.ICompilationSettings)">setSettings</a></code></div>
+</a><code><a href="../compilation/AbstractCompiler.html#close()">close</a>, <a href="../compilation/AbstractCompiler.html#compileToString(TypeAugmentedSemanticNode)">compileToString</a>, <a href="../compilation/AbstractCompiler.html#flush()">flush</a>, <a href="../compilation/AbstractCompiler.html#getErrors()">getErrors</a>, <a href="../compilation/AbstractCompiler.html#getSettings()">getSettings</a>, <a href="../compilation/AbstractCompiler.html#invoke(TypeAugmentedSemanticNode)">invoke</a>, <a href="../compilation/AbstractCompiler.html#print(java.lang.Object)">print</a>, <a href="../compilation/AbstractCompiler.html#print(java.lang.String)">print</a>, <a href="../compilation/AbstractCompiler.html#print(radin.core.lexical.Token)">print</a>, <a href="../compilation/AbstractCompiler.html#printf(java.lang.String,java.lang.Object...)">printf</a>, <a href="../compilation/AbstractCompiler.html#printf(java.util.Locale,java.lang.String,java.lang.Object...)">printf</a>, <a href="../compilation/AbstractCompiler.html#println()">println</a>, <a href="../compilation/AbstractCompiler.html#println(java.lang.Object)">println</a>, <a href="../compilation/AbstractCompiler.html#println(java.lang.String)">println</a>, <a href="../compilation/AbstractCompiler.html#setPrintWriter(java.io.PrintWriter)">setPrintWriter</a>, <a href="../compilation/AbstractCompiler.html#setSettings(radin.core.utility.ICompilationSettings)">setSettings</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></h3>
 <a id="methods.inherited.from.class.java.lang.Object">
@@ -216,11 +216,11 @@ int&nbsp;indent)</span></div>
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></h3>
+<h3><a id="compile(TypeAugmentedSemanticNode)">compile</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">compile</span>&#8203;(<span class="arguments"><a href="../../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../compilation/AbstractCompiler.html#compile(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">compile</a></code>&nbsp;in class&nbsp;<code><a href="../compilation/AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a></code></dd>
+<dd><code><a href="../compilation/AbstractCompiler.html#compile(TypeAugmentedSemanticNode)">compile</a></code>&nbsp;in class&nbsp;<code><a href="../compilation/AbstractCompiler.html" title="class in radin.core.output.backend.compilation">AbstractCompiler</a></code></dd>
 </dl>
 </section>
 </li>

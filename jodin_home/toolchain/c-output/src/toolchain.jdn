@@ -1,0 +1,6 @@
+#include <system/toolchain.h>
+#include <interpreter_hook.h>
+
+void print(const char* c) {
+	printf(c);
+}
