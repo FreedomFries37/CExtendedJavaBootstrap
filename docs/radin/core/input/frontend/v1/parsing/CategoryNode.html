@@ -95,8 +95,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
 <div class="inheritance"><a href="../../../../AbstractTree.html" title="class in radin.core">radin.core.AbstractTree</a>&lt;<a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>&gt;
-<div class="inheritance"><a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">radin.core.input.frontend.v1.parsing.ParseNode</a>
-<div class="inheritance">radin.core.input.frontend.v1.parsing.CategoryNode</div>
+<div class="inheritance"><a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>
+<div class="inheritance">CategoryNode</div>
 </div>
 </div>
 </div>
@@ -152,17 +152,17 @@ extends <a href="ParseNode.html" title="class in radin.core.input.frontend.v1.pa
 <tbody>
 <tr class="altColor" id="i0">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addChild(radin.core.input.frontend.v1.parsing.CategoryNode)">addChild</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;categoryNode)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addChild(CategoryNode)">addChild</a></span>&#8203;(<a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;categoryNode)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i1">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addChild(radin.core.input.frontend.v1.parsing.LeafNode)">addChild</a></span>&#8203;(<a href="LeafNode.html" title="class in radin.core.input.frontend.v1.parsing">LeafNode</a>&nbsp;leaf)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addChild(LeafNode)">addChild</a></span>&#8203;(<a href="LeafNode.html" title="class in radin.core.input.frontend.v1.parsing">LeafNode</a>&nbsp;leaf)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i2">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addChild(radin.core.input.frontend.v1.parsing.ParseNode)">addChild</a></span>&#8203;(<a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>&nbsp;n)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addChild(ParseNode)">addChild</a></span>&#8203;(<a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>&nbsp;n)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i3">
@@ -260,7 +260,7 @@ int&nbsp;count)</code></th>
 </div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.input.frontend.v1.parsing.<a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a></h3>
-<a id="methods.inherited.from.class.radin.core.input.frontend.v1.parsing.ParseNode">
+<a id="methods.inherited.from.class.ParseNode">
 <!--   -->
 </a><code><a href="ParseNode.html#getCompilationTagList()">getCompilationTagList</a>, <a href="ParseNode.html#getData()">getData</a>, <a href="ParseNode.html#getInherit()">getInherit</a>, <a href="ParseNode.html#getInherit(int)">getInherit</a>, <a href="ParseNode.html#getSynthesized()">getSynthesized</a>, <a href="ParseNode.html#setCompilationTagList(radin.core.semantics.AbstractSyntaxNode)">setCompilationTagList</a>, <a href="ParseNode.html#setInherit(radin.core.semantics.AbstractSyntaxNode)">setInherit</a>, <a href="ParseNode.html#setInherit(radin.core.semantics.AbstractSyntaxNode,int)">setInherit</a>, <a href="ParseNode.html#setSynthesized(radin.core.semantics.AbstractSyntaxNode)">setSynthesized</a></code></div>
 <div class="inheritedList">
@@ -304,19 +304,19 @@ int&nbsp;count)</code></th>
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="addChild(radin.core.input.frontend.v1.parsing.ParseNode)">addChild</a></h3>
+<h3><a id="addChild(ParseNode)">addChild</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">addChild</span>&#8203;(<span class="arguments"><a href="ParseNode.html" title="class in radin.core.input.frontend.v1.parsing">ParseNode</a>&nbsp;n)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="addChild(radin.core.input.frontend.v1.parsing.LeafNode)">addChild</a></h3>
+<h3><a id="addChild(LeafNode)">addChild</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">addChild</span>&#8203;(<span class="arguments"><a href="LeafNode.html" title="class in radin.core.input.frontend.v1.parsing">LeafNode</a>&nbsp;leaf)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="addChild(radin.core.input.frontend.v1.parsing.CategoryNode)">addChild</a></h3>
+<h3><a id="addChild(CategoryNode)">addChild</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">addChild</span>&#8203;(<span class="arguments"><a href="CategoryNode.html" title="class in radin.core.input.frontend.v1.parsing">CategoryNode</a>&nbsp;categoryNode)</span></div>
 </section>
 </li>

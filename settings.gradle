@@ -1,4 +1,4 @@
-rootProject.name = 'Jodin'
+rootProject.name = 'Jodin-Java'
 include 'Core'
 include 'Input'
 include 'Output'
@@ -6,3 +6,6 @@ include 'BackEnd'
 include 'FrontEnd'
 include 'MidAnalysis'
 include 'Combo'
+include 'Interpreter'
+include 'ToolchainRunner'
+

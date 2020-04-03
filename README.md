@@ -1,6 +1,8 @@
 
 # CExtended (Jodin) Java Bootstrap
 
+![Java CI with Gradle](https://github.com/JoshuaRadin37/CExtendedJavaBootstrap/workflows/Java%20CI%20with%20Gradle/badge.svg)
+
 > The bootstrap for the Jodin language.
 
 > Eventually, this entire app will be replaced with a compiler written in Jodin

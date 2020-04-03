@@ -6,6 +6,7 @@ import radin.core.JodinLogger;
 import radin.core.chaining.IToolChain;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
 
@@ -43,6 +44,69 @@ public interface ICompilationSettings<Front, Mid, Back> {
         }
     }
     
+    static String defaultInclude() {
+        String jodin_home = System.getenv("JODIN_HOME");
+        if (jodin_home != null) {
+            return jodin_home + "/include";
+        } else {
+            return null;
+        }
+    }
+    
+    default void copySettingsTo(ICompilationSettings<?, ?, ?> other) {
+        setDirectory(other.getDirectory());
+        for (File file : other.includeDirectories()) {
+            try {
+                addIncludeDirectories(file.getPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        for (File additionalSource : other.getAdditionalSources()) {
+            try {
+                addAdditionalSourceDirectory(additionalSource.getPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Level level = debugLog.getLevel();
+        debugLog.setLevel(Level.OFF);
+        setThisPassedOffAsParameter(other.isThisPassedOffAsParameter());
+        setLookForMainFunction(other.isLookForMainFunction());
+        setOptimizationLevel(other.getOptimizationLevel());
+        setUseStackTrace(other.getUseStackTrace());
+        setUseTryCatch(other.getUseTryCatch());
+        setIndent(other.getIndent());
+        setvTableName(other.getvTableName());
+        setShowErrorStackTrace(other.isShowErrorStackTrace());
+        setTabSize(other.getTabSize());
+        setOutputPostprocessingOutput(other.isOutputPostprocessingOutput());
+        setHideClassPrivateDeclarations(other.isHideClassPrivateDeclarations());
+        setAllowUseStatements(other.isAllowUseStatements());
+        setDirectivesMustStartAtColumn1(other.isDirectivesMustStartAtColumn1());
+        setInRuntimeCompilationMode(other.isInRuntimeCompilationMode());
+        setOutputAST(other.isOutputAST());
+        setOutputTAST(other.isOutputTAST());
+        debugLog.setLevel(level);
+    }
+    
+    static File createBuildFile(String filename) {
+        return createFile("target/" + filename);
+    }
+    
+    static File getBuildFile(String filename) {
+        return createFile("target/" + filename);
+    }
+    
+    static File getCoreFile(String filename) {
+        String jodin_home = System.getenv("JODIN_HOME");
+        if (jodin_home != null) {
+            return new File(jodin_home + "/core/" + filename);
+        } else {
+            return null;
+        }
+    }
+    
     String getDirectory();
     
     void setDirectory(String directory);
@@ -76,6 +140,23 @@ public interface ICompilationSettings<Front, Mid, Back> {
             }catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+    
+    File[] includeDirectories();
+    void addIncludeDirectories(String dir) throws IOException;
+    
+    File[] getAdditionalSources();
+    void addAdditionalSource(String sourceFile) throws IOException;
+    default void addAdditionalSourceDirectory(String dir) throws IOException {
+        if(dir == null) throw new NullPointerException();
+        File dirFile = new File(dir);
+        if (!dirFile.exists() || !dirFile.isDirectory()) throw new IOException();
+    
+        File[] files = dirFile.listFiles();
+        if (files == null) throw new IOException();
+        for (File file : files) {
+            addAdditionalSource(file.getAbsolutePath());
         }
     }
     
