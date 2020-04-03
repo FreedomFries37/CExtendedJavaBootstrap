@@ -7,5 +7,5 @@ include 'FrontEnd'
 include 'MidAnalysis'
 include 'Combo'
 include 'InterpreterBackend'
-
+include 'ToolchainRunner'
 

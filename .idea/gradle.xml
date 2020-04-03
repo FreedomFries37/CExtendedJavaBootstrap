@@ -20,6 +20,7 @@
             <option value="$PROJECT_DIR$/InterpreterBackend" />
             <option value="$PROJECT_DIR$/MidAnalysis" />
             <option value="$PROJECT_DIR$/Output" />
+            <option value="$PROJECT_DIR$/ToolchainRunner" />
           </set>
         </option>
         <option name="useAutoImport" value="true" />

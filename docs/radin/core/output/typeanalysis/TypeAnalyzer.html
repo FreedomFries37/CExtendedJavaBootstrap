@@ -94,8 +94,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance"><a href="../midanalysis/ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">radin.core.output.midanalysis.ScopedTypeTracker</a>
-<div class="inheritance">radin.core.output.typeanalysis.TypeAnalyzer</div>
+<div class="inheritance"><a href="../midanalysis/ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a>
+<div class="inheritance">TypeAnalyzer</div>
 </div>
 </div>
 <section class="description">
@@ -122,7 +122,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 <h2>Field Summary</h2>
 <div class="inheritedList">
 <h3>Fields inherited from class&nbsp;radin.core.output.midanalysis.<a href="../midanalysis/ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a></h3>
-<a id="fields.inherited.from.class.radin.core.output.midanalysis.ScopedTypeTracker">
+<a id="fields.inherited.from.class.ScopedTypeTracker">
 <!--   -->
 </a><code><a href="../midanalysis/ScopedTypeTracker.html#environment">environment</a>, <a href="../midanalysis/ScopedTypeTracker.html#trackerStack">trackerStack</a></code></div>
 </section>
@@ -144,7 +144,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </thead>
 <tbody>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">TypeAnalyzer</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;tree)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(TypeAugmentedSemanticNode)">TypeAnalyzer</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;tree)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -177,7 +177,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </tr>
 <tr class="rowColor" id="i1">
 <td class="colFirst"><code>abstract boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#determineTypes(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">determineTypes</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#determineTypes(TypeAugmentedSemanticNode)">determineTypes</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i2">
@@ -233,14 +233,14 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </tr>
 <tr class="rowColor" id="i11">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setHead(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">setHead</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setHead(TypeAugmentedSemanticNode)">setHead</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object)</code></th>
 <td class="colLast">
 <div class="block">Sets the target of the analyzer.</div>
 </td>
 </tr>
 <tr class="altColor" id="i12">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setIsFailurePoint(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">setIsFailurePoint</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setIsFailurePoint(TypeAugmentedSemanticNode)">setIsFailurePoint</a></span>&#8203;(<a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i13">
@@ -259,7 +259,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.output.midanalysis.<a href="../midanalysis/ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a></h3>
-<a id="methods.inherited.from.class.radin.core.output.midanalysis.ScopedTypeTracker">
+<a id="methods.inherited.from.class.ScopedTypeTracker">
 <!--   -->
 </a><code><a href="../midanalysis/ScopedTypeTracker.html#getCurrentTracker()">getCurrentTracker</a>, <a href="../midanalysis/ScopedTypeTracker.html#getEnvironment()">getEnvironment</a>, <a href="../midanalysis/ScopedTypeTracker.html#releaseTrackingClosure()">releaseTrackingClosure</a>, <a href="../midanalysis/ScopedTypeTracker.html#setEnvironment(radin.core.semantics.TypeEnvironment)">setEnvironment</a>, <a href="../midanalysis/ScopedTypeTracker.html#setTrackerStack(java.util.Stack)">setTrackerStack</a>, <a href="../midanalysis/ScopedTypeTracker.html#typeTrackingClosure()">typeTrackingClosure</a>, <a href="../midanalysis/ScopedTypeTracker.html#typeTrackingClosure(radin.core.semantics.types.compound.CXClassType)">typeTrackingClosure</a>, <a href="../midanalysis/ScopedTypeTracker.html#typeTrackingClosureLoad(radin.core.semantics.types.compound.CXClassType)">typeTrackingClosureLoad</a></code></div>
 <div class="inheritedList">
@@ -287,7 +287,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">TypeAnalyzer</a></h3>
+<h3><a id="&lt;init&gt;(TypeAugmentedSemanticNode)">TypeAnalyzer</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">TypeAnalyzer</span>&#8203;(<span class="arguments"><a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;tree)</span></div>
 </section>
 </li>
@@ -327,7 +327,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="setHead(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">setHead</a></h3>
+<h3><a id="setHead(TypeAugmentedSemanticNode)">setHead</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">setHead</span>&#8203;(<span class="arguments"><a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object)</span></div>
 <div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="../../chaining/IInPlaceCompilerAnalyzer.html#setHead(T)">IInPlaceCompilerAnalyzer</a></code></span></div>
 <div class="block">Sets the target of the analyzer.</div>
@@ -410,13 +410,13 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="determineTypes(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">determineTypes</a></h3>
+<h3><a id="determineTypes(TypeAugmentedSemanticNode)">determineTypes</a></h3>
 <div class="memberSignature"><span class="modifiers">public abstract</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">determineTypes</span>&#8203;(<span class="arguments"><a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="determineTypes(radin.core.output.typeanalysis.TypeAnalyzer)">
+<h3><a id="determineTypes(TypeAnalyzer)">
 <!--   -->
 </a><a id="determineTypes(T)">determineTypes</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="typeParameters">&lt;T extends <a href="TypeAnalyzer.html" title="class in radin.core.output.typeanalysis">TypeAnalyzer</a>&gt;</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">determineTypes</span>&#8203;(<span class="arguments">T&nbsp;other)</span></div>
@@ -424,7 +424,7 @@ implements <a href="../../chaining/IInPlaceCompilerAnalyzer.html" title="interfa
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="setIsFailurePoint(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">setIsFailurePoint</a></h3>
+<h3><a id="setIsFailurePoint(TypeAugmentedSemanticNode)">setIsFailurePoint</a></h3>
 <div class="memberSignature"><span class="modifiers">protected</span>&nbsp;<span class="returnType">void</span>&nbsp;<span class="memberName">setIsFailurePoint</span>&#8203;(<span class="arguments"><a href="../midanalysis/TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
 </section>
 </li>

@@ -94,8 +94,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </div>
 <div class="contentContainer">
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a>
-<div class="inheritance"><a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">radin.core.output.midanalysis.ScopedTypeTracker</a>
-<div class="inheritance">radin.core.output.midanalysis.transformation.AbstractListBasedTransformer</div>
+<div class="inheritance"><a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a>
+<div class="inheritance">AbstractListBasedTransformer</div>
 </div>
 </div>
 <section class="description">
@@ -118,7 +118,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 <h2>Nested Class Summary</h2>
 <div class="inheritedList">
 <h2>Nested classes/interfaces inherited from interface&nbsp;radin.core.output.midanalysis.transformation.<a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></h2>
-<a id="nested.classes.inherited.from.class.radin.core.output.midanalysis.transformation.ITransformer">
+<a id="nested.classes.inherited.from.class.ITransformer">
 <!--   -->
 </a><code><a href="ITransformer.TargetsNotConsecutive.html" title="class in radin.core.output.midanalysis.transformation">ITransformer.TargetsNotConsecutive</a></code></div>
 </section>
@@ -131,7 +131,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 <h2>Field Summary</h2>
 <div class="inheritedList">
 <h3>Fields inherited from class&nbsp;radin.core.output.midanalysis.<a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a></h3>
-<a id="fields.inherited.from.class.radin.core.output.midanalysis.ScopedTypeTracker">
+<a id="fields.inherited.from.class.ScopedTypeTracker">
 <!--   -->
 </a><code><a href="../ScopedTypeTracker.html#environment">environment</a>, <a href="../ScopedTypeTracker.html#trackerStack">trackerStack</a></code></div>
 </section>
@@ -161,7 +161,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(radin.core.output.midanalysis.ScopedTypeTracker)">AbstractTransformer</a></span>&#8203;(<a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a>&nbsp;old)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(ScopedTypeTracker)">AbstractTransformer</a></span>&#8203;(<a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a>&nbsp;old)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -195,27 +195,27 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="rowColor" id="i1">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#callMethodOn(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.lang.String)">callMethodOn</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#callMethodOn(TypeAugmentedSemanticNode,java.lang.String)">callMethodOn</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;functionName)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i2">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#callMethodOn(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.lang.String,java.util.List)">callMethodOn</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#callMethodOn(TypeAugmentedSemanticNode,java.lang.String,java.util.List)">callMethodOn</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;functionName,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&gt;&nbsp;sequence)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i3">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delete(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">delete</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delete(TypeAugmentedSemanticNode)">delete</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">
 <div class="block">Deletes a node from the relevant layer, returning false if the removal failed</div>
 </td>
 </tr>
 <tr class="altColor" id="i4">
 <td class="colFirst"><code>protected boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#determineTypes(radin.core.output.typeanalysis.TypeAnalyzer)">determineTypes</a></span>&#8203;(<a href="../../typeanalysis/TypeAnalyzer.html" title="class in radin.core.output.typeanalysis">TypeAnalyzer</a>&nbsp;other)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#determineTypes(TypeAnalyzer)">determineTypes</a></span>&#8203;(<a href="../../typeanalysis/TypeAnalyzer.html" title="class in radin.core.output.typeanalysis">TypeAnalyzer</a>&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i5">
@@ -235,7 +235,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="altColor" id="i8">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">insertAfter</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertAfter(TypeAugmentedSemanticNode,java.util.List)">insertAfter</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;? extends <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&gt;&nbsp;nodes)</code></th>
 <td class="colLast">
 <div class="block">Inserts a node after a target node in the relevant layer</div>
@@ -243,7 +243,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="rowColor" id="i9">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertAfter</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertAfter(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">insertAfter</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">
 <div class="block">Inserts a node after a target node in the relevant layer</div>
@@ -251,7 +251,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="altColor" id="i10">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">insertBefore</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertBefore(TypeAugmentedSemanticNode,java.util.List)">insertBefore</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;? extends <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&gt;&nbsp;nodes)</code></th>
 <td class="colLast">
 <div class="block">Inserts a node after a target node in the relevant layer</div>
@@ -259,7 +259,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="rowColor" id="i11">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertBefore</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertBefore(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">insertBefore</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">
 <div class="block">Inserts a node after a target node in the relevant layer</div>
@@ -274,7 +274,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="rowColor" id="i13">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertFirst(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertFirst</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertFirst(TypeAugmentedSemanticNode)">insertFirst</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">
 <div class="block">Inserts a node at the beginning of the relevant layer</div>
 </td>
@@ -288,24 +288,24 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </tr>
 <tr class="rowColor" id="i15">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertLast(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertLast</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertLast(TypeAugmentedSemanticNode)">insertLast</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</code></th>
 <td class="colLast">
 <div class="block">Inserts a node at the end of the relevant layer</div>
 </td>
 </tr>
 <tr class="altColor" id="i16">
 <td class="colFirst"><code><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#invoke(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">invoke</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;input)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#invoke(TypeAugmentedSemanticNode)">invoke</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;input)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i17">
 <td class="colFirst"><code><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#next(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">next</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#next(TypeAugmentedSemanticNode)">next</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i18">
 <td class="colFirst"><code><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#previous(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">previous</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#previous(TypeAugmentedSemanticNode)">previous</a></span>&#8203;(<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i19">
@@ -324,7 +324,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;radin.core.output.midanalysis.<a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a></h3>
-<a id="methods.inherited.from.class.radin.core.output.midanalysis.ScopedTypeTracker">
+<a id="methods.inherited.from.class.ScopedTypeTracker">
 <!--   -->
 </a><code><a href="../ScopedTypeTracker.html#getCurrentTracker()">getCurrentTracker</a>, <a href="../ScopedTypeTracker.html#getEnvironment()">getEnvironment</a>, <a href="../ScopedTypeTracker.html#releaseTrackingClosure()">releaseTrackingClosure</a>, <a href="../ScopedTypeTracker.html#setEnvironment(radin.core.semantics.TypeEnvironment)">setEnvironment</a>, <a href="../ScopedTypeTracker.html#setTrackerStack(java.util.Stack)">setTrackerStack</a>, <a href="../ScopedTypeTracker.html#typeTrackingClosure()">typeTrackingClosure</a>, <a href="../ScopedTypeTracker.html#typeTrackingClosure(radin.core.semantics.types.compound.CXClassType)">typeTrackingClosure</a>, <a href="../ScopedTypeTracker.html#typeTrackingClosureLoad(radin.core.semantics.types.compound.CXClassType)">typeTrackingClosureLoad</a></code></div>
 <div class="inheritedList">
@@ -339,9 +339,9 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </a><code><a href="../../../errorhandling/ICompilationErrorCollector.html#hasErrors()">hasErrors</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from interface&nbsp;radin.core.output.midanalysis.transformation.<a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></h3>
-<a id="methods.inherited.from.class.radin.core.output.midanalysis.transformation.ITransformer">
+<a id="methods.inherited.from.class.ITransformer">
 <!--   -->
-</a><code><a href="ITransformer.html#delete(java.util.Set)">delete</a>, <a href="ITransformer.html#delete(java.util.Set,boolean)">delete</a>, <a href="ITransformer.html#encapsulate(java.util.List,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">encapsulate</a>, <a href="ITransformer.html#encapsulate(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">encapsulate</a>, <a href="ITransformer.html#encapsulate(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode...)">encapsulate</a>, <a href="ITransformer.html#replace(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">replace</a>, <a href="ITransformer.html#replace(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">replace</a></code></div>
+</a><code><a href="ITransformer.html#delete(java.util.Set)">delete</a>, <a href="ITransformer.html#delete(java.util.Set,boolean)">delete</a>, <a href="ITransformer.html#encapsulate(java.util.List,TypeAugmentedSemanticNode)">encapsulate</a>, <a href="ITransformer.html#encapsulate(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">encapsulate</a>, <a href="ITransformer.html#encapsulate(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode,TypeAugmentedSemanticNode...)">encapsulate</a>, <a href="ITransformer.html#replace(TypeAugmentedSemanticNode,java.util.List)">replace</a>, <a href="ITransformer.html#replace(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">replace</a></code></div>
 </section>
 </li>
 </ul>
@@ -363,7 +363,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(radin.core.output.midanalysis.ScopedTypeTracker)">AbstractTransformer</a></h3>
+<h3><a id="&lt;init&gt;(ScopedTypeTracker)">AbstractTransformer</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">AbstractTransformer</span>&#8203;(<span class="arguments"><a href="../ScopedTypeTracker.html" title="class in radin.core.output.midanalysis">ScopedTypeTracker</a>&nbsp;old)</span></div>
 </section>
 </li>
@@ -391,7 +391,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="invoke(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">invoke</a></h3>
+<h3><a id="invoke(TypeAugmentedSemanticNode)">invoke</a></h3>
 <div class="memberSignature"><span class="modifiers">public final</span>&nbsp;<span class="returnType"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a></span>&nbsp;<span class="memberName">invoke</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;input)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
@@ -417,13 +417,13 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="insertFirst(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertFirst</a></h3>
+<h3><a id="insertFirst(TypeAugmentedSemanticNode)">insertFirst</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">insertFirst</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertFirst(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertFirst(TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
 <div class="block">Inserts a node at the beginning of the relevant layer</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#insertFirst(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertFirst</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#insertFirst(TypeAugmentedSemanticNode)">insertFirst</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>node</code> - non-null node</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -449,13 +449,13 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="insertLast(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertLast</a></h3>
+<h3><a id="insertLast(TypeAugmentedSemanticNode)">insertLast</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">insertLast</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertLast(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertLast(TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
 <div class="block">Inserts a node at the end of the relevant layer</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#insertLast(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertLast</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#insertLast(TypeAugmentedSemanticNode)">insertLast</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>node</code> - a non-null node</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -481,18 +481,18 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertAfter</a></h3>
+<h3><a id="insertAfter(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">insertAfter</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">insertAfter</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertAfter(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
 <div class="block">Inserts a node after a target node in the relevant layer</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertAfter</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#insertAfter(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">insertAfter</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>target</code> - either a node in the relevant layer or a null value. If the target is not null and is not within
               the layer, the operation fails. A null target value is equivalent to
-              <a href="ITransformer.html#insertLast(radin.core.output.midanalysis.TypeAugmentedSemanticNode)"><code>ITransformer.insertLast(TypeAugmentedSemanticNode)</code></a>.</dd>
+              <a href="ITransformer.html#insertLast(TypeAugmentedSemanticNode)"><code>ITransformer.insertLast(TypeAugmentedSemanticNode)</code></a>.</dd>
 <dd><code>node</code> - a non null node</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>if the target was valid and the operation succeeded</dd>
@@ -501,14 +501,14 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">insertAfter</a></h3>
+<h3><a id="insertAfter(TypeAugmentedSemanticNode,java.util.List)">insertAfter</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">insertAfter</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;? extends <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&gt;&nbsp;nodes)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertAfter(TypeAugmentedSemanticNode,java.util.List)">ITransformer</a></code></span></div>
 <div class="block">Inserts a node after a target node in the relevant layer</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#insertAfter(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">insertAfter</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#insertAfter(TypeAugmentedSemanticNode,java.util.List)">insertAfter</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>target</code> - either a node in the relevant layer or a null value. If the target is not null and is not within
               the layer, the operation fails. A null target value is equivalent to
@@ -521,18 +521,18 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertBefore</a></h3>
+<h3><a id="insertBefore(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">insertBefore</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">insertBefore</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertBefore(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
 <div class="block">Inserts a node after a target node in the relevant layer</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,radin.core.output.midanalysis.TypeAugmentedSemanticNode)">insertBefore</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#insertBefore(TypeAugmentedSemanticNode,TypeAugmentedSemanticNode)">insertBefore</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>target</code> - either a node in the relevant layer or a null value. If the target is not null and is not within
               the layer, the operation fails. A null target value is equivalent to
-              <a href="ITransformer.html#insertFirst(radin.core.output.midanalysis.TypeAugmentedSemanticNode)"><code>ITransformer.insertFirst(TypeAugmentedSemanticNode)</code></a>.</dd>
+              <a href="ITransformer.html#insertFirst(TypeAugmentedSemanticNode)"><code>ITransformer.insertFirst(TypeAugmentedSemanticNode)</code></a>.</dd>
 <dd><code>node</code> - a non null node</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>if the target was valid and the operation succeeded</dd>
@@ -541,14 +541,14 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">insertBefore</a></h3>
+<h3><a id="insertBefore(TypeAugmentedSemanticNode,java.util.List)">insertBefore</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">insertBefore</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;? extends <a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&gt;&nbsp;nodes)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#insertBefore(TypeAugmentedSemanticNode,java.util.List)">ITransformer</a></code></span></div>
 <div class="block">Inserts a node after a target node in the relevant layer</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#insertBefore(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.util.List)">insertBefore</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#insertBefore(TypeAugmentedSemanticNode,java.util.List)">insertBefore</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>target</code> - either a node in the relevant layer or a null value. If the target is not null and is not within
               the layer, the operation fails. A null target value is equivalent to
@@ -561,13 +561,13 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="delete(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">delete</a></h3>
+<h3><a id="delete(TypeAugmentedSemanticNode)">delete</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">delete</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;node)</span></div>
-<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#delete(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
+<div class="block"><span class="descfrmTypeLabel">Description copied from interface:&nbsp;<code><a href="ITransformer.html#delete(TypeAugmentedSemanticNode)">ITransformer</a></code></span></div>
 <div class="block">Deletes a node from the relevant layer, returning false if the removal failed</div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#delete(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">delete</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#delete(TypeAugmentedSemanticNode)">delete</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>node</code> - the node to remove, if it's null nothing happens and the operation "succeeds"</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -577,21 +577,21 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="next(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">next</a></h3>
+<h3><a id="next(TypeAugmentedSemanticNode)">next</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a></span>&nbsp;<span class="memberName">next</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#next(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">next</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#next(TypeAugmentedSemanticNode)">next</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 </dl>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="previous(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">previous</a></h3>
+<h3><a id="previous(TypeAugmentedSemanticNode)">previous</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a></span>&nbsp;<span class="memberName">previous</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;target)</span></div>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="ITransformer.html#previous(radin.core.output.midanalysis.TypeAugmentedSemanticNode)">previous</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
+<dd><code><a href="ITransformer.html#previous(TypeAugmentedSemanticNode)">previous</a></code>&nbsp;in interface&nbsp;<code><a href="ITransformer.html" title="interface in radin.core.output.midanalysis.transformation">ITransformer</a></code></dd>
 </dl>
 </section>
 </li>
@@ -607,7 +607,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="determineTypes(radin.core.output.typeanalysis.TypeAnalyzer)">determineTypes</a></h3>
+<h3><a id="determineTypes(TypeAnalyzer)">determineTypes</a></h3>
 <div class="memberSignature"><span class="modifiers">protected</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">determineTypes</span>&#8203;(<span class="arguments"><a href="../../typeanalysis/TypeAnalyzer.html" title="class in radin.core.output.typeanalysis">TypeAnalyzer</a>&nbsp;other)</span></div>
 </section>
 </li>
@@ -626,7 +626,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="callMethodOn(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.lang.String,java.util.List)">callMethodOn</a></h3>
+<h3><a id="callMethodOn(TypeAugmentedSemanticNode,java.lang.String,java.util.List)">callMethodOn</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">callMethodOn</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;functionName,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&gt;&nbsp;sequence)</span></div>
@@ -634,7 +634,7 @@ implements <a href="ITransformer.html" title="interface in radin.core.output.mid
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="callMethodOn(radin.core.output.midanalysis.TypeAugmentedSemanticNode,java.lang.String)">callMethodOn</a></h3>
+<h3><a id="callMethodOn(TypeAugmentedSemanticNode,java.lang.String)">callMethodOn</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">callMethodOn</span>&#8203;(<span class="arguments"><a href="../TypeAugmentedSemanticNode.html" title="class in radin.core.output.midanalysis">TypeAugmentedSemanticNode</a>&nbsp;object,
 <a href="https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;functionName)</span></div>
 </section>

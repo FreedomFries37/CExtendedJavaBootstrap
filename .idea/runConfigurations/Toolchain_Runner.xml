@@ -6,7 +6,7 @@
       <env name="JODIN_HOME" value="jodin_home" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.ToolchainEntrancePoint" />
-    <module name="Jodin.main" />
+    <module name="Jodin.ToolchainRunner.main" />
     <option name="PROGRAM_PARAMETERS" value="-D c_src --ast --tast --debug-level 5 test_project/main.jdn" />
     <method v="2">
       <option name="Make" enabled="true" />
