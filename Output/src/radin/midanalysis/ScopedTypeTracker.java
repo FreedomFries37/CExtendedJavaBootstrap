@@ -29,6 +29,10 @@ public abstract class ScopedTypeTracker implements IScopedTracker<VariableTypeTr
         genericModule = new GenericModule();
     }
     
+    public GenericModule getGenericModule() {
+        return genericModule;
+    }
+    
     @Override
     public void typeTrackingClosure() {
         VariableTypeTracker next;

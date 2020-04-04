@@ -21,7 +21,7 @@ import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
-import radin.core.semantics.types.compound.ICXClassType;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.input.ISemanticAnalyzer;
@@ -515,7 +515,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             typeName = getCatNode("AbstractDeclarator").getSynthesized();
                             CXType type = environment.getType(typeName);
                             if(type instanceof PointerType && UniversalCompilerSettings.getInstance().getSettings().isInRuntimeCompilationMode()) {
-                                if(((PointerType) type).innerMostType() instanceof ICXClassType) {
+                                if(((PointerType) type).innerMostType() instanceof AbstractCXClassType) {
                                     type = ((PointerType) type).getSubType();
                                 }
                             }
@@ -1645,9 +1645,12 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "GenericDeclaration": {
+                        
+                        // Get the TypeParameterList
                         AbstractSyntaxNode identifierList = getCatNode("TypeParameterList").getSynthesized();
                         List<AbstractSyntaxNode> parameterTypes = identifierList.getDirectChildren();
                         List<String> typedefs = new LinkedList<>();
+                        
                         for (AbstractSyntaxNode parameterType : parameterTypes) {
                             AbstractSyntaxNode id = parameterType.getChild(0);
                             CXType upperBound = environment.getDefaultInheritance();
@@ -1662,6 +1665,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         }
                         
                         node.getChild(1).setInherit(AbstractSyntaxNode.EMPTY);
+                        
+                        
                         AbstractSyntaxNode dec = node.getChild(1).getSynthesized();
                         
                         
@@ -1670,7 +1675,13 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             
                         }
                         
-                        node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.generic, identifierList, dec));
+                        // this should be the complete generic clause
+                        AbstractSyntaxNode generic = new AbstractSyntaxNode(ASTNodeType.generic, identifierList, dec);
+                        node.setSynthesized(generic);
+                        
+                        
+                        
+                        
                         
                         return true;
                     }

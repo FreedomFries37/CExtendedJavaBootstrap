@@ -21,7 +21,7 @@ import radin.core.utility.UniversalCompilerSettings;
 
 import java.util.*;
 
-public class CXClassType extends CXCompoundType implements ICXClassType {
+public class CXClassType extends AbstractCXClassType {
     
     private CXClassType parent;
     

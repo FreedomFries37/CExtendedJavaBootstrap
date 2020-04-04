@@ -16,6 +16,9 @@ void println_s(std::String o) {
 	println(o->getCStr());
 }
 
+void delete(std::Object o) {
+	o->drop();
+}
 
 
 in std {

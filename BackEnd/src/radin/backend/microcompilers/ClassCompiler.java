@@ -7,7 +7,7 @@ import radin.output.tags.PriorConstructorTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXStructType;
-import radin.core.semantics.types.compound.ICXClassType;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.utility.UniversalCompilerSettings;
@@ -16,10 +16,10 @@ import java.io.PrintWriter;
 
 public class ClassCompiler extends AbstractIndentedOutputSingleOutputCompiler {
     
-    private ICXClassType cxClassType;
+    private AbstractCXClassType cxClassType;
     private TypeAugmentedSemanticNode corresponding;
     
-    public ClassCompiler(PrintWriter printWriter, int indent, ICXClassType cxClassType,
+    public ClassCompiler(PrintWriter printWriter, int indent, AbstractCXClassType cxClassType,
                          TypeAugmentedSemanticNode corresponding) {
         super(printWriter, indent);
         this.cxClassType = cxClassType;

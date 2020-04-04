@@ -1,9 +1,10 @@
 package radin.core.semantics.types;
 
 import radin.core.lexical.Token;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 
 /**
- * The visibility of a field in a {@link radin.core.semantics.types.compound.ICXClassType}
+ * The visibility of a field in a {@link AbstractCXClassType}
  * This is enforced statically in compilation time, and resulting code will have everything visible
  */
 public enum Visibility {

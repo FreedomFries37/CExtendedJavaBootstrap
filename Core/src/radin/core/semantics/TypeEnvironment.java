@@ -16,7 +16,6 @@ import radin.core.utility.Pair;
 
 import java.util.*;
 
-import static radin.core.lexical.TokenType.t_class;
 import static radin.core.lexical.TokenType.t_id;
 import static radin.core.semantics.ASTNodeType.*;
 
@@ -381,7 +380,7 @@ public class TypeEnvironment {
         if(output == null)
             throw new TypeDoesNotExist(typenameImage.getImage());
         
-        if(output instanceof ICXClassType) {
+        if(output instanceof AbstractCXClassType) {
             output = output.toPointer();
         }
         return output;

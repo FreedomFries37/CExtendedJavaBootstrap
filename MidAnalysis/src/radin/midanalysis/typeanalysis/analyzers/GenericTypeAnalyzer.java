@@ -1,5 +1,6 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
+import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.typeanalysis.TypeAnalyzer;
 import radin.core.semantics.ASTNodeType;
@@ -13,12 +14,35 @@ public class GenericTypeAnalyzer extends TypeAnalyzer {
     
     @Override
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
-        ICompilationSettings.debugLog.info(node.toTreeForm());
+        ICompilationSettings.debugLog.info("Generic Declaration: " + node.toTreeForm());
     
-        TypeAugmentedSemanticNode functionDefinition = node.getASTChild(ASTNodeType.function_definition);
-        FunctionTypeAnalyzer functionTypeAnalyzer = new FunctionTypeAnalyzer(functionDefinition);
+        switch (node.getChild(1).getASTType()) {
+            case function_definition: {
+                TypeAugmentedSemanticNode functionDefinition = node.getASTChild(ASTNodeType.function_definition);
+                FunctionTypeAnalyzer functionTypeAnalyzer = new FunctionTypeAnalyzer(functionDefinition);
+    
+                if(!determineTypes(functionTypeAnalyzer)) return false;
+                
+                /*
+                getGenericModule().declareGenericFunction(
+                        new CXIdentifier(functionDefinition.getASTChild(ASTNodeType.id).getToken(), false),
+                        functionDefinition.getCXType(),
+                        
+                );
+                
+                 */
+            }
+            break;
+            case class_type_definition: {
+                
+                
+                break;
+            }
+            default: {
+                return false;
+            }
+        }
         
-        if(!determineTypes(functionTypeAnalyzer)) return false;
         
         return true;
     }

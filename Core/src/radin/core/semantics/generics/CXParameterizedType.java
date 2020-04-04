@@ -4,30 +4,30 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.ICXWrapper;
-import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXStructType;
-import radin.core.semantics.types.compound.ICXClassType;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 import radin.core.utility.Reference;
 
-import java.util.LinkedList;
 import java.util.List;
 
-public class CXParameterizedType extends CXType implements ICXClassType {
+public class CXParameterizedType extends AbstractCXClassType {
     
-    private ICXClassType upperBound;
+    private AbstractCXClassType upperBound;
     private Token name;
     
-    public CXParameterizedType(ICXClassType upperBound, Token name, TypeEnvironment e) {
+    public CXParameterizedType(AbstractCXClassType upperBound, Token name, TypeEnvironment e) {
+        super(upperBound.getFields());
         this.upperBound = upperBound;
         this.name = name;
     }
     
-    
+    public AbstractCXClassType getUpperBound() {
+        return upperBound;
+    }
     
     /**
      * Creates a declaration of a variable of a certain type

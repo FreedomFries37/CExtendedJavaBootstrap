@@ -5,7 +5,9 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
+import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.*;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
@@ -403,9 +405,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             CXType cxClass;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 cxClass = objectInteraction.getCXType();
-            }
-            
-            else {
+            } else if (objectInteraction.getCXType() instanceof CXParameterizedType) {
+                cxClass = ((CXParameterizedType) objectInteraction.getCXType()).getUpperBound();
+            } else {
                 cxClass = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(ScopedTypeTracker.getEnvironment());
             }
             
@@ -413,7 +415,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
            
             
             
-            if(!(cxClass instanceof CXClassType) || !getCurrentTracker().methodVisible(((CXClassType) cxClass),
+            if(!(cxClass instanceof AbstractCXClassType) || !getCurrentTracker().methodVisible(((CXClassType) cxClass),
                     name.getImage(),
                     typeList)) {
                 if(getCurrentTracker().fieldVisible((CXCompoundType) cxClass, name.getImage())) {
@@ -430,12 +432,13 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 throw new IllegalAccessError(cxClass, name.getImage(), typeList, node.getChild(0).findFirstToken(), name);
             }
             
-            CXType nextType = getCurrentTracker().getMethodType(((CXClassType) cxClass), name.getImage(), typeList);
+            
+            CXType nextType = getCurrentTracker().getMethodType(((AbstractCXClassType) cxClass), name.getImage(), typeList);
             if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             
             if(!isSuperCall) {
                 Reference<Boolean> ref = new Reference<>();
-                CXMethod method = ((CXClassType) cxClass).getMethod(name, typeList, ref);
+                CXMethod method = ((AbstractCXClassType) cxClass).getMethod(name, typeList, ref);
                 if (ref.getValue()) {
                     node.addCompilationTag(BasicCompilationTag.VIRTUAL_METHOD_CALL);
                 }
