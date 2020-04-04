@@ -1,8 +1,7 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
-import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.core.semantics.ASTNodeType;
 import radin.core.utility.ICompilationSettings;
 

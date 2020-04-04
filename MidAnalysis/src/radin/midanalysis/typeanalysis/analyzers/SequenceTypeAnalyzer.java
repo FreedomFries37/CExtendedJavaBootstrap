@@ -1,7 +1,7 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.core.semantics.types.CXType;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 
 import java.util.LinkedList;

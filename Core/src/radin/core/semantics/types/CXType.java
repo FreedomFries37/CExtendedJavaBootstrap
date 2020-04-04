@@ -40,6 +40,17 @@ public abstract class CXType implements CXEquivalent {
     abstract public boolean isValid(TypeEnvironment e);
     
     /**
+     * Determines if a type can be instantiated
+     *
+     * <b>
+     *     Eventually, {@code new} will be valid for all types by replacing malloc(sizeof(T));
+     * @return whether the {@code new} operator is valid
+     */
+    public boolean canBeInstantiated() {
+        return true;
+    }
+    
+    /**
      * Used as a shortcut for checking if a type is primitive (ie: a non-compound C type)
      * Primitive Types:
      *  {@link radin.core.semantics.types.primitives.CXPrimitiveType}

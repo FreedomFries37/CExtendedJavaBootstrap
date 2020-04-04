@@ -4,7 +4,7 @@ import radin.core.chaining.ICompilerFunction;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.midanalysis.GenericModule;
 import radin.midanalysis.ScopedTypeTracker;
-import radin.output.typeanalysis.VariableTypeTracker;
+import radin.midanalysis.typeanalysis.VariableTypeTracker;
 
 import java.util.LinkedList;
 import java.util.List;

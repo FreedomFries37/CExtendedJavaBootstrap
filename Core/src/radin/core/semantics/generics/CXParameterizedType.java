@@ -4,6 +4,7 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXStructType;
 import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
@@ -186,6 +187,41 @@ public class CXParameterizedType extends AbstractCXClassType {
     @Override
     public void generateSuperMethods(String vtablename) {
     
+    }
+    
+    @Override
+    public List<CXMethod> getInstanceMethods() {
+        return upperBound.getInstanceMethods();
+    }
+    
+    @Override
+    public List<CXClassType> getLineage() {
+        return upperBound.getLineage();
+    }
+    
+    @Override
+    public boolean canBeInstantiated() {
+        return false;
+    }
+    
+    @Override
+    public CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
+        return upperBound.getMethodStrict(name, parameterTypeList, isVirtual);
+    }
+    
+    @Override
+    public boolean isVirtualStrict(String name, ParameterTypeList typeList) {
+        return upperBound.isVirtualStrict(name, typeList);
+    }
+    
+    @Override
+    public List<CXClassType> getReverseInheritanceOrder() {
+        return upperBound.getReverseInheritanceOrder();
+    }
+    
+    @Override
+    public CXClassType getParent() {
+        return upperBound.getParent();
     }
     
     @Override

@@ -496,6 +496,7 @@ public class CXClassType extends AbstractCXClassType {
                 CXMethod.variableAST(name));
     }
     
+    @Override
     public List<CXMethod> getInstanceMethods() {
         return instanceMethods;
     }
@@ -504,6 +505,7 @@ public class CXClassType extends AbstractCXClassType {
         return getLineage().contains(other);
     }
     
+    @Override
     public List<CXClassType> getLineage() {
         List<CXClassType> output = new LinkedList<>();
         CXClassType ptr = this;
@@ -514,6 +516,7 @@ public class CXClassType extends AbstractCXClassType {
         return output;
     }
     
+    @Override
     public CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) {
         ICompilationSettings.debugLog.finest("Getting method with strict parameter checking");
         ICompilationSettings.debugLog.finest("Name = " + name);
@@ -531,6 +534,7 @@ public class CXClassType extends AbstractCXClassType {
         return null;
     }
     
+    @Override
     public boolean isVirtualStrict(String name, ParameterTypeList typeList) {
         Reference<Boolean> output = new Reference<>();
         CXMethod method = getMethodStrict(name, typeList, output);
@@ -625,6 +629,7 @@ public class CXClassType extends AbstractCXClassType {
         return visibilityMap.get(name);
     }
     
+    @Override
     public List<CXClassType> getReverseInheritanceOrder() {
         List<CXClassType> lineage = getLineage();
         Collections.reverse(lineage);
@@ -707,6 +712,7 @@ public class CXClassType extends AbstractCXClassType {
         return "struct " + getCTypeName();
     }
     
+    @Override
     public CXClassType getParent() {
         return parent;
     }

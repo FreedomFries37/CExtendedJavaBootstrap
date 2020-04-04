@@ -291,6 +291,7 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     @Override
     public void setOutputAST(boolean outputAST) {
+        debugLog.config("Set output AST to " + outputAST);
         this.outputAST = outputAST;
     }
     
@@ -301,6 +302,7 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     @Override
     public void setOutputTAST(boolean outputTAST) {
+        debugLog.config("Set output TAST to " + outputTAST);
         this.outputTAST = outputTAST;
     }
     

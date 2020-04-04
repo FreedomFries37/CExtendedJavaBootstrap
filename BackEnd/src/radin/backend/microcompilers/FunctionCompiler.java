@@ -6,7 +6,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXParameter;
-import radin.output.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
+import radin.midanalysis.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.UniversalCompilerSettings;
 

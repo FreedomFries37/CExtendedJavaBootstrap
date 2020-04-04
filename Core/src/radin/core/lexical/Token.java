@@ -11,6 +11,7 @@ public class Token implements Comparable<Token> {
     private int virtualColumn = -1;
     private int virtualLineNumber = -1;
     private Token previous;
+    private Token next;
     
     private int actualLineNumber;
     private String filename;
@@ -37,6 +38,18 @@ public class Token implements Comparable<Token> {
     
     public void setPrevious(Token previous) {
         this.previous = previous;
+        if(previous != null)
+            previous.next = this;
+    }
+    
+    public Token getNext() {
+        return next;
+    }
+    
+    public void setNext(Token next) {
+        this.next = next;
+        if (next != null)
+            next.previous = this;
     }
     
     /**

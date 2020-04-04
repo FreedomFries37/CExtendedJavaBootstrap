@@ -5,7 +5,7 @@ import radin.core.lexical.TokenType;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.midanalysis.TypeAugmentedSemanticTree;
 import radin.midanalysis.typeanalysis.analyzers.ExpressionTypeAnalyzer;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 

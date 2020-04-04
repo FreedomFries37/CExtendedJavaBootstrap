@@ -2,7 +2,7 @@ package radin.midanalysis;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
-import radin.output.typeanalysis.VariableTypeTracker;
+import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.generics.CXGenericFunction;

@@ -24,7 +24,7 @@ import radin.interpreter.SymbolTableCreator;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.midanalysis.TypeAugmentedSemanticTree;
 import radin.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -240,7 +240,7 @@ public class ToolchainEntrancePoint {
                         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
                                 SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> newSettings =
                                 new CompilationSettings<>();
-                        settings.copySettingsTo(newSettings);
+                        newSettings.copySettingsFrom(settings);
                         newSettings.setFrontEndUnit(frontEndUnit);
                         newSettings.setMidToolChain(midChain);
                         var backChain = new SymbolTableCreator();
@@ -258,7 +258,7 @@ public class ToolchainEntrancePoint {
     
                         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> newSettings =
                                 new CompilationSettings<>();
-                        settings.copySettingsTo(newSettings);
+                        newSettings.copySettingsFrom(settings);
                         newSettings.setFrontEndUnit(frontEndUnit);
                         newSettings.setMidToolChain(midChain);
                         settings = newSettings;

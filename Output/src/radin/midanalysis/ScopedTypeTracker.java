@@ -1,7 +1,7 @@
 package radin.midanalysis;
 
 
-import radin.output.typeanalysis.VariableTypeTracker;
+import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.utility.ICompilationSettings;

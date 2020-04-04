@@ -2,8 +2,8 @@ package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.core.semantics.types.CXType;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.typeanalysis.TypeAnalyzer;
-import radin.output.typeanalysis.errors.UnreachableCodeError;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.errors.UnreachableCodeError;
 
 public class CompoundStatementTypeAnalyzer extends TypeAnalyzer {
     private CXType returnType;

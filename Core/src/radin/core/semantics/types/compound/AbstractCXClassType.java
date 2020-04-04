@@ -64,6 +64,18 @@ public abstract class AbstractCXClassType extends CXCompoundType implements CXCa
     
     public abstract List<CXMethod> getGeneratedSupers();
     
+    public abstract List<CXMethod> getInstanceMethods();
+    
+    public abstract List<CXClassType> getLineage();
+    
+    public abstract CXMethod getMethodStrict(String name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual);
+    
+    public abstract boolean isVirtualStrict(String name, ParameterTypeList typeList);
+    
+    public abstract List<CXClassType> getReverseInheritanceOrder();
+    
+    public abstract CXClassType getParent();
+    
     public abstract boolean canInstantiateDirectly();
     
     public static class ClassFieldDeclaration extends FieldDeclaration {

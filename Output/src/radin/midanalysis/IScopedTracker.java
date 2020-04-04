@@ -1,6 +1,6 @@
 package radin.midanalysis;
 
-import radin.output.typeanalysis.VariableTypeTracker;
+import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.types.compound.CXClassType;
 
 import java.util.Stack;

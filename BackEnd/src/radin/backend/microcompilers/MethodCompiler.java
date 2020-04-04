@@ -2,7 +2,7 @@ package radin.backend.microcompilers;
 
 import radin.midanalysis.MethodTASNTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
+import radin.midanalysis.typeanalysis.errors.IncorrectlyMissingCompoundStatement;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.CXParameter;

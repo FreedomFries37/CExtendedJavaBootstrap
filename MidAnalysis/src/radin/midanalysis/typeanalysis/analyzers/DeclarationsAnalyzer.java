@@ -9,7 +9,7 @@ import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 
 public class DeclarationsAnalyzer extends TypeAnalyzer {
     

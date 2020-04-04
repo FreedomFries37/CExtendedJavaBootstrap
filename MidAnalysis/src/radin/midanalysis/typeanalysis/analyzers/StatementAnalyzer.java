@@ -1,16 +1,16 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.output.tags.BasicCompilationTag;
-import radin.output.typeanalysis.errors.NonVoidReturnTypeError;
+import radin.midanalysis.typeanalysis.errors.NonVoidReturnTypeError;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.typeanalysis.errors.IllegalStatementError;
-import radin.output.typeanalysis.errors.IncorrectReturnTypeError;
+import radin.midanalysis.typeanalysis.errors.IllegalStatementError;
+import radin.midanalysis.typeanalysis.errors.IncorrectReturnTypeError;
 import radin.core.utility.ICompilationSettings;
 
 public class StatementAnalyzer extends TypeAnalyzer {

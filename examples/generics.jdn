@@ -16,6 +16,7 @@ for <T> class Wrapper {
 };
 
 for <T> T earlyTest(T input) {
+	T beep = new T();
 	return input;
 }
 

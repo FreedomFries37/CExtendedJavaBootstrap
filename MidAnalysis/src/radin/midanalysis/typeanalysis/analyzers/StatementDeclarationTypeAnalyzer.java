@@ -2,9 +2,9 @@ package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.output.tags.ArrayWithSizeTag;
 import radin.output.tags.BasicCompilationTag;
-import radin.output.typeanalysis.errors.IncorrectTypeError;
-import radin.output.typeanalysis.errors.TypeNotDefinedError;
-import radin.output.typeanalysis.errors.VoidTypeError;
+import radin.midanalysis.typeanalysis.errors.IncorrectTypeError;
+import radin.midanalysis.typeanalysis.errors.TypeNotDefinedError;
+import radin.midanalysis.typeanalysis.errors.VoidTypeError;
 import radin.output.tags.MultiDimensionalArrayWithSizeTag;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
@@ -15,7 +15,7 @@ import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.ArrayType;
-import radin.output.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.utility.ICompilationSettings;
 

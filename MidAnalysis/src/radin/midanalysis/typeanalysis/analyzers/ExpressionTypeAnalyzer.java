@@ -23,13 +23,14 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
+import radin.midanalysis.typeanalysis.errors.InstantiationError;
 import radin.output.tags.BasicCompilationTag;
 import radin.output.tags.ConstructorCallTag;
 import radin.output.tags.MethodCallTag;
 import radin.output.tags.SuperCallTag;
-import radin.output.typeanalysis.TypeAnalyzer;
-import radin.output.typeanalysis.errors.IllegalAccessError;
-import radin.output.typeanalysis.errors.*;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.errors.IllegalAccessError;
+import radin.midanalysis.typeanalysis.errors.*;
 
 import java.util.regex.Pattern;
 
@@ -415,7 +416,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
            
             
             
-            if(!(cxClass instanceof AbstractCXClassType) || !getCurrentTracker().methodVisible(((CXClassType) cxClass),
+            if(!(cxClass instanceof AbstractCXClassType) || !getCurrentTracker().methodVisible(((AbstractCXClassType) cxClass),
                     name.getImage(),
                     typeList)) {
                 if(getCurrentTracker().fieldVisible((CXCompoundType) cxClass, name.getImage())) {
@@ -486,6 +487,10 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 base = ((ICXWrapper) base).getWrappedType();
             }
             CXType constructedType = ((PointerType) base).getSubType();
+            
+            if(!constructedType.canBeInstantiated()) {
+                throw new InstantiationError(node.findFirstToken().getNext(), constructedType);
+            }
             
             assert constructedType instanceof CXClassType;
             SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(node.getASTChild(ASTNodeType.sequence));

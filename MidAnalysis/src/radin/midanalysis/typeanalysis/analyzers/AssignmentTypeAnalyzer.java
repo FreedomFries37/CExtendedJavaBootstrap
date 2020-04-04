@@ -2,16 +2,16 @@ package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.BasicCompilationTag;
-import radin.output.typeanalysis.errors.ConstModificationError;
+import radin.midanalysis.typeanalysis.errors.ConstModificationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.wrapped.ConstantType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
-import radin.output.typeanalysis.TypeAnalyzer;
-import radin.output.typeanalysis.errors.IllegalLValueError;
-import radin.output.typeanalysis.errors.IncorrectTypeError;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.errors.IllegalLValueError;
+import radin.midanalysis.typeanalysis.errors.IncorrectTypeError;
 import radin.core.utility.ICompilationSettings;
 
 public class AssignmentTypeAnalyzer extends TypeAnalyzer {
