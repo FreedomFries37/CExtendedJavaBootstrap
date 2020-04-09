@@ -3,7 +3,6 @@
     <envs>
       <env name="EXPERIMENTAL" value="true" />
       <env name="MSFT" value="true" />
-      <env name="JODIN_HOME" value="jodin_home" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.ToolchainEntrancePoint" />
     <module name="Jodin.ToolchainRunner.main" />
