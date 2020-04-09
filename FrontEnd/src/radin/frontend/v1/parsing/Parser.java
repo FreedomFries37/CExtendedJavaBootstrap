@@ -1354,6 +1354,9 @@ public class Parser extends BasicParser {
                 if (match(t_typename)) {
                     consumeAndAddAsLeaf(child);
                 } else if (!parseNamespacedType(child)) return false;
+                if(match(t_lt)) {
+                    if(!parseGenericInstanceInitParameters(child)) return false;
+                }
                 if (!consume(TokenType.t_lpar)) return false;
                 if (!parseArgsList(child)) return false;
                 if (!consume(TokenType.t_rpar)) return false;
@@ -1405,11 +1408,27 @@ public class Parser extends BasicParser {
     private boolean parseFunctionCall(CategoryNode parent) {
         CategoryNode output = new CategoryNode("FunctionCall");
         
-        if (consume(TokenType.t_lpar)) {
-            if (!parseArgsList(output)) return false;
-            if (!consume(TokenType.t_rpar)) return false;
+        if(match(t_lt)) {
+            switch (attemptParse(this::parseGenericInstanceInitParameters, output)) {
+                case PARSED:
+                    if (!consume(TokenType.t_lpar)) return error("Generic'd ids must always be a function call");
+                    if (!parseArgsList(output)) return false;
+                    if (!consume(TokenType.t_rpar)) return false;
+                    break;
+                case ROLLBACK:
+                    // was not a generic list, the < was a for a comparison
+                    break;
+                case DESYNC:
+                    return error("Parse error in the generic declaration");
+            }
+            
+            
+        } else {
+            if (consume(TokenType.t_lpar)) {
+                if (!parseArgsList(output)) return false;
+                if (!consume(TokenType.t_rpar)) return false;
+            }
         }
-        
         
         parent.addChild(output);
         return true;
@@ -1472,11 +1491,7 @@ public class Parser extends BasicParser {
     protected boolean parseAbstractTypeName(CategoryNode parent) {
         CategoryNode output = new CategoryNode("TypeName");
         
-        if (!parseSpecsAndQuals(output)) return false;
-        if(consume(t_lt)) {
-            
-            if(!consume(t_gt)) return missingError("Missing matching <");
-        }
+        if (!parseCanonicalType(output)) return false;
         if (!parseAbstractDeclarator(output)) return false;
         
         parent.addChild(output);
@@ -1558,18 +1573,16 @@ public class Parser extends BasicParser {
             case t_id:
             case t_typename: {
                 if(!parseNamespacedType(output)) return false;
+                if(match(t_lt)) {
+                    if(!parseGenericInstanceParameters(output)) return false;
+                }
                 break;
             }
             default:
                 return error("Not a valid type");
         }
         
-        if(consume(t_lt)) {
-            if(!match(t_gt)) {
-                if(!parseGenericInstanceTypeList(output)) return false;
-            }
-            if(!consume(t_gt)) return missingError("Missing matching >");
-        }
+        
         
         
         parent.addChild(output);
@@ -2497,4 +2510,105 @@ public class Parser extends BasicParser {
         parent.addChild(child);
         return true;
     }
+    
+    
+    /**
+     * Used when parsing generic type variable declarations.
+     * Allows for variance.
+     * <br>
+     *     Example:
+     * {@code List<Integer>}
+     * @param parent
+     * @return
+     */
+    private boolean parseGenericInstanceParameters(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("GenericInstanceParameters");
+        
+        if(!consume(t_lt)) return false;
+        if(!parseVarianceList(child)) return false;
+        if(!consume(t_gt)) return error("Missing matching > for generic instance");
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseVariance(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Variance");
+     
+        if(consumeAndAddAsLeaf(t_qmark, child)) {
+            if(!consumeAndAddAsLeaf(t_colon, child)) {
+                return error("In generic parameter type of ? must be followed by an inheriting type (ex: ? : std::Object)");
+            }
+            if(!parseAbstractTypeName(child)) return error("Invalid type name");
+        } else {
+            if(!parseAbstractTypeName(child)) return error("Invalid type name");
+            if(consumeAndAddAsLeaf(t_colon, child)) {
+                if(!consumeAndAddAsLeaf(t_qmark, child)) {
+                    return error("Only \": ?\" allowed for contravariance");
+                }
+            }
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseVarianceList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("VarianceList");
+        
+        if (!parseVariance(child)) return false;
+        if (!parseVarianceListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseVarianceListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("VarianceListTail");
+        
+        if(consume(t_comma)) {
+            if(!parseVarianceList(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    /**
+     * Used for calling generic functions or constructors. No variance allowed.
+     * @param parent
+     * @return
+     */
+    private boolean parseGenericInstanceInitParameters(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("GenericInstanceInitParameters");
+    
+        if(!consume(t_lt)) return false;
+        if(!parseAbstractTypeNameList(child)) return false;
+        if(!consume(t_gt)) return error("Missing matching > for generic instance");
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseAbstractTypeNameList(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("AbstractTypeNameList");
+        
+        if (!parseAbstractTypeName(child)) return false;
+        if (!parseAbstractTypeNameListTail(child)) return false;
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseAbstractTypeNameListTail(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("AbstractTypeNameListTail");
+        
+        if(consume(t_comma)) {
+            if(!parseAbstractTypeNameList(child)) return false;
+        }
+        
+        parent.addChild(child);
+        return true;
+    }
+    
 }

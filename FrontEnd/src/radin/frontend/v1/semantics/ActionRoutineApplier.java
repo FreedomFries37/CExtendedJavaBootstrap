@@ -714,10 +714,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     case "TypeName": {
                         
                         CategoryNode abstractDeclarator = getCatNode("AbstractDeclarator");
+                        AbstractSyntaxNode canonicalType = getCatNode("CanonicalType")
+                                .getSynthesized();
                         abstractDeclarator
                                 .setInherit(
-                                        getCatNode("SpecsAndQuals")
-                                                .getSynthesized()
+                                        canonicalType
                                 );
                         
                         node.setSynthesized(abstractDeclarator.getSynthesized());
