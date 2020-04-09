@@ -10,6 +10,16 @@ sourceSets {
     }
 }
 
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'radin.ToolchainEntrancePoint'
+    }
+
+    archiveBaseName = "jodin"
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
 dependencies {
     implementation project(':Core')
     implementation project(':Input')
