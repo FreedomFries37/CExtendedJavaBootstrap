@@ -1352,7 +1352,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "ParameterDeclaration": {
                         
-                        AbstractSyntaxNode specifiers = getCatNode("DeclarationSpecifiers").getSynthesized();
+                        AbstractSyntaxNode specifiers = getCatNode("CanonicalType").getSynthesized();
                         CategoryNode declarator;
                         if(node.hasChildCategory("Declarator")) {
                             declarator =  getCatNode("Declarator");

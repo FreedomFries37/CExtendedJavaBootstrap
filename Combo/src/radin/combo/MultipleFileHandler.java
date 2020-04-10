@@ -32,7 +32,7 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
     private IToolChain<? super AbstractSyntaxNode, ? extends TypeAugmentedSemanticNode> midToolChain;
     private IToolChain<? super TypeAugmentedSemanticNode, ? extends Output> backToolChain;
     private List<Output> generatedOutputs = new LinkedList<>();
-    private HashSet<CompilationNode> nodes;
+    private List<CompilationNode> nodes;
     private int compileAttempt;
     private HashMap<CompilationNode, List<CXClassType>> directingMap;
     private HashMap<CompilationNode, List<CXIdentifier>> dependencies;
@@ -44,7 +44,7 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
         this.settings = settings;
         compileStartTime = System.currentTimeMillis();
         fullErrors = new LinkedList<>();
-        nodes = new HashSet<>();
+        nodes = new LinkedList<>();
         frontEndUnit = settings.getFrontEndUnit();
         if (frontEndUnit == null) {
             ICompilationSettings.debugLog.severe("Front End Missing!");
@@ -110,8 +110,8 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
             
             
             compileAttempt++;
-            CompilationNode next = ((CompilationNode) nodes.toArray()[0]);
-            nodes.remove(next);
+            CompilationNode next = nodes.remove(0);
+            // nodes.remove(next);
     
             
             

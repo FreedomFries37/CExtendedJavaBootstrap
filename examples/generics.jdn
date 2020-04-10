@@ -13,6 +13,12 @@ for <T> class Wrapper {
 	public void setValue(T val) {
 		this->value = val;
 	}
+
+	public void swap(Wrapper<T> other) {
+		T value = other->getValue();
+		other->setValue(this->value);
+		this->value = value;
+	}
 };
 
 for <T> T earlyTest(T input) {
@@ -23,11 +29,15 @@ for <T> int getHash(T input) {
 	return input->hashcode();
 }
 
-for <T> void replace(T l, T r) {
-	T temp = l;
+
+for <T> void replace(T* l, T* r) {
+	T temp = *l;
 	*l = *r;
-	*r = *temp;
+	*r = temp;
 }
+
+
+
 
 
 int main(int argc, std::String argv[]) {
@@ -40,7 +50,11 @@ int main(int argc, std::String argv[]) {
 	std::Int l = new std::Int(0);
 	std::Int r = new std::Int(1);
 
-	replace<std::Int>(l, r);
+	replace<std::Int>(&l, &r);
+	l->println();
+	r->println();
+
+
 
 	return 0;
 }

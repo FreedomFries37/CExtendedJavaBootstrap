@@ -2271,7 +2271,7 @@ public class Parser extends BasicParser {
     protected boolean parseParameterDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("ParameterDeclaration");
         
-        if (!parseDeclarationSpecifiers(child)) return false;
+        if (!parseCanonicalType(child)) return false;
         switch (attemptParse(this::parseDeclarator, child)) {
             case PARSED:
                 break;

@@ -74,6 +74,10 @@ public class PointerType extends ArrayType {
             return true;
         }
         
+        if(subType instanceof PointerType && this.getSubType() instanceof PointerType) {
+            return subType.isExact(this.getSubType(), e);
+        }
+        
         return e.is(this.getSubType(), subType);
     }
     

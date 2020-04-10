@@ -31,8 +31,10 @@ import radin.midanalysis.typeanalysis.errors.IllegalAccessError;
 import radin.midanalysis.typeanalysis.errors.*;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     
@@ -529,7 +531,29 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
     
                     GenericInstance<CXFunctionPointer> genericFunctionCallOn = getGenericModule().genericFunctionCallOn(new CXIdentifier(id, false), types);
                     CXFunctionPointer type = genericFunctionCallOn.type;
+    
+                    TypeAugmentedSemanticNode sequence = genericItem.getASTChild(ASTNodeType.sequence);
+                    SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(
+                            sequence
+                    );
                     
+                    if(!determineTypes(sequenceTypeAnalyzer)) return false;
+                    List<CXType> sequenceTypes = sequence.getChildren().stream().map(TypeAugmentedSemanticNode::getCXType).collect(Collectors.toList());
+                    Iterator<CXType> iterator = sequenceTypes.iterator();
+                    if(sequenceTypes.size() != sequence.getChildren().size()) {
+                        throw new IncorrectParameterTypesError();
+                    }
+    
+                    int count = 0;
+                    for (CXType parameterType : type.getParameterTypes()) {
+                        CXType lookingFor = iterator.next();
+                        
+                        if(!environment.is(lookingFor, parameterType)) {
+                            throw new IncorrectTypeError(lookingFor, parameterType, sequence.getChild(count).findFirstToken());
+                        }
+                        ++count;
+                    }
+    
                     genericItem.addCompilationTag(new GenericFunctionCallTag(genericFunctionCallOn));
                     node.setType(type.getReturnType());
                     return true;
