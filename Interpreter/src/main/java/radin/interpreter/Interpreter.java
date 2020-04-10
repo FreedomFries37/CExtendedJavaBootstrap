@@ -7,10 +7,7 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.midanalysis.MethodTASNTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.tags.ConstructorCallTag;
-import radin.output.tags.MultiDimensionalArrayWithSizeTag;
-import radin.output.tags.PriorConstructorTag;
-import radin.output.tags.SuperCallTag;
+import radin.output.tags.*;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
@@ -1548,9 +1545,19 @@ public class Interpreter {
                 break;
             case parameter_list:
                 break;
+            case generic_init: {
+                if(!invoke(input.getChild(1))) return false;
+                break;
+            }
             case function_call: {
                 
                 Token token = input.getASTChild(ASTNodeType.id).getToken();
+                
+                if(input.containsCompilationTag(GenericFunctionCallTag.class)) {
+                    var compilationTag = input.getCompilationTag(GenericFunctionCallTag.class);
+                    token = new Token(t_id, compilationTag.getGenericFunction().modifiedName);
+                }
+                
                 String funcCall = token.getImage();
                 
                 if (funcCall.equals("calloc")) {
@@ -1635,7 +1642,7 @@ public class Interpreter {
                 }
                 
                 
-                TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
+                TypeAugmentedSemanticNode function = getSymbol(funcCall);
                 
                 
                 if (function == null) {

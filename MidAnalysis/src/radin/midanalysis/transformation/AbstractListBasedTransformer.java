@@ -107,7 +107,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
         if(target == null) return insertLast(node);
         int index = indexOf(target);
         if(index == -1) throw new IndexOutOfBoundsException(index);
-        getRelevant().add(index, node);
+        getRelevant().add(index + 1, node);
         return true;
     }
     

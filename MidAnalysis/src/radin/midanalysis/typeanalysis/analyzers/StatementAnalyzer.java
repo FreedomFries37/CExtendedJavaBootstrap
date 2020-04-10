@@ -46,6 +46,7 @@ public class StatementAnalyzer extends TypeAnalyzer {
         } else if(node.getASTType() == ASTNodeType.method_call ||
                 node.getASTType() == ASTNodeType.function_call ||
                 node.getASTType() == ASTNodeType.postop ||
+                node.getASTType() == ASTNodeType.generic_init ||
                 (node.getASTType() == ASTNodeType.uniop &&
                         (node.getChild(0).getToken().getType() == TokenType.t_inc ||
                                 node.getChild(0).getToken().getType() == TokenType.t_dec))) {

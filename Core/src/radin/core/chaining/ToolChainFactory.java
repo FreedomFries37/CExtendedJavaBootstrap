@@ -203,6 +203,7 @@ public class ToolChainFactory {
         public R invoke(T input) {
             ICompilationSettings.debugLog.info("Running link from " + front + " to " + back);
             M invoke = front.invoke(input);
+            if(front.hasErrors()) return null;
             return back.invoke(invoke);
         }
     

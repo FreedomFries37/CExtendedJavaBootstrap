@@ -525,11 +525,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 case function_call: {
                     
                     Token id = genericItem.getASTChild(ASTNodeType.id).getToken();
+                    ICompilationSettings.debugLog.fine("Calling generic function: " + id.getImage());
     
                     GenericInstance<CXFunctionPointer> genericFunctionCallOn = getGenericModule().genericFunctionCallOn(new CXIdentifier(id, false), types);
                     CXFunctionPointer type = genericFunctionCallOn.type;
                     
-                    node.addCompilationTag(new GenericFunctionCall(genericFunctionCallOn));
+                    genericItem.addCompilationTag(new GenericFunctionCallTag(genericFunctionCallOn));
                     node.setType(type.getReturnType());
                     return true;
                 }

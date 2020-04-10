@@ -102,7 +102,7 @@ public class CXParameterizedType extends AbstractCXClassType {
     }
     
     public boolean isValidParameterizedType(CXType other) {
-        return getEnvironment().isStrict(upperBound, other);
+        return getEnvironment().is(other, upperBound);
     }
     
     @Override
