@@ -5,6 +5,7 @@ import radin.core.lexical.Token;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class TypedAbstractSyntaxNode extends AbstractSyntaxNode {
@@ -62,11 +63,26 @@ public class TypedAbstractSyntaxNode extends AbstractSyntaxNode {
         this.cxType = cxType;
     }
     
+    public static TypedAbstractSyntaxNode createWithChangedChildren(AbstractSyntaxNode other, CXType cxType,
+                                                                    List<AbstractSyntaxNode> children) {
+        var abstractSyntaxNodes = new TypedAbstractSyntaxNode(other, cxType, new LinkedList<>());
+        abstractSyntaxNodes.getMutableChildren().clear();
+        abstractSyntaxNodes.getMutableChildren().addAll(children);
+        return abstractSyntaxNodes;
+    }
     
     public TypedAbstractSyntaxNode(ASTNodeType type, Token token, CXType cxType) {
         super(type, token);
         if(cxType == null)
             throw new NullCXTypeError(token);
+        this.cxType = cxType;
+    }
+    
+    public TypedAbstractSyntaxNode(ASTNodeType type, AbstractSyntaxNode... children) {
+        super(type, children);
+    }
+    
+    public void setCxType(CXType cxType) {
         this.cxType = cxType;
     }
     

@@ -1,6 +1,7 @@
 package radin.midanalysis.transformation;
 
 import radin.core.chaining.ICompilerFunction;
+import radin.core.chaining.IInPlaceCompilerAnalyzer;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.midanalysis.GenericModule;
 import radin.midanalysis.ScopedTypeTracker;
@@ -28,6 +29,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
     }
     
     protected final T getHead() {
+        if(headStack.isEmpty()) return null;
         return headStack.peek();
     }
     
@@ -49,7 +51,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
     @Override
     public T unScopeTo(T to) {
         T pop = headStack.pop();
-        if(!getHead().equals(to)) {
+        if(to != getHead() && !getHead().equals(to)) {
             headStack = new Stack<>();
             headStack.push(to);
         }
@@ -68,6 +70,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
         unScopeTo(old);
         return output;
     }
+    
     
     protected abstract T transform();
     
@@ -105,7 +108,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
         int index = indexOf(target);
         if(index == -1) throw new IndexOutOfBoundsException(index);
         getRelevant().add(index, node);
-        return false;
+        return true;
     }
     
     @Override
@@ -114,7 +117,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
         int index = indexOf(target);
         if(index == -1) throw new IndexOutOfBoundsException(index);
         getRelevant().addAll(index + 1, nodes);
-        return false;
+        return true;
     }
     
     @Override
@@ -123,7 +126,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
         int index = indexOf(target);
         if(index == -1) throw new IndexOutOfBoundsException(index);
         getRelevant().add(index, node);
-        return false;
+        return true;
     }
     
     @Override
@@ -132,7 +135,7 @@ public abstract class AbstractListBasedTransformer <T> extends ScopedTypeTracker
         int index = indexOf(target);
         if(index == -1) throw new IndexOutOfBoundsException(index);
         getRelevant().addAll(index, nodes);
-        return false;
+        return true;
     }
     
     @Override

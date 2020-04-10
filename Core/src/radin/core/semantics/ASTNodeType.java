@@ -235,7 +235,8 @@ public enum ASTNodeType {
     parameter_type("parameter_type"),
     invariance("invariance"),
     covariance("covariance"),
-    contravariance("contravariance")
+    contravariance("contravariance"),
+    generic_init("generic_init")
     ;
     
     

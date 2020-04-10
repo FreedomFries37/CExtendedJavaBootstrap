@@ -79,7 +79,8 @@ public class ErrorReader {
             for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {
                 
                 if(errorInformation.getToken() == null) {
-                    System.out.println(errorInformation.getInfo());
+                    if(errorInformation.getInfo() != null)
+                        System.out.println(errorInformation.getInfo());
                     continue;
                 }
                 int i = errorInformation.getToken().getVirtualLineNumber() - 1;

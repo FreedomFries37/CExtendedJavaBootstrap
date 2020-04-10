@@ -13,6 +13,7 @@ import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.wrapped.ConstantType;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.utility.ICompilationSettings;
+import radin.midanalysis.typeanalysis.errors.UndefinedError;
 
 import java.util.*;
 
@@ -215,6 +216,7 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
     public <T extends TypeAnalyzer> boolean determineTypes(T other) throws MissingClassReferenceError {
         other.trackerStack = trackerStack;
         ((TypeAnalyzer) other).errors = errors;
+        other.genericModule = genericModule;
         return other.determineTypes();
     }
     

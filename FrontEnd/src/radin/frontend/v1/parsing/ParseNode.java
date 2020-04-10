@@ -30,6 +30,10 @@ public abstract class ParseNode extends AbstractTree<ParseNode> {
         return synthesized;
     }
     
+    public boolean hasSynthesized() {
+        return synthesized != null;
+    }
+    
     public void setSynthesized(AbstractSyntaxNode synthesized) {
         this.synthesized = synthesized;
     }

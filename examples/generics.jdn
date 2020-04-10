@@ -25,7 +25,9 @@ for <T> int getHash(T input) {
 
 int main(int argc, std::String argv[]) {
 	std::Object o = new std::Object();
+	std::Object self = earlyTest<std::Object>(o);
 	int hash = getHash<std::Object>(o);
+
 
 	return 0;
 }

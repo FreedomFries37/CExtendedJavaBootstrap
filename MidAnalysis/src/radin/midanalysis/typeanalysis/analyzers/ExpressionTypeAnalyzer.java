@@ -6,6 +6,7 @@ import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
 import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.generics.GenericInstance;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
@@ -24,14 +25,13 @@ import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.midanalysis.typeanalysis.errors.InstantiationError;
-import radin.output.tags.BasicCompilationTag;
-import radin.output.tags.ConstructorCallTag;
-import radin.output.tags.MethodCallTag;
-import radin.output.tags.SuperCallTag;
+import radin.output.tags.*;
 import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.midanalysis.typeanalysis.errors.IllegalAccessError;
 import radin.midanalysis.typeanalysis.errors.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class ExpressionTypeAnalyzer extends TypeAnalyzer {
@@ -509,7 +509,36 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
-        return false;
+        if(node.getASTType() == ASTNodeType.generic_init) {
+            List<TypeAugmentedSemanticNode> parameterTypes = node.getASTChild(ASTNodeType.parameterized_types).getChildren();
+            List<CXType> types = new ArrayList<>(parameterTypes.size());
+            for (TypeAugmentedSemanticNode parameterType : parameterTypes) {
+                CXType originalType = parameterType.getCXType();
+                if(originalType.isEventuallyClassPointer()) {
+                    originalType = ((PointerType) originalType).getSubType();
+                }
+                types.add(originalType);
+            }
+    
+            TypeAugmentedSemanticNode genericItem = node.getChild(1);
+            switch (genericItem.getASTType()) {
+                case function_call: {
+                    
+                    Token id = genericItem.getASTChild(ASTNodeType.id).getToken();
+    
+                    GenericInstance<CXFunctionPointer> genericFunctionCallOn = getGenericModule().genericFunctionCallOn(new CXIdentifier(id, false), types);
+                    CXFunctionPointer type = genericFunctionCallOn.type;
+                    
+                    node.addCompilationTag(new GenericFunctionCall(genericFunctionCallOn));
+                    node.setType(type.getReturnType());
+                    return true;
+                }
+                default:
+                    break;
+            }
+        }
+        
+        throw new UndefinedError(node.findFirstToken(), "Undefined Expression Type: " + node.getASTType());
     }
     
     public void single_op(TypeAugmentedSemanticNode node, TypeAugmentedSemanticNode child, CXType childCXType) {

@@ -11,6 +11,8 @@ import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.types.primitives.PointerType;
+import radin.output.tags.BasicCompilationTag;
+import radin.output.tags.GenericLocationTag;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -110,6 +112,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 GenericTypeAnalyzer genericTypeAnalyzer = new GenericTypeAnalyzer(child);
                 
                 if(!determineTypes(genericTypeAnalyzer)) return false;
+                
             }
             
             

@@ -161,7 +161,7 @@ public abstract class CXType implements CXEquivalent {
      * @return
      * @deprecated unsure why this exists, system could be reworked to avoid this
      */
-    @Deprecated(forRemoval = true)
+    @Deprecated
     public CXType getTypeIndirection() {
         return this;
     }
@@ -172,7 +172,7 @@ public abstract class CXType implements CXEquivalent {
      * @return
      * @deprecated unsure why this exists, system could be reworked to avoid this
      */
-    @Deprecated(forRemoval = true)
+    @Deprecated
     public CXType getTypeRedirection(TypeEnvironment e) {
         return this;
     }
@@ -228,5 +228,20 @@ public abstract class CXType implements CXEquivalent {
             e = basicEnvironment;
         }
         return this.isExact(obj, e);
+    }
+    
+    /**
+     * Determines whether the type is exactly a Class*
+     * @return if this is a type pointer
+     */
+    public boolean isClassPointer() {
+        return false;
+    }
+    /**
+     * Determines whether the type is exactly a Class*, Class**, Class***, ...
+     * @return if this is a type pointer
+     */
+    public boolean isEventuallyClassPointer() {
+        return false;
     }
 }

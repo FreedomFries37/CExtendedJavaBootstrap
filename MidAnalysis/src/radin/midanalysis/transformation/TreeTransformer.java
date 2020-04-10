@@ -8,7 +8,7 @@ public abstract class TreeTransformer<T extends AbstractTree<T>> extends Abstrac
     
     @Override
     public List<T> getRelevant() {
-        return getHead().getDirectChildren();
+        return getHead().getMutableChildren();
     }
     
     

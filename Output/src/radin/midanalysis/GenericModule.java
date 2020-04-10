@@ -2,6 +2,7 @@ package radin.midanalysis;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
+import radin.core.semantics.generics.ICXGeneric;
 import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
@@ -13,11 +14,9 @@ import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.utility.Pair;
+import radin.output.tags.GenericLocationTag;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class GenericModule implements IScopedTracker<Object>{
     
@@ -52,7 +51,8 @@ public class GenericModule implements IScopedTracker<Object>{
     
     
     
-    private HashMap<Pair<CXIdentifier, Integer>, CXGenericFunction> genericFunctionsDictionary;
+    private HashMap<Pair<CXIdentifier, Integer>, CXGenericFunction> genericFunctionsDictionary = new HashMap<>();
+    private HashMap<ICXGeneric<?>, GenericLocationTag> locationTagHashMap = new HashMap<>();
     
     
     /**
@@ -71,7 +71,8 @@ public class GenericModule implements IScopedTracker<Object>{
                                        List<CXType> argsTypes,
                                        AbstractSyntaxNode relevantBody,
                                        TypeEnvironment e,
-                                       Token decToken) {
+                                       Token decToken,
+                                       GenericLocationTag tag) {
         
         Pair<CXIdentifier, Integer> pair = new Pair<>(name, parameterizedTypes.size());
         if(genericFunctionsDictionary.containsKey(
@@ -90,8 +91,16 @@ public class GenericModule implements IScopedTracker<Object>{
                 decToken
         );
         genericFunctionsDictionary.putIfAbsent(pair, genericFunction);
+        locationTagHashMap.put(genericFunction, tag);
     }
     
+    public <T> GenericLocationTag genericLocationTag(ICXGeneric<T> generic) {
+        return locationTagHashMap.get(generic);
+    }
+    
+    public Collection<CXGenericFunction> getRegisteredGenericFunctions() {
+        return genericFunctionsDictionary.values();
+    }
     
     public GenericInstance<CXFunctionPointer> genericFunctionCallOn(CXIdentifier identifier, List<CXType> parameterTypes) {
         
@@ -147,6 +156,7 @@ public class GenericModule implements IScopedTracker<Object>{
     
     @Override
     public void reset() {
-    
+        genericFunctionsDictionary.clear();
+        locationTagHashMap.clear();
     }
 }

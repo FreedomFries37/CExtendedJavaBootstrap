@@ -666,9 +666,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             
                             AbstractSyntaxNode call = getCatNode("ArgsList").getSynthesized();
                             
+                            AbstractSyntaxNode synth;
                             if(object.equals(GLOBAL_NODE)) {
-                                node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.function_call, name,
-                                        call));
+                                synth = new AbstractSyntaxNode(ASTNodeType.function_call, name,
+                                        call);
                             } /*else if(object.getType() == ASTNodeType.indirection && object.hasChild(ASTNodeType
                             ._super)) {
                                 
@@ -680,8 +681,16 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                 );
                             }
                             */
-                            else node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.method_call, object, name,
-                                    call));
+                            else synth = new AbstractSyntaxNode(ASTNodeType.method_call, object, name,
+                                    call);
+    
+                            if(node.hasChildCategory("GenericInstanceInitParameters")) {
+                                CategoryNode initParameters = node.getCategoryNode("GenericInstanceInitParameters");
+                                initParameters.setInherit(synth);
+                                synth = initParameters.getSynthesized();
+                            }
+                            
+                            node.setSynthesized(synth);
                         } else {
                             node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.field_get, node.getInherit(0),
                                     node.getInherit(1)));
@@ -899,8 +908,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             if(!original.isExact(type, environment)) return error("Conflicting types for typedef of " + node.getLeafNode(t_typename).getToken().getImage());
                         }
                         
-                       
-    
+                        
+                        
                         node.setSynthesized(
                                 new TypedAbstractSyntaxNode(ASTNodeType.typedef, type, id)
                         );
@@ -1650,9 +1659,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         // Get the TypeParameterList
                         AbstractSyntaxNode identifierList = getCatNode("TypeParameterList").getSynthesized();
                         List<AbstractSyntaxNode> parameterTypes = identifierList.getDirectChildren();
+                        
+                        
                         List<String> typedefs = new LinkedList<>();
                         
-                        for (AbstractSyntaxNode parameterType : parameterTypes) {
+                        for (TypedAbstractSyntaxNode parameterType : parameterTypes.stream().map((p) -> (TypedAbstractSyntaxNode) p).collect(Collectors.toList())) {
                             AbstractSyntaxNode id = parameterType.getChild(0);
                             CXType upperBound = environment.getDefaultInheritance();
                             if(parameterType.getDirectChildren().size() > 1) {
@@ -1660,9 +1671,13 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             }
                             String image = id.getToken().getImage();
                             typedefs.add(image);
-                            CXParameterizedType parameterizedType = new CXParameterizedType((CXClassType) upperBound,
-                                    id.getToken(), environment);
-                            environment.addTypeDefinition(parameterizedType, image);
+                            if(!node.getChild(1).hasSynthesized()) {
+                                CXParameterizedType parameterizedType = new CXParameterizedType((CXClassType) upperBound,
+                                        id.getToken(), environment);
+    
+                                CXType cxType = environment.addTypeDefinition(parameterizedType, image);
+                                parameterType.setCxType(cxType);
+                            }
                         }
                         
                         node.getChild(1).setInherit(AbstractSyntaxNode.EMPTY);
@@ -1704,9 +1719,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
                         if(node.hasChildCategory("Inherit")) {
                             AbstractSyntaxNode inherit = node.getCategoryNode("Inherit").getSynthesized();
-                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.parameter_type, id, inherit));
+                            node.setSynthesized(new TypedAbstractSyntaxNode(ASTNodeType.parameter_type, id, inherit));
                         } else {
-                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.parameter_type, id));
+                            node.setSynthesized(new TypedAbstractSyntaxNode(ASTNodeType.parameter_type, id));
                         }
                         return true;
                     }
@@ -1745,8 +1760,30 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "GenericInstanceTypeList": {
                         
-                        
                         return false;
+                    }
+                    case "GenericInstanceInitParameters": {
+                        AbstractSyntaxNode next = new AbstractSyntaxNode(ASTNodeType.generic_init,
+                                getCatNode("AbstractTypeNameList").getSynthesized());
+                        next.addChild(node.getInherit());
+                        node.setSynthesized(
+                                next
+                        );
+                        return true;
+                    }
+                    case "AbstractTypeNameList": {
+                        String entry = "TypeName";
+                        String HeadCatName = "AbstractTypeNameList";
+                        String TailCatName = "AbstractTypeNameListTail";
+    
+                        AbstractSyntaxNode[] array = foldList(node, entry,
+                                HeadCatName, TailCatName);
+    
+    
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.parameterized_types, array)
+                        );
+                        return true;
                     }
                     default:
                         error("No Action Routine for " + node.getCategory());

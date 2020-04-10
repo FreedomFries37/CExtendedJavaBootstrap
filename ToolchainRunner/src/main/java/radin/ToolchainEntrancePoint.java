@@ -12,6 +12,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.utility.CompilationSettings;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.Pair;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.frontend.v1.lexing.PreProcessingLexer;
 import radin.frontend.v1.parsing.ParseNode;
@@ -23,6 +24,7 @@ import radin.interpreter.Interpreter;
 import radin.interpreter.SymbolTableCreator;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.midanalysis.TypeAugmentedSemanticTree;
+import radin.midanalysis.transformation.GenericTransformer;
 import radin.midanalysis.typeanalysis.analyzers.ProgramTypeAnalyzer;
 import radin.midanalysis.typeanalysis.TypeAnalyzer;
 
@@ -58,15 +60,15 @@ public class ToolchainEntrancePoint {
         
         File configFile = new File(toolchainDirectory, "config");
         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, ?> settings = new CompilationSettings<>();
-       
-    
+        
+        
         List<String> argPassOff = new LinkedList<>();
         List<String> filenamesStrings = new LinkedList<>();
         Iterator<String> argsIterator = Arrays.stream(args).iterator();
         Integer arch = null;
         while (argsIterator.hasNext()) {
             String argument = argsIterator.next();
-        
+            
             if (argument.startsWith("-") || argument.startsWith("--")) {
                 switch (argument) {
                     case "-E":
@@ -156,9 +158,9 @@ public class ToolchainEntrancePoint {
                 
                  */
             }
-        
+            
         }
-    
+        
         String property = System.getProperty("os.arch");
         if(arch == null) {
             if (property == null) {
@@ -168,21 +170,21 @@ public class ToolchainEntrancePoint {
             }
         }
         UniversalCompilerSettings.getInstance().setSettings(settings);
-    
+        
         if(System.getenv("MSFT") != null) {
             UniversalCompilerSettings.getInstance().getSettings().setDirectivesMustStartAtColumn1(false);
         }
         
         BufferedReader fileReader = new BufferedReader(new FileReader(configFile));
         PreProcessingLexer lex = new PreProcessingLexer();
-    
+        
         if(arch == 64) {
             ICompilationSettings.debugLog.config("Using 64-bit mode");
             lex.define("__64_bit__");
         } else {
             ICompilationSettings.debugLog.config("Using 32-bit mode");
         }
-    
+        
         List<File> files = new LinkedList<>();
         for (String filenamesString : filenamesStrings) {
             File f = new File(filenamesString);
@@ -199,25 +201,33 @@ public class ToolchainEntrancePoint {
             files.addAll(fileList);
         }
         
-    
+        
         IParser<Token, ParseNode> parser = new Parser();
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         TypeAnalyzer.setEnvironment(environment);
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
-    
+        
         FrontEndUnit<Token, ParseNode, AbstractSyntaxNode> frontEndUnit = new FrontEndUnit<>(lex, parser, applier);
         
-    
-    
+        
+        
         ToolChainFactory.ToolChainBuilder<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
                 (AbstractSyntaxNode o) -> TypeAugmentedSemanticTree.convertAST(o, environment)
         );
-        ToolChainFactory.ToolChainBuilder<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode> compilerAnalyzer = ToolChainFactory.compilerAnalyzer(
-                new ProgramTypeAnalyzer((TypeAugmentedSemanticNode) null)
-        );
-        var midChain = function.chain_to(compilerAnalyzer);
         
-    
+        ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer((TypeAugmentedSemanticNode) null);
+        ToolChainFactory.ToolChainBuilder<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode> compilerAnalyzer = ToolChainFactory.compilerAnalyzer(
+                analyzer
+        );
+        
+        GenericTransformer genericTransformer = new GenericTransformer(analyzer.getGenericModule());
+        
+        ToolChainFactory.ToolChainBuilder<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode>
+                genericTransformerChain = ToolChainFactory.compilerFunction(genericTransformer);
+        
+        var midChain = function.chain_to(compilerAnalyzer).chain_to(genericTransformerChain);
+        
+        
         MultipleFileHandler<?> compiler = null;
         
         
@@ -255,7 +265,7 @@ public class ToolchainEntrancePoint {
                     } else if(argument.equals("compiler")) {
                         useInterpreter = false;
                         ICompilationSettings.debugLog.config("Using Compiler");
-    
+                        
                         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> newSettings =
                                 new CompilationSettings<>();
                         newSettings.copySettingsFrom(settings);
@@ -263,9 +273,9 @@ public class ToolchainEntrancePoint {
                         newSettings.setMidToolChain(midChain);
                         settings = newSettings;
                         UniversalCompilerSettings.getInstance().setSettings(settings);
-    
+                        
                         compiler = new MultipleFileHandler<>(files, newSettings);
-    
+                        
                         var backChain = new FileCompiler();
                         newSettings.setBackToolChain(backChain);
                         FunctionCompiler.environment = environment;
@@ -315,7 +325,7 @@ public class ToolchainEntrancePoint {
         }
         
         if(compiler == null) throw new IllegalArgumentException("No toolchain set");
-    
+        
         compiler.addFiles(UniversalCompilerSettings.getInstance().getSettings().getAdditionalSources());
         
         
@@ -331,14 +341,14 @@ public class ToolchainEntrancePoint {
             if (!runtimeCompiler.compile()) {
                 err.println("Runtime Jodin Compilation failed");
             }
-    
+            
             File runtimeFile = ICompilationSettings.getBuildFile("runtime.jdn");
             if(useInterpreter) {
                 ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, SymbolTable<CXIdentifier,
                         TypeAugmentedSemanticNode>> fixedSettings =
                         (ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
-                        SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>>) settings;
-    
+                                SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>>) settings;
+                
                 MultipleFileHandler<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> fixedCompiler = (MultipleFileHandler<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>>) compiler;
                 List<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> generatedOutputs =
                         fixedCompiler.getGeneratedOutputs();
@@ -352,7 +362,7 @@ public class ToolchainEntrancePoint {
                 generatedOutputs.addAll(fixedCompiler.getGeneratedOutputs());
                 SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbolTable = new SymbolTable<>(generatedOutputs);
                 Interpreter interpreter = new Interpreter(environment, symbolTable);
-    
+                
                 ICompilationSettings.debugLog.info("Running interpreter");
                 exit(interpreter.run(argPassOff.toArray(new String[0])));
             } else {
@@ -360,14 +370,14 @@ public class ToolchainEntrancePoint {
                         (ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean>) settings;
                 MultipleFileHandler<Boolean> fixedCompiler = new MultipleFileHandler<>(Collections.singletonList(runtimeFile),
                         fixedSettings);
-    
+                
                 if(!fixedCompiler.compileAll()) {
                     err.println("Runtime Compilation failed");
                 }
-    
+                
                 System.out.println("Compilation Succeeded");
             }
-    
+            
         } else {
             System.err.println("Compilation Failed");
         }

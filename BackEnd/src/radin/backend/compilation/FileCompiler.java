@@ -1,6 +1,8 @@
 package radin.backend.compilation;
 
+import radin.backend.microcompilers.IndentPrintWriter;
 import radin.backend.microcompilers.TopLevelDeclarationCompiler;
+import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.utility.ICompilationSettings;
 
@@ -75,7 +77,13 @@ public class FileCompiler extends AbstractCompiler {
         }
         try {
             TopLevelDeclarationCompiler topLevelDeclarationCompiler = new TopLevelDeclarationCompiler(getPrintWriter());
-            topLevelDeclarationCompiler.compile(node);
+            if(!topLevelDeclarationCompiler.compile(node)) {
+                flush();
+                close();
+                return false;
+            }
+            
+            
             
         }catch (Throwable t) {
             t.printStackTrace();

@@ -3,6 +3,7 @@ package radin.core.semantics.types.primitives;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.generics.CXParameterizedType;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.wrapped.CXMappedType;
 
@@ -121,5 +122,19 @@ public class PointerType extends ArrayType {
     @Override
     public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
         return new PointerType(getSubType().propagateGenericReplacement(original, replacement));
+    }
+    
+    @Override
+    public boolean isClassPointer() {
+        return getSubType() instanceof AbstractCXClassType;
+    }
+    
+    @Override
+    public boolean isEventuallyClassPointer() {
+        if (getSubType() instanceof PointerType) {
+            return getSubType().isEventuallyClassPointer();
+        } else {
+            return isClassPointer();
+        }
     }
 }

@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface ICXGeneric<T> {
     
+    
+    
     Collection<AbstractSyntaxNode> getCreatedTrees();
     
     void setOriginalRelevantTree(AbstractSyntaxNode originalRelevantTree);
@@ -33,27 +35,29 @@ public interface ICXGeneric<T> {
         if(node instanceof TypedAbstractSyntaxNode) {
             return createModifiedTree((TypedAbstractSyntaxNode) node, inputTypes);
         }
-        ArrayList<AbstractSyntaxNode> fixedChildren = new ArrayList<>(node.getDirectChildren().size());
+        ArrayList<AbstractSyntaxNode> fixedChildren = new ArrayList<>();
         for (AbstractSyntaxNode directChild : node.getDirectChildren()) {
             fixedChildren.add(createModifiedTree(directChild, inputTypes));
         }
-        return new AbstractSyntaxNode(node, fixedChildren);
+        return AbstractSyntaxNode.createWithChangedChildren(node, fixedChildren);
     }
     
     default TypedAbstractSyntaxNode createModifiedTree(TypedAbstractSyntaxNode node, List<CXType> inputTypes) {
-        ArrayList<AbstractSyntaxNode> fixedChildren = new ArrayList<>(node.getDirectChildren().size());
+        ArrayList<AbstractSyntaxNode> fixedChildren = new ArrayList<>();
         for (AbstractSyntaxNode directChild : node.getDirectChildren()) {
             fixedChildren.add(createModifiedTree(directChild, inputTypes));
         }
         CXType newType = getFixedCXType(node.getCxType(), inputTypes);
-        return new TypedAbstractSyntaxNode(node, newType, fixedChildren);
+        return TypedAbstractSyntaxNode.createWithChangedChildren(node, newType, fixedChildren);
     }
     
     List<CXParameterizedType> getParameterizedTypes();
     
     default boolean typesValid(List<CXType> input) {
         for (int i = 0; i < getParameterizedTypes().size(); i++) {
-            if (!getEnvironment().isStrict(getParameterizedTypes().get(i), input.get(i))) return false;
+            if (!getParameterizedTypes()
+                    .get(i)
+                    .isValidParameterizedType(input.get(i))) return false;
         }
         return true;
     }

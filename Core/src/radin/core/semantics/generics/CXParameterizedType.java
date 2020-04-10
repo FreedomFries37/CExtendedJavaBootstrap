@@ -4,6 +4,7 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXStructType;
 import radin.core.semantics.types.compound.AbstractCXClassType;
@@ -14,17 +15,23 @@ import radin.core.semantics.types.primitives.*;
 import radin.core.utility.Reference;
 
 import java.util.List;
+import java.util.Objects;
 
 public class CXParameterizedType extends AbstractCXClassType {
     
+    private static long ptsCreated = 0;
     private AbstractCXClassType upperBound;
     private Token name;
+    private long pt;
     
     public CXParameterizedType(AbstractCXClassType upperBound, Token name, TypeEnvironment e) {
         super(upperBound.getFields());
         this.upperBound = upperBound;
         this.name = name;
+        pt = ptsCreated++;
     }
+    
+    
     
     public AbstractCXClassType getUpperBound() {
         return upperBound;
@@ -92,6 +99,10 @@ public class CXParameterizedType extends AbstractCXClassType {
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         return this == other;
+    }
+    
+    public boolean isValidParameterizedType(CXType other) {
+        return getEnvironment().isStrict(upperBound, other);
     }
     
     @Override
@@ -251,7 +262,7 @@ public class CXParameterizedType extends AbstractCXClassType {
     
     @Override
     public String toString() {
-        return name.getImage();
+        return name.getImage() + " @ " + pt;
     }
     
     @Override

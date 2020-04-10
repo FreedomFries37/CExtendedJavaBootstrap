@@ -85,6 +85,14 @@ public class AbstractSyntaxNode extends ASTMeaningfulNode<AbstractSyntaxNode> im
         this(other, false, additionalChildren);
     }
     
+    public static AbstractSyntaxNode createWithChangedChildren(AbstractSyntaxNode other,
+                                                                    List<AbstractSyntaxNode> children) {
+        var abstractSyntaxNodes = new AbstractSyntaxNode(other, new LinkedList<>());
+        abstractSyntaxNodes.getMutableChildren().clear();
+        abstractSyntaxNodes.getMutableChildren().addAll(children);
+        return abstractSyntaxNodes;
+    }
+    
     public AbstractSyntaxNode(AbstractSyntaxNode other, boolean addFirst, List<AbstractSyntaxNode> additionalChildren) {
         this(other.type, other.token);
         if(!addFirst) {

@@ -7,6 +7,8 @@ import radin.core.semantics.ASTMeaningfulNode;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
+import radin.core.semantics.types.TypedAbstractSyntaxNode;
+import radin.output.tags.AbstractCompilationTag;
 import radin.output.tags.ICompilationTag;
 
 import java.util.HashSet;
@@ -36,6 +38,9 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         parent = null;
         children = new LinkedList<>();
         compilationTags = new HashSet<>();
+        if(base instanceof TypedAbstractSyntaxNode) {
+            this.type = ((TypedAbstractSyntaxNode) base).getCxType();
+        }
     }
     
     public boolean isLValue() {
@@ -59,6 +64,9 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         setParent(parent);
         addAllChildren(children);
         compilationTags = new HashSet<>();
+        if(astNode instanceof TypedAbstractSyntaxNode) {
+            this.type = ((TypedAbstractSyntaxNode) astNode).getCxType();
+        }
     }
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode astNode, List<TypeAugmentedSemanticNode> children) {
@@ -74,6 +82,9 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
          */
         addAllChildren(children);
         compilationTags = new HashSet<>();
+        if(astNode instanceof TypedAbstractSyntaxNode) {
+            this.type = ((TypedAbstractSyntaxNode) astNode).getCxType();
+        }
     }
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode astNode, TypeAugmentedSemanticNode parent) {
@@ -81,6 +92,9 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         setParent(parent);
         children = new LinkedList<>();
         compilationTags = new HashSet<>();
+        if(astNode instanceof TypedAbstractSyntaxNode) {
+            this.type = ((TypedAbstractSyntaxNode) astNode).getCxType();
+        }
     }
     
     public TypeAugmentedSemanticNode getParent() {
@@ -349,6 +363,16 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         if(this.getASTNode().equals(node)) return this;
         for (TypeAugmentedSemanticNode child : children) {
             TypeAugmentedSemanticNode output = child.findFromASTNode(node);
+            if(output != null) return output;
+        }
+        
+        return null;
+    }
+    
+    public TypeAugmentedSemanticNode findFromTag(AbstractCompilationTag tag) {
+        if(this.containsCompilationTag(tag)) return this;
+        for (TypeAugmentedSemanticNode child : children) {
+            TypeAugmentedSemanticNode output = child.findFromTag(tag);
             if(output != null) return output;
         }
         
