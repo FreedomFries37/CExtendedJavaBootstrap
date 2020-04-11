@@ -30,16 +30,19 @@ public class CXGenericClassType extends CXGenericType<AbstractCXClassType> imple
     public CXMethod getMethodChecked(Token name, ParameterTypeList parameterTypeList, Reference<Boolean> isVirtual) throws GetMethodError {
         for (CXMethod allMethod : getBaseType().getAllMethods()) {
             if(allMethod.getName().getIdentifier().equals(name)) {
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+    
+    
+                CXType returnType = allMethod.getReturnType();
+                if(returnType instanceof CXParameterizedType) {
+                    if (getParameterMap().containsKey(returnType)) {
+                        if (getParameterMap().get(returnType).getVariance() == CXParameterizedTypeInstance.Variance.CONTRAVARIANCE) {
+                            throw new GetMethodError(new VarianceMatchError())
+                        }
+                    }
+                }
+                
+                
+    
             }
         }
         throw new GetMethodError(name, parameterTypeList);

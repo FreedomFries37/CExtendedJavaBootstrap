@@ -73,6 +73,8 @@ public abstract class CXGenericType<T extends CXType> extends CXType {
         return parameters;
     }
     
+    
+    
     public T getBaseType() {
         return baseType;
     }
@@ -81,4 +83,6 @@ public abstract class CXGenericType<T extends CXType> extends CXType {
     public TypeEnvironment getEnvironment() {
         return environment;
     }
+    
+    
 }

@@ -32,6 +32,10 @@ public class CXParameterizedTypeInstance<T extends CXType> {
         this.environment = environment;
     }
     
+    public Variance getVariance() {
+        return variance;
+    }
+    
     /**
      * Checks whether the incoming parameterized type fits the proper inheritence type
      *
