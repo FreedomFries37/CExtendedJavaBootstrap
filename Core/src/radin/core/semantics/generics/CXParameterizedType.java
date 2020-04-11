@@ -201,6 +201,11 @@ public class CXParameterizedType extends AbstractCXClassType {
     }
     
     @Override
+    public List<CXMethod> getAllMethods() {
+        return upperBound.getAllMethods();
+    }
+    
+    @Override
     public List<CXMethod> getInstanceMethods() {
         return upperBound.getInstanceMethods();
     }

@@ -311,6 +311,7 @@ public class CXClassType extends AbstractCXClassType {
         return initMethod;
     }
     
+    @Override
     public List<CXMethod> getAllMethods() {
         List<CXMethod> output = getConcreteMethodsOrder();
         output.addAll(getVirtualMethodsOrder());

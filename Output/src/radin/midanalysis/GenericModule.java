@@ -93,7 +93,7 @@ public class GenericModule implements IScopedTracker<Object>{
     }
     
     public void declareGenericClass(AbstractSyntaxNode classBody, List<CXParameterizedType> parameterizedTypes) {
-        if(genericClassHashMap.containsKey())
+        //if(genericClassHashMap.containsKey())
     }
     
     public <T> GenericLocationTag genericLocationTag(ICXGenericFactory<T> generic) {
