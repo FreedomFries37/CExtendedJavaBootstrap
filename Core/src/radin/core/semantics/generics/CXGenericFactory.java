@@ -7,7 +7,7 @@ import radin.core.semantics.types.CXType;
 
 import java.util.ArrayList;
 
-public abstract class CXGeneric<T> extends CXType implements ICXGeneric<T> {
+public abstract class CXGenericFactory <T> extends CXType implements ICXGenericFactory<T> {
     
     private TypeEnvironment environment;
     private ArrayList<CXParameterizedType> parameterizedTypes;
@@ -16,7 +16,7 @@ public abstract class CXGeneric<T> extends CXType implements ICXGeneric<T> {
     private Token declarationToken;
    
     
-    public CXGeneric(TypeEnvironment environment, ArrayList<CXParameterizedType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
+    public CXGenericFactory(TypeEnvironment environment, ArrayList<CXParameterizedType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
         this.environment = environment;
         this.parameterizedTypes = parameterizedTypes;
         this.originalRelevantTree = originalRelevantTree;

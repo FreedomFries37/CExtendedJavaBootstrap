@@ -2,13 +2,10 @@ package radin.midanalysis;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
-import radin.core.semantics.generics.ICXGeneric;
+import radin.core.semantics.generics.*;
 import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
-import radin.core.semantics.generics.CXGenericFunction;
-import radin.core.semantics.generics.CXParameterizedType;
-import radin.core.semantics.generics.GenericInstance;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXClassType;
@@ -52,7 +49,8 @@ public class GenericModule implements IScopedTracker<Object>{
     
     
     private HashMap<Pair<CXIdentifier, Integer>, CXGenericFunction> genericFunctionsDictionary = new HashMap<>();
-    private HashMap<ICXGeneric<?>, GenericLocationTag> locationTagHashMap = new HashMap<>();
+    private HashMap<CXIdentifier, CXGenericClassFactory> genericClassHashMap = new HashMap<>();
+    private HashMap<ICXGenericFactory<?>, GenericLocationTag> locationTagHashMap = new HashMap<>();
     
     
     /**
@@ -94,7 +92,11 @@ public class GenericModule implements IScopedTracker<Object>{
         locationTagHashMap.put(genericFunction, tag);
     }
     
-    public <T> GenericLocationTag genericLocationTag(ICXGeneric<T> generic) {
+    public void declareGenericClass(AbstractSyntaxNode classBody, List<CXParameterizedType> parameterizedTypes) {
+        if(genericClassHashMap.containsKey())
+    }
+    
+    public <T> GenericLocationTag genericLocationTag(ICXGenericFactory<T> generic) {
         return locationTagHashMap.get(generic);
     }
     

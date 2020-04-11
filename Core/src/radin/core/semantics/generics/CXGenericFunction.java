@@ -12,7 +12,7 @@ import radin.core.semantics.types.compound.CXFunctionPointer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CXGenericFunction extends CXFunctionPointer implements ICXGeneric<CXFunctionPointer> {
+public class CXGenericFunction extends CXFunctionPointer implements ICXGenericFactory<CXFunctionPointer> {
     
     private TypeEnvironment environment;
     private CXIdentifier name;

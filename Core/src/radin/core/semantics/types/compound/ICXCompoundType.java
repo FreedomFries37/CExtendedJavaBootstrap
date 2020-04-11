@@ -4,6 +4,7 @@ import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ICXCompoundType{
     
@@ -18,6 +19,10 @@ public interface ICXCompoundType{
     String getCTypeName();
     
     CXIdentifier getTypeNameIdentifier();
+    
+    default Optional<CXType> getFieldType(String name) {
+        return getFields().stream().filter((f) -> f.name.equals(name)).map((f) -> f.type).findAny();
+    }
     
     class FieldDeclaration {
         private CXType type;
