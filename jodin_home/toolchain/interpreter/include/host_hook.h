@@ -11,11 +11,11 @@ do, as it requires system interaction of some kind
 void _interpreter_print(char * c);
 
 // Input is path, output is file descriptor
-int _open_file(std::String path);
+int _open_file(std::String path, int* error);
 void _flush_file(int fd);
 void _close_file(int fd);
-char _read_file(int fd, int position, bool* error);
-bool _write_file(int fd, int position);
+char _read_file(int fd, bool* error);
+bool _write_file(int fd, char c, bool* error);
 
 
 #endif

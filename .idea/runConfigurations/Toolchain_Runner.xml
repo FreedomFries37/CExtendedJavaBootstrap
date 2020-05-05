@@ -7,7 +7,7 @@
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.ToolchainEntrancePoint" />
     <module name="Jodin-Java.ToolchainRunner.main" />
-    <option name="PROGRAM_PARAMETERS" value="--debug-level 5 examples/toolchain_test.jdn" />
+    <option name="PROGRAM_PARAMETERS" value=" --tast --debug-level 5 examples/toolchain_test.jdn" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

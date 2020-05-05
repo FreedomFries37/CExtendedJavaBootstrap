@@ -88,6 +88,7 @@ public class ToolchainEntrancePoint {
                         settings.setDirectory(dir);
                         break;
                     }
+                    case "--post-lexer":
                     case "-P": {
                         settings.setOutputPostprocessingOutput(true);
                         break;

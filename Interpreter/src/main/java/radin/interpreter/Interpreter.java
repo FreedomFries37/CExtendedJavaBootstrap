@@ -5,6 +5,7 @@ import radin.core.SymbolTable;
 import radin.core.errorhandling.CompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
+import radin.core.utility.Option;
 import radin.midanalysis.MethodTASNTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.ConstructorCallTag;
@@ -27,9 +28,12 @@ import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 import radin.core.utility.ICompilationSettings;
 
+import java.io.IOException;
 import java.util.*;
 
 import static radin.core.lexical.TokenType.*;
+import static radin.core.utility.Option.None;
+import static radin.core.utility.Option.Some;
 
 public class Interpreter {
     
@@ -410,6 +414,28 @@ public class Interpreter {
                     ", size=" + size +
                     '}';
         }
+    
+        /**
+         * If this is a Jodin C String, converts it to a Java string
+         * @return Some(String), or None
+         */
+        public Option<String> takeString() {
+            if (subType == CXPrimitiveType.CHAR) {
+                StringBuilder output = new StringBuilder();
+        
+                try {
+                    for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
+                        output.append(((PrimitiveInstance<Character, ?>) getAt(i).getValue()).backingValue);
+                    }
+                }catch (IndexOutOfBoundsException e) {
+                    throw new SegmentationFault(e);
+                }
+        
+                return Some(output.toString());
+            } else {
+                return None();
+            }
+        }
         
         @Override
         void copyFrom(Instance<?> other) {
@@ -653,6 +679,7 @@ public class Interpreter {
     private Stack<PointerInstance<CXClassType>> thisStack = new Stack<>();
     private Stack<Boolean> useThisStack = new Stack<>();
     
+    private FileHandler fileHandler = new FileHandler();
     
     private Token nearestCurrentToken = null;
     private boolean log;
@@ -1635,10 +1662,21 @@ public class Interpreter {
                 }
                 switch (funcCall) {
                     case "_open_file": {
-                        
-                        
-                        
-                        
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        startStackTraceFor(token);
+                        //hopefully a string
+                        PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) pop();
+                        String path = pop.takeString().expect("A string must be passed here");
+                        try {
+                            int fd = fileHandler.openFile(path, FileHandler.AccessOption.READ, FileHandler.AccessOption.WRITE);
+                            push(createNewInstance(CXPrimitiveType.INTEGER, fd));
+                        } catch (IOException e) {
+                            PointerInstance<CXPrimitiveType> errorPtr = (PointerInstance<CXPrimitiveType>) pop();
+                            PrimitiveInstance<Long, ?> error = (PrimitiveInstance<Long, ?>) errorPtr.getPointer();
+                            error.setBackingValue(1L);
+                        }
+                        stackTrace.pop();
+                        logCurrentState();
                         break;
                     }
                     case "_flush_file": {
