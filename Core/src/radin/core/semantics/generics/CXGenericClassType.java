@@ -36,7 +36,8 @@ public class CXGenericClassType extends CXGenericType<AbstractCXClassType> imple
                 if(returnType instanceof CXParameterizedType) {
                     if (getParameterMap().containsKey(returnType)) {
                         if (getParameterMap().get(returnType).getVariance() == CXParameterizedTypeInstance.Variance.CONTRAVARIANCE) {
-                            throw new GetMethodError(new VarianceMatchError())
+                            // TODO: Fix this
+                            throw new GetMethodError(new VarianceMatchError(name, null, null), name, parameterTypeList);
                         }
                     }
                 }
