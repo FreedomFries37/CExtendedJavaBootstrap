@@ -299,7 +299,7 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
                     
                     if (UniversalCompilerSettings.getInstance().getSettings().isOutputPostprocessingOutput()) {
                         try {
-                            File preProcessingOutput = ICompilationSettings.createFile(file + ".ppo");
+                            File preProcessingOutput = ICompilationSettings.createBuildFile(new File(file).getName() + ".ppo");
                             FileWriter fileWriter = new FileWriter(preProcessingOutput);
                             fileWriter.write(inputString);
                             fileWriter.flush();

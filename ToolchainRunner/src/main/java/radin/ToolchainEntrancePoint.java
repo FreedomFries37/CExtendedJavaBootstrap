@@ -241,7 +241,7 @@ public class ToolchainEntrancePoint {
                         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
                                 SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> newSettings =
                                 new CompilationSettings<>();
-                        settings.copySettingsTo(newSettings);
+                        newSettings.copySettingsFrom(settings);
                         newSettings.setFrontEndUnit(frontEndUnit);
                         newSettings.setMidToolChain(midChain);
                         var backChain = new SymbolTableCreator();
@@ -259,7 +259,7 @@ public class ToolchainEntrancePoint {
     
                         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> newSettings =
                                 new CompilationSettings<>();
-                        settings.copySettingsTo(newSettings);
+                        newSettings.copySettingsFrom(settings);
                         newSettings.setFrontEndUnit(frontEndUnit);
                         newSettings.setMidToolChain(midChain);
                         settings = newSettings;

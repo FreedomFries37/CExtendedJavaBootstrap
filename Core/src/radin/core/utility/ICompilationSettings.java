@@ -53,7 +53,7 @@ public interface ICompilationSettings<Front, Mid, Back> {
         }
     }
     
-    default void copySettingsTo(ICompilationSettings<?, ?, ?> other) {
+    default void copySettingsFrom(ICompilationSettings<?, ?, ?> other) {
         setDirectory(other.getDirectory());
         for (File file : other.includeDirectories()) {
             try {
