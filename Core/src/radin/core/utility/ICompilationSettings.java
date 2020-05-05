@@ -24,7 +24,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
         String directory = UniversalCompilerSettings.getInstance().getSettings().getDirectory();
         if(directory.equals("")) {
             ICompilationSettings.debugLog.info("Created file " + filename);
-            return new File(filename);
+            File file = new File(filename);
+            File parentFile = file.getParentFile();
+            parentFile.mkdirs();
+            return file;
         } else {
             File dir = new File(directory);
             dir.mkdirs();
