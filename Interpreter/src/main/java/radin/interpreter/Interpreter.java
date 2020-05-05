@@ -1633,6 +1633,39 @@ public class Interpreter {
                     int exitCode = pop.getBackingValue().intValue();
                     throw new EarlyExit(exitCode);
                 }
+                switch (funcCall) {
+                    case "_open_file": {
+                        
+                        
+                        
+                        
+                        break;
+                    }
+                    case "_flush_file": {
+                        
+                        
+                        
+                        break;
+                    }
+                    case "_close_file": {
+                        
+                        
+                        
+                        break;
+                    }
+                    case "_read_file": {
+                        
+                        
+                        
+                        break;
+                    }
+                    
+                    case "_write_file": {
+                        
+                        
+                        break;
+                    }
+                }
                 
                 
                 TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
