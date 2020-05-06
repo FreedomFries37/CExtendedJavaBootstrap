@@ -6,6 +6,7 @@ import radin.core.errorhandling.CompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.utility.Option;
+import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.MethodTASNTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.ConstructorCallTag;
@@ -918,7 +919,7 @@ public class Interpreter {
     
     public void endClosure() {
         autoVariables.pop();
-        if(log) logger.info("Available variables: " + autoVariables.peek().keySet());
+        // if(log) logger.info("Available variables: " + autoVariables.peek().keySet());
         int previousSize = previousMemStackSize.pop();
         while (memStack.size() > previousSize) {
             memStack.pop();
@@ -1485,7 +1486,7 @@ public class Interpreter {
                     }
                     
                     ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
-                    if(log) logger.info("Created a " + cxType + " array of size " + array.size);
+                    if(log) logger.finest("Created a " + cxType + " array of size " + array.size);
                     addAutoVariable(id, array);
                     logCurrentState();
                 } else {
@@ -1531,7 +1532,7 @@ public class Interpreter {
                 ArrayInstance<?, ?> arr = (ArrayInstance<?,?>) pop();
                 if (!invoke(input.getChild(1))) return false;
                 PrimitiveInstance<Number, ?> index = (PrimitiveInstance<Number, ?>) pop();
-                if(log) logger.info("Getting at index " + index + " of " + arr);
+                if(log) logger.finest("Getting at index " + index + " of " + arr);
                 push(arr.getAt(index.backingValue.intValue()));
             }
             break;
@@ -1599,9 +1600,9 @@ public class Interpreter {
                     CXType cxType =
                             ((TypedAbstractSyntaxNode) input.getASTChild(ASTNodeType.sequence).getASTChild(ASTNodeType.sizeof).getASTNode()).getCxType();
                     PrimitiveInstance<Number, ?> size = (PrimitiveInstance<Number, ?>) pop();
-                    if(log) logger.info("Using simulated Calloc to creating an array of " + cxType + "...");
+                    if(log) logger.finest("Using simulated Calloc to creating an array of " + cxType + "...");
                     push(createArrayOfType(cxType, size.backingValue.intValue()));
-                    if(log) logger.info("Array of " + cxType + "created with size " + size.backingValue.intValue() + " => " + memStack.peek());
+                    if(log) logger.finest("Array of " + cxType + "created with size " + size.backingValue.intValue() + " => " + memStack.peek());
                     logCurrentState();
                     stackTrace.pop();
                     break;
@@ -1609,7 +1610,7 @@ public class Interpreter {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
                     PointerInstance<?> pop = (PointerInstance<?>) pop();
-                    if(log) logger.info("freeing object " + pop);
+                    if(log) logger.finest("freeing object " + pop);
                     pop.setPointer(null);
                     stackTrace.pop();
                     break;
@@ -1807,7 +1808,7 @@ public class Interpreter {
                             startStackTraceFor(token);
                             logCurrentState();
                             try {
-                                if(log) logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
+                                if(log) logger.finest("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
                                 if (!invoke(function)) return false;
                             } catch (FunctionReturned functionReturned) {
                                 if (returnValue != null) {
@@ -2185,7 +2186,7 @@ public class Interpreter {
                 
                 
                 
-                if(log) logger.info("Calling constructor for " + cxConstructor.getParent());
+                if(log) logger.finest("Calling constructor for " + cxConstructor.getParent());
                 TypeAugmentedSemanticNode cons = MethodTASNTracker.getInstance().get(cxConstructor);
                 try {
                     if (!invoke(cons)) return false;

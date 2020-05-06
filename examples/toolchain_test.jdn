@@ -4,20 +4,25 @@
 int main(int argc, std::String argv[]) {
 
 
-	std::File file = access_file("output.txt");
+	std::File file = access_file(new std::String("output.txt"), new std::String("w"));
+
 
 	std::FileWriter fw = new std::FileWriter(file);
 	fw->writeln("Hello File!");
 	fw->flush();
 	fw->close();
 
-
+	/*
 	stdout->writeln("Whats your name?");
 	std::String name = stdin->readLine();
 	stdout->write("Hello ");
 	stdout->writeln(name);
+	*/
 
-	// fw->write("This shouldn't work");
+	file = access_file(new std::String("output.txt"), new std::String("w"));
+	std::FileReader reader = new std::FileReader(file);
+	std::String fileLine = reader->readLine();
+	// stdout->writeln(fileLine);
 
 
 	return 0;
