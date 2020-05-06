@@ -38,6 +38,9 @@ class FileWriter {
 	public void write(char c);
 	public void writeln(char c);
 
+	public void write(char *c);
+    public void writeln(char *c);
+
 	public void write(std::String s);
 	public void writeln(std::String s);
 

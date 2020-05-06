@@ -942,13 +942,44 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             str = getNextChars(3);
                             if (str.length() != 3 || str.charAt(2) != '\'') return null;
                             consumeNextChars(3);
-                            return new Token(TokenType.t_literal, "'" + str);
+                            char c = 0;
+                            switch (str.charAt(1)) {
+                                case 't': {
+                                    c = '\t';
+                                    break;
+                                }
+                                case 'n': {
+                                    c = '\n';
+                                    break;
+                                }
+                                case 'r': {
+                                    c = '\r';
+                                    break;
+                                }
+                                case '\'': {
+                                    c = '\'';
+                                    break;
+                                }
+                                case '\\': {
+                                    c = '\\';
+                                    break;
+                                }
+                                case '"': {
+                                    c= '"';
+                                    break;
+                                }
+                                case '?': {
+                                    c = '?';
+                                    break;
+                                }
+                            }
+                            return new Token(TokenType.t_literal, "'" + c + "'");
                         }
                         
                         return null;
                     }
                     consumeNextChars(2);
-                    return new Token(TokenType.t_literal, "'" + str);
+                    return new Token(TokenType.t_literal, "'" + str.charAt(0) + "'");
                 } case '$': {
                     return new Token(TokenType.t_dollar);
                 }
@@ -1016,8 +1047,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     private HashMap<String, Define> baseDefines() {
         HashMap<String, Define> output = new HashMap<>();
         
-        output.put("__LINE__", new FunctionDefine("__LINE__", () -> "" + lineNumber ));
-        output.put("__FILE__", new FunctionDefine("__FILE__", () -> "\"" + currentFile + '"' ));
+        output.put("__LINE__", new FunctionDefine("__LINE__", () -> "" + getLine() ));
+        output.put("__FILE__", new FunctionDefine("__FILE__", () -> "\"" + currentFile.replaceAll("\\\\", "/") + '"' ));
         output.put("defined", new FunctionDefine("defined", false, Collections.singletonList("X"),
                 (String[] args) -> defines.containsKey(args[0]) ? "1" : "0" ));
         

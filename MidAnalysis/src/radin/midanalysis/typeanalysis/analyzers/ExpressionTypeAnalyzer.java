@@ -56,7 +56,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             String image = node.getToken().getImage();
             Pattern floatingPoint = Pattern.compile("-?\\d+\\.\\d*|\\d*\\.\\d+");
             Pattern integer = Pattern.compile("\\d+|0b[01]+|0x[a-fA-F]+");
-            Pattern character = Pattern.compile("'(.|\\\\.)'");
+            Pattern character = Pattern.compile("'(.|\\\\.)'", Pattern.DOTALL);
             
             if(floatingPoint.matcher(image).matches()) {
                 node.setType(CXPrimitiveType.DOUBLE);

@@ -42,7 +42,7 @@ class InterpreterFile : std::File {
 
 		u16 fd = this->fd;
 		if(!_write_file(fd, c)) {
-			panic(new std::String("Error writing to file"));
+			PANIC(new std::String("Error writing to file"));
 		}
 	}
 	virtual public void change_position(size_t position) {

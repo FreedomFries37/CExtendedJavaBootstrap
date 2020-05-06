@@ -1,14 +1,18 @@
 #include <stdio.h>
 
 int main(int argc, std::String argv[]) {
-	panic(new std::String("ahh"));
+
+
 	std::File file = access_file("output.txt");
 
 	std::FileWriter fw = new std::FileWriter(file);
-	fw->writeln(new std::String("Hello File!"));
+	fw->writeln("Hello File!");
 	fw->flush();
 	fw->close();
 
+	stdout->writeln("What's up its your boy");
+
+	fw->write("This shouldn't work");
 
 
 	return 0;

@@ -109,6 +109,12 @@ public class FileHandler {
         },
                 false);
     
+        fdToOutput.remove(fd);
+        fdToInput.remove(fd);
+        
+        usedFileDescriptors[fd] = false;
+        
+        
         return inputSuccess && outputSuccess;
     }
     
@@ -160,14 +166,7 @@ public class FileHandler {
     }
     
     public void closeFile(int fd)  {
-        Reference<OutputStream> stream = new Reference<>();
-        if(getOutputStream(fd).match(stream)) {
-            try {
-                stream.getValue().close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        closeFileDescriptor(fd);
     }
     
     public char readFile(int fd) throws IOException {

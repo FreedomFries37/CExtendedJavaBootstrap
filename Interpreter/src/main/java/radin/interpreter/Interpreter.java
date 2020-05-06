@@ -1705,8 +1705,18 @@ public class Interpreter {
                         break;
                     }
                     case "_close_file": {
-                        
-                        
+    
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        startStackTraceFor(token);
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) pop();
+    
+                        int fd = fdInstance.getBackingValue().intValue();
+    
+                        fileHandler.closeFile(fd);
+    
+    
+                        stackTrace.pop();
+                        logCurrentState();
                         
                         break;
                     }
