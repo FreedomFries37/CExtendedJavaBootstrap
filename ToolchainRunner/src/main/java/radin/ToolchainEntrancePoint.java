@@ -49,7 +49,10 @@ public class ToolchainEntrancePoint {
     public static void main(String[] args) throws IOException {
         File toolchainDirectory = new File(".toolchain");
         if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
-            if (System.getenv("JODIN_HOME") == null) throw new IOException("Jodin Home not set");
+            if (System.getenv("JODIN_HOME") == null) {
+                err.println("Jodin Home not set");
+                exit(-1);
+            }
             toolchainDirectory = new File(System.getenv("JODIN_HOME") + "/toolchain");
             if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
                 throw new IOException("No toolchain directory!");
