@@ -13,7 +13,7 @@ int main(int argc, std::String argv[]) {
 
 	stdout->writeln("What's up its your boy");
 
-	fw->write("This shouldn't work");
+	// fw->write("This shouldn't work");
 
 
 	return 0;
