@@ -16,7 +16,6 @@ implement String {
 		this->cLength = this->length + 1;
 	}
 	String(String other) : this(other->backingPtr) {
-
 	}
 
 

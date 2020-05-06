@@ -107,6 +107,14 @@ public class Option<T> {
         }
     }
     
+    public T thisOrElse(T or) {
+        Reference<T> ref = new Reference<>();
+        if(match(ref)) {
+            return ref.getValue();
+        } else {
+            return or;
+        }
+    }
     
     
     public static <T> Option<T> Some(T data) {

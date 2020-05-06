@@ -42,6 +42,7 @@ class FileWriter {
 
 	public void flush();
 	public void close();
+
 };
 
 

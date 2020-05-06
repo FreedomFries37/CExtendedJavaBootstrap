@@ -311,7 +311,7 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
                     }
                     
                     if (astTree != null && UniversalCompilerSettings.getInstance().getSettings().isOutputAST()) {
-                        File astOutput = ICompilationSettings.createFile("ast/" + new File(file).getName() + ".ast");
+                        File astOutput = ICompilationSettings.createBuildFile("ast/" + new File(file).getName() + ".ast");
                         try {
                             PrintWriter fileWriter = new PrintWriter(new FileWriter(astOutput));
                             fileWriter.println("ast {");
@@ -348,7 +348,7 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
                     
                     invoke = midToolChain.invoke(astTree);
                     if (invoke != null && UniversalCompilerSettings.getInstance().getSettings().isOutputTAST()) {
-                        File astOutput = ICompilationSettings.createFile("ast/" + new File(file).getName() + ".tast");
+                        File astOutput = ICompilationSettings.createBuildFile("ast/" + new File(file).getName() + ".tast");
                         try {
                             PrintWriter fileWriter = new PrintWriter(new FileWriter(astOutput));
                             fileWriter.println(invoke.toTreeForm());

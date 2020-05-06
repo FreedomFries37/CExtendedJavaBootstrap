@@ -1,6 +1,6 @@
 #include <system/toolchain.h>
 #include <host_hook.h>
-
+#include <host_hook.h>
 
 void print(const char* c) {
 	_interpreter_print(c);
@@ -9,7 +9,7 @@ void print(const char* c) {
 
 
 class InterpreterFile : std::File {
-	private int fd;
+	private u16 fd;
 	private std::String path;
 	private int position;
 
@@ -35,7 +35,9 @@ class InterpreterFile : std::File {
 		return output;
 	}
 	virtual public void write(char c) {
-		if(!_write_file(this->fd)) {
+
+		u16 fd = this->fd;
+		if(!_write_file(fd, c)) {
 			panic(new std::String("Error writing to file"));
 		}
 	}

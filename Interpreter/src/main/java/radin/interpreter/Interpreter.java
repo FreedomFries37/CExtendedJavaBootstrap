@@ -396,6 +396,7 @@ public class Interpreter {
         
         @Override
         public String toString() {
+            /*
             if (subType == CXPrimitiveType.CHAR) {
                 StringBuilder output = new StringBuilder("\"");
                 
@@ -409,6 +410,8 @@ public class Interpreter {
                 
                 return output + "\" (true size = " + getSize() + ")";
             }
+            
+             */
             return "ArrayInstance{" +
                     "type=" + getType() +
                     ", size=" + size +
@@ -519,11 +522,14 @@ public class Interpreter {
         
         @Override
         public String toString() {
+            /*
             if (getSubType() == CXPrimitiveType.CHAR) {
                 String full = super.toString();
                 String output = full.substring(index + 1);
                 return "\"" + output + " (char*)";
             }
+            
+             */
             if(getBackingValue().size() == 0) {
                 return "nullptr (type = " + getType() + ")";
             }
@@ -1120,7 +1126,8 @@ public class Interpreter {
                             System.exit(earlyExit.code);
                         }
                         PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
-                        if(log) logger.finest(" ".repeat(eqIndex) + "  toString() = " + cString);
+                        if(log) logger.finest(" ".repeat(eqIndex) + "  toString() = \"" + cString.takeString().thisOrElse("No toString() " +
+                                "defined") +"\"");
                     } else if (instanceEntry.getValue() instanceof ArrayInstance && !(instanceEntry.getValue() instanceof PointerInstance)) {
                         var backingValue = ((ArrayInstance<?, ?>) instanceEntry.getValue()).getBackingValue();
                         for (int i = 0; i < backingValue.size(); i++) {
@@ -1255,6 +1262,10 @@ public class Interpreter {
             return closestToken(node.getParent());
         }
         return firstToken;
+    }
+    
+    private void pushBoolean(boolean b) {
+        push(createNewInstance(CXPrimitiveType.INTEGER, b? 1 : 0));
     }
     
     
@@ -1699,38 +1710,40 @@ public class Interpreter {
                     }
                     
                     case "_write_file": {
-                        
-                        
+    
+    
+                        pushBoolean(false);
                         break;
                     }
-                }
-                
-                
-                TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
-                
-                
-                if (function == null) {
-                    
-                    throw new CompilationError("Symbol " + funcCall + " not " +
-                            "defined", input.getASTChild(ASTNodeType.id).getToken());
-                } else {
-                    if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    useThisStack.push(false);
-                    startStackTraceFor(token);
-                    logCurrentState();
-                    try {
-                        if(log) logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
-                        if (!invoke(function)) return false;
-                    } catch (FunctionReturned functionReturned) {
-                        if (returnValue != null) {
-                            push(returnValue);
+                    default: {
+                        TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
+    
+    
+                        if (function == null) {
+        
+                            throw new CompilationError("Symbol " + funcCall + " not " +
+                                    "defined", input.getASTChild(ASTNodeType.id).getToken());
+                        } else {
+                            if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                            useThisStack.push(false);
+                            startStackTraceFor(token);
+                            logCurrentState();
+                            try {
+                                if(log) logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
+                                if (!invoke(function)) return false;
+                            } catch (FunctionReturned functionReturned) {
+                                if (returnValue != null) {
+                                    push(returnValue);
+                                }
+                                returnValue = null;
+                            }
                         }
-                        returnValue = null;
+                        logCurrentState();
+                        stackTrace.pop();
+                        useThisStack.pop();
                     }
                 }
-                logCurrentState();
-                stackTrace.pop();
-                useThisStack.pop();
+                
                 
             }
             break;

@@ -3,10 +3,6 @@
 int main(int argc, std::String argv[]) {
 
 	std::File file = access_file("output.txt");
-	if(!file->exists()) {
-
-		file->create();
-	}
 
 	std::FileWriter fw = new std::FileWriter(file);
 	fw->writeln(new std::String("Hello File!"));
