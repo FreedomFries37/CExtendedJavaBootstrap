@@ -1,0 +1,286 @@
+Index: Jodin-std-lib/include/prelude.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#ifndef __PRELUDE_HEADER__\r\n#define __PRELUDE_HEADER__\r\n\r\n#include <reflection.h>\r\n#include <primitives.h>\r\n\r\n\r\nin std class String;\r\nin std class ClassInfo;\r\nin std class Int;\r\n\r\nvoid* calloc(size_t size, size_t length);\r\n\r\n\r\nvoid free(void* ptr);\r\nvoid exit(int status);\r\nvoid panic(std::String msg);\r\n\r\nvoid print(const char* c);\r\nvoid println(const char* c);\r\nvoid print_s(std::String o);\r\nvoid println_s(std::String o);\r\n\r\nconst void* nullptr = (void*) 0;\r\n\r\n\r\n\r\nin std {\r\n\t// ClassInfo get_class(class_id id);s\r\n\r\n\t[setAsDefaultInheritance]\r\n\tclass Object { // default inheritence is initially null\r\n\t\tprivate ClassInfo info;\r\n\t\tpublic long references; // if using garbage collection\r\n\r\n\t\tpublic Object();\r\n\r\n\t\tvirtual public int hashcode();\r\n\t\tvirtual public bool equals(Object other);\r\n\t\tvirtual public void drop();\r\n\r\n\r\n\r\n\t\tvirtual public String toString();\r\n\r\n\t\tpublic ClassInfo getClass();\r\n\r\n\t\tvirtual public void print();\r\n\t\tpublic void println();\r\n\r\n\r\n\t};\r\n\r\n\r\n\r\n\tclass ClassInfo {\r\n\r\n\r\n\t\tprivate String name;\r\n\t\tprivate ClassInfo parent;\r\n\t\tprivate i32 classHash;\r\n\r\n\t\tpublic ClassInfo();\r\n\r\n\t\tpublic String getName();\r\n\r\n\t\tpublic bool is_object(Object o);\r\n\t\tprivate bool is_class(ClassInfo o);\r\n\r\n\t\tvirtual public bool equals(Object other);\r\n\t\tvirtual public bool equals(ClassInfo other);\r\n\t};\r\n\r\n\tclass String{\r\n\t\tchar* backingPtr;\r\n\t\tint length;\r\n\t\tint cLength;\r\n\r\n\t\tpublic String(const char* bp);\r\n\t\tpublic String(char c);\r\n\t\tpublic String();\r\n\t\tpublic String(String other);\r\n\r\n\t\tvirtual public void drop();\r\n\r\n\t\tpublic String concat(String other);\r\n\r\n\t\tpublic String concat(char* other);\r\n\r\n\t\tpublic String concat_integer(long other);\r\n\r\n\t\tpublic String concat(Object other);\r\n\r\n\t\tpublic String concat(char c);\r\n\r\n\t\tpublic const char* getCStr();\r\n\r\n\t\tvirtual public int length();\r\n\r\n\t\tvirtual public String toString();\r\n    };\r\n\r\n\r\n}\r\n\r\n\r\n\r\n#endif\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/include/prelude.h	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/include/prelude.h	(date 1588740529624)
+@@ -14,7 +14,7 @@
+ 
+ void free(void* ptr);
+ void exit(int status);
+-void panic(std::String msg);
++
+ 
+ void print(const char* c);
+ void println(const char* c);
+@@ -105,4 +105,9 @@
+ 
+ 
+ 
++#include <panic.h>
++
++
++
++
+ #endif
+Index: Jodin-std-lib/core/stdio.jdn
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include <stdio.h>\r\n\r\nin std\r\nimplement FileWriter {\r\n\r\n\tFileWriter(FILE f) {\r\n\t\tthis->f = f;\r\n\t}\r\n\r\n\tvoid writeln() {\r\n\t\tthis->f->write('\\n');\r\n\t}\r\n\r\n\tvoid write(char c) {\r\n\t\tthis->f->write(c);\r\n\t}\r\n\tvoid writeln(char c) {\r\n\t\tthis->f->write(c);\r\n\t\tthis->writeln();\r\n\t}\r\n\r\n\r\n\tvoid write(std::String s) {\r\n\t\tsize_t length = s->length();\r\n\t\tconst char* c_str = s->getCStr();\r\n\t\tfor(int i = 0; i < length; ++i) {\r\n\t\t\tthis->write(c_str[i]);\r\n\t\t}\r\n\t}\r\n\tvoid writeln(std::String s) {\r\n\t\tthis->write(s);\r\n\t\tthis->writeln();\r\n\t}\r\n\r\n\tvoid write(std::Object o) {\r\n\t\tthis->write(o->toString());\r\n\t}\r\n\tvoid writeln(std::Object o) {\r\n\t\tthis->writeln(o->toString());\r\n\t}\r\n\r\n\tvoid flush() {\r\n\t\tthis->f->flush();\r\n\t}\r\n\r\n\tvoid close() {\r\n\t\tthis->f->close();\r\n\t}\r\n}\r\n\r\nin std\r\nimplement FileReader {\r\n\r\n\tFileReader(FILE f) {\r\n\t\tthis->f = f;\r\n\t}\r\n\r\n\tvoid close() {\r\n\t\tthis->f->close();\r\n\t}\r\n\r\n\tu8 read() {\r\n\t\treturn (u8) this->f->read();\r\n\t}\r\n\r\n\tbool safe_read(u8* c) {\r\n\t\tif (!this->f->ready()) {\r\n\t\t\treturn false;\r\n\t\t}\r\n\t\t*c = this->f->read();\r\n\t\treturn true;\r\n\t}\r\n\r\n\tbool read(u8 buffer[], int len) {\r\n\t\tfor(int i =0; i < len; ++i) {\r\n\t\t\tu8 nextByte;\r\n\t\t\tif(!safe_read(&u8)) {\r\n\t\t\t\treturn false;\r\n\t\t\t}\r\n\t\t\tbuffer[i] = nextByte;\r\n\t\t}\r\n\t\treturn true;\r\n\t}\r\n\r\n\tchar readChar() {\r\n\t\treturn this->f->read();\r\n\t}\r\n\r\n\tString readString(int len) {\r\n\t\tchar image[len + 1];\r\n\t\timage[len] = '0';\r\n\t\tfor(int i =0; i < len; ++i) {\r\n\t\t\timage[i] = this->readChar();\r\n\t\t}\r\n\t\treturn new String(image);\r\n\t}\r\n\r\n\tString readLine() {\r\n\t\tString output = new String();\r\n\t\tbool lineBreakFound = false;\r\n\t\twhile(this->f->ready() && !lineBreakFound) {\r\n\t\t\tchar c = this->readChar();\r\n\t\t\tif(c == '\\n') {\r\n\t\t\t\tlineBreakFound = true;\r\n\t\t\t} else {\r\n\t\t\t\toutput = output->concat(c);\r\n\t\t\t}\r\n\t\t}\r\n\t\treturn output;\r\n\t}\r\n\r\n\tString readToken() {\r\n\t\tString output = new String();\r\n\t\tbool charFound = false;\r\n\t\twhile(this->f->ready() && !charFound) {\r\n\t\t\tchar c = this->readChar();\r\n\t\t\tif (!(c == ' ' || c == '\\r' || c == '\\n' || c == '\\t')) {\r\n\t\t\t\tcharFound = true;\r\n\t\t\t\toutput = output->concat(c);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\r\n\t\tbool whitespaceFound = false;\r\n\t\twhile(this->f->ready() && !whitespaceFound) {\r\n\t\t\tchar c = this->readChar();\r\n\t\t\tif ((c == ' ' || c == '\\r' || c == '\\n' || c == '\\t')) {\r\n\t\t\t\twhitespaceFound = true;\r\n\t\t\t} else {\r\n\t\t\t\toutput = output->concat(c);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\treturn output;\r\n\t}\r\n\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/core/stdio.jdn	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/core/stdio.jdn	(date 1588740630960)
+@@ -5,17 +5,34 @@
+ 
+ 	FileWriter(FILE f) {
+ 		this->f = f;
++		this->autoFlush = false;
++	}
++
++	FileWriter(FILE f, bool autoFlush) {
++		this->f = f;
++		this->autoFlush = autoFlush;
+ 	}
+ 
+ 	void writeln() {
+-		this->f->write('\n');
++		this->write('\n');
+ 	}
+ 
+ 	void write(char c) {
+ 		this->f->write(c);
++		if(this->autoFlush) {
++			this->f->flush();
++		}
+ 	}
+ 	void writeln(char c) {
+-		this->f->write(c);
++		this->write(c);
++		this->writeln();
++	}
++
++	void write(char* c) {
++		this->write(new std::String(c));
++	}
++	void writeln(char* c) {
++		this->write(c);
+ 		this->writeln();
+ 	}
+ 
+@@ -135,4 +152,4 @@
+ 	}
+ 
+ 
+-}
+\ No newline at end of file
++}
+Index: Jodin-std-lib/core/string.jdn
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include <string.h>\r\n#include <stdint.h>\r\n\r\nin std\r\nimplement String {\r\n\tString() : this(\"\") { }\r\n\tString(const char* bp) {\r\n\t\tthis->backingPtr = strdup(bp);\r\n\t\tthis->length = strlen(bp);\r\n\t\tthis->cLength = this->length + 1;\r\n\t}\r\n\tString(char c) {\r\n\t\tthis->backingPtr = calloc(sizeof(char), 2);\r\n\t\tthis->backingPtr[0] = c;\r\n\t\tthis->length = 1;\r\n\t\tthis->cLength = this->length + 1;\r\n\t}\r\n\tString(String other) : this(other->backingPtr) {\r\n\r\n\t}\r\n\r\n\r\n\tvoid drop() {\r\n\t\tfree(this->backingPtr);\r\n\t\tsuper->drop();\r\n\t}\r\n\r\n\tString concat(String other) {\r\n\t\tchar next[this->length + other->length + 1];\r\n\t\t// print(\"This length = \");\r\n\t\t// println_s(new Int(this->length())->toString());\r\n\t\tstrcpy(next, this->backingPtr);\r\n\t\tstrcat(next, other->backingPtr);\r\n\t\treturn new String(next);\r\n\t}\r\n\r\n\tString concat(Object other) {\r\n\t\treturn this->concat(other->toString());\r\n\t}\r\n\r\n\tString concat(char* other) {\r\n\t\treturn this->concat(new String(other));\r\n\t}\r\n\r\n\tString concat(char c) {\r\n\t\tchar next[this->cLength + 1];\r\n\t\t//print(\"This length = \");\r\n\t\t//println_s(new Int(this->length())->toString());\r\n\t\tstrcpy(next, this->backingPtr);\r\n\t\tnext[this->length] = c;\r\n\r\n\t\tnext[this->length + 1] = (char) 0;\r\n\t\treturn new String(next);\r\n\t}\r\n\r\n\tconst char* getCStr() {\r\n\t\treturn this->backingPtr;\r\n\t}\r\n\r\n\tString concat_integer(long other) {\r\n\t\treturn this;\r\n\t}\r\n\r\n\tint length() {\r\n\t\treturn this->length;\r\n\t}\r\n\r\n\tString toString() {\r\n\t\treturn this;\r\n\t}\r\n}\r\n\r\nchar* strdup(const char* str1) {\r\n\tsize_t length = strlen(str1);\r\n\tchar* output = calloc(sizeof(char), length + 1);\r\n\tfor(int i = 0; i < length; ++i) {\r\n\t\toutput[i] = str1[i];\r\n\t}\r\n\treturn output;\r\n}\r\n\r\nsize_t strlen ( const char * str ) {\r\n\tconst char* ptr = str;\r\n\tsize_t output = 0;\r\n\twhile(*ptr != 0) {\r\n\t\t++ptr;\r\n\t\t++output;\r\n\t}\r\n\treturn output;\r\n}\r\n\r\nchar * strcpy ( char * destination, const char * source ) {\r\n\tsize_t length = strlen(source);\r\n\tfor(int i = 0; i < length; ++i) {\r\n\t\tdestination[i] = source[i];\r\n\t}\r\n\r\n\t// print(\"strcpy result: \");\r\n    // println(destination);\r\n\treturn destination;\r\n}\r\nchar * strncpy ( char * destination, const char * source, size_t num ) {\r\n\tfor(int i = 0; i < num; ++i) {\r\n    \tdestination[i] = source[i];\r\n    }\r\n\r\n\r\n\r\n    return destination;\r\n}\r\n\r\n/*\r\n\r\ndest.len = 3;\r\nsrc.len = 4;\r\n\r\n\r\n\r\n*/\r\nchar * strcat ( char * destination, const char * source ) {\r\n\tsize_t dest = strlen(destination);\r\n\r\n\tsize_t src = strlen(source);\r\n\tfor(int i = 0; i < src; ++i) {\r\n    \t\tdestination[dest + i] = source[i];\r\n    }\r\n    destination[dest + src] = 0;\r\n    return destination;\r\n}\r\nchar * strncat ( char * destination, const char * source, size_t num );\r\n\r\n\r\nint strcmp ( const char * str1, const char * str2 ) {\r\n\tchar* ptr1, *ptr2;\r\n\twhile(ptr1 != nullptr || ptr2 != nullptr) {\r\n\t\tif(*ptr1 < *ptr2) {\r\n\t\t\treturn -1;\r\n\t\t} else if(*ptr1 > *ptr2) {\r\n\t\t\treturn 1;\r\n\t\t}\r\n\t}\r\n\treturn 0;\r\n}\r\nint strcoll ( const char * str1, const char * str2 );\r\nint strncmp ( const char * str1, const char * str2, size_t num );\r\nsize_t strxfrm ( char * destination, const char * source, size_t num );\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/core/string.jdn	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/core/string.jdn	(date 1588740529622)
+@@ -16,7 +16,6 @@
+ 		this->cLength = this->length + 1;
+ 	}
+ 	String(String other) : this(other->backingPtr) {
+-
+ 	}
+ 
+ 
+Index: Jodin-std-lib/toolchain/interpreter/src/toolchain.jdn
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#include <system/toolchain.h>\r\n#include <host_hook.h>\r\n\r\n\r\nvoid print(const char* c) {\r\n\t_interpreter_print(c);\r\n}\r\n\r\n\r\n\r\nclass InterpreterFile : std::File {\r\n\tprivate int fd;\r\n\tprivate std::String path;\r\n\tprivate int position;\r\n\r\n\tpublic InterpreterFile(std::String path) {\r\n\t\tthis->fd = _open_file(path);\r\n\t\tthis->path = path;\r\n\t}\r\n\r\n\r\n\r\n\tvirtual public void flush() {\r\n\t\t_flush_file(this->fd);\r\n\t}\r\n\tvirtual public void close() {\r\n\t\t_close_file(this->fd);\r\n\t}\r\n\tvirtual public char read() {\r\n\t\tbool error;\r\n\t\tchar output = _read_file(this->fd, this->position++, &error);\r\n\t\tif(error) {\r\n\t\t\tpanic(new std::String(\"Error reading from file\"));\r\n\t\t}\r\n\t\treturn output;\r\n\t}\r\n\tvirtual public void write(char c) {\r\n\t\tif(!_write_file(this->fd)) {\r\n\t\t\tpanic(new std::String(\"Error writing to file\"));\r\n\t\t}\r\n\t}\r\n\tvirtual public void change_position(size_t position) {\r\n\t\tthis->position = position;\r\n\t}\r\n};\r\n\r\nin std File access_file(std::String file) {\r\n\treturn new InterpreterFile(file);\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/toolchain/interpreter/src/toolchain.jdn	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/toolchain/interpreter/src/toolchain.jdn	(date 1588740529628)
+@@ -1,6 +1,6 @@
+ #include <system/toolchain.h>
+ #include <host_hook.h>
+-
++#include <host_hook.h>
+ 
+ void print(const char* c) {
+ 	_interpreter_print(c);
+@@ -9,7 +9,7 @@
+ 
+ 
+ class InterpreterFile : std::File {
+-	private int fd;
++	private u16 fd;
+ 	private std::String path;
+ 	private int position;
+ 
+@@ -18,6 +18,9 @@
+ 		this->path = path;
+ 	}
+ 
++	public InterpreterFile(int fd) {
++		this->fd = fd;
++	}
+ 
+ 
+ 	virtual public void flush() {
+@@ -30,13 +33,16 @@
+ 		bool error;
+ 		char output = _read_file(this->fd, this->position++, &error);
+ 		if(error) {
+-			panic(new std::String("Error reading from file"));
++			PANIC("Error reading from file");
++			// panic(new std::String("Error reading from file"));
+ 		}
+ 		return output;
+ 	}
+ 	virtual public void write(char c) {
+-		if(!_write_file(this->fd)) {
+-			panic(new std::String("Error writing to file"));
++
++		u16 fd = this->fd;
++		if(!_write_file(fd, c)) {
++			PANIC(new std::String("Error writing to file"));
+ 		}
+ 	}
+ 	virtual public void change_position(size_t position) {
+@@ -46,4 +52,8 @@
+ 
+ in std File access_file(std::String file) {
+ 	return new InterpreterFile(file);
++}
++
++in std File access_fd(int fd) {
++	return new InterpreterFile(fd);
+ }
+\ No newline at end of file
+Index: Jodin-std-lib/toolchain/interpreter/include/host_hook.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#ifndef __HOST_HOOK__HEADER__\r\n#define __HOST_HOOK__HEADER__\r\n\r\n/*\r\n\r\nThis file will be the \"interpreter hook\", which is basically the list of functions that the interpreter will have to\r\ndo, as it requires system interaction of some kind\r\n\r\n*/\r\n\r\nvoid _interpreter_print(char * c);\r\n\r\n// Input is path, output is file descriptor\r\nint _open_file(std::String path);\r\nvoid _flush_file(int fd);\r\nvoid _close_file(int fd);\r\nchar _read_file(int fd, int position, bool* error);\r\nbool _write_file(int fd, int position);\r\n\r\n\r\n#endif
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/toolchain/interpreter/include/host_hook.h	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/toolchain/interpreter/include/host_hook.h	(date 1588740529626)
+@@ -11,11 +11,11 @@
+ void _interpreter_print(char * c);
+ 
+ // Input is path, output is file descriptor
+-int _open_file(std::String path);
++int _open_file(std::String path, int* error);
+ void _flush_file(int fd);
+ void _close_file(int fd);
+-char _read_file(int fd, int position, bool* error);
+-bool _write_file(int fd, int position);
++char _read_file(int fd, bool* error);
++bool _write_file(int fd, char c);
+ 
+ 
+ #endif
+\ No newline at end of file
+Index: Jodin-std-lib/include/panic.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/include/panic.h	(date 1588740529623)
++++ Jodin-std-lib/include/panic.h	(date 1588740529623)
+@@ -0,0 +1,13 @@
++
++
++#ifndef __PANIC__HEADER__
++#define __PANIC__HEADER__
++
++void panic(std::String msg, int line, char* filename);
++
++#ifndef FORCE_STRING
++#define FORCE_STRING(string) (new std::String(string))
++#endif
++#define PANIC(msg) panic(FORCE_STRING(msg), __LINE__, __FILE__)
++
++#endif
+\ No newline at end of file
+Index: Jodin-std-lib/core/runtime.i
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/*\r\nThis file is mean to be added onto by the compiler. All non-dynamic declarations will occur here.\r\n\r\nThis file is compiled with special rules, significantly that words starting with __ are valid\r\n*/\r\n\r\n#define KB(X) (1028 * (X))\r\n#define MB(X) (1028 * KB(X))\r\n#define GB(X) (1028 * MB(X))\r\n\r\n#ifndef HEAP_SIZE\r\n#define HEAP_SIZE (MB(128))\r\n#endif\r\n\r\n#ifndef STRING_TYPE\r\n#define STRING_TYPE char*\r\n#endif\r\n\r\n#include <string.h>\r\n#include <primitives.h>\r\n\r\ntypedef unsigned char byte;\r\n\r\n\r\n\r\nstruct j_heap{\r\n\tbyte* jheap;\r\n\tsize_t size;\r\n\tsize_t bytes_free;\r\n#ifdef GC\r\n\tdouble allocation_percent;\r\n#endif\r\n};\r\n\r\nstruct j_heap jodin_heap;\r\n\r\n\r\nvoid panic(STRING_TYPE message) {\r\n\tstd::String fixed = new std::String(message); // whether the STRING type is a char* or a std::String, this always works\r\n\tprintln_s(fixed);\r\n\texit(-1);\r\n}\r\n\r\n\r\nvoid assert_failure(const char* file, int linenumber, const char* message) {\r\n\tprint(file);\r\n\tprint(\": \");\r\n\t//print()\r\n\tprintln(message);\r\n}\r\n\r\n\r\nbool __init_heap() {\r\n\r\n\r\n\tjodin_heap.jheap = nullptr;\r\n\tif(jodin_heap.jheap == nullptr) {\r\n\t\treturn false;\r\n\t}\r\n\tjodin_heap.size = HEAP_SIZE;\r\n\tjodin_heap.bytes_free = 0;\r\n#ifdef GC\r\n\tjodin_heap.allocation_percent = 0;\r\n#endif\r\n\treturn true;\r\n}\r\n\r\nvoid __free_heap() {\r\n\tfree(jodin_heap.jheap);\r\n}\r\n\r\n\r\n\r\n\r\n\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/core/runtime.i	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/core/runtime.i	(date 1588740529621)
+@@ -12,12 +12,10 @@
+ #define HEAP_SIZE (MB(128))
+ #endif
+ 
+-#ifndef STRING_TYPE
+-#define STRING_TYPE char*
+-#endif
+ 
+ #include <string.h>
+ #include <primitives.h>
++#include <stdio.h>
+ 
+ typedef unsigned char byte;
+ 
+@@ -35,11 +33,6 @@
+ struct j_heap jodin_heap;
+ 
+ 
+-void panic(STRING_TYPE message) {
+-	std::String fixed = new std::String(message); // whether the STRING type is a char* or a std::String, this always works
+-	println_s(fixed);
+-	exit(-1);
+-}
+ 
+ 
+ void assert_failure(const char* file, int linenumber, const char* message) {
+Index: Jodin-std-lib/core/panic.jdn
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/core/panic.jdn	(date 1588740529620)
++++ Jodin-std-lib/core/panic.jdn	(date 1588740529620)
+@@ -0,0 +1,14 @@
++#include <panic.h>
++#include <stdio.h>
++#include <stdint.h>
++
++void panic(std::String msg, int line, char* filename) {
++	stderr->write("Program panicked");
++	stderr->write(" in file ");
++	stderr->write(filename);
++	stderr->write(" at line ");
++	stderr->writeln(new std::Int(line));
++	stderr->write("Reason: ");
++	stderr->writeln(msg);
++	exit(-1);
++}
+Index: Jodin-std-lib/toolchain/interpreter/include/toolchain/defines.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#ifndef __DEFINES__HEADER__\r\n#define __DEFINES__HEADER__\r\n\r\ntypedef i8 status_t;\r\n\r\n#endif
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Jodin-std-lib/toolchain/interpreter/include/toolchain/defines.h	(revision ca78515308545029efdd664752a796214802c47f)
++++ Jodin-std-lib/toolchain/interpreter/include/toolchain/defines.h	(date 1588740529627)
+@@ -3,4 +3,7 @@
+ 
+ typedef i8 status_t;
+ 
++
++
++
+ #endif
+\ No newline at end of file
