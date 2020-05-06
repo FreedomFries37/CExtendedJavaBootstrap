@@ -18,6 +18,9 @@ class InterpreterFile : std::File {
 		this->path = path;
 	}
 
+	public InterpreterFile(int fd) {
+		this->fd = fd;
+	}
 
 
 	virtual public void flush() {
@@ -48,4 +51,8 @@ class InterpreterFile : std::File {
 
 in std File access_file(std::String file) {
 	return new InterpreterFile(file);
+}
+
+in std File access_fd(int fd) {
+	return new InterpreterFile(fd);
 }

@@ -12,12 +12,10 @@ This file is compiled with special rules, significantly that words starting with
 #define HEAP_SIZE (MB(128))
 #endif
 
-#ifndef STRING_TYPE
-#define STRING_TYPE char*
-#endif
 
 #include <string.h>
 #include <primitives.h>
+#include <stdio.h>
 
 typedef unsigned char byte;
 
@@ -35,9 +33,8 @@ struct j_heap{
 struct j_heap jodin_heap;
 
 
-void panic(STRING_TYPE message) {
-	std::String fixed = new std::String(message); // whether the STRING type is a char* or a std::String, this always works
-	println_s(fixed);
+void panic(std::String message) {
+	stderr->writeln(message);
 	exit(-1);
 }
 

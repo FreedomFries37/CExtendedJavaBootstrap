@@ -5,17 +5,26 @@ implement FileWriter {
 
 	FileWriter(FILE f) {
 		this->f = f;
+		this->autoFlush = false;
+	}
+
+	FileWriter(FILE f, bool autoFlush) {
+		this->f = f;
+		this->autoFlush = autoFlush;
 	}
 
 	void writeln() {
-		this->f->write('\n');
+		this->write('\n');
 	}
 
 	void write(char c) {
 		this->f->write(c);
+		if(this->autoFlush) {
+			this->f->flush();
+		}
 	}
 	void writeln(char c) {
-		this->f->write(c);
+		this->write(c);
 		this->writeln();
 	}
 
@@ -47,3 +56,4 @@ implement FileWriter {
 		this->f->close();
 	}
 }
+

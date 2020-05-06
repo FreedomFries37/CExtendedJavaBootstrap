@@ -1691,9 +1691,17 @@ public class Interpreter {
                         break;
                     }
                     case "_flush_file": {
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        startStackTraceFor(token);
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) pop();
+    
+                        int fd = fdInstance.getBackingValue().intValue();
                         
+                        fileHandler.flushFile(fd);
                         
-                        
+    
+                        stackTrace.pop();
+                        logCurrentState();
                         break;
                     }
                     case "_close_file": {
@@ -1710,9 +1718,29 @@ public class Interpreter {
                     }
                     
                     case "_write_file": {
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        startStackTraceFor(token);
+    
+                        PrimitiveInstance<Character, ?> cInstance = (PrimitiveInstance<Character, ?>) pop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) pop();
+                        
+                        char c = cInstance.getBackingValue();
+                        int fd = fdInstance.getBackingValue().intValue();
     
     
-                        pushBoolean(false);
+                        try {
+                            fileHandler.writeFile(fd, c);
+                        } catch (IOException e) {
+                            stackTrace.pop();
+                            logCurrentState();
+                            pushBoolean(false);
+                            break;
+                        }
+    
+    
+                        stackTrace.pop();
+                        logCurrentState();
+                        pushBoolean(true);
                         break;
                     }
                     default: {
