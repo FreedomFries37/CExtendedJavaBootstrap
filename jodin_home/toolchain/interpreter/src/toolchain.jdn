@@ -33,7 +33,8 @@ class InterpreterFile : std::File {
 		bool error;
 		char output = _read_file(this->fd, this->position++, &error);
 		if(error) {
-			panic(new std::String("Error reading from file"));
+			PANIC("Error reading from file");
+			// panic(new std::String("Error reading from file"));
 		}
 		return output;
 	}

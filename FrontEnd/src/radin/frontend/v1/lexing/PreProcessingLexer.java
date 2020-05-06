@@ -773,7 +773,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         }
                         
                     } else {
-                        replaceString(image, define.replacementString);
+                        replaceString(image, define.invoke());
                         continue;
                     }
                     

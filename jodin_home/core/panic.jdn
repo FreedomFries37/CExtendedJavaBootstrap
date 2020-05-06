@@ -1,0 +1,9 @@
+#include <panic.h>
+#include <stdio.h>
+
+void panic(std::String message) {
+	stderr->writeln("Program panicked!");
+
+	stderr->writeln(message);
+	exit(-1);
+}

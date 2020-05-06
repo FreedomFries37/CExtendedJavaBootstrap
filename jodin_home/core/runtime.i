@@ -33,10 +33,6 @@ struct j_heap{
 struct j_heap jodin_heap;
 
 
-void panic(std::String message) {
-	stderr->writeln(message);
-	exit(-1);
-}
 
 
 void assert_failure(const char* file, int linenumber, const char* message) {

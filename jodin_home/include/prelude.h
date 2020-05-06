@@ -14,7 +14,7 @@ void* calloc(size_t size, size_t length);
 
 void free(void* ptr);
 void exit(int status);
-void panic(std::String msg);
+
 
 void print(const char* c);
 void println(const char* c);
@@ -104,6 +104,11 @@ in std {
 
 
 }
+
+
+
+#include <panic.h>
+
 
 
 
