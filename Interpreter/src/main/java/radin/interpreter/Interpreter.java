@@ -129,7 +129,14 @@ public class Interpreter {
         
         @Override
         boolean isFalse() {
-            if(backingValue instanceof Number) return ((Number) this.backingValue).doubleValue() == 0 && ((Number) this.backingValue).longValue() == 0;
+            if(backingValue instanceof Number) {
+                if (backingValue instanceof Double) {
+                    return ((Number) this.backingValue).doubleValue() == 0;
+                } else {
+                    return ((Number) this.backingValue).longValue() == 0;
+                }
+                
+            }
             if(backingValue instanceof Character) return ((Character) backingValue).charValue() == 0;
             return true;
         }
@@ -161,7 +168,7 @@ public class Interpreter {
                             false);
                 } else if (castingTo.equals(CXPrimitiveType.VOID)) {
                     return null;
-                } else if (castingTo instanceof LongPrimitive) {
+                }else if (castingTo instanceof LongPrimitive) {
                     return new PrimitiveInstance<>(LongPrimitive.create(), (long) ((Number) backingValue).longValue(), false);
                 } else if (castingTo instanceof ShortPrimitive) {
                     return new PrimitiveInstance<>(new ShortPrimitive((CXPrimitiveType) getType()),
@@ -1401,9 +1408,11 @@ public class Interpreter {
                 
             }
             break;
+            
             case uniop: {
                 if (!invoke(input.getChild(1))) return false;
                 Instance<?> pop = pop();
+                Instance<?> push = pop;
                 switch (input.getChild(0).getToken().getType()) {
                     case t_inc: {
                         if (pop instanceof PointerInstance) {
@@ -1443,6 +1452,8 @@ public class Interpreter {
                         }
                         break;
                     case t_not:
+                        throw new UnsupportedOperationException();
+                        /*
                         if (pop instanceof PrimitiveInstance) {
                             if (((PrimitiveInstance<?, ?>) pop).getBackingValue() instanceof Character) {
                                 ((PrimitiveInstance<Character, ?>) pop).setBackingValue((char) (~((Character) ((PrimitiveInstance) pop).getBackingValue()).charValue()));
@@ -1452,22 +1463,13 @@ public class Interpreter {
                             }
                         }
                         break;
+                        
+                         */
                     case t_bang:
-                        if (pop instanceof PrimitiveInstance) {
-                            if (((PrimitiveInstance<?, ?>) pop).getBackingValue() instanceof Character) {
-                                ((PrimitiveInstance<Character, ?>) pop).setBackingValue((char) (~((Character) ((PrimitiveInstance) pop).getBackingValue()).charValue()));
-                            } else {
-                                if (((PrimitiveInstance<?, ?>) pop).getBackingValue() instanceof Double) {
-                                
-                                } else {
-                                    ((PrimitiveInstance<Number, ?>) pop).setBackingValue(opOnIntegral(t_eq,
-                                            ((PrimitiveInstance<Number, ?>) pop).backingValue.longValue(), 0));
-                                }
-                            }
-                        }
+                        push = createNewInstance(CXPrimitiveType.INTEGER, pop.isFalse() ? 1 : 0);
                         break;
                 }
-                push(pop);
+                push(push);
             }
             break;
             case declaration: {
@@ -1709,6 +1711,7 @@ public class Interpreter {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
                         PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) pop();
+                        
     
                         int fd = fdInstance.getBackingValue().intValue();
     
@@ -1721,8 +1724,28 @@ public class Interpreter {
                         break;
                     }
                     case "_read_file": {
-                        
-                        
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        startStackTraceFor(token);
+                        PointerInstance<CXPrimitiveType> errorInstance = (PointerInstance<CXPrimitiveType>) pop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) pop();
+    
+                        PrimitiveInstance<? super Number, ?> error = (PrimitiveInstance<? super Number, ?>) errorInstance.getPointer();
+                        int fd = fdInstance.getBackingValue().intValue();
+    
+                        try {
+                            int b = fileHandler.readFile(fd);
+                            if(b == -1) {
+                                error.setBackingValue(2);
+                            }
+                            push(createNewInstance(UnsignedPrimitive.createUnsigned(CXPrimitiveType.CHAR), (char)b));
+                        } catch (IOException e) {
+                            push(createNewInstance(UnsignedPrimitive.createUnsigned(CXPrimitiveType.CHAR),  (char) 0));
+                            error.setBackingValue(1);
+                        }
+    
+    
+                        stackTrace.pop();
+                        logCurrentState();
                         
                         break;
                     }
@@ -1751,6 +1774,23 @@ public class Interpreter {
                         stackTrace.pop();
                         logCurrentState();
                         pushBoolean(true);
+                        break;
+                    }
+                    case "_file_ready": {
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        startStackTraceFor(token);
+    
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) pop();
+                        int fd = fdInstance.getBackingValue().intValue();
+    
+                        try {
+                            pushBoolean(fileHandler.fileReady(fd));
+                        } catch (IOException e) {
+                            pushBoolean(false);
+                        }
+    
+                        stackTrace.pop();
+                        logCurrentState();
                         break;
                     }
                     default: {

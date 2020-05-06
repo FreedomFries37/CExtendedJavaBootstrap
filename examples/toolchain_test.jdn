@@ -11,7 +11,11 @@ int main(int argc, std::String argv[]) {
 	fw->flush();
 	fw->close();
 
-	stdout->writeln("What's up its your boy");
+
+	stdout->writeln("Whats your name?");
+	std::String name = stdin->readLine();
+	stdout->write("Hello ");
+	stdout->writeln(name);
 
 	// fw->write("This shouldn't work");
 

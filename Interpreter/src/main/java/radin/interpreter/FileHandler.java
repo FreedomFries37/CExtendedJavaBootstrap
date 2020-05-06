@@ -169,11 +169,11 @@ public class FileHandler {
         closeFileDescriptor(fd);
     }
     
-    public char readFile(int fd) throws IOException {
+    public int readFile(int fd) throws IOException {
         Reference<InputStream> stream = new Reference<>();
         if(getInputStream(fd).match(stream)) {
             InputStream value = stream.getValue();
-            return (char) value.read();
+            return value.read();
         } else {
             throw new IOException("File Descriptor not open");
         }
@@ -189,5 +189,13 @@ public class FileHandler {
         }
     }
 
+    public boolean fileReady(int fd) throws IOException {
+        Reference<InputStream> stream = new Reference<>();
+        if(getInputStream(fd).match(stream)) {
+            return stream.getValue().available() > 0;
+        } else {
+            throw new IOException("File Descriptor not open");
+        }
+    }
     
 }
