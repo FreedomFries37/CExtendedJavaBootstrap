@@ -8,7 +8,7 @@
       <env name="JODIN_HOME" value="C:\Users\jradi\ProgrammingWorkspace\Java\CExtendedJavaBootstrap\std\src" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="radin.CompilerEntrancePoint" />
-    <module name="CExtendedJavaBootstrap" />
+    <module name="Jodin-Java.ToolchainRunner.main" />
     <option name="PROGRAM_PARAMETERS" value="--debug-level 3 --ast -D c_src test_project/main.jdn" />
     <method v="2">
       <option name="Make" enabled="true" />
