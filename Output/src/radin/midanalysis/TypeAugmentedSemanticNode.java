@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSemanticNode> {
+public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSemanticNode>  {
     
     private AbstractSyntaxNode astNode;
     
@@ -354,4 +354,5 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         
         return null;
     }
+
 }

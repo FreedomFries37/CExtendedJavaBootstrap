@@ -232,7 +232,12 @@ public enum ASTNodeType {
     trait("trait"),
     id_list("id_list"),
     parameterized_types("parameterized_types"),
-    parameter_type("parameter_type")
+    parameter_type("parameter_type"),
+    pattern_declaration("pattern_dec"),
+    expr_pattern("expr_singleton"),
+    named_pattern("named_singleton"),
+    type_pattern("type_singleton"),
+    token_pattern("token_singleton")
     ;
     
     
@@ -252,7 +257,25 @@ public enum ASTNodeType {
         return name;
     }
     
-    
-    
+    public static ASTNodeType[] expressionTypes() {
+        return new ASTNodeType[] {
+                binop,
+                union,
+                ternary,
+                array_reference,
+                postop,
+                literal,
+                id,
+                string,
+                method_call,
+                function_call,
+                field_get,
+                cast,
+                sizeof,
+                typeid,
+                _true,
+                _false
+        };
+    }
     
 }

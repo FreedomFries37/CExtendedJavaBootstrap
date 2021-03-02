@@ -124,4 +124,23 @@ public class Option<T> {
     public static <T> Option<T> None() {
         return new Option<>(null);
     }
+    
+    public static <T> Option<T> From(T data) {
+        return new Option<>(data);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        Option<?> option = (Option<?>) o;
+    
+        return data != null ? data.equals(option.data) : option.data == null;
+    }
+    
+    @Override
+    public int hashCode() {
+        return data != null ? data.hashCode() : 0;
+    }
 }
