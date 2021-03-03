@@ -3,8 +3,8 @@
 
 int main(int argc, std::String argv[]) {
 
-
-	std::File file = access_file("output.txt");
+	std::String file_name = new std::String("output.txt");
+	std::File file = access_file(file_name, new std::String("w"));
 
 	std::FileWriter fw = new std::FileWriter(file);
 	fw->writeln("Hello File!");
