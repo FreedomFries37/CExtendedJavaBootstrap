@@ -15,7 +15,7 @@ int main(int argc, std::String argv[]) {
 
 	char* str1 = "What's up doc";
 	char* str2 = strdup(str1);
-	if (!strcmp(str1, *str2)) {
+	if (!strcmp(str1, str2)) {
 		println("WHat the Heck");
 	}
 

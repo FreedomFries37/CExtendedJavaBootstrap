@@ -663,10 +663,12 @@ public class Interpreter {
     
     private class StackTraceInfo {
         private Token function;
+        private Token currentToken;
         private HashMap<String, Instance<?>> stackVariables;
         
         public StackTraceInfo(Token function) {
             this.function = function;
+            this.currentToken = nearestCurrentToken;
             stackVariables = new HashMap<>();
         }
         
@@ -677,10 +679,14 @@ public class Interpreter {
         public HashMap<String, Instance<?>> getStackVariables() {
             return stackVariables;
         }
-        
+    
+        public void setCurrentToken(Token currentToken) {
+            this.currentToken = currentToken;
+        }
+    
         @Override
         public String toString() {
-            if(function.getFilename() != null) return function.getImage() + "(" + function.getFilename() + ":" + function.getActualLineNumber() + ")";
+            if(function.getFilename() != null) return function.getImage() + "(" + currentToken.getFilename() + ":" + currentToken.getActualLineNumber() + ")";
             return function.getImage();
         }
     }
@@ -819,13 +825,17 @@ public class Interpreter {
         } catch (Throwable e) {
             System.err.println("\nError " + e.toString() + " thrown (in jodin):");
             logCurrentState();
+            /*
             StackTraceInfo peek = stackTrace.peek();
+            
             Token function = new Token(t_id, peek.function.getImage());
             if(nearestCurrentToken != null) {
                 function.setFilename(nearestCurrentToken.getFilename());
                 function.setActualLineNumber(nearestCurrentToken.getActualLineNumber());
             }
             System.err.println("\tat " + new StackTraceInfo(function));
+            
+             */
             while (!stackTrace.empty()) {
                 StackTraceInfo s = stackTrace.pop();
                 System.err.println("\tat " + s);
@@ -1370,6 +1380,9 @@ public class Interpreter {
     public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned, EarlyExit, JodinNullPointerException {
         // if(log) logger.info("Executing " + input);
         nearestCurrentToken = closestToken(input);
+        if (!stackTrace.empty()) {
+            stackTrace.peek().setCurrentToken(nearestCurrentToken);
+        }
         switch (input.getASTType()) {
             case operator:
                 break;
