@@ -29,7 +29,10 @@ import radin.core.semantics.types.primitives.*;
 import radin.core.utility.ICompilationSettings;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static radin.core.lexical.TokenType.*;
 import static radin.core.utility.Option.None;
@@ -541,11 +544,16 @@ public class Interpreter {
             if(getBackingValue().size() == 0 || getPointer() == null) {
                 return "nullptr (type = " + getType() + ")";
             }
-            return (getBackingValue() == null || getBackingValue().get(0) == null ?
-                    "[NULL] " : "") +
-                    "PointerInstance{" +
-                    "type=" + getType() +
-                    '}';
+            
+            if(getBackingValue().size() == 1) {
+                return getType().toString();
+            }
+            
+            Stream<CharSequence> stringStream = getBackingValue().stream().map((instance) -> instance.toString());
+            String elements = stringStream.collect(Collectors.joining(", "));
+            
+            
+            return String.format("%s [%s]", getType(), elements);
         }
         
         boolean isNull() {
