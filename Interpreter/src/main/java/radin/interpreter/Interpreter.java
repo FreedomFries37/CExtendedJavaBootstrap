@@ -538,7 +538,7 @@ public class Interpreter {
             }
             
              */
-            if(getBackingValue().size() == 0) {
+            if(getBackingValue().size() == 0 || getPointer() == null) {
                 return "nullptr (type = " + getType() + ")";
             }
             return (getBackingValue() == null || getBackingValue().get(0) == null ?
@@ -546,6 +546,10 @@ public class Interpreter {
                     "PointerInstance{" +
                     "type=" + getType() +
                     '}';
+        }
+        
+        boolean isNull() {
+            return getPointer() == null;
         }
         
         @Override
@@ -740,7 +744,7 @@ public class Interpreter {
                                 "value " + memStack.peek());
                         addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
                         newInstance.copyFrom(pop());
-                    } catch (FunctionReturned | EarlyExit functionReturned) {
+                    } catch (FunctionReturned | EarlyExit | JodinNullPointerException functionReturned) {
                         throw new IllegalStateException();
                     }
                 } else {
@@ -847,7 +851,7 @@ public class Interpreter {
     
     boolean disableLogging = false;
     
-    public boolean callMethod(PointerInstance<CXClassType> ptr, String methodName, Instance<?>... params) throws EarlyExit {
+    public boolean callMethod(PointerInstance<CXClassType> ptr, String methodName, Instance<?>... params) throws EarlyExit, JodinNullPointerException {
         for (Instance<?> param : params) {
             push(param);
         }
@@ -868,6 +872,10 @@ public class Interpreter {
         }
         Token idToken = new Token(t_id, methodName);
         CompoundInstance<CXClassType> classTypeInstance = (CompoundInstance<CXClassType>) ptr.getPointer();
+        if (classTypeInstance == null) {
+            throw new JodinNullPointerException();
+        }
+        
         
         TypeAugmentedSemanticNode method = dynamicMethodLookup(ptr.getSubType(), idToken, types);
         if(method == null) {
@@ -1004,11 +1012,11 @@ public class Interpreter {
         return null;
     }
     
-    private class FunctionReturned extends Throwable {
+    private static class FunctionReturned extends Throwable {
     
     }
     
-    private class EarlyExit extends Throwable {
+    private static class EarlyExit extends Throwable {
         private final int code;
     
         public EarlyExit(int code) {
@@ -1017,6 +1025,13 @@ public class Interpreter {
     
         public int getCode() {
             return code;
+        }
+    }
+    
+    private class JodinNullPointerException extends Exception {
+    
+        public JodinNullPointerException() {
+            logCurrentState();
         }
     }
     
@@ -1090,7 +1105,7 @@ public class Interpreter {
     
     
     
-    public void logCurrentState() {
+    public void logCurrentState(){
         if(log && LOG_STATE) {
             if (disableLogging) return;
             disableLogging = true;
@@ -1115,11 +1130,14 @@ public class Interpreter {
                     
                     
                     PointerInstance<CXClassType> thisInstance = thisStack.get(thisStackIndex);
-                    CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
-                    for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
-                        logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
-                                stringInstanceEntry.getValue()));
+                    if (!thisInstance.isNull()) {
+                        CompoundInstance<CXClassType> pointer = (CompoundInstance<CXClassType>) thisInstance.getPointer();
+                        for (Map.Entry<String, Instance<?>> stringInstanceEntry : pointer.fields.entrySet()) {
+                            logger.finest(" ".repeat(eqIndex) + "   + " + String.format("%-15s = %s", stringInstanceEntry.getKey(),
+                                    stringInstanceEntry.getValue()));
+                        }
                     }
+                   
                 }
                 for (Map.Entry<String, Instance<?>> instanceEntry : stackTraceInfo.getStackVariables().entrySet()) {
                     String msg = "   ".repeat(indent) + "   + " + String.format("%-15s = %s", instanceEntry.getKey(),
@@ -1142,6 +1160,8 @@ public class Interpreter {
                             callMethod(string, "getCStr");
                         } catch (EarlyExit earlyExit) {
                             System.exit(earlyExit.code);
+                        } catch (JodinNullPointerException e) {
+                            continue;
                         }
                         PointerInstance<CXPrimitiveType> cString = (PointerInstance<CXPrimitiveType>) pop();
                         if(log) logger.finest(" ".repeat(eqIndex) + "  toString() = \"" + cString.takeString().thisOrElse("No toString() " +
@@ -1347,7 +1367,7 @@ public class Interpreter {
     }
     
     
-    public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned, EarlyExit {
+    public Boolean invoke(TypeAugmentedSemanticNode input) throws FunctionReturned, EarlyExit, JodinNullPointerException {
         // if(log) logger.info("Executing " + input);
         nearestCurrentToken = closestToken(input);
         switch (input.getASTType()) {
@@ -2004,6 +2024,10 @@ public class Interpreter {
             {
                 Instance<?> pop = pop();
                 CompoundInstance<?> compoundInstance = (CompoundInstance<?>) pop;
+                if (pop == null) {
+                    
+                    throw new JodinNullPointerException();
+                }
                 String field = input.getChild(1).getToken().getImage();
                 
                 // push field
@@ -2229,6 +2253,10 @@ public class Interpreter {
                 PointerInstance<CXClassType> classTypeInstance =
                         (PointerInstance<CXClassType>) createNewInstance(subType).toPointer();
                 
+                if (classTypeInstance.getPointer() == null) {
+                    throw new Error("Creating a new instance of " + subType + " failed");
+                }
+                
                 
                 int memstackPrevious = memStack.size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
@@ -2267,7 +2295,7 @@ public class Interpreter {
                 TypeAugmentedSemanticNode cons = MethodTASNTracker.getInstance().get(cxConstructor);
                 try {
                     if (!invoke(cons)) return false;
-                } catch (FunctionReturned e) {
+                } catch (FunctionReturned ignored) {
                 
                 }
                 

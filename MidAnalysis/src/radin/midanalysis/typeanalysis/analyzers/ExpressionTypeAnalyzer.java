@@ -29,6 +29,7 @@ import radin.output.typeanalysis.TypeAnalyzer;
 import radin.output.typeanalysis.errors.IllegalAccessError;
 import radin.output.typeanalysis.errors.*;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class ExpressionTypeAnalyzer extends TypeAnalyzer {
@@ -296,7 +297,30 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(sequenceTypeAnalyzer)) return false;
             
             assert node.getChild(0).getCXType() instanceof CXFunctionPointer;
+    
+            
+    
+    
             CXFunctionPointer cxType = (CXFunctionPointer) node.getChild(0).getCXType();
+            List<CXType> sequenceTypes = sequenceTypeAnalyzer.getCollectedTypes();
+            List<CXType> functionArgTypes = cxType.getParameterTypes();
+            
+            if(sequenceTypes.size() != functionArgTypes.size()) {
+                setIsFailurePoint(node.getASTChild(ASTNodeType.sequence));
+                throw new IncorrectNumberOfArgumentsError(node.getASTChild(ASTNodeType.sequence).findFirstToken(), functionArgTypes.size(),
+                        sequenceTypes.size());
+            }
+    
+            for (int i = 0; i < sequenceTypes.size(); i++) {
+                CXType seq = sequenceTypes.get(i);
+                CXType param = functionArgTypes.get(i);
+                if (!is(seq, param)) {
+                    TypeAugmentedSemanticNode child_arg = node.getASTChild(ASTNodeType.sequence).getChild(i);
+                    throw new IncorrectTypeError(param, seq, child_arg.findFirstToken());
+                }
+            }
+    
+    
             node.setType(cxType.getReturnType());
             node.setLValue(false);
             return true;
