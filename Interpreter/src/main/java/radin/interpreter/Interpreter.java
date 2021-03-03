@@ -91,7 +91,7 @@ public class Interpreter {
         public PrimitiveInstance(P type, R backingValue, boolean unsigned) {
             super(type);
             this.backingValue = backingValue;
-            if (backingValue == null) if(log) logger.warning("Shouldn't set backing value to null");
+            // if (backingValue == null) if(log) logger.warning("Shouldn't set backing value to null");
             this.unsigned = unsigned;
         }
         
@@ -556,6 +556,8 @@ public class Interpreter {
             return String.format("%s [%s]", getType(), elements);
         }
         
+        
+        
         boolean isNull() {
             return getPointer() == null;
         }
@@ -570,6 +572,10 @@ public class Interpreter {
             return new PointerInstance<>(getSubType(), getBackingValue(), index);
         }
         
+        Reference<R> deref() {
+            return new Reference<>(getSubType(), this);
+        }
+        
         @Override
         Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
             if(castingTo instanceof AbstractCXPrimitiveType && getPointer() == null) {
@@ -580,6 +586,45 @@ public class Interpreter {
                 throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
             
             return new PointerInstance<R>((R) castingTo, getPointer());
+        }
+    }
+    
+    public class Reference<R extends CXType> extends Instance<R> {
+        private final PointerInstance<R> location;
+    
+        public Reference(R type, PointerInstance<R> location) {
+            super(type);
+            this.location = location;
+        }
+    
+        @Override
+        public PointerInstance<R> toPointer() {
+            return location;
+        }
+    
+        @Override
+        void copyFrom(Instance<?> other) {
+            location.getAt(location.index).copyFrom(other);
+        }
+        
+        @Override
+        Instance<R> copy() {
+            return location.getAt(location.index).copy();
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            return copy().castTo(castingTo);
+        }
+        
+        @Override
+        boolean isFalse() {
+            return copy().isFalse();
+        }
+    
+        @Override
+        public String toString() {
+            return "Reference{" + copy().toString() + '}';
         }
     }
     
@@ -627,6 +672,8 @@ public class Interpreter {
             throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
         }
     }
+    
+    
     
     public <R, T extends AbstractCXPrimitiveType> PrimitiveInstance<R, T> createNewInstance(T type, R backing) {
         PrimitiveInstance<R, T> instance = (PrimitiveInstance<R, T>) createNewInstance(type);
@@ -1707,6 +1754,7 @@ public class Interpreter {
                 
                 Token token = input.getASTChild(ASTNodeType.id).getToken();
                 String funcCall = token.getImage();
+                
                 
                 if (funcCall.equals("calloc")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
