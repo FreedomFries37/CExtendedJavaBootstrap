@@ -52,14 +52,13 @@ public class ToolchainEntrancePoint {
         if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
             if (getenv("JODIN_HOME") == null) throw new IOException("Jodin Home not set");
             toolchainDirectory = new File(getenv("JODIN_HOME") + "/toolchain");
-                exit(-1);
-            }
+            
             if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
                 throw new IOException("No toolchain directory!");
             }
         }
         
-        File configFile = new File(toolchainDirectory, "config");
+        File configFile = new File( toolchainDirectory, "config");
         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, ?> settings = new CompilationSettings<>();
        
     
