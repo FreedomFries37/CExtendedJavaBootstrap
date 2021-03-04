@@ -952,6 +952,7 @@ public class Interpreter {
         return log && (!log_after_main || main_started);
     }
     
+    
     public int run(String[] args) {
         long startTime = System.currentTimeMillis();
         if (args.length == 0)
@@ -2085,6 +2086,21 @@ public class Interpreter {
                         
                         stackTrace.pop();
                         logCurrentState();
+                        break;
+                    }
+                    case "breakpoint": {
+                        if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                        if (log()) {
+                            System.out.println("Breakpoint Hit, press [ENTER] to continue");
+                            logCurrentState();
+                            try {
+                                System.in.read();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println("Continuing...");
+                        }
+    
                         break;
                     }
                     default: {

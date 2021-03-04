@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <system/toolchain.h>
 
 in std {
 String format(std::String fmt, void** args);
@@ -7,16 +8,12 @@ String format(std::String fmt, void** args);
 int printf(char*, void**);
 
 int main(int argc, std::String argv[]) {
-	i32 ints[] = [0, 1, 2];
-	//std::String s = (std::String) "h";
-	std::String woot[] = ["hello"];
-	std::String yay = "what's up doc";
-	i32 len = ("hello")->length();
 
+	i32 x = 5;
 
-	println(format("hello %s", ["world"]));
+	println(format("hello %s * %d", ["world", &x]));
 
-
+	void* p = "hord";
 
 
     return 0;
@@ -38,7 +35,19 @@ in std String format(String fmt, void** args) {
 			if (type == 's') {
 				String s = (String) args[arg++];
 				ret = ret->concat(s);
-			}
+			} else if (type == '%') {
+				ret = ret->concat('%');
+			} else if (type == 'd') {
+
+				i32* d = (i32*) args[arg++];
+
+				ret = ret->concat_integer(*d);
+
+			} else if (type == 'l') {
+				i64* l = (i64*) args[arg++];
+				ret = ret->concat_integer(*l);
+            }
+
 		} else {
 			ret = ret->concat(c);
 		}
