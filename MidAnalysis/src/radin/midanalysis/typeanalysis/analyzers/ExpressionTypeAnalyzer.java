@@ -76,7 +76,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.string) {
-            node.setType(new PointerType(CXPrimitiveType.CHAR));
+            CXType stringType = environment.getType(CXIdentifier.from("std", "String"), null);
+            node.setType(stringType);
             return true;
         }
         
@@ -149,7 +150,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     child.getCXType(), child.findFirstToken());
             assert child.getCXType() instanceof PointerType;
             
-            if(strictIs(((PointerType) child.getCXType()).getSubType(), CXPrimitiveType.VOID)) throw new VoidDereferenceError();
+            if(strictIs(CXPrimitiveType.VOID, ((PointerType) child.getCXType()).getSubType())) throw new VoidDereferenceError();
             
             if(child.getASTType() == ASTNodeType.constructor_call) {
                 node.addCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE);
@@ -543,7 +544,11 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             for(int i = 1; i < collectedTypes.size(); i++) {
                 CXType found = collectedTypes.get(i);
                 if (!is(found, expected)) {
-                    throw new IncorrectTypeError(expected, found, sequence.getChild(0).findFirstToken(), sequence.getChild(1).findFirstToken());
+                    if(found.canBeTreatedAsPointer() && expected.canBeTreatedAsPointer()) {
+                        expected = CXPrimitiveType.VOID.toPointer();
+                    } else {
+                        throw new IncorrectTypeError(expected, found, sequence.getChild(0).findFirstToken(), sequence.getChild(1).findFirstToken());
+                    }
                 }
             }
             
