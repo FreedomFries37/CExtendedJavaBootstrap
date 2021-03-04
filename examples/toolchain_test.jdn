@@ -8,6 +8,7 @@ int main(int argc, std::String argv[]) {
 	std::File file = access_file(file_name, new std::String("w"));
 
 
+
 	std::FileWriter fw = new std::FileWriter(file);
 	fw->writeln("Hello File!");
 	fw->flush();
@@ -19,16 +20,17 @@ int main(int argc, std::String argv[]) {
 		println("WHat the Heck");
 	}
 
-
 /*
 	stdout->writeln("Whats your name?");
 	std::String name = stdin->readLine();
 	stdout->write("Hello ");
 	stdout->writeln(name);
+	*/
 
-	// fw->write("This shouldn't work");
+	file = access_file(new std::String("output.txt"), new std::String("w"));
 */
 
+	// stdout->writeln(fileLine);
 
 
 	return 0;

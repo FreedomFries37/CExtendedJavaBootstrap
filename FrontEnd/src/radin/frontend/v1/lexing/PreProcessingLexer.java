@@ -64,8 +64,11 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         }
         
         public String invoke(String[] args) {
-            if(args.length < numArgs) throw new IllegalArgumentException();
-            if(!isVararg && args.length > numArgs) throw new IllegalArgumentException();
+            if(args.length < numArgs) throw new IllegalArgumentException(String.format("Macro %s has %d args, but %d args were given",
+                    identifier, numArgs, args.length));
+            if(!isVararg && args.length > numArgs) throw new IllegalArgumentException(String.format("Macro %s has %d args, but %d args were given " +
+                            "(%s)",
+             identifier, numArgs, args.length, Arrays.deepToString(args)));
             
             String output = replacementString;
             for (int i = 0; i < this.args.size(); i++) {
