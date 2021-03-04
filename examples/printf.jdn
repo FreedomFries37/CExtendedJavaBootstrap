@@ -1,0 +1,19 @@
+#include <string.h>
+#include <stdio.h>
+
+in std {
+String format(std::String fmt, void** args);
+}
+int printf(char*, void**);
+
+int main(int argc, std::String argv[]) {
+
+    return 0;
+}
+
+in std String format(String fmt, void** args) {
+    String ret = new String();
+
+
+    return ret;
+}
