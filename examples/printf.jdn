@@ -7,11 +7,18 @@ String format(std::String fmt, void** args);
 int printf(char*, void**);
 
 int main(int argc, std::String argv[]) {
+	i32 ints[] = [0, 1, 2];
+
+
 	char* p = "hello %s";
 	std::String tofmt = new std::String(p);
 	void* args[1];
 	args[0] = new std::String("world");
 	println_s(format(tofmt, args));
+
+
+
+
     return 0;
 }
 
