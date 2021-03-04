@@ -5,10 +5,6 @@ import radin.core.SymbolTable;
 import radin.core.errorhandling.CompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
-import radin.core.utility.Option;
-import radin.midanalysis.MethodTASNTracker;
-import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.tags.*;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
@@ -24,9 +20,15 @@ import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.semantics.types.primitives.*;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.Option;
+import radin.midanalysis.MethodTASNTracker;
+import radin.midanalysis.TypeAugmentedSemanticNode;
+import radin.output.tags.ConstructorCallTag;
+import radin.output.tags.MultiDimensionalArrayWithSizeTag;
+import radin.output.tags.PriorConstructorTag;
+import radin.output.tags.SuperCallTag;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -340,7 +342,7 @@ public class Interpreter {
     public class ArrayInstance <R extends CXType, T extends ArrayType>
             extends PrimitiveInstance<ArrayList<Instance<R>>, T> {
         
-        private int size;
+        protected int size;
         private R subType;
         
         public ArrayInstance(T type, R subtype, int size) {
@@ -451,7 +453,11 @@ public class Interpreter {
                 
                 try {
                     for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
-                        output.append(((PrimitiveInstance<Character, ?>) getAt(i).getValue()).backingValue);
+                        
+                        char backingValue = ((PrimitiveInstance<Character, ?>) getAtNoIndirection(i)).backingValue;
+                        if (backingValue != '\0') {
+                            output.append(backingValue);
+                        }
                     }
                 } catch (IndexOutOfBoundsException e) {
                     throw new SegmentationFault(e);
@@ -467,7 +473,7 @@ public class Interpreter {
         void copyFrom(Instance<?> other) {
             if (other instanceof ArrayInstance) {
                 this.setBackingValue(((ArrayInstance<R, T>) other).getBackingValue());
-                
+                this.size = ((ArrayInstance<?, ?>) other).size;
             } else {
                 assert other instanceof PrimitiveInstance;
                 if (((PrimitiveInstance<?, ?>) other).getBackingValue().toString().equals("0")) {
@@ -482,13 +488,16 @@ public class Interpreter {
         
         @Override
         Instance<T> copy() {
+            /*
             ArrayList<Instance<R>> backingValue = getBackingValue();
             ArrayInstance<R, T> output = new ArrayInstance<>(getType(), getSubType(), backingValue.size());
             for (int i = 0; i < backingValue.size(); i++) {
                 Instance<R> value = backingValue.get(i).copy();
                 output.setAt(i, value);
             }
-            return (Instance<T>) output.asPointer();
+            
+             */
+            return (Instance<T>) this.asPointer();
         }
         
         @Override
@@ -553,6 +562,7 @@ public class Interpreter {
         
 
         public Instance<R> getPointer() {
+            if (getBackingValue().size() == 0) return null;
             Instance<R> at = getAtNoIndirection(index);
             if (at == null) return null;
             if (at instanceof NullableInstance) {
@@ -634,6 +644,7 @@ public class Interpreter {
             if (other instanceof PointerInstance) {
                 this.setBackingValue(((PointerInstance<R>) other).getBackingValue());
                 this.index = ((PointerInstance<?>) other).index;
+                this.size = ((PointerInstance<?>) other).size;
             } else {
                 super.copyFrom(other);
             }
@@ -1013,7 +1024,7 @@ public class Interpreter {
     
     public boolean callMethod(PointerInstance<CXClassType> ptr, String methodName, Instance<?>... params) throws EarlyExit, JodinNullPointerException {
         for (Instance<?> param : params) {
-            push(param);
+            arguments.push(param);
         }
         
         thisStack.push(ptr);
@@ -1023,7 +1034,7 @@ public class Interpreter {
         Stack<CXType> types = new Stack<>();
         Stack<Instance<?>> instances = new Stack<>();
         for (int i = 0; i < params.length; i++) {
-            Instance<?> pop = pop();
+            Instance<?> pop = argument_pop();
             types.push(pop.getType());
             instances.push(pop);
         }
@@ -1303,7 +1314,8 @@ public class Interpreter {
                     
                     if (instanceEntry.getValue() instanceof PointerInstance && ((PointerInstance<?>) instanceEntry.getValue()).getSubType() instanceof CXClassType) {
                         PointerInstance<CXClassType> value = (PointerInstance<CXClassType>) instanceEntry.getValue();
-                        if (value.getPointer() == null) {
+                        if (value == null || value.getPointer() == null) {
+                            if (log()) logger.finest(" ".repeat(eqIndex) + "  java nullptr");
                             continue;
                         }
                         try {

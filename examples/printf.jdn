@@ -7,13 +7,35 @@ String format(std::String fmt, void** args);
 int printf(char*, void**);
 
 int main(int argc, std::String argv[]) {
-
+	char* p = "hello %s";
+	std::String tofmt = new std::String(p);
+	void* args[1];
+	args[0] = new std::String("world");
+	println_s(format(tofmt, args));
     return 0;
 }
 
 in std String format(String fmt, void** args) {
     String ret = new String();
+    int arg = 0;
+	for(int i = 0; i < fmt->length(); i++) {
+		char c = fmt->getChar(i);
+		if (c == '%') {
+			if (i == fmt->length() - 1) {
+				PANIC(("Index out of bounds"));
+			};
 
+			i++;
+			char type = fmt->getChar(i);
+
+			if (type == 's') {
+				String s = (String) args[arg++];
+				ret = ret->concat(s);
+			}
+		} else {
+			ret = ret->concat(c);
+		}
+	}
 
     return ret;
 }
