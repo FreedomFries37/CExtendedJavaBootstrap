@@ -4,8 +4,6 @@ plugins {
 
 version 'unspecified'
 
-sourceCompatibility = 13
-
 repositories {
     mavenCentral()
 }

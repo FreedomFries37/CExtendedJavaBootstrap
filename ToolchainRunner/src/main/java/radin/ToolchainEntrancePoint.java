@@ -1,5 +1,6 @@
 package radin;
 
+
 import radin.backend.compilation.FileCompiler;
 import radin.backend.compilation.RuntimeCompiler;
 import radin.backend.microcompilers.FunctionCompiler;
@@ -49,11 +50,10 @@ public class ToolchainEntrancePoint {
     public static void main(String[] args) throws IOException {
         File toolchainDirectory = new File(".toolchain");
         if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
-            if (System.getenv("JODIN_HOME") == null) {
-                err.println("Jodin Home not set");
+            if (getenv("JODIN_HOME") == null) throw new IOException("Jodin Home not set");
+            toolchainDirectory = new File(getenv("JODIN_HOME") + "/toolchain");
                 exit(-1);
             }
-            toolchainDirectory = new File(System.getenv("JODIN_HOME") + "/toolchain");
             if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
                 throw new IOException("No toolchain directory!");
             }
@@ -98,12 +98,12 @@ public class ToolchainEntrancePoint {
                     }
                     case "--arch": {
                         if (!argsIterator.hasNext()) {
-                            System.err.println("Expected an argument");
+                            err.println("Expected an argument");
                             exit(-1);
                         }
                         int a = Integer.parseInt(argsIterator.next());
                         if(a != 32 && a != 64) {
-                            System.err.println("Must be either 32 or 64");
+                            err.println("Must be either 32 or 64");
                             exit(-1);
                         }
                         arch = a;
@@ -111,7 +111,7 @@ public class ToolchainEntrancePoint {
                     }
                     case "--debug-level": {
                         if (!argsIterator.hasNext()) {
-                            System.err.println("Expected an argument");
+                            err.println("Expected an argument");
                             exit(-1);
                         }
                         int level = Integer.parseInt(argsIterator.next());
@@ -136,7 +136,7 @@ public class ToolchainEntrancePoint {
                                 actual = Level.ALL;
                                 break;
                             default: {
-                                System.err.println("Expected level 0-5");
+                                err.println("Expected level 0-5");
                                 return;
                             }
                         }
@@ -163,7 +163,7 @@ public class ToolchainEntrancePoint {
         
         }
     
-        String property = System.getProperty("os.arch");
+        String property = getProperty("os.arch");
         if(arch == null) {
             if (property == null) {
                 arch = 32;
@@ -173,7 +173,7 @@ public class ToolchainEntrancePoint {
         }
         UniversalCompilerSettings.getInstance().setSettings(settings);
     
-        if(System.getenv("MSFT") != null) {
+        if(getenv("MSFT") != null) {
             UniversalCompilerSettings.getInstance().getSettings().setDirectivesMustStartAtColumn1(false);
         }
         
@@ -194,8 +194,8 @@ public class ToolchainEntrancePoint {
             files.add(f);
             ICompilationSettings.debugLog.info("Adding " + filenamesString + " for compilation");
         }
-        if(System.getenv("JODIN_HOME") != null) {
-            String jodinHome = System.getenv("JODIN_HOME");
+        if(getenv("JODIN_HOME") != null) {
+            String jodinHome = getenv("JODIN_HOME");
             Stream<Path> pathStream = Files.find(Paths.get(jodinHome, "core"), Integer.MAX_VALUE,
                     (p, bfa) -> bfa.isRegularFile());
             List<File> fileList = pathStream.map((p) -> new File(p.toUri())).collect(Collectors.toList());
@@ -369,11 +369,11 @@ public class ToolchainEntrancePoint {
                     err.println("Runtime Compilation failed");
                 }
     
-                System.out.println("Compilation Succeeded");
+                out.println("Compilation Succeeded");
             }
     
         } else {
-            System.err.println("Compilation Failed");
+            err.println("Compilation Failed");
         }
         
     }
