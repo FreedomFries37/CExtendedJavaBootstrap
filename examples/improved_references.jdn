@@ -3,8 +3,6 @@
 
 int main(int argc, std::String argv[]) {
 
-
-
 	char* str1 = "What's up doc";
 	char* references = &str1[2];
 	println(references);
@@ -15,12 +13,20 @@ int main(int argc, std::String argv[]) {
             return -1;
     	}
 
-
+    str2[0] = 'W';
 	if (strcmp(str1, str2)) {
 		println("calculation wrong");
 		return -1;
 	}
 
+	char* str3 = "00000000";
+	char* str4 = &str3[4];
+	str4[2] = '1';
+	println(str3);
+
+	float flt = 3.0;
+    int* int_ptr = (int*) &flt;
+    int i = *int_ptr;
 
 
 

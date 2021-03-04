@@ -79,7 +79,6 @@ public class Interpreter {
             return this;
         }
         
-        
         public NullableInstance<T, ? extends Instance<T>> toNullable() {
             return new NullableInstance<>(getType(), this);
         }
@@ -230,7 +229,7 @@ public class Interpreter {
             
             throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
         }
-        
+
     }
     
     public class SegmentationFault extends Error {
@@ -339,7 +338,7 @@ public class Interpreter {
      * @param <T> Type of Array
      */
     public class ArrayInstance <R extends CXType, T extends ArrayType>
-            extends PrimitiveInstance<ArrayList<NullableInstance<R, Instance<R>>>, T> {
+            extends PrimitiveInstance<ArrayList<Instance<R>>, T> {
         
         private int size;
         private R subType;
@@ -348,12 +347,12 @@ public class Interpreter {
             super(type, new ArrayList<>(size), true);
             this.subType = subtype;
             for (int i = 0; i < size; i++) {
-                getBackingValue().add(new NullableInstance<>(subtype));
+                getBackingValue().add(((Instance<R>) defaultValue(subtype)));
             }
             this.size = size;
         }
         
-        public ArrayInstance(T type, R subType, ArrayList<NullableInstance<R, Instance<R>>> other) {
+        public ArrayInstance(T type, R subType, ArrayList<Instance<R>> other) {
             super(type,
                     other,
                     true);
@@ -372,8 +371,13 @@ public class Interpreter {
             this.subType = subType;
             this.size = other.size();
         }
-        
-        
+
+        public ArrayInstance(T type, R subType) {
+            this(type, subType, new ArrayList<>());
+        }
+
+
+
         public SemiIndirection<R, Instance<R>> getAt(int index) {
             if (index >= getBackingValue().size()) throw new SegmentationFault("Index " + index + " out of bounds of " +
                     "size " + getBackingValue().size());
@@ -388,25 +392,16 @@ public class Interpreter {
         }
         
         public void setAt(int index, Instance<R> value) {
-            if (value == null) {
-                getBackingValue().set(index, new NullableInstance<>(subType));
-            } else if (value instanceof NullableInstance) {
-                getBackingValue().set(index, ((NullableInstance<R, Instance<R>>) value));
-            } else {
-                getBackingValue().get(index).setValue(value);
-            }
+            getBackingValue().set(index, value);
         }
         
         public PointerInstance<R> asPointer() {
-            return new PointerInstance<>(subType,
-                    new ArrayList<NullableInstance<R, Instance<R>>>(
-                            getBackingValue()
-                    ), 0);
+            return new PointerInstance<>(subType, getBackingValue(), 0);
         }
         
         @Override
         boolean isFalse() {
-            return getBackingValue().size() == 0;
+            return isNull();
         }
         
         public int getSize() {
@@ -487,10 +482,10 @@ public class Interpreter {
         
         @Override
         Instance<T> copy() {
-            ArrayList<NullableInstance<R, Instance<R>>> backingValue = getBackingValue();
+            ArrayList<Instance<R>> backingValue = getBackingValue();
             ArrayInstance<R, T> output = new ArrayInstance<>(getType(), getSubType(), backingValue.size());
             for (int i = 0; i < backingValue.size(); i++) {
-                NullableInstance<R, Instance<R>> value = backingValue.get(i);
+                Instance<R> value = backingValue.get(i).copy();
                 output.setAt(i, value);
             }
             return (Instance<T>) output.asPointer();
@@ -509,6 +504,26 @@ public class Interpreter {
             }
             return super.equals(o);
         }
+
+        public Instance<R> getPointer() {
+            Instance<R> at = getAtNoIndirection(0);
+            if (at == null) return null;
+            if (at instanceof NullableInstance) {
+                return ((NullableInstance<R, ?>) at).getValue();
+            }
+            return at;
+        }
+
+        boolean isNull() {
+            if (getBackingValue().size() == 0) {
+                return true;
+            }
+            Instance<R> pointer = getPointer();
+            if (pointer == null) {
+                return true;
+            }
+            return pointer.isFalse();
+        }
     }
     
     
@@ -522,23 +537,21 @@ public class Interpreter {
         }
         
         public PointerInstance(R type,
-                               ArrayList<NullableInstance<R, Instance<R>>> backing,
+                               ArrayList<Instance<R>> backing,
                                int offset) {
             super(type.toPointer(), type, backing);
             index = offset;
         }
-        
-        
+        public PointerInstance(PointerType type) {
+            super(type, (R) type.getSubType());
+        }
+
+
         public PointerInstance<R> getPointerOfOffset(int offset) {
             return new PointerInstance<R>(getSubType(), getBackingValue(), index + offset);
         }
         
-        public PointerInstance(PointerType type) {
-            super(type, (R) type.getSubType(),
-                    new ArrayList<>(Collections.singletonList(new NullableInstance<>((R) type.getSubType()))));
-        }
-        
-        
+
         public Instance<R> getPointer() {
             Instance<R> at = getAtNoIndirection(index);
             if (at == null) return null;
@@ -547,6 +560,7 @@ public class Interpreter {
             }
             return at;
         }
+
         
         public void setPointer(Instance<R> pointer) {
             setAt(index, pointer);
@@ -588,16 +602,6 @@ public class Interpreter {
             
             
             return String.format("%s [%s]", getType(), elements);
-        }
-        
-        
-        boolean isNull() {
-            return getPointer() == null;
-        }
-        
-        @Override
-        boolean isFalse() {
-            return super.isFalse() || getPointer() == null;
         }
         
         @Override
@@ -718,7 +722,7 @@ public class Interpreter {
             super(type);
             this.fields = new HashMap<>();
             for (ICXCompoundType.FieldDeclaration field : type.getAllFields()) {
-                fields.put(field.getName(), createNewInstance(field.getType()));
+                fields.put(field.getName(), defaultValue(field.getType()));
             }
         }
         
@@ -1223,16 +1227,15 @@ public class Interpreter {
         if (sizes.size() == 1) return createArray(type.getBaseType(), sizes.get(0));
         int thisSize = sizes.get(0);
         List<Integer> restSizes = sizes.subList(1, sizes.size());
-        ArrayList<NullableInstance<ArrayType, ArrayInstance<?, ArrayType>>> subArrays = new ArrayList<>();
+        ArrayList<ArrayInstance<?, ArrayType>> subArrays = new ArrayList<>();
         for (int i = 0; i < thisSize; i++) {
-            subArrays.set(i, new NullableInstance<>(((ArrayType) type.getBaseType()),
-                    createArray((ArrayType) type.getBaseType(),
-                            restSizes)));
+            subArrays.set(i, createArray((ArrayType) type.getBaseType(),
+                            restSizes));
         }
         ArrayInstance<ArrayType, ArrayType> output = new ArrayInstance<>(type, (ArrayType) type.getBaseType(),
                 thisSize);
         for (int i = 0; i < thisSize; i++) {
-            output.setAt(i, subArrays.get(i).value);
+            output.setAt(i, subArrays.get(i));
         }
         return output;
     }
@@ -1248,7 +1251,7 @@ public class Interpreter {
                     createNewInstance(CXPrimitiveType.CHAR, s.charAt(i))
             );
         }
-        output.setAt(output.size - 1, null);
+        // output.setAt(output.size - 1, null);
         if (log()) logger.fine("Created Jodin-Style string " + output);
         return output;
     }
@@ -1728,7 +1731,7 @@ public class Interpreter {
                     addAutoVariable(id, array);
                     logCurrentState();
                 } else {
-                    addAutoVariable(id, createNewInstance(cxType));
+                    addAutoVariable(id, defaultValue(cxType));
                 }
             }
             break;
@@ -1865,7 +1868,7 @@ public class Interpreter {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
                     PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) argument_pop();
-                    while (pop.getPointer() != null) {
+                    while (!pop.isNull()) {
                         PrimitiveInstance<Character, ?> pointer = (PrimitiveInstance<Character, ?>) pop.getPointer();
                         if (pointer.backingValue == '\\') {
                             pop = pop.getPointerOfOffset(1);
@@ -2381,7 +2384,7 @@ public class Interpreter {
                 String id = input.getChild(0).getASTChild(ASTNodeType.id).getToken().getImage();
                 if (!invoke(input.getChild(1))) return false;
                 Instance<CXType> autoVariable = getAutoVariable(id);
-                autoVariable.copyFrom(pop());
+                autoVariable.copyFrom(pop().unwrap());
                 break;
             case compound_statement:
                 startLexicalScope();
@@ -2523,5 +2526,31 @@ public class Interpreter {
         ParameterTypeList parameterTypeList = new ParameterTypeList(inputTypes);
         CXMethod method = clazz.getConstructor(parameterTypeList);
         return MethodTASNTracker.getInstance().get(method);
+    }
+
+    protected  <R extends CXType> Instance<?> defaultValue(R type) {
+        if (type instanceof ICXWrapper) return defaultValue(((ICXWrapper) type).getWrappedType());
+
+        if (type instanceof PointerType) {
+            return new PointerInstance<>((PointerType) type);
+        }
+
+        if (type instanceof ArrayType) {
+            return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getDereferenceType());
+        }
+
+        if (type instanceof AbstractCXPrimitiveType) {
+            return createNewInstance(type);
+        }
+
+
+        if (type instanceof CXCompoundType) {
+            return new CompoundInstance<>(((CXCompoundType) type));
+        }
+
+
+
+
+        throw new Error("Invalid type");
     }
 }

@@ -299,6 +299,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
             case t_int:
             case t_char:
             case t_void:
+            case t_double:
+            case t_float:
                 node.setInherit(new AbstractSyntaxNode(ASTNodeType.specifier, token));
                 break;
             case t_const:
