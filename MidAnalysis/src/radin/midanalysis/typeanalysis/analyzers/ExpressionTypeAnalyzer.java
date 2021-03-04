@@ -21,10 +21,7 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.tags.BasicCompilationTag;
-import radin.output.tags.ConstructorCallTag;
-import radin.output.tags.MethodCallTag;
-import radin.output.tags.SuperCallTag;
+import radin.output.tags.*;
 import radin.output.typeanalysis.TypeAnalyzer;
 import radin.output.typeanalysis.errors.IllegalAccessError;
 import radin.output.typeanalysis.errors.*;
@@ -522,6 +519,40 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             node.addCompilationTag(new ConstructorCallTag(constructor));
             
             node.setType(new PointerType(constructedType));
+            return true;
+        }
+        
+        if(node.getASTType() == ASTNodeType.inline_array) {
+            TypeAugmentedSemanticNode sequence = node.getASTChild(ASTNodeType.sequence);
+            SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(sequence);
+            if(!determineTypes(sequenceTypeAnalyzer)) return false;
+            List<CXType> collectedTypes = sequenceTypeAnalyzer.getCollectedTypes();
+            node.addCompilationTag(
+                    new InlineArrayTag(collectedTypes.size())
+            );
+    
+            if (collectedTypes.size() == 0) {
+                node.setType(CXPrimitiveType.VOID.toPointer());
+                node.setLValue(false);
+    
+    
+                return true;
+            }
+            
+            CXType expected = collectedTypes.get(0);
+            for(int i = 1; i < collectedTypes.size(); i++) {
+                CXType found = collectedTypes.get(i);
+                if (!is(found, expected)) {
+                    throw new IncorrectTypeError(expected, found, sequence.getChild(0).findFirstToken(), sequence.getChild(1).findFirstToken());
+                }
+            }
+            
+            ArrayType type = new ArrayType(expected);
+           
+            node.setType(type);
+            node.setLValue(false);
+            
+            
             return true;
         }
         

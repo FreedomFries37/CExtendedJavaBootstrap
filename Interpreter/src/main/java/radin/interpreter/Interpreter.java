@@ -5,7 +5,6 @@ import radin.core.SymbolTable;
 import radin.core.errorhandling.CompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
-import radin.core.utility.UniversalCompilerSettings;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
@@ -24,10 +23,7 @@ import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Option;
 import radin.midanalysis.MethodTASNTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.tags.ConstructorCallTag;
-import radin.output.tags.MultiDimensionalArrayWithSizeTag;
-import radin.output.tags.PriorConstructorTag;
-import radin.output.tags.SuperCallTag;
+import radin.output.tags.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -974,7 +970,9 @@ public class Interpreter {
             }
             arguments.push(argv);
             startStackTraceFor(new Token(t_id, "start"));
-            if (!invoke(main)) return -1;
+            if (!invoke(main)) {
+                throw new Error("Interpreter didn't complete");
+            }
             stackTrace.pop();
             endClosure();
         } catch (FunctionReturned e) {
@@ -1035,7 +1033,7 @@ public class Interpreter {
         Stack<CXType> types = new Stack<>();
         Stack<Instance<?>> instances = new Stack<>();
         for (int i = 0; i < params.length; i++) {
-            Instance<?> pop = argument_pop();
+            Instance<?> pop = argumentPop();
             types.push(pop.getType());
             instances.push(pop);
         }
@@ -1129,7 +1127,7 @@ public class Interpreter {
         return pop;
     }
     
-    public Instance<?> argument_pop() {
+    public Instance<?> argumentPop() {
         if (log()) logger.fine("Argument was popped from stack: " + arguments.peek());
         Instance<?> pop = arguments.pop();
         if (pop instanceof NullableInstance) {
@@ -1542,8 +1540,6 @@ public class Interpreter {
             stackTrace.peek().setCurrentToken(nearestCurrentToken);
         }
         switch (input.getASTType()) {
-            case operator:
-                break;
             case binop: {
                 Token op = input.getChild(0).getToken();
                 if (!invoke(input.getChild(1))) return false;
@@ -1732,20 +1728,25 @@ public class Interpreter {
                 CXType cxType = ((TypedAbstractSyntaxNode) input.getASTNode()).getCxType();
                 if (cxType instanceof ArrayType && !(cxType instanceof PointerType)) {
                     MultiDimensionalArrayWithSizeTag compilationTag = input.getCompilationTag(MultiDimensionalArrayWithSizeTag.class);
-                    List<Integer> sizes = new LinkedList<>();
-                    for (TypeAugmentedSemanticNode expression : compilationTag.getExpressions()) {
-                        if (!invoke(expression)) return false;
-                        PrimitiveInstance<Number, ?> pop = ((PrimitiveInstance<Number, ?>) pop());
-                        sizes.add(pop.backingValue.intValue());
+                    if (compilationTag != null) {
+                        List<Integer> sizes = new LinkedList<>();
+                        for (TypeAugmentedSemanticNode expression : compilationTag.getExpressions()) {
+                            if (!invoke(expression)) return false;
+                            PrimitiveInstance<Number, ?> pop = ((PrimitiveInstance<Number, ?>) pop());
+                            sizes.add(pop.backingValue.intValue());
+                        }
+    
+                        ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
+                        if (log()) logger.info("Created a " + cxType + " array of size " + array.size);
+                        addAutoVariable(id, array);
+                    } else {
+                        addAutoVariable(id, defaultValue(cxType));
                     }
-                    
-                    ArrayInstance<?, ArrayType> array = createArray(((ArrayType) cxType), sizes);
-                    if (log()) logger.info("Created a " + cxType + " array of size " + array.size);
-                    addAutoVariable(id, array);
                     logCurrentState();
-                } else {
-                    addAutoVariable(id, defaultValue(cxType));
+                    break;
                 }
+                addAutoVariable(id, defaultValue(cxType));
+                
             }
             break;
             case assignment: {
@@ -1777,10 +1778,6 @@ public class Interpreter {
                 
                 break;
             }
-            case assignment_type:
-                break;
-            case ternary:
-                break;
             case array_reference: {
                 if (!invoke(input.getChild(0))) return false;
                 ArrayInstance<?, ?> arr = (ArrayInstance<?, ?>) pop().unwrap();
@@ -1842,10 +1839,6 @@ public class Interpreter {
                     this.arguments.push(pop);
                 }
                 break;
-            case typename:
-                break;
-            case parameter_list:
-                break;
             case function_call: {
                 
                 Token token = input.getASTChild(ASTNodeType.id).getToken();
@@ -1861,8 +1854,8 @@ public class Interpreter {
                     startStackTraceFor(token);
                     CXType cxType =
                             ((TypedAbstractSyntaxNode) input.getASTChild(ASTNodeType.sequence).getASTChild(ASTNodeType.sizeof).getASTNode()).getCxType();
-                    PrimitiveInstance<Number, ?> size = (PrimitiveInstance<Number, ?>) argument_pop();
-                    argument_pop();
+                    PrimitiveInstance<Number, ?> size = (PrimitiveInstance<Number, ?>) argumentPop();
+                    argumentPop();
                     if (log()) logger.info("Using simulated Calloc to creating an array of " + cxType + "...");
                     push(createArrayOfType(cxType, size.backingValue.intValue()));
                     if (log()) logger.info("Array of " + cxType + "created with size " + size.backingValue.intValue() + " => " + memStack.peek());
@@ -1872,7 +1865,7 @@ public class Interpreter {
                 } else if (funcCall.equals("free")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
-                    PointerInstance<?> pop = (PointerInstance<?>) argument_pop();
+                    PointerInstance<?> pop = (PointerInstance<?>) argumentPop();
                     if (log()) logger.info("freeing object " + pop);
                     pop.setPointer(null);
                     stackTrace.pop();
@@ -1880,7 +1873,7 @@ public class Interpreter {
                 } else if (funcCall.equals("_interpreter_print")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
-                    PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) argument_pop();
+                    PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) argumentPop();
                     while (!pop.isNull()) {
                         PrimitiveInstance<Character, ?> pointer = (PrimitiveInstance<Character, ?>) pop.getPointer();
                         if (pointer.backingValue == '\\') {
@@ -1927,13 +1920,13 @@ public class Interpreter {
                 } else if (funcCall.equals("get_hashcode_for")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                     startStackTraceFor(token);
-                    push(createNewInstance(CXPrimitiveType.INTEGER, argument_pop().hashCode()));
+                    push(createNewInstance(CXPrimitiveType.INTEGER, argumentPop().hashCode()));
                     stackTrace.pop();
                     logCurrentState();
                     break;
                 } else if (funcCall.equals("exit")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    PrimitiveInstance<? extends Number, ?> pop = (PrimitiveInstance<? extends Number, ?>) argument_pop();
+                    PrimitiveInstance<? extends Number, ?> pop = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                     int exitCode = pop.getBackingValue().intValue();
                     throw new EarlyExit(exitCode);
                 }
@@ -1942,8 +1935,8 @@ public class Interpreter {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
                         //hopefully a string
-                        PointerInstance<CXPrimitiveType> errorPtr = (PointerInstance<CXPrimitiveType>) argument_pop();
-                        PointerInstance<CXClassType> stringObj = (PointerInstance<CXClassType>) argument_pop();
+                        PointerInstance<CXPrimitiveType> errorPtr = (PointerInstance<CXPrimitiveType>) argumentPop();
+                        PointerInstance<CXClassType> stringObj = (PointerInstance<CXClassType>) argumentPop();
                         callMethod(stringObj, "getCStr");
                         PointerInstance<CXPrimitiveType> charPtr = (PointerInstance<CXPrimitiveType>) pop();
                         String path = charPtr.takeString().expect("A c-style string must be passed here. Instead found " + charPtr);
@@ -1962,7 +1955,7 @@ public class Interpreter {
                     case "_flush_file": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
-                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argument_pop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
                         int fd = fdInstance.getBackingValue().intValue();
                         
@@ -1977,7 +1970,7 @@ public class Interpreter {
                         
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
-                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argument_pop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
                         
                         int fd = fdInstance.getBackingValue().intValue();
@@ -1993,8 +1986,8 @@ public class Interpreter {
                     case "_read_file": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
-                        PointerInstance<CXPrimitiveType> errorInstance = (PointerInstance<CXPrimitiveType>) argument_pop();
-                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argument_pop();
+                        PointerInstance<CXPrimitiveType> errorInstance = (PointerInstance<CXPrimitiveType>) argumentPop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
                         PrimitiveInstance<? super Number, ?> error = (PrimitiveInstance<? super Number, ?>) errorInstance.getPointer();
                         int fd = fdInstance.getBackingValue().intValue();
@@ -2021,8 +2014,8 @@ public class Interpreter {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
                         
-                        PrimitiveInstance<Character, ?> cInstance = (PrimitiveInstance<Character, ?>) argument_pop();
-                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argument_pop();
+                        PrimitiveInstance<Character, ?> cInstance = (PrimitiveInstance<Character, ?>) argumentPop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
                         char c = cInstance.getBackingValue();
                         int fd = fdInstance.getBackingValue().intValue();
@@ -2047,7 +2040,7 @@ public class Interpreter {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                         startStackTraceFor(token);
                         
-                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argument_pop();
+                        PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         int fd = fdInstance.getBackingValue().intValue();
                         
                         try {
@@ -2111,7 +2104,7 @@ public class Interpreter {
                     Stack<CXType> types = new Stack<>();
                     Stack<Instance<?>> instances = new Stack<>();
                     for (int i = 0; i < parameters; i++) {
-                        Instance<?> pop = argument_pop().unwrap();
+                        Instance<?> pop = argumentPop().unwrap();
                         types.push(pop.getType());
                         instances.push(pop);
                     }
@@ -2156,7 +2149,7 @@ public class Interpreter {
                     Stack<CXType> types = new Stack<>();
                     Stack<Instance<?>> instances = new Stack<>();
                     for (int i = 0; i < parameters; i++) {
-                        Instance<?> pop = argument_pop();
+                        Instance<?> pop = argumentPop();
                         types.push(pop.getType());
                         instances.push(pop);
                     }
@@ -2272,7 +2265,7 @@ public class Interpreter {
                 for (int i = parameters.size() - 1; i >= 0; i--) {
                     addAutoVariable(
                             parameters.get(i).getASTChild(ASTNodeType.id).getToken().getImage(),
-                            argument_pop().copy()
+                            argumentPop().copy()
                     );
                 }
                 
@@ -2303,26 +2296,6 @@ public class Interpreter {
                     throw e;
                 }
                 endClosure();
-                break;
-            case basic_compound_type_dec:
-                break;
-            case specifiers:
-                break;
-            case specifier:
-                break;
-            case qualifier:
-                break;
-            case qualifiers:
-                break;
-            case qualifiers_and_specifiers:
-                break;
-            case class_level_decs:
-                break;
-            case class_type_definition:
-                break;
-            case class_type_declaration:
-                break;
-            case class_type_name:
                 break;
             case compound_type_reference:
                 startLexicalScope();
@@ -2369,24 +2342,6 @@ public class Interpreter {
                 
             }
             break;
-            case empty:
-                break;
-            case array_type:
-                break;
-            case pointer_type:
-                break;
-            case abstract_declarator:
-                break;
-            case struct:
-                break;
-            case union:
-                break;
-            case _class:
-                break;
-            case basic_compound_type_fields:
-                break;
-            case basic_compound_type_field:
-                break;
             case declarations:
                 for (TypeAugmentedSemanticNode child : input.getChildren()) {
                     if (!invoke(child)) return false;
@@ -2472,58 +2427,31 @@ public class Interpreter {
                 logCurrentState();
             }
             break;
-            case function_description:
-                break;
-            case visibility:
-                break;
-            case class_level_declaration:
-                break;
-            case _virtual:
-                break;
-            case _super:
-                break;
-            case inherit:
-                break;
-            case namespaced:
-                break;
-            case implement:
-                break;
-            case implementing:
-                break;
-            case using:
-                break;
-            case alias:
-                break;
-            case _import:
-                break;
-            case compilation_tag:
-                break;
-            case compilation_tag_list:
-                break;
-            case constructor_description:
-                break;
-            case typeid:
-                break;
-            case syntax:
-                break;
             case _true:
                 push(createNewInstance(CXPrimitiveType.CHAR, 1));
                 break;
             case _false:
                 push(createNewInstance(CXPrimitiveType.CHAR, 0));
                 break;
-            case ast:
+            case inline_array:
+                ArrayType arrayType = (ArrayType) input.getCXType();
+                InlineArrayTag tag = input.getCompilationTag(InlineArrayTag.class);
+                
+                ArrayInstance<CXType, ArrayType> array = new ArrayInstance<>(arrayType, arrayType.getBaseType(), tag.getSize());
+                
+                if(!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
+                //List<Instance<?>> elements = new ArrayList<>(tag.getSize());
+                for (int i = 0; i < tag.getSize(); i++) {
+                    array.setAt(tag.getSize() - 1 - i, (Instance<CXType>) argumentPop().unwrap());
+                }
+                
+                push(array);
                 break;
-            case generic:
+                //throw new Error("Inline arrays not yet supported");
+            case empty: // nop
                 break;
-            case trait:
-                break;
-            case id_list:
-                break;
-            case parameterized_types:
-                break;
-            case parameter_type:
-                break;
+            default:
+                return false;
         }
         return true;
     }
