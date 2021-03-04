@@ -534,6 +534,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         } else if(node.firstIs(TokenType.t_false)) {
                             node.setSynthesized(new AbstractSyntaxNode(ASTNodeType._false));
                             return true;
+                        } else if (node.firstIs(TokenType.t_lbrac)) {
+                            AbstractSyntaxNode members = getCatNode("ArgsList").getSynthesized();
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.inline_array, members));
+                            return true;
                         }
                         
                         node.printTreeForm();
