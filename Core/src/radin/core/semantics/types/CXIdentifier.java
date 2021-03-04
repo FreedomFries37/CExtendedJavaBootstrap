@@ -3,6 +3,7 @@ package radin.core.semantics.types;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class CXIdentifier implements CXEquivalent {
@@ -18,6 +19,16 @@ public class CXIdentifier implements CXEquivalent {
         corresponding = identifier;
         useHashcode = true;
     }
+    
+    public static CXIdentifier from(String first, String... rest) {
+        if (rest.length == 0) return new CXIdentifier(new Token(TokenType.t_id, first), false);
+        String last = rest[rest.length - 1];
+        String[] parents = Arrays.copyOf(rest, rest.length - 1);
+        CXIdentifier parent = CXIdentifier.from(first, parents);
+        return new CXIdentifier(parent, new Token(TokenType.t_id, last));
+    }
+    
+    
     
     public Token getCorresponding() {
         if(corresponding == null) return new Token(TokenType.t_eof);
@@ -86,4 +97,6 @@ public class CXIdentifier implements CXEquivalent {
         if(parentNamespace == null) return identifier.toString();
         return parentNamespace.fullInfo() + " :: " + identifier.toString();
     }
+    
+    
 }

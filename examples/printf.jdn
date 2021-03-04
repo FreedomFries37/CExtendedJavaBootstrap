@@ -9,10 +9,12 @@ int printf(char*, void**);
 int main(int argc, std::String argv[]) {
 	i32 ints[] = [0, 1, 2];
 	//std::String s = (std::String) "h";
-	std::String woot[] = [new std::String("hello")];
+	std::String woot[] = ["hello"];
+	std::String yay = "what's up doc";
+	i32 len = ("hello")->length();
 
 
-	println_s(format(new std::String("hello %s"), [new std::String("world")]));
+	println(format("hello %s", ["world"]));
 
 
 

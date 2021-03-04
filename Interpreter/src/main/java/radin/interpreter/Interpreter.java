@@ -1145,7 +1145,7 @@ public class Interpreter {
      */
     
     
-    protected Instance<?> getInstance(TypeAugmentedSemanticNode node) {
+    protected Instance<?> getInstance(TypeAugmentedSemanticNode node) throws EarlyExit, FunctionReturned, JodinNullPointerException {
         switch (node.getASTType()) {
             case id: {
                 String name = node.getToken().getImage(); /*
@@ -1176,7 +1176,41 @@ public class Interpreter {
             }
             case string: {
                 String image = node.getToken().getImage();
-                return createCharPointerFromString(image.substring(1, image.length() - 1));
+    
+                PointerInstance<CXPrimitiveType> charPointer = createCharPointerFromString(image.substring(1, image.length() - 1));
+                PointerType stringType = (PointerType) environment.getType(CXIdentifier.from("std", "String"),
+                        null);
+                CXClassType string = (CXClassType) stringType.getSubType();
+                TypeAugmentedSemanticNode constructor = dynamicConstructorLookup(string, Collections.singletonList(charPointer.getType()));
+                arguments.push(charPointer);
+                PointerInstance<CXClassType> classTypeInstance =
+                        (PointerInstance<CXClassType>) createNewInstance(string).toPointer();
+    
+                if (classTypeInstance.getPointer() == null) {
+                    throw new Error("Creating a new instance of " + string + " failed");
+                }
+    
+                thisStack.push(classTypeInstance);
+                useThisStack.push(true);
+                createClosure();
+               
+                startStackTraceFor(constructor.getParent().toString() + "::<init>", constructor.findFirstToken());
+                logCurrentState();
+    
+    
+                if (log()) logger.info("Calling constructor for " + constructor.getParent());
+                try {
+                    if (!invoke(constructor)) throw new JodinNullPointerException();
+                } catch (FunctionReturned ignored) {
+        
+                }
+    
+                stackTrace.pop();
+                thisStack.pop();
+                useThisStack.pop();
+                endClosure();
+                //endClosure();ush(classTypeInstance);
+                return classTypeInstance;
             }
         }
         return null;

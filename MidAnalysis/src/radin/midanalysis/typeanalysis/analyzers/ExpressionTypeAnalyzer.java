@@ -76,7 +76,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.string) {
-            node.setType(new PointerType(CXPrimitiveType.CHAR));
+            CXType stringType = environment.getType(CXIdentifier.from("std", "String"), null);
+            node.setType(stringType);
             return true;
         }
         
