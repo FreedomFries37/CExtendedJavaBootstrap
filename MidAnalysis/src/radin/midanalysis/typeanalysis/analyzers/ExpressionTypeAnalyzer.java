@@ -562,6 +562,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
 
         if(node.getASTType() == ASTNodeType.namespaced_id) {
+            CXIdentifier id = new CXIdentifier(node.getASTNode());
+            getCurrentTracker().entryExists()
 
             throw new Error("Namespaced Identifier resolution not yet implemented");
         }
