@@ -233,7 +233,8 @@ public enum ASTNodeType {
     id_list("id_list"),
     parameterized_types("parameterized_types"),
     parameter_type("parameter_type"),
-    inline_array("inline_array")
+    inline_array("inline_array"),
+    namespaced_id("namespaced_id")
     ;
     
     

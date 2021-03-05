@@ -560,6 +560,11 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             
             return true;
         }
+
+        if(node.getASTType() == ASTNodeType.namespaced_id) {
+
+            throw new Error("Namespaced Identifier resolution not yet implemented");
+        }
         
         return false;
     }

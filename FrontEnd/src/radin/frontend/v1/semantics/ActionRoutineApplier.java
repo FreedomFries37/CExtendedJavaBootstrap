@@ -569,7 +569,24 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Atom": {
-                        if (node.firstIs(t_id)) {
+                        if (node.hasChildCategory("NamespacedId")) {
+                            CategoryNode namespacedId = node.getCategoryNode("NamespacedId");
+                            namespacedId.setInherit(AbstractSyntaxNode.EMPTY);
+                            AbstractSyntaxNode name = namespacedId.getSynthesized();
+                            AbstractSyntaxNode interact;
+                            CategoryNode functionCall = getCatNode("FunctionCall");
+                            functionCall.setInherit(GLOBAL_NODE, 0);
+                            functionCall.setInherit(name, 1);
+                            if(functionCall.hasChildren()) {
+                                interact = functionCall.getSynthesized();
+                                //interact = new AbstractSyntaxNode(ASTNodeType.function_call, name, call);
+                            } else {
+                                interact = name;
+                            }
+
+                            node.setSynthesized(interact);
+                            return true;
+                        } else if (node.firstIs(t_id)) {
                             AbstractSyntaxNode name = node.getLeafNode(t_id).getSynthesized();
                             AbstractSyntaxNode interact;
                             CategoryNode functionCall = getCatNode("FunctionCall");
@@ -1641,6 +1658,33 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             );
                         }
                         
+                        return true;
+                    }
+                    case "NamespacedId": {
+                        AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
+                        AbstractSyntaxNode parent = node.getInherit();
+
+                        if(node.hasChildCategory("NamespacedId")) {
+                            AbstractSyntaxNode newParent;
+                            if(parent == AbstractSyntaxNode.EMPTY) {
+                                newParent = new AbstractSyntaxNode(ASTNodeType.namespaced_id, id);
+                            } else {
+                                newParent = new AbstractSyntaxNode(ASTNodeType.namespaced_id, parent, id);
+                            }
+
+                            CategoryNode child = node.getCategoryNode("NamespacedId", 2);
+                            child.setInherit(newParent);
+                            node.setSynthesized(child.getSynthesized());
+                        } else {
+                            if(parent == AbstractSyntaxNode.EMPTY) {
+                                node.setSynthesized(id);
+                            } else {
+                                node.setSynthesized(
+                                        new AbstractSyntaxNode(ASTNodeType.namespaced_id, parent, id)
+                                );
+                            }
+                        }
+
                         return true;
                     }
                     case "Alias": {

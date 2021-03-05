@@ -2,6 +2,8 @@ package radin.core.semantics.types;
 
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.AbstractSyntaxNode;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -26,6 +28,14 @@ public class CXIdentifier implements CXEquivalent {
         String[] parents = Arrays.copyOf(rest, rest.length - 1);
         CXIdentifier parent = CXIdentifier.from(first, parents);
         return new CXIdentifier(parent, new Token(TokenType.t_id, last));
+    }
+
+    public CXIdentifier(AbstractSyntaxNode typespacedId) {
+        if (typespacedId.hasChild(ASTNodeType.namespaced_id)) {
+            this.parentNamespace = new CXIdentifier(typespacedId.getChild(ASTNodeType.namespaced_id));
+        }
+        this.identifier = typespacedId.getChild(ASTNodeType.id).getToken();
+        corresponding = this.identifier;
     }
     
     

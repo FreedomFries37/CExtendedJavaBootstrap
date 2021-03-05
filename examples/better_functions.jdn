@@ -1,0 +1,14 @@
+
+in namespace {
+    std::String function() {
+        return "Hello, World!";
+    }
+}
+
+
+int main(int argc, std::String args[]) {
+
+    println(namespace::function());
+
+    return 0;
+}

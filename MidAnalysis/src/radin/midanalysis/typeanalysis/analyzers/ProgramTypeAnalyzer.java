@@ -47,7 +47,10 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
             } else if(child.getASTType() == ASTNodeType.function_definition) {
                 
                 FunctionTypeAnalyzer functionTypeAnalyzer = new FunctionTypeAnalyzer(child);
-                if(!determineTypes(functionTypeAnalyzer)) return false;
+                if(!determineTypes(functionTypeAnalyzer)) {
+                    node.printTreeForm();
+                    return false;
+                }
     
                 TypedAbstractSyntaxNode astNode =
                         ((TypedAbstractSyntaxNode) child.getASTNode());

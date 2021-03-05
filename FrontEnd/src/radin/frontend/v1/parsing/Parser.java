@@ -272,7 +272,8 @@ public class Parser extends BasicParser {
             case t_struct:
             case t_union:
             case t_lpar:
-            case t_const: {
+            case t_const:
+            case t_id: {
                 Token corresponding = getCurrent();
                 if (!oneMustParse(child, this::parseFunctionDefinition, this::parseDeclaration)) {
                     return error("Could not parse declaration", corresponding);
@@ -671,6 +672,7 @@ public class Parser extends BasicParser {
         */
         parent.addChild(child);
         return true;
+
     }
     
     private boolean parseDeclarationList(CategoryNode parent) {
@@ -1344,9 +1346,23 @@ public class Parser extends BasicParser {
         parent.addChild(child);
         return true;
     }
+
+    private boolean parseNamespacedIdentifier(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("NamespacedId");
+
+        if(!consumeAndAddAsLeaf(t_id, child)) return error("Must be an identifier");
+        if(consume(t_namespace)) {
+            if (!parseNamespacedIdentifier(child)) return false;
+        }
+
+        parent.addChild(child);
+        return true;
+    }
     
     private boolean parseAtom(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Atom");
+
+
         
         switch (getCurrentType()) {
             case t_lpar: {
@@ -1355,7 +1371,11 @@ public class Parser extends BasicParser {
                 if (!consume(TokenType.t_rpar)) return missingError("Missing matching )");
                 break;
             }
-            case t_id:
+            case t_id: {
+                if (!parseNamespacedIdentifier(child)) return false;
+                if (!parseFunctionCall(child)) return false;
+                break;
+            }
             case t_super: {
                 consumeAndAddAsLeaf(child);
                 if (!parseFunctionCall(child)) return false;
