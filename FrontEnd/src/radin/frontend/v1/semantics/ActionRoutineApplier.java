@@ -1531,6 +1531,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "InIdentifier": {
                         Token id = node.getLeafNode(t_id).getToken();
+                        AbstractSyntaxNode idNode = node.getLeafNode(t_id).getSynthesized();
                         boolean push = false;
                         try{
                             node.setSynthesized(
@@ -1541,10 +1542,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         }
                         
                         if(push) environment.pushNamespace(id);
-                        
-                        node.setSynthesized(
-                                node.getChild(1).getSynthesized()
-                        );
+
+                        AbstractSyntaxNode newNode = new AbstractSyntaxNode(ASTNodeType.in_namespace, idNode, node.getChild(1).getSynthesized());
+
+                        node.setSynthesized(newNode);
                         
                         environment.popNamespace();
                         return true;

@@ -41,7 +41,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.isTypedExpression()) return true;
         
         if(node.getASTNode().getTreeType() == ASTNodeType._super) {
-            node.setType(getCurrentTracker().getType("super"));
+
+            node.setType(getCurrentTracker().getType(new CXIdentifier(new Token(TokenType.t_super, "super"))));
             return true;
         }
         
@@ -82,7 +83,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.id) {
-            String image = node.getToken().getImage();
+            CXIdentifier image = new CXIdentifier(node.getToken());
             if(!getCurrentTracker().variableExists(image)) {
                 throw new IdentifierDoesNotExistError(image);
             }
@@ -563,7 +564,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
 
         if(node.getASTType() == ASTNodeType.namespaced_id) {
             CXIdentifier id = new CXIdentifier(node.getASTNode());
-            getCurrentTracker().entryExists()
+            if (!getCurrentTracker().entryExists(id)) {
+                throw new IdentifierDoesNotExistError(id);
+            }
 
             throw new Error("Namespaced Identifier resolution not yet implemented");
         }

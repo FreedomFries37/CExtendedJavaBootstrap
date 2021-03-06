@@ -1,5 +1,6 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
+import radin.core.semantics.types.CXIdentifier;
 import radin.output.tags.ArrayWithSizeTag;
 import radin.output.tags.BasicCompilationTag;
 import radin.output.typeanalysis.errors.IncorrectTypeError;
@@ -39,7 +40,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
         
         for (TypeAugmentedSemanticNode declaration : node.getChildren()) {
             CXType declarationType;
-            String name;
+            CXIdentifier name;
             
             if(declaration.getASTType() == ASTNodeType.declaration) {
                 assert declaration.getASTNode() instanceof TypedAbstractSyntaxNode;
@@ -101,7 +102,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 
                 
-                name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
                 
             } else if(declaration.getASTType() == ASTNodeType.initialized_declaration) {
                 
@@ -115,7 +116,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     throw new TypeNotDefinedError(subDeclaration.findFirstToken().getPrevious());
                 }
     
-                name = subDeclaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                name = new CXIdentifier(subDeclaration.getASTChild(ASTNodeType.id).getToken());
                 
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
@@ -141,7 +142,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 declarationType =
                         ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
     
-                name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
                 
                 
                 getCurrentTracker().addFunction(name, declarationType, false);

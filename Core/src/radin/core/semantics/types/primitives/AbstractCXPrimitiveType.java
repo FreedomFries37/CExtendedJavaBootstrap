@@ -1,5 +1,6 @@
 package radin.core.semantics.types.primitives;
 
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 
 public abstract class AbstractCXPrimitiveType extends CXType {
@@ -22,5 +23,9 @@ public abstract class AbstractCXPrimitiveType extends CXType {
     public String generateCDeclaration(String identifier) {
         return generateCDefinition() + " " + identifier;
     }
-    
+
+    @Override
+    public CXIdentifier getIdentifier() {
+        return CXIdentifier.from(toString());
+    }
 }

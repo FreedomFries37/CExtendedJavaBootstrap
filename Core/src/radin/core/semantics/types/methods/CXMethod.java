@@ -37,7 +37,7 @@ public class CXMethod implements CXEquivalent {
                     AbstractSyntaxNode methodBody) {
         this.parent = parent;
         this.visibility = visibility;
-        this.name = new CXIdentifier(name, false);
+        this.name = new CXIdentifier(name);
         this.isVirtual = isVirtual;
         this.returnType = returnType;
         this.parameters = parameters;

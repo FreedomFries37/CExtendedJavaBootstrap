@@ -18,11 +18,11 @@ public abstract class CXBasicCompoundType extends CXCompoundType {
     }
     
     public CXBasicCompoundType(Token name, List<FieldDeclaration> fields) {
-        super(new CXIdentifier(name, false), fields);
+        super(new CXIdentifier(name), fields);
     }
     
     public CXBasicCompoundType(Token name, FieldDeclaration f1, FieldDeclaration... fields) {
-        super(new CXIdentifier(name, false), f1, fields);
+        super(new CXIdentifier(name), f1, fields);
     }
     
     @Override

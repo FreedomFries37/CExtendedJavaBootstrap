@@ -1,21 +1,21 @@
 package radin.core.semantics;
 
-import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.Namespaced;
+import radin.core.semantics.types.AmbiguousIdentifierError;
 import radin.core.semantics.types.CXIdentifier;
-import radin.core.semantics.types.CXType;
 
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class NamespaceTree {
+public class NamespaceTree<T extends Namespaced> {
 
     private class Node {
         private String shorthand;
         private CXIdentifier identifier;
         private List<Node> children;
-        private List<CXCompoundType> relatedTypes;
+        private List<T> relatedTypes;
     
         public Node(String shorthand, CXIdentifier identifier) {
             this.shorthand = shorthand;
@@ -40,17 +40,17 @@ public class NamespaceTree {
             return identifier;
         }
     
-        public boolean add(CXCompoundType type) {
+        public boolean add(T type) {
             return relatedTypes.add(type);
         }
     
-        public List<CXCompoundType> getRelatedTypes() {
+        public List<T> getRelatedTypes() {
             return relatedTypes;
         }
     }
     
     private List<Node> topNamespaces;
-    private List<CXCompoundType> baseObjects = new LinkedList<>();
+    private List<T> baseObjects = new LinkedList<>();
     
     public NamespaceTree() {
         this.topNamespaces = new LinkedList<>();
@@ -67,7 +67,8 @@ public class NamespaceTree {
         }
         return null;
     }
-    
+
+
     public Set<CXIdentifier> getNamespaces(CXIdentifier currentNamespace, CXIdentifier path) {
         Set<CXIdentifier> output = new HashSet<>();
         if(namespaceExists(path)) output.add(path);
@@ -86,29 +87,16 @@ public class NamespaceTree {
         return output;
     }
     
-    /**
-     * Assume base case is id::typename
-     * @param identifier
-     * @return
-     */
-    public CXType getTypeForIdentifier(CXIdentifier currentNamespace, CXIdentifier identifier) {
-        CXIdentifier namespace = identifier.getParentNamespace();
-        CXIdentifier absoluteNameSpace = getNamespace(currentNamespace, namespace);
-        if(absoluteNameSpace == null) return null;
-        for (CXCompoundType relatedType : getNode(absoluteNameSpace).getRelatedTypes()) {
-            if(relatedType.getTypeNameIdentifier().getParentNamespace().equals(absoluteNameSpace)) return relatedType;
-        }
-        return null;
-    }
+
     
-    public List<CXCompoundType> getTypesForNamespace(CXIdentifier identifier) {
+    public List<T> getObjectsForNamespace(CXIdentifier identifier) {
         if(identifier == null) return baseObjects;
         Node node = getNode(identifier);
         if(node == null) return null;
         return node.getRelatedTypes();
     }
     
-    public List<CXCompoundType> getBaseObjects() {
+    public List<T> getBaseObjects() {
         return baseObjects;
     }
     
@@ -128,8 +116,34 @@ public class NamespaceTree {
         return null;
     }
     
-    public boolean namespaceExists(CXIdentifier fullPath) {
-        return getNode(fullPath) != null;
+    public boolean namespaceExists(CXIdentifier namespacePath) {
+        return getNode(namespacePath) != null;
+    }
+
+    public T getFromIdentifier(CXIdentifier currentNamespace, CXIdentifier path) {
+        if(path.getParentNamespace() == null) {
+            for(T o : baseObjects) {
+                if (o.getIdentifier().equals(path)) {
+                    return o;
+                }
+            }
+        }
+
+        List<T> output = new LinkedList<>();
+
+        for (CXIdentifier namespace : getNamespaces(currentNamespace, path.getParentNamespace())) {
+            for (T object : getObjectsForNamespace(namespace)) {
+                if(object.getIdentifier().getIdentifierString().equals(path.getIdentifierString())) {
+                    output.add(object);
+                }
+            }
+        }
+
+
+        if(output.size() > 1) throw new AmbiguousIdentifierError(path.getBase(), output);
+        else if(output.size() == 1) return output.get(0);
+
+        return null;
     }
     
     public void addNamespace(CXIdentifier namespace) {

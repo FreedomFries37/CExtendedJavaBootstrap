@@ -1,5 +1,8 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
+import radin.core.lexical.Token;
+import radin.core.lexical.TokenType;
+import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
@@ -34,10 +37,16 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
     
     public boolean determineTypes(TypeAugmentedSemanticNode node, boolean closure) {
         if(closure) typeTrackingClosure();
+        assert node.getASTType() == ASTNodeType.top_level_decs;
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
-            
-            
-            if(child.getASTType() == ASTNodeType.class_type_definition) {
+
+            if(child.getASTType() == ASTNodeType.in_namespace) {
+                InNamespaceTypeAnalyzer inNamespaceTypeAnalyzer = new InNamespaceTypeAnalyzer(child);
+                if(!determineTypes(inNamespaceTypeAnalyzer)) {
+                    return false;
+                }
+                //throw new Error("Identifier Resolution for variables not yet implemented");
+            }else if(child.getASTType() == ASTNodeType.class_type_definition) {
                 
                 ClassTypeAnalyzer classTypeAnalyzer = new ClassTypeAnalyzer(child);
                 if(!determineTypes(classTypeAnalyzer)) {
@@ -51,11 +60,11 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                     node.printTreeForm();
                     return false;
                 }
-    
+
                 TypedAbstractSyntaxNode astNode =
                         ((TypedAbstractSyntaxNode) child.getASTNode());
                 
-                String name = child.getASTChild(ASTNodeType.id).getToken().getImage();
+                CXIdentifier name = functionTypeAnalyzer.getName();
                 CXType returnType = astNode.getCxType();
                 node.setType(returnType);
                 if(!getCurrentTracker().functionExists(name)) {

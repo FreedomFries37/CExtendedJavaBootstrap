@@ -40,7 +40,7 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
         // Creates symbols for all functions
         for (TypeAugmentedSemanticNode functionDefinition : functionDefinitions) {
             output.put(
-                    output.new Key(new CXIdentifier(functionDefinition.getASTChild(ASTNodeType.id).getToken(), false),
+                    output.new Key(new CXIdentifier(functionDefinition.getASTChild(ASTNodeType.id).getToken()),
                             file, functionDefinition.findFirstToken()),
                     functionDefinition
             );
@@ -48,7 +48,7 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
         String f = new File(file).getName();
         f = f.replaceAll("(\\..+)+", "");
         CXIdentifier parentIdentifier = new CXIdentifier(new Token(TokenType.t_id, f)
-                , false);
+        );
         for (TypeAugmentedSemanticNode decs : input.getAllChildren(ASTNodeType.declarations, 1)) {
             for (TypeAugmentedSemanticNode dec : decs.getAllChildren(ASTNodeType.declaration, 1)) {
                 TypeAugmentedSemanticNode value = new TypeAugmentedSemanticNode(new AbstractSyntaxNode(ASTNodeType.empty));

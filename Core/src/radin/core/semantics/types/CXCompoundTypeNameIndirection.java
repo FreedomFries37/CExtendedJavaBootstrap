@@ -1,5 +1,6 @@
 package radin.core.semantics.types;
 
+import radin.core.Namespaced;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.exceptions.TypeDoesNotExist;
@@ -7,7 +8,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.ICXCompoundType;
 
-public class CXCompoundTypeNameIndirection extends CXType {
+public class CXCompoundTypeNameIndirection extends CXType implements Namespaced {
     
     public enum CompoundType {
         struct("struct"),
@@ -25,7 +26,7 @@ public class CXCompoundTypeNameIndirection extends CXType {
     
     public CXCompoundTypeNameIndirection(CompoundType compoundType, Token typename) {
         this.compoundType = compoundType;
-        this.typename = new CXIdentifier(typename, false);
+        this.typename = new CXIdentifier(typename);
     }
     
     public CXCompoundTypeNameIndirection(CompoundType compoundType, CXIdentifier typename) {
@@ -70,7 +71,12 @@ public class CXCompoundTypeNameIndirection extends CXType {
             //return namedCompoundType.is(e.getNamedCompoundType(((CXCompoundTypeNameIndirection) other).typename), e);
         }
     }
-    
+
+    @Override
+    public CXIdentifier getIdentifier() {
+        return typename;
+    }
+
     public CompoundType getCompoundType() {
         return compoundType;
     }

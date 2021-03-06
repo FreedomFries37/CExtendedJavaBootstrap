@@ -4,6 +4,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Option<T> {
+
+    public static class NoneUnwrapped extends Error {
+        public NoneUnwrapped() {
+            super("None value unwrapped");
+        }
+
+        public NoneUnwrapped(String msg) {
+            super(msg);
+        }
+    }
     
     private T data;
     
@@ -31,11 +41,11 @@ public class Option<T> {
     /**
      * Gets the data in the option
      * @return the data
-     * @throws NullPointerException if the data is null
+     * @throws NoneUnwrapped if the data is null
      */
     public T unwrap() {
         if(isNone()) {
-            throw new NullPointerException();
+            throw new NoneUnwrapped();
         }
         return data;
     }
@@ -43,11 +53,11 @@ public class Option<T> {
     /**
      * Gets the data in the option
      * @return the data
-     * @throws NullPointerException if the data is null, with a user set message
+     * @throws NoneUnwrapped if the data is null, with a user set message
      */
     public T expect(String message) {
         if(isNone()) {
-            throw new NullPointerException(message);
+            throw new NoneUnwrapped(message);
         }
         return data;
     }
@@ -103,7 +113,7 @@ public class Option<T> {
         Reference<T> ref = new Reference<>();
         if(match(ref)) {
             T value = ref.getValue();
-           function.accept(value);
+            function.accept(value);
         }
     }
     

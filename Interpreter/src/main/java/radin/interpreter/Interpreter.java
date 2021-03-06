@@ -1242,7 +1242,7 @@ public class Interpreter {
     }
     
     private TypeAugmentedSemanticNode getSymbol(String s) {
-        return symbols.get(new CXIdentifier(new Token(t_id, s), false));
+        return symbols.get(new CXIdentifier(new Token(t_id, s)));
     }
     
     public <T extends CXType> ArrayInstance<T, ArrayType> createArray(T type, int size) {

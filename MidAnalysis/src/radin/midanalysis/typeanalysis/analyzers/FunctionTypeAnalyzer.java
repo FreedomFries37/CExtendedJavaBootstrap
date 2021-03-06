@@ -1,5 +1,6 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
+import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.BasicCompilationTag;
@@ -24,6 +25,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
     
     private boolean hasOwnerType;
     private CXType owner;
+    private CXIdentifier name;
     
     public FunctionTypeAnalyzer(TypeAugmentedSemanticNode tree, CXType owner) {
         super(tree);
@@ -68,9 +70,8 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
             getCurrentTracker().addVariable(name, type);
         }
         
-        String functionName = node.getASTChild(ASTNodeType.id).getToken().getImage();
-    
-        
+        CXIdentifier functionName = new CXIdentifier(node.getASTChild(ASTNodeType.id).getToken());
+        name = functionName;
         
         if(UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction() && functionName.equals("main") && !hasOwnerType) {
             if(!ScopedTypeTracker.environment.is(returnType, CXPrimitiveType.INTEGER) ||
@@ -108,5 +109,9 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         
         releaseTrackingClosure();
         return true;
+    }
+
+    public CXIdentifier getName() {
+        return name;
     }
 }
