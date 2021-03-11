@@ -17,7 +17,7 @@ import radin.output.typeanalysis.errors.RedeclarationError;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VariableTypeTracker {
+public class VariableTypeTracker implements IVariableTypeTracker {
     
     public enum EntryStatus {
         OLD,
@@ -149,13 +149,16 @@ public class VariableTypeTracker {
     private HashSet<CXCompoundType> trackingTypes;
     // lexical variables
     // these should be demoted
-    private HashMap<CXIdentifier, TypeTrackerEntry> variableEntries;
+    private HashMap<String, TypeTrackerEntry> variableEntries;
+    private HashMap<CXIdentifier, TypeTrackerEntry> globalVariableEntries;
+
 
 
     
     // global availability
     // these should copied
     private HashMap<CXIdentifier, TypeTrackerEntry> functionEntries;
+    
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries;
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicFieldEntries;
     private HashSet<ConstructorKey> publicConstructors;
@@ -184,6 +187,7 @@ public class VariableTypeTracker {
         this.environment = environment;
         this.resolver = resolver;
         variableEntries = new HashMap<>();
+        globalVariableEntries = new HashMap<>();
         functionEntries = new HashMap<>();
         
         publicMethodEntries = new HashMap<>();
@@ -206,6 +210,7 @@ public class VariableTypeTracker {
         resolver = old.resolver;
         trackingTypes = new HashSet<>(old.trackingTypes);
         variableEntries = new HashMap<>();
+        globalVariableEntries = old.globalVariableEntries;
         demoteEntries(variableEntries, old.variableEntries);
         
         functionEntries = old.functionEntries;
@@ -237,6 +242,7 @@ public class VariableTypeTracker {
         variableEntries = new HashMap<>();
         demoteEntries(variableEntries, old.variableEntries);
         demoteEntries(variableEntries, old2.variableEntries);
+        globalVariableEntries = old.globalVariableEntries;
         
         functionEntries = old.functionEntries;
         functionEntries.putAll(old2.functionEntries);
