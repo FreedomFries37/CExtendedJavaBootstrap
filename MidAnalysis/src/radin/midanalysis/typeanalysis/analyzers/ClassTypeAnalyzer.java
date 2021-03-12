@@ -51,12 +51,12 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             getCurrentTracker().addPrivateField(cxClassType, UniversalCompilerSettings.getInstance().getSettings().getvTableName(),
                     new PointerType(vTable));
             
-            getCurrentTracker().addVariable("__this", new PointerType(CXPrimitiveType.VOID));
+            getCurrentTracker().addLocalVariable("__this", new PointerType(CXPrimitiveType.VOID));
             
             
             
             for (CXParameter parameter : generatedSuper.getParameters()) {
-                getCurrentTracker().addVariable(parameter.getName(), parameter.getType());
+                getCurrentTracker().addLocalVariable(parameter.getName(), parameter.getType());
             }
             TypeAugmentedSemanticNode tree = new TypeAugmentedSemanticTree(generatedSuper.getMethodBody(),
                     ScopedTypeTracker.getEnvironment()).getHead();
@@ -212,11 +212,11 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             TypeAugmentedSemanticNode tree =
                     new TypeAugmentedSemanticTree(methodBody, cxClassType.getEnvironment()).getHead();
             typeTrackingClosure();
-            getCurrentTracker().addVariable("this", cxClassType.toPointer());
+            getCurrentTracker().addLocalVariable("this", cxClassType.toPointer());
             
     
             for (CXParameter cxParameter : generatedSuper.getParametersExpanded()) {
-                getCurrentTracker().addVariable(cxParameter.getName(), cxParameter.getType());
+                getCurrentTracker().addLocalVariable(cxParameter.getName(), cxParameter.getType());
             }
     
             CXStructType vTable = cxClassType.getVTable();
@@ -226,7 +226,7 @@ public class ClassTypeAnalyzer extends TypeAnalyzer {
             }
             getCurrentTracker().addPrivateField(cxClassType, UniversalCompilerSettings.getInstance().getSettings().getvTableName(), vTable.toPointer());
             for (CXMethod cxMethod : cxClassType.getParent().getVirtualMethodsOrder()) {
-                getCurrentTracker().addVariable(cxMethod.getCFunctionName(), cxMethod.getFunctionPointer());
+                getCurrentTracker().addLocalVariable(cxMethod.getCFunctionName(), cxMethod.getFunctionPointer());
             }
             
             CompoundStatementTypeAnalyzer analyzer = new CompoundStatementTypeAnalyzer(tree,

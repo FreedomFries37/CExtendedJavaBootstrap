@@ -48,13 +48,13 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         typeTrackingClosure();
         ICompilationSettings.debugLog.finest("Compiling function " + node.getASTChild(ASTNodeType.id).getToken().getImage());
         if(hasOwnerType) {
-            getCurrentTracker().addVariable("this", new PointerType(owner));
+            getCurrentTracker().addLocalVariable("this", new PointerType(owner));
             if(owner instanceof CXClassType) {
                 CXClassType cxClassType = (CXClassType) owner;
                 if(cxClassType.getParent() != null) {
                     
                     
-                    getCurrentTracker().addVariable("super", new PointerType(owner));
+                    getCurrentTracker().addLocalVariable("super", new PointerType(owner));
                 }
             }
         }
@@ -67,7 +67,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
             parameterTypes.add(type);
             String name = parameter.getASTChild(ASTNodeType.id).getToken().getImage();
             ICompilationSettings.debugLog.finest("Adding " + type.generateCDeclaration(name) + " to parameters");
-            getCurrentTracker().addVariable(name, type);
+            getCurrentTracker().addLocalVariable(name, type);
         }
         
         CXIdentifier functionName = new CXIdentifier(node.getASTChild(ASTNodeType.id).getToken());

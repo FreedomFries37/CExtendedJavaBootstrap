@@ -3,6 +3,7 @@ package radin.midanalysis.typeanalysis.analyzers;
 import radin.core.semantics.types.CXIdentifier;
 import radin.output.tags.ArrayWithSizeTag;
 import radin.output.tags.BasicCompilationTag;
+import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.errors.IncorrectTypeError;
 import radin.output.typeanalysis.errors.TypeNotDefinedError;
 import radin.output.typeanalysis.errors.VoidTypeError;
@@ -24,9 +25,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
-    
-    public StatementDeclarationTypeAnalyzer(TypeAugmentedSemanticNode tree) {
+
+    private IVariableTypeTracker.NameType nameType;
+
+
+    public StatementDeclarationTypeAnalyzer(TypeAugmentedSemanticNode tree, IVariableTypeTracker.NameType type) {
         super(tree);
+        this.nameType = type;
+    }
+
+    public StatementDeclarationTypeAnalyzer(TypeAugmentedSemanticNode tree) {
+        this(tree, IVariableTypeTracker.NameType.LOCAL);
     }
     
     private static boolean constantDeterminer(TypeAugmentedSemanticNode node) {
@@ -121,7 +130,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
                 if(!determineTypes(analyzer)) {
-                    getCurrentTracker().addLocalVariable(name, declarationType);
+                    getCurrentTracker().addLocalVariable(name.getIdentifierString(), declarationType);
                     return false;
                 }
                 
@@ -145,7 +154,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
                 
                 
-                getCurrentTracker().addFunction(name, declarationType, false);
+
     
                 TypeAugmentedSemanticNode astChild = declaration.getASTChild(ASTNodeType.parameter_list);
                 List<CXType> typeList = new LinkedList<>();
@@ -153,8 +162,8 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     typeList.add(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
                 }
                 CXFunctionPointer pointer = new CXFunctionPointer(declarationType, typeList);
-                
-                getCurrentTracker().addLocalVariable(name, pointer);
+                getCurrentTracker().addFunction(name, pointer, false);
+                getCurrentTracker().addGlobalVariable(name, pointer);
                 declaration.getASTChild(ASTNodeType.id).setType(pointer);
                 return true;
             } else {
@@ -174,7 +183,18 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             if(isBaseTracker()) {
                 ICompilationSettings.debugLog.finer("Adding global variable " + name + " of type " + declarationType);
             }
-            getCurrentTracker().addLocalVariable(name, declarationType);
+            switch (nameType) {
+
+                case LOCAL:
+                    getCurrentTracker().addLocalVariable(name.getIdentifierString(), declarationType);
+                    break;
+                case GLOBAL:
+
+                    getCurrentTracker().addGlobalVariable(name, declarationType);
+                    node.setAbsolutePath(getCurrentTracker().resolveIdentifier(name));
+                    break;
+            }
+
             declaration.setType(declarationType);
         }
         

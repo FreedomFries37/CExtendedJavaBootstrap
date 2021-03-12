@@ -11,6 +11,7 @@ import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.midanalysis.TypeAugmentedSemanticNode;
+import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.TypeAnalyzer;
 
 import java.util.LinkedList;
@@ -66,24 +67,23 @@ public class InNamespaceTypeAnalyzer extends TypeAnalyzer {
                 CXIdentifier name = functionTypeAnalyzer.getName();
                 CXType returnType = astNode.getCxType();
                 node.setType(returnType);
+                TypeAugmentedSemanticNode astChild = within.getASTChild(ASTNodeType.parameter_list);
+                List<CXType> typeList = new LinkedList<>();
+                for (TypeAugmentedSemanticNode param : astChild.getChildren()) {
+                    typeList.add(((TypedAbstractSyntaxNode) param.getASTNode()).getCxType());
+                }
+                CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
                 if(!getCurrentTracker().functionExists(name)) {
-                    getCurrentTracker().addFunction(name, returnType, true);
-
-                    TypeAugmentedSemanticNode astChild = within.getASTChild(ASTNodeType.parameter_list);
-                    List<CXType> typeList = new LinkedList<>();
-                    for (TypeAugmentedSemanticNode param : astChild.getChildren()) {
-                        typeList.add(((TypedAbstractSyntaxNode) param.getASTNode()).getCxType());
-                    }
-                    CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
+                    getCurrentTracker().addFunction(name, pointer, true);
 
 
-                    getCurrentTracker().addLocalVariable(name, pointer);
+                    getCurrentTracker().addGlobalVariable(name, pointer);
                     within.getASTChild(ASTNodeType.id).setType(pointer);
                 }
                 break;
             }
             case declarations: {
-                StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(within);
+                StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(within, IVariableTypeTracker.NameType.GLOBAL);
                 if(!determineTypes(analyzer)) return false;
                 break;
             }

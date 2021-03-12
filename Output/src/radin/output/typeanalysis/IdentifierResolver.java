@@ -48,7 +48,12 @@ public class IdentifierResolver {
     }
 
     public CXIdentifier createIdentity(CXIdentifier id) {
-        if(currentNamespace.isNone()) return id;
+        if(currentNamespace.isNone()) {
+            if(!tree.getBaseObjects().contains(id)) {
+                tree.getBaseObjects().add(id);
+            }
+            return id;
+        }
         CXIdentifier fullPath = CXIdentifier.from(currentNamespace.unwrap(), id);
         CXIdentifier parentPath = fullPath.getParentNamespace();
         tree.addNamespace(parentPath);

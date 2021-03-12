@@ -5,6 +5,7 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.ASTMeaningfulNode;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 import radin.output.tags.ICompilationTag;
@@ -29,7 +30,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     private HashSet<ICompilationTag> compilationTags;
     
     public final static TypeAugmentedSemanticNode EMPTY = new TypeAugmentedSemanticNode(AbstractSyntaxNode.EMPTY);
-    
+    private CXIdentifier absolutePath;
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode base) {
         this.astNode = base;
@@ -247,6 +248,9 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         }
         if(!compilationTags.isEmpty())
             output += "  compilation tags: " + compilationTags;
+        if(absolutePath != null) {
+            output += " ID: " + absolutePath;
+        }
         return output;
     }
     
@@ -353,5 +357,13 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         }
         
         return null;
+    }
+
+    public CXIdentifier getAbsolutePath() {
+        return absolutePath;
+    }
+
+    public void setAbsolutePath(CXIdentifier absolutePath) {
+        this.absolutePath = absolutePath;
     }
 }

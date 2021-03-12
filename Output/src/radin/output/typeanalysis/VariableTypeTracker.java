@@ -332,13 +332,19 @@ public class VariableTypeTracker implements IVariableTypeTracker {
 
     @Override
     public boolean globalVariableExists(CXIdentifier id) {
-        CXIdentifier resolved = resolveIdentifier(id);
-        return globalVariableEntries.containsKey(resolved);
+        Option<CXIdentifier> resolved = tryResolveIdentifier(id);
+        if(resolved.isNone()) return false;
+        return globalVariableEntries.containsKey(resolved.unwrap());
     }
 
     @Override
     public CXIdentifier resolveIdentifier(CXIdentifier id) {
         return resolver.resolvePath(id).unwrap();
+    }
+
+    @Override
+    public Option<CXIdentifier> tryResolveIdentifier(CXIdentifier id) {
+        return resolver.resolvePath(id);
     }
 
     @Override
@@ -373,35 +379,8 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         return variableEntry.getType();
     }
 
-    public boolean entryExists(CXIdentifier name) {
-        if(variableExists(name) || functionExists(name)) return true;
-        CXIdentifier resolved = resolver.resolvePath(name).thisOrElse(null);
-        if(resolved == null) return false;
-        if(variableEntries.containsKey(resolved)) return true;
-        return functionExists(resolved);
-    }
 
-    @Deprecated
-    public boolean variableExists(String name) {
-        return variableExists(CXIdentifier.from(name));
-    }
 
-    /**
-     * Determines if a variable exists. Global variables are overriden by local variables
-     * @param id The identifier of the variable
-     * @return whether such an identifier exists
-     */
-    public boolean variableExists(CXIdentifier id) {
-        if(variableEntries.containsKey(id)) return true;
-        Option<CXIdentifier> full = resolver.resolvePath(id);
-        if(full.isNone()) return false;
-        return variableEntries.containsKey(full.unwrap());
-    }
-
-    @Deprecated
-    public boolean functionExists(String name) {
-        return functionExists(CXIdentifier.from(name));
-    }
     public boolean functionExists(CXIdentifier name) {
         Option<CXIdentifier> full = resolver.resolvePath(name);
         if(full.isNone()) return false;
@@ -444,30 +423,12 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         return false;
     }
 
-    @Deprecated(forRemoval = true)
-    public void addVariable(String name, CXType type) {
-        addLocalVariable(name, type);
-    }
-
-
 
     public void addGlobalVariable(CXIdentifier name, CXType type) {
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
         addGlobalVariable(name, typeTrackerEntry);
     }
 
-    @Deprecated(forRemoval = true)
-    private TypeTrackerEntry getEntry(CXIdentifier name) {
-        Reference<CXIdentifier> match = new Reference<>();
-        if(resolver.resolvePath(name).match(match)) {
-            CXIdentifier full = match.getValue();
-            if(!entryExists(full)) return null;
-            if(functionExists(full)) return functionEntries.get(full);
-            return variableEntries.get(full);
-        } else {
-            return null;
-        }
-    }
 
 
     private TypeTrackerEntry getVariableEntry(String name) {
@@ -475,7 +436,7 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         Reference<CXIdentifier> match = new Reference<>();
         if(resolver.resolvePath(CXIdentifier.from(name)).match(match)) {
             CXIdentifier full = match.getValue();
-            if(!entryExists(full)) return null;
+            if(!idExists(full)) return null;
             if(functionExists(full)) return functionEntries.get(full);
             return null;
         } else {
@@ -487,8 +448,8 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         Reference<CXIdentifier> match = new Reference<>();
         if(resolver.resolvePath(name).match(match)) {
             CXIdentifier full = match.getValue();
-            if(!entryExists(full)) return null;
-            if(functionExists(full)) return functionEntries.get(full);
+            if(!idExists(full)) return null;
+            //if(functionExists(full)) return functionEntries.get(full);
             return globalVariableEntries.get(name);
         } else {
             return null;
@@ -500,7 +461,7 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         Reference<CXIdentifier> match = new Reference<>();
         if(resolver.resolvePath(name).match(match)) {
             CXIdentifier full = match.getValue();
-            if(!entryExists(full)) return null;
+            if(!idExists(full)) return null;
             if(functionExists(full)) return functionEntries.get(full);
             return null;
         } else {
@@ -518,12 +479,10 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         if(!localVariableExists(name)) {
             variableEntries.put(name, typeTrackerEntry);
         } else {
-            if(!functionExists(name)) {
-                TypeTrackerEntry oldEntry = getVariableEntry(name);
-                assert oldEntry != null;
-                if (oldEntry.getStatus() != EntryStatus.OLD) {
-                    throw new RedeclareError(name);
-                }
+            TypeTrackerEntry oldEntry = getVariableEntry(name);
+            assert oldEntry != null;
+            if (oldEntry.getStatus() != EntryStatus.OLD) {
+                throw new RedeclareError(name);
             }
             variableEntries.replace(name, typeTrackerEntry);
         }
@@ -555,6 +514,19 @@ public class VariableTypeTracker implements IVariableTypeTracker {
                 throw new RedeclareError(full);
             }
            else return;
+        }
+        functionEntries.put(full, typeTrackerEntry);
+    }
+
+    @Override
+    public void addFunction(CXIdentifier name, CXType returnType, boolean isDefinition) {
+        CXIdentifier full = resolver.createIdentity(name);
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, returnType);
+        if(functionExists(full)) {
+            if(isDefinition) {
+                throw new RedeclareError(full);
+            }
+            else return;
         }
         functionEntries.put(full, typeTrackerEntry);
     }

@@ -9,6 +9,7 @@ import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
+import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.TypeAnalyzer;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.types.primitives.PointerType;
@@ -64,24 +65,25 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 
                 CXIdentifier name = functionTypeAnalyzer.getName();
                 CXType returnType = astNode.getCxType();
+                TypeAugmentedSemanticNode astChild = child.getASTChild(ASTNodeType.parameter_list);
+                List<CXType> typeList = new LinkedList<>();
+                for (TypeAugmentedSemanticNode param : astChild.getChildren()) {
+                    typeList.add(((TypedAbstractSyntaxNode) param.getASTNode()).getCxType());
+                }
+                CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
                 node.setType(returnType);
                 if(!getCurrentTracker().functionExists(name)) {
-                    getCurrentTracker().addFunction(name, returnType, true);
+                    getCurrentTracker().addFunction(name, pointer, true);
     
-                    TypeAugmentedSemanticNode astChild = child.getASTChild(ASTNodeType.parameter_list);
-                    List<CXType> typeList = new LinkedList<>();
-                    for (TypeAugmentedSemanticNode param : astChild.getChildren()) {
-                        typeList.add(((TypedAbstractSyntaxNode) param.getASTNode()).getCxType());
-                    }
-                    CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
+
     
     
-                    getCurrentTracker().addLocalVariable(name, pointer);
+                    getCurrentTracker().addGlobalVariable(name, pointer);
                     child.getASTChild(ASTNodeType.id).setType(pointer);
                 }
                 
             } else if(child.getASTType() == ASTNodeType.declarations) {
-                StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(child);
+                StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(child, IVariableTypeTracker.NameType.GLOBAL);
                 
                 if(!determineTypes(analyzer)) return false;
             
