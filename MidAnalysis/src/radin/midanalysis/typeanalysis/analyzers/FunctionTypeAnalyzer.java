@@ -72,24 +72,28 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         
         CXIdentifier functionName = new CXIdentifier(node.getASTChild(ASTNodeType.id).getToken());
         name = functionName;
-        
-        if(UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction() && functionName.equals("main") && !hasOwnerType) {
-            if(!ScopedTypeTracker.environment.is(returnType, CXPrimitiveType.INTEGER) ||
-                    parameterTypes.size() != 2 ||
-                    !ScopedTypeTracker.environment.is(parameterTypes.get(0), CXPrimitiveType.INTEGER) ||
-                    !(parameterTypes.get(1) instanceof ArrayType) ||
-                    !(((ArrayType) parameterTypes.get(1)).getBaseType() instanceof PointerType) ||
-                    !(((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType() instanceof CXClassType) ||
-                    !((CXClassType) ((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType()).getTypeName().equals("std::String")) {
-                throw new IncorrectMainDefinition(node.getASTChild(ASTNodeType.id).getToken());
+
+
+        if(owner == null) {
+            CXIdentifier full = getCurrentTracker().resolveIdentifier(functionName);
+            if (UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction() && full.toString().equals("main") && !hasOwnerType) {
+                if (!ScopedTypeTracker.environment.is(returnType, CXPrimitiveType.INTEGER) ||
+                        parameterTypes.size() != 2 ||
+                        !ScopedTypeTracker.environment.is(parameterTypes.get(0), CXPrimitiveType.INTEGER) ||
+                        !(parameterTypes.get(1) instanceof ArrayType) ||
+                        !(((ArrayType) parameterTypes.get(1)).getBaseType() instanceof PointerType) ||
+                        !(((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType() instanceof CXClassType) ||
+                        !((CXClassType) ((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType()).getTypeName().equals("std::String")) {
+                    throw new IncorrectMainDefinition(node.getASTChild(ASTNodeType.id).getToken());
+                }
+
+                if (MultipleMainDefinitionsError.firstDefinition != null) {
+                    throw new MultipleMainDefinitionsError(node.getASTChild(ASTNodeType.id).getToken());
+                }
+                MultipleMainDefinitionsError.firstDefinition = node.getASTChild(ASTNodeType.id).getToken();
+                ICompilationSettings.debugLog.info("Main Function Found");
+                node.addCompilationTag(BasicCompilationTag.MAIN_FUNCTION);
             }
-        
-            if(MultipleMainDefinitionsError.firstDefinition != null) {
-                throw new MultipleMainDefinitionsError(node.getASTChild(ASTNodeType.id).getToken());
-            }
-            MultipleMainDefinitionsError.firstDefinition = node.getASTChild(ASTNodeType.id).getToken();
-            ICompilationSettings.debugLog.info("Main Function Found");
-            node.addCompilationTag(BasicCompilationTag.MAIN_FUNCTION);
         }
         
         TypeAugmentedSemanticNode compoundStatement = node.getASTChild(ASTNodeType.compound_statement);

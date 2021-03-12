@@ -42,6 +42,17 @@ public class IdentifierResolver {
         usingNamespaces.add(resolvedNamespace);
     }
 
+    public void stopUseNamespace(CXIdentifier namespace) {
+        Set<CXIdentifier> resolvedSet = tree.getNamespaces(currentNamespace.thisOrElse(null), namespace);
+        if(resolvedSet.size() == 0) {
+            throw new IdentifierDoesNotExistError(namespace);
+        } else if (resolvedSet.size() > 1) {
+            throw new AmbiguousIdentifierError(namespace.getBase(), new ArrayList<>(resolvedSet));
+        }
+        CXIdentifier resolvedNamespace = resolvedSet.iterator().next();
+        usingNamespaces.remove(resolvedNamespace);
+    }
+
     public void popNamespace() {
         CXIdentifier parent = currentNamespace.expect("Can't pop the empty namespace").getParentNamespace();
         currentNamespace = Option.Some(parent);

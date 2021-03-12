@@ -55,15 +55,10 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
             } else if(child.getASTType() == ASTNodeType.function_definition) {
                 
                 FunctionTypeAnalyzer functionTypeAnalyzer = new FunctionTypeAnalyzer(child);
-                if(!determineTypes(functionTypeAnalyzer)) {
-                    node.printTreeForm();
-                    return false;
-                }
-
+                CXIdentifier name = new CXIdentifier(child.getASTChild(ASTNodeType.id).getToken());
                 TypedAbstractSyntaxNode astNode =
                         ((TypedAbstractSyntaxNode) child.getASTNode());
-                
-                CXIdentifier name = functionTypeAnalyzer.getName();
+
                 CXType returnType = astNode.getCxType();
                 TypeAugmentedSemanticNode astChild = child.getASTChild(ASTNodeType.parameter_list);
                 List<CXType> typeList = new LinkedList<>();
@@ -74,13 +69,20 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                 node.setType(returnType);
                 if(!getCurrentTracker().functionExists(name)) {
                     getCurrentTracker().addFunction(name, pointer, true);
-    
 
-    
-    
+
+
+
                     getCurrentTracker().addGlobalVariable(name, pointer);
                     child.getASTChild(ASTNodeType.id).setType(pointer);
                 }
+
+                if(!determineTypes(functionTypeAnalyzer)) {
+                    node.printTreeForm();
+                    return false;
+                }
+
+
                 
             } else if(child.getASTType() == ASTNodeType.declarations) {
                 StatementDeclarationTypeAnalyzer analyzer = new StatementDeclarationTypeAnalyzer(child, IVariableTypeTracker.NameType.GLOBAL);

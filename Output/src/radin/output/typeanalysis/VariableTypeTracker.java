@@ -9,6 +9,7 @@ import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.ParameterTypeList;
+import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Option;
 import radin.core.utility.Reference;
 import radin.output.typeanalysis.errors.ClassNotDefinedError;
@@ -508,6 +509,7 @@ public class VariableTypeTracker implements IVariableTypeTracker {
 
     public void addFunction(CXIdentifier name, CXFunctionPointer type, boolean isDefinition) {
         CXIdentifier full = resolver.createIdentity(name);
+        ICompilationSettings.debugLog.fine("Added function " + full);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type.getReturnType());
         if(functionExists(full)) {
             if(isDefinition) {
