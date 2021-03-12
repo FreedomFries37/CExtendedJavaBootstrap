@@ -1,7 +1,5 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
-import radin.core.lexical.Token;
-import radin.core.lexical.TokenType;
 import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.TypeAugmentedSemanticTree;
 import radin.core.semantics.ASTNodeType;
@@ -78,7 +76,7 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
                     CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
     
     
-                    getCurrentTracker().addVariable(name, pointer);
+                    getCurrentTracker().addLocalVariable(name, pointer);
                     child.getASTChild(ASTNodeType.id).setType(pointer);
                 }
                 

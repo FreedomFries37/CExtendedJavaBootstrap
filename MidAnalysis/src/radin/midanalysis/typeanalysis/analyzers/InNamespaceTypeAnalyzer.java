@@ -77,7 +77,7 @@ public class InNamespaceTypeAnalyzer extends TypeAnalyzer {
                     CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
 
 
-                    getCurrentTracker().addVariable(name, pointer);
+                    getCurrentTracker().addLocalVariable(name, pointer);
                     within.getASTChild(ASTNodeType.id).setType(pointer);
                 }
                 break;

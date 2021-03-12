@@ -121,7 +121,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
                 if(!determineTypes(analyzer)) {
-                    getCurrentTracker().addVariable(name, declarationType);
+                    getCurrentTracker().addLocalVariable(name, declarationType);
                     return false;
                 }
                 
@@ -154,7 +154,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 }
                 CXFunctionPointer pointer = new CXFunctionPointer(declarationType, typeList);
                 
-                getCurrentTracker().addVariable(name, pointer);
+                getCurrentTracker().addLocalVariable(name, pointer);
                 declaration.getASTChild(ASTNodeType.id).setType(pointer);
                 return true;
             } else {
@@ -174,7 +174,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             if(isBaseTracker()) {
                 ICompilationSettings.debugLog.finer("Adding global variable " + name + " of type " + declarationType);
             }
-            getCurrentTracker().addVariable(name, declarationType);
+            getCurrentTracker().addLocalVariable(name, declarationType);
             declaration.setType(declarationType);
         }
         

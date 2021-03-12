@@ -18,7 +18,7 @@ public interface IVariableTypeTracker {
      * @param identifier The relative
      * @param functionPointer
      */
-    void addFunction(CXIdentifier identifier, CXFunctionPointer functionPointer);
+    void addFunction(CXIdentifier identifier, CXFunctionPointer functionPointer, boolean isDefinition);
     
     /**
      * Adds a local variable to the tracker
@@ -39,21 +39,30 @@ public interface IVariableTypeTracker {
      * @param name
      * @return Where `name` exists, whether its local or global
      */
-    boolean nameExists(String name);
+    default boolean nameExists(String name) {
+        CXIdentifier id = CXIdentifier.from(name);
+        return localVariableExists(name) || globalVariableExists(id) || functionExists(id);
+    }
     
     /**
      * Determine if a name refers to a local or global variable, where local variables have precedence
      * @param name
      * @return the type for the name
      */
-    NameType getVariableTypeForName(String name);
+    default NameType getVariableTypeForName(String name) {
+        if(localVariableExists(name)) return NameType.LOCAL;
+        if(globalVariableExists(CXIdentifier.from(name))) return NameType.GLOBAL;
+        throw new IdentifierDoesNotExistError(name);
+    }
     
     /**
      * Checks whether such an identifier exists, which can be a function or a global variable
      * @param id
      * @return
      */
-    boolean idExists(CXIdentifier id);
+    default boolean idExists(CXIdentifier id) {
+        return globalVariableExists(id) || functionExists(id);
+    }
     
     /**
      * Checks if a local variable exists
@@ -114,14 +123,14 @@ public interface IVariableTypeTracker {
     default CXType getType(String name) {
         switch (getVariableTypeForName(name)) {
     
-            case LOCAL -> {
+            case LOCAL: {
                 return getLocalVariableType(name);
             }
-            case GLOBAL -> {
+            case GLOBAL:  {
                 CXIdentifier resolved = resolveIdentifier(CXIdentifier.from(name));
                 return getGlobalVariableType(resolved);
             }
-            default -> {
+            default: {
                 throw new IdentifierDoesNotExistError(name);
             }
         }
