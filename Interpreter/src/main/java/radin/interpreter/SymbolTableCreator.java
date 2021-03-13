@@ -89,10 +89,13 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
             }
         }
 
+        /*
         for (TypeAugmentedSemanticNode allChild : input.getAllChildren(ASTNodeType.top_level_decs, 1)) {
             if(allChild == input) continue;
             output = new SymbolTable<>(Arrays.asList(output, invoke(allChild)));
         }
+
+         */
         return output;
     }
 

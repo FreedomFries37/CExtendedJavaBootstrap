@@ -893,9 +893,10 @@ public class Interpreter {
                         if (log()) logger.info("Generating usable value for " + symbol.getKey());
                         if (!invoke(symbol.getValue())) throw new IllegalStateException();
                         if (memStack.peek() == null) {
+                            memStack.pop();
                             if (log()) logger.info("No usable value for " + symbol.getKey() + " created...");
                             if (log()) logger.info("Will retry later");
-                            queue.offer(symbol);
+                            queue.add(symbol);
                             continue;
                         }
                         if (log()) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
@@ -909,8 +910,12 @@ public class Interpreter {
                 } else {
                     Instance<?> newInstance = createNewInstance(symbol.getKey().getType());
                     if (log()) logger.fine("Added " + symbol.getKey().getToken() + " with default value " + newInstance);
+                    globalAutoVariables.put(symbol.getKey().getKey(), newInstance);
+                    /*
                     addAutoVariable(symbol.getKey().getToken().getImage(),
                             newInstance);
+
+                     */
                 }
             }
             
@@ -1086,13 +1091,13 @@ public class Interpreter {
     }
     
     public void createClosure() {
-        //autoVariables.push(new HashMap<>(globalAutoVariables));
+        autoVariables.push(new HashMap<>());
         previousMemStackSize.push(memStack.size());
     }
     
     public void startLexicalScope() {
         autoVariables.push(new HashMap<>(autoVariables.peek()));
-        //autoVariables.push(autoVariables.peek());
+        // autoVariables.push(autoVariables.peek());
     }
     
     public void endLexicalScope() {
@@ -1251,6 +1256,10 @@ public class Interpreter {
     
     private TypeAugmentedSemanticNode getSymbol(String s) {
         return symbols.get(new CXIdentifier(new Token(t_id, s)));
+    }
+
+    private TypeAugmentedSemanticNode getSymbol(CXIdentifier id) {
+        return symbols.get(id);
     }
     
     public <T extends CXType> ArrayInstance<T, ArrayType> createArray(T type, int size) {
@@ -1884,8 +1893,9 @@ public class Interpreter {
                 break;
             case function_call: {
                 
-                Token token = input.getASTChild(ASTNodeType.id).getToken();
-                String funcCall = token.getImage();
+                // Token token = input.getASTChild(ASTNodeType.id).getToken();
+                CXIdentifier id = input.getChild(0).getCompilationTag(ResolvedPathTag.class).getAbsolutePath();
+                String funcCall = id.toString();
                 
                 if(funcCall.equals("main")) {
                     main_started = true;
@@ -1894,7 +1904,7 @@ public class Interpreter {
                 
                 if (funcCall.equals("calloc")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(token);
+                    startStackTraceFor(id.getBase());
                     CXType cxType =
                             ((TypedAbstractSyntaxNode) input.getASTChild(ASTNodeType.sequence).getASTChild(ASTNodeType.sizeof).getASTNode()).getCxType();
                     PrimitiveInstance<Number, ?> size = (PrimitiveInstance<Number, ?>) argumentPop();
@@ -1907,7 +1917,7 @@ public class Interpreter {
                     break;
                 } else if (funcCall.equals("free")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(token);
+                    startStackTraceFor(id.getBase());
                     PointerInstance<?> pop = (PointerInstance<?>) argumentPop();
                     if (log()) logger.info("freeing object " + pop);
                     pop.setPointer(null);
@@ -1915,7 +1925,7 @@ public class Interpreter {
                     break;
                 } else if (funcCall.equals("_interpreter_print")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(token);
+                    startStackTraceFor(id.getBase());
                     PointerInstance<CXPrimitiveType> pop = (PointerInstance<CXPrimitiveType>) argumentPop();
                     while (!pop.isNull()) {
                         PrimitiveInstance<Character, ?> pointer = (PrimitiveInstance<Character, ?>) pop.getPointer();
@@ -1962,7 +1972,7 @@ public class Interpreter {
                     break;
                 } else if (funcCall.equals("get_hashcode_for")) {
                     if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                    startStackTraceFor(token);
+                    startStackTraceFor(id.getBase());
                     push(createNewInstance(CXPrimitiveType.INTEGER, argumentPop().hashCode()));
                     stackTrace.pop();
                     logCurrentState();
@@ -1973,10 +1983,11 @@ public class Interpreter {
                     int exitCode = pop.getBackingValue().intValue();
                     throw new EarlyExit(exitCode);
                 }
+
                 switch (funcCall) {
                     case "_open_file": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                        startStackTraceFor(token);
+                        startStackTraceFor(id.getBase());
                         //hopefully a string
                         PointerInstance<CXPrimitiveType> errorPtr = (PointerInstance<CXPrimitiveType>) argumentPop();
                         PointerInstance<CXClassType> stringObj = (PointerInstance<CXClassType>) argumentPop();
@@ -1997,7 +2008,7 @@ public class Interpreter {
                     }
                     case "_flush_file": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                        startStackTraceFor(token);
+                        startStackTraceFor(id.getBase());
                         PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
                         int fd = fdInstance.getBackingValue().intValue();
@@ -2012,7 +2023,7 @@ public class Interpreter {
                     case "_close_file": {
                         
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                        startStackTraceFor(token);
+                        startStackTraceFor(id.getBase());
                         PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
                         
@@ -2028,7 +2039,7 @@ public class Interpreter {
                     }
                     case "_read_file": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                        startStackTraceFor(token);
+                        startStackTraceFor(id.getBase());
                         PointerInstance<CXPrimitiveType> errorInstance = (PointerInstance<CXPrimitiveType>) argumentPop();
                         PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         
@@ -2055,7 +2066,7 @@ public class Interpreter {
                     
                     case "_write_file": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                        startStackTraceFor(token);
+                        startStackTraceFor(id.getBase());
                         
                         PrimitiveInstance<Character, ?> cInstance = (PrimitiveInstance<Character, ?>) argumentPop();
                         PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
@@ -2081,7 +2092,7 @@ public class Interpreter {
                     }
                     case "_file_ready": {
                         if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
-                        startStackTraceFor(token);
+                        startStackTraceFor(id.getBase());
                         
                         PrimitiveInstance<? extends Number, ?> fdInstance = (PrimitiveInstance<? extends Number, ?>) argumentPop();
                         int fd = fdInstance.getBackingValue().intValue();
@@ -2112,7 +2123,7 @@ public class Interpreter {
                         break;
                     }
                     default: {
-                        TypeAugmentedSemanticNode function = getSymbol(input.getASTChild(ASTNodeType.id).getToken().getImage());
+                        TypeAugmentedSemanticNode function = getSymbol(id);
                         
                         
                         if (function == null) {
@@ -2122,7 +2133,7 @@ public class Interpreter {
                         } else {
                             if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
                             useThisStack.push(false);
-                            startStackTraceFor(token);
+                            startStackTraceFor(id.getBase());
                             logCurrentState();
                             try {
                                 if (log()) logger.info("Calling function: " + input.getASTChild(ASTNodeType.id).getToken().getImage());
