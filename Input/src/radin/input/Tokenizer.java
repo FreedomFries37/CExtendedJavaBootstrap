@@ -141,10 +141,7 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
             case "internal":
                 return new Token(TokenType.t_internal);
             case "using":
-                if(UniversalCompilerSettings.getInstance().getSettings().isAllowUseStatements())
                     return new Token(TokenType.t_using);
-                else
-                    break;
             case "typeid":
                 return new Token(TokenType.t_typeid);
             case "true":

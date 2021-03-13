@@ -1796,6 +1796,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 if(!enactActionRoutine(e.node)) return false;
             } catch (InheritMissingError | MissingCategoryNodeError e) {
                 e.printStackTrace();
+                for (CategoryNode categoryNode : catNodeStack) {
+                    System.out.println(categoryNode.getCategory());
+                }
                 error(e.getMessage());
                 if(e instanceof MissingCategoryNodeError) {
                     node.printTreeForm();
