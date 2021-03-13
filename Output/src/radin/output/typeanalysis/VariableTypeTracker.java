@@ -704,6 +704,14 @@ public class VariableTypeTracker implements IVariableTypeTracker {
     public void exitNamespace() {
         resolver.popNamespace();
     }
+
+    public void useNamespace(CXIdentifier namespace) {
+        resolver.useNamespace(namespace);
+    }
+
+    public void stopUseNamespace(CXIdentifier namespace) {
+        resolver.stopUseNamespace(namespace);
+    }
     
     public static VariableTypeTracker getTracker(CXClassType cxClassType) {
         return classTrackers.get(cxClassType);

@@ -22,6 +22,7 @@ import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.*;
+import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.TypeAnalyzer;
 import radin.output.typeanalysis.errors.IllegalAccessError;
 import radin.output.typeanalysis.errors.*;
@@ -90,6 +91,10 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             CXType type = getCurrentTracker().getType(image);
             if(type instanceof CXDynamicTypeDefinition) {
                 type = ((CXDynamicTypeDefinition) type).getOriginal();
+            }
+            if(getCurrentTracker().getVariableTypeForName(image) == IVariableTypeTracker.NameType.GLOBAL) {
+                CXIdentifier id = getCurrentTracker().tryResolveFromName(image).expect("Global Variables should always resolve");
+                node.addCompilationTag(new ResolvedPathTag(id));
             }
             node.setType(type);
             node.setLValue(true);
@@ -568,6 +573,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 throw new IdentifierDoesNotExistError(id);
             }
             CXType type = getCurrentTracker().getGlobalVariableType(id);
+            CXIdentifier absolute = getCurrentTracker().resolveIdentifier(id);
+            node.addCompilationTag(new ResolvedPathTag(absolute));
             node.setType(type);
             return true;
         }

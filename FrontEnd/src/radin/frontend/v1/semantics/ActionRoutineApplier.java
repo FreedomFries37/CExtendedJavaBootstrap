@@ -1633,18 +1633,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Using": {
-                        AbstractSyntaxNode find = getCatNode("Namespace").getSynthesized();
-                        CXType type = null; // environment.getType(find);
-                        if(node.hasChildCategory("Alias")) {
-                            AbstractSyntaxNode alias = getCatNode("Alias").getSynthesized();
-                            node.setSynthesized(
-                                    new TypedAbstractSyntaxNode(ASTNodeType.using, type, find, alias)
-                            );
-                        } else {
-                            node.setSynthesized(
-                                    new TypedAbstractSyntaxNode(ASTNodeType.using, type, find)
-                            );
-                        }
+                        AbstractSyntaxNode find = getCatNode("NamespacedId").getSynthesized();
+                        node.setSynthesized(
+                                new AbstractSyntaxNode(ASTNodeType.using, find)
+                        );
+
                         return true;
                     }
                     case "Namespace": {
@@ -1663,7 +1656,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "NamespacedId": {
                         AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
-                        AbstractSyntaxNode parent = node.getInherit();
+                        AbstractSyntaxNode parent = node.getInheritOrEmpty();
 
                         if(node.hasChildCategory("NamespacedId")) {
                             AbstractSyntaxNode newParent;

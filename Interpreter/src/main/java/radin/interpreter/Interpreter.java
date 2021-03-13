@@ -849,7 +849,7 @@ public class Interpreter {
     private final Stack<Instance<?>> arguments = new Stack<>();
     private Stack<Integer> previousMemStackSize = new Stack<>();
     private Stack<StackTraceInfo> stackTrace = new Stack<>();
-    private HashMap<String, Instance<?>> globalAutoVariables;
+    private HashMap<CXIdentifier, Instance<?>> globalAutoVariables;
     private Stack<PointerInstance<CXClassType>> thisStack = new Stack<>();
     private Stack<Boolean> useThisStack = new Stack<>();
     
@@ -877,7 +877,8 @@ public class Interpreter {
         useThisStack.push(false);
         Queue<Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode>> queue =
                 new ArrayDeque<>(this.symbols.entrySet());
-        
+        globalAutoVariables = new HashMap<>();
+
         while (!queue.isEmpty()) {
             Map.Entry<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>.Key, TypeAugmentedSemanticNode> symbol = queue.poll();
             
@@ -899,7 +900,8 @@ public class Interpreter {
                         }
                         if (log()) logger.fine("Added " + symbol.getKey().getType() + " " + symbol.getKey().getToken() + " with " +
                                 "value " + memStack.peek());
-                        addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
+                        //addAutoVariable(symbol.getKey().getToken().getImage(), newInstance);
+                        globalAutoVariables.put(symbol.getKey().getKey(), newInstance);
                         newInstance.copyFrom(pop());
                     } catch (FunctionReturned | EarlyExit | JodinNullPointerException functionReturned) {
                         throw new IllegalStateException();
@@ -941,7 +943,7 @@ public class Interpreter {
         }
         
          */
-        globalAutoVariables = autoVariables.peek();
+        //globalAutoVariables = autoVariables.peek();
     }
     
     private boolean log() {
@@ -1084,7 +1086,7 @@ public class Interpreter {
     }
     
     public void createClosure() {
-        autoVariables.push(new HashMap<>(globalAutoVariables));
+        //autoVariables.push(new HashMap<>(globalAutoVariables));
         previousMemStackSize.push(memStack.size());
     }
     
@@ -1157,9 +1159,15 @@ public class Interpreter {
                 }
                 */
                 if (name.equals("this") && useThisStack.peek()) {
-                    
                     return thisStack.peek();
                 }
+
+                if(node.containsCompilationTag(ResolvedPathTag.class)) {
+                    CXIdentifier resolved = node.getCompilationTag(ResolvedPathTag.class).getAbsolutePath();
+                    return globalAutoVariables.get(resolved);
+                }
+
+
                 return autoVariables.peek().get(name);
             }
             case literal: {

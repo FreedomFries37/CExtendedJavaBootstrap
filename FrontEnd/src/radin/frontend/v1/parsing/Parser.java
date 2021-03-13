@@ -371,7 +371,7 @@ public class Parser extends BasicParser {
         if (!consumeAndAddAsLeaf(t_using, child)) {
             return false;
         }
-        if(!parseNamespacedIdentifier(parent)) return error("Using statement must use a proper identifier");
+        if(!parseNamespacedIdentifier(child)) return error("Using statement must use a proper identifier");
         switch (getCurrentType()) {
             case t_semic: {
                 getNext();

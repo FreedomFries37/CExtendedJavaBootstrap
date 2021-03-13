@@ -37,7 +37,12 @@ public class CXIdentifier implements CXEquivalent, Namespaced {
         if (typespacedId.hasChild(ASTNodeType.namespaced_id)) {
             this.parentNamespace = new CXIdentifier(typespacedId.getChild(ASTNodeType.namespaced_id));
         }
-        this.identifier = typespacedId.getChild(ASTNodeType.id).getToken();
+        if (typespacedId.getTreeType() == ASTNodeType.id) {
+            this.identifier = typespacedId.getToken();
+        } else {
+            this.identifier = typespacedId.getChild(ASTNodeType.id).getToken();
+        }
+
         corresponding = this.identifier;
     }
 

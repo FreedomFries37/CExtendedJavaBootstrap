@@ -3,6 +3,7 @@ package radin.midanalysis.typeanalysis.analyzers;
 import radin.core.semantics.types.CXIdentifier;
 import radin.output.tags.ArrayWithSizeTag;
 import radin.output.tags.BasicCompilationTag;
+import radin.output.tags.ResolvedPathTag;
 import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.errors.IncorrectTypeError;
 import radin.output.typeanalysis.errors.TypeNotDefinedError;
@@ -50,6 +51,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
         for (TypeAugmentedSemanticNode declaration : node.getChildren()) {
             CXType declarationType;
             CXIdentifier name;
+            TypeAugmentedSemanticNode identifierNode = null;
             
             if(declaration.getASTType() == ASTNodeType.declaration) {
                 assert declaration.getASTNode() instanceof TypedAbstractSyntaxNode;
@@ -112,6 +114,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 
                 name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
+                identifierNode = declaration.getASTChild(ASTNodeType.id);
                 
             } else if(declaration.getASTType() == ASTNodeType.initialized_declaration) {
                 
@@ -126,6 +129,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 }
     
                 name = new CXIdentifier(subDeclaration.getASTChild(ASTNodeType.id).getToken());
+                identifierNode = subDeclaration.getASTChild(ASTNodeType.id);
                 
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
@@ -152,7 +156,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                         ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
     
                 name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
-                
+                identifierNode = declaration.getASTChild(ASTNodeType.id);
                 
 
     
@@ -165,6 +169,10 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 getCurrentTracker().addFunction(name, pointer, false);
                 getCurrentTracker().addGlobalVariable(name, pointer);
                 declaration.getASTChild(ASTNodeType.id).setType(pointer);
+
+                CXIdentifier id = getCurrentTracker().resolveIdentifier(name);
+                declaration.getASTChild(ASTNodeType.id).addCompilationTag(new ResolvedPathTag(id));
+
                 return true;
             } else {
                 return false;
@@ -191,7 +199,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 case GLOBAL:
 
                     getCurrentTracker().addGlobalVariable(name, declarationType);
-                    node.setAbsolutePath(getCurrentTracker().resolveIdentifier(name));
+                    identifierNode.addCompilationTag(new ResolvedPathTag(getCurrentTracker().resolveIdentifier(name)));
                     break;
             }
 

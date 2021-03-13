@@ -265,7 +265,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     }
     
     public void addCompilationTag(ICompilationTag tag) {
-        if(!tag.canAttachTo(this)) throw new IllegalArgumentException();
+        if(!tag.canAttachTo(this)) throw new IllegalArgumentException(tag.toString() + " can not attach to " + this.getASTType());
         compilationTags.add(tag);
     }
     
