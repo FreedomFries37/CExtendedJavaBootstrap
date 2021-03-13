@@ -368,17 +368,28 @@ public class Parser extends BasicParser {
     private boolean parseUsing(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Using");
         
-        if (!consume(t_using)) {
+        if (!consumeAndAddAsLeaf(t_using, child)) {
             return false;
         }
-        if (!parseNamespace(child)) return false;
-        String id = getInnerMost(child.getCategoryNode("Namespace"));
-        scopedTypedefStack.peek().add(id);
-        if (match(t_assign)) {
-            if (!parseAlias(child)) return false;
+        if(!parseNamespacedIdentifier(parent)) return error("Using statement must use a proper identifier");
+        switch (getCurrentType()) {
+            case t_semic: {
+                getNext();
+                break;
+            }
+            case t_lcurl: {
+                consumeAndAddAsLeaf(child);
+                if(!parseTopLevelDecsList(child)) return false;
+                if(!consume(t_rbrac)) return error("Using that starts with { must end with }");
+                break;
+            }
+            default:
+                if (!parseTopLevelDeclaration(child)) return false;
+                break;
         }
-        if (!consume(t_semic)) return error("Missing semi-colon");
-        
+
+
+
         parent.addChild(child);
         return true;
     }
