@@ -42,7 +42,7 @@ Class are written using the follow syntax
 
 ```
 class IDENTIFIER (: PARENT_IDENTIFIER)? {
-    (public|private)? treeType field_name;
+    (public|private)? TYPE field_name;
             or
     (public|private)? CLASSNAME(parameters?);
             or
@@ -159,6 +159,16 @@ These types are
 - `bool` (equivalent to `u8`)
 - `size_t` (equivalent to `usize`)
 
+#### Free Standing Strings
+
+Character string literals are automatically turned into objects of the String class. The backing `char*` can be accessed using the `getCStr()` method. This allows for this
+```
+usize len = ("hello").length();
+```
+to be valid.
+
+
+
 The Interpreter
 ---
 
@@ -241,6 +251,13 @@ These are the features that I have determined are necessary for work on the self
 | Implement Block   | Completed             |
 | Runtime Class Info| Works in a non static context                  |
 
+
+##### Automatic Derefrencing
+Class objects can only ever exist as pointers within a Jodin program, but they must be interacted in the c-mannered way (though derefrencing). With this
+in mind, it might be optimal to allow for class object pointers to be automatically dereferenced.
+
+Bare minimum should be just `class T*` types to be able to handle auto-derefrencing.
+
 ##### Preamable
 The preamble AST will be attached to the top of every file being compiled.
 
@@ -286,8 +303,6 @@ Experimental Features
 
 #### Stack trace
 Section coming son
-
-#### Reference Counting Garbage collectoin
 
 Code Examples
 ---
