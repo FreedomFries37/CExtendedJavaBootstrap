@@ -1,4 +1,4 @@
 [submodule "Jodin-std-lib"]
 	path = Jodin-std-lib
 	url =https://github.com/JoshuaRadin37/Jodin-std-lib.git
-	branch=master
+	branch = master
