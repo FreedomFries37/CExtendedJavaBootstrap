@@ -1634,9 +1634,29 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "Using": {
                         AbstractSyntaxNode find = getCatNode("NamespacedId").getSynthesized();
-                        node.setSynthesized(
-                                new AbstractSyntaxNode(ASTNodeType.using, find)
-                        );
+                        CXIdentifier namespace = new CXIdentifier(find);
+                        environment.useNamespace(namespace);
+                        if(node.getDirectChildren().size() > 2) {
+                            AbstractSyntaxNode inner;
+                            if(node.hasChildCategory("TopLevelDecsList")) {
+                                CategoryNode topLevelDecsList = getCatNode("TopLevelDecsList");
+                                if(!enactActionRoutine(topLevelDecsList)) return false;
+                                inner = topLevelDecsList.getSynthesized();
+                            }else {
+                                ParseNode other = node.getChild(2);
+                                if(!enactActionRoutine(other)) return false;
+                                inner = other.getSynthesized();
+                            }
+                            environment.stopUseNamespace(namespace);
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.using, find, inner)
+                            );
+                        } else {
+
+                            node.setSynthesized(
+                                    new AbstractSyntaxNode(ASTNodeType.using, find)
+                            );
+                        }
 
                         return true;
                     }

@@ -1,14 +1,22 @@
-
-in namespace {
-    std::String function() {
+using std;
+in namespace1 {
+    String function() {
         return "Hello, World!";
     }
 }
 
+in namespace2 {
+    String function() {
+        return "Goodbye, World!";
+    }
+}
 
-int main(int argc, std::String args[]) {
 
-    println(namespace::function());
+using namespace1;
+
+int main(int argc, String args[]) {
+
+    println(function());
 
     return 0;
 }

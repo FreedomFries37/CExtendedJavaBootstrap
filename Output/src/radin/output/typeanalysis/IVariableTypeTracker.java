@@ -17,8 +17,9 @@ public interface IVariableTypeTracker {
      * Adds a function to track
      * @param identifier The relative id
      * @param functionPointer
+     * @return
      */
-    void addFunction(CXIdentifier identifier, CXFunctionPointer functionPointer, boolean isDefinition);
+    CXIdentifier addFunction(CXIdentifier identifier, CXFunctionPointer functionPointer, boolean isDefinition);
 
     /**
      * Adds a function to track
@@ -38,8 +39,9 @@ public interface IVariableTypeTracker {
      * Adds a global variable to the tracker
      * @param identifier
      * @param type
+     * @return
      */
-    void addGlobalVariable(CXIdentifier identifier, CXType type);
+    CXIdentifier addGlobalVariable(CXIdentifier identifier, CXType type);
     
 
     

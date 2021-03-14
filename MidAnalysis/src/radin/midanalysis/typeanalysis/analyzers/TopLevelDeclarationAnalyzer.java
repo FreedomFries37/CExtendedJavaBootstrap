@@ -34,6 +34,9 @@ public class TopLevelDeclarationAnalyzer extends TypeAnalyzer {
                 getCurrentTracker().stopUseNamespace(id);
             } else if(child.getChildren().size() > 1) {
                 TypeAugmentedSemanticNode innerChild = child.getChildren().get(1);
+                getCurrentTracker().useNamespace(id);
+                if(!determineTypes(innerChild)) return false;
+                getCurrentTracker().stopUseNamespace(id);
             } else {
                 getCurrentTracker().useNamespace(id);
             }
@@ -65,12 +68,12 @@ public class TopLevelDeclarationAnalyzer extends TypeAnalyzer {
             }
             CXFunctionPointer pointer = new CXFunctionPointer(returnType, typeList);
             child.setType(returnType);
-            if(!getCurrentTracker().functionExists(name)) {
-                getCurrentTracker().addFunction(name, pointer, true);
-                getCurrentTracker().addGlobalVariable(name, pointer);
+            //if(!getCurrentTracker().functionExists(name)) {
+            CXIdentifier id = getCurrentTracker().addFunction(name, pointer, true);
+            getCurrentTracker().addGlobalVariable(name, pointer);
 
-            }
-            CXIdentifier id = getCurrentTracker().resolveIdentifier(name);
+            // }
+
             child.getASTChild(ASTNodeType.id).setType(pointer);
             child.getASTChild(ASTNodeType.id).addCompilationTag(new ResolvedPathTag(id));
 

@@ -6,6 +6,7 @@ import radin.output.tags.BasicCompilationTag;
 import radin.output.tags.ResolvedPathTag;
 import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.errors.IncorrectTypeError;
+import radin.output.typeanalysis.errors.RedeclarationError;
 import radin.output.typeanalysis.errors.TypeNotDefinedError;
 import radin.output.typeanalysis.errors.VoidTypeError;
 import radin.output.tags.MultiDimensionalArrayWithSizeTag;
@@ -52,6 +53,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             CXType declarationType;
             CXIdentifier name;
             TypeAugmentedSemanticNode identifierNode = null;
+
             
             if(declaration.getASTType() == ASTNodeType.declaration) {
                 assert declaration.getASTNode() instanceof TypedAbstractSyntaxNode;
@@ -129,6 +131,11 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 }
     
                 name = new CXIdentifier(subDeclaration.getASTChild(ASTNodeType.id).getToken());
+
+                if(getCurrentTracker().globalVariableExists(name)) {
+                    throw new RedeclarationError(name.getIdentifierString());
+                }
+
                 identifierNode = subDeclaration.getASTChild(ASTNodeType.id);
                 
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
@@ -166,7 +173,7 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     typeList.add(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
                 }
                 CXFunctionPointer pointer = new CXFunctionPointer(declarationType, typeList);
-                getCurrentTracker().addFunction(name, pointer, false);
+                // getCurrentTracker().addFunction(name, pointer, false);
                 getCurrentTracker().addGlobalVariable(name, pointer);
                 declaration.getASTChild(ASTNodeType.id).setType(pointer);
 
@@ -198,8 +205,8 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     break;
                 case GLOBAL:
 
-                    getCurrentTracker().addGlobalVariable(name, declarationType);
-                    identifierNode.addCompilationTag(new ResolvedPathTag(getCurrentTracker().resolveIdentifier(name)));
+                    CXIdentifier id = getCurrentTracker().addGlobalVariable(name, declarationType);
+                    identifierNode.addCompilationTag(new ResolvedPathTag(id));
                     break;
             }
 

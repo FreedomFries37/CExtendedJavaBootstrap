@@ -50,7 +50,10 @@ public class ProgramTypeAnalyzer extends TypeAnalyzer {
         assert node.getASTType() == ASTNodeType.top_level_decs;
         for (TypeAugmentedSemanticNode child : node.getChildren()) {
             TopLevelDeclarationAnalyzer topLevelDeclarationAnalyzer = new TopLevelDeclarationAnalyzer(child);
-            if(!determineTypes(topLevelDeclarationAnalyzer)) return false;
+            if(!determineTypes(topLevelDeclarationAnalyzer)) {
+                node.printTreeForm();
+                return false;
+            }
         }
         
         if(closure && this.closure) {

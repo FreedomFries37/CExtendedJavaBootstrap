@@ -378,9 +378,10 @@ public class Parser extends BasicParser {
                 break;
             }
             case t_lcurl: {
-                consumeAndAddAsLeaf(child);
+                //consumeAndAddAsLeaf(child);
+                getNext();
                 if(!parseTopLevelDecsList(child)) return false;
-                if(!consume(t_rbrac)) return error("Using that starts with { must end with }");
+                if(!consume(t_rcurl)) return error("Using that starts with { must end with }");
                 break;
             }
             default:

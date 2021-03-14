@@ -47,6 +47,7 @@ public class TypeEnvironment {
     private AnnotationManager<CXClassType> classTargetManger;
     private CXClassType defaultInheritance = null;
     private CXIdentifier currentNamespace = null;
+    private List<CXIdentifier> usingNamespaces = new LinkedList<>();
     private NamespaceTree<CXCompoundType> namespaceTree = new NamespaceTree<>();
     private int pointerSize = 8;
     private int charSize = 1;
@@ -93,9 +94,10 @@ public class TypeEnvironment {
         classTargetManger = AnnotationManager.createTargeted(
                 new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
         );
-        namespaceTree = new NamespaceTree();
+        namespaceTree = new NamespaceTree<>();
         defaultInheritance = null;
         currentNamespace = null;
+        usingNamespaces = new LinkedList<>();
         if(standardBooleanDefined) {
             addTypeDefinition(
                     UnsignedPrimitive.createUnsignedShort(), "boolean"
@@ -171,6 +173,16 @@ public class TypeEnvironment {
         this.currentNamespace = new CXIdentifier(this.currentNamespace, identifier);
         namespaceTree.addNamespace(this.currentNamespace);
     }
+
+    public void useNamespace(CXIdentifier namespace) {
+        usingNamespaces.add(namespace);
+    }
+
+    public void stopUseNamespace(CXIdentifier namespace) {
+        usingNamespaces.remove(namespace);
+    }
+
+
     
     public CXType addTemp(Token tok) {
         String identifier = tok.getImage();
@@ -318,6 +330,16 @@ public class TypeEnvironment {
                 }
             }
         }
+
+        for(CXIdentifier using : usingNamespaces) {
+            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(using)) {
+                if(cxCompoundType.getTypeNameIdentifier().getIdentifierString().equals(namespacedTypename.getIdentifierString())) {
+                    if(!output.contains(cxCompoundType)) {
+                        output.add(cxCompoundType);
+                    }
+                }
+            }
+        }
         
         /*
         CXIdentifier certainNamespace = namespaceTree.getNamespace(currentNamespace, namespacedTypename.getParentNamespace());
@@ -329,7 +351,9 @@ public class TypeEnvironment {
   
          */
         
-        if(output.size() > 1) throw new AmbiguousIdentifierError(corresponding, output);
+        if(output.size() > 1){
+            throw new AmbiguousIdentifierError(corresponding, output);
+        }
         else if(output.size() == 1) return new PointerType(output.get(0));
         
         throw new TypeDoesNotExist(namespacedTypename.toString());
@@ -353,6 +377,16 @@ public class TypeEnvironment {
         if(typesForNamespace == null) {
             throw new TypeDoesNotExist(typenameImage.getImage());
         }
+        for (CXIdentifier usingNamespace : usingNamespaces) {
+            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(usingNamespace)) {
+                if(!typesForNamespace.contains(cxCompoundType)) {
+                    typesForNamespace.add(cxCompoundType);
+                }
+            }
+
+        }
+
+
         List<CXType> possibilities = new LinkedList<>();
         for (CXCompoundType cxCompoundType : typesForNamespace) {
             

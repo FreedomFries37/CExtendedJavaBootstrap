@@ -13,7 +13,6 @@ import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Option;
 import radin.core.utility.Reference;
 import radin.output.typeanalysis.errors.ClassNotDefinedError;
-import radin.output.typeanalysis.errors.IdentifierDoesNotExistError;
 import radin.output.typeanalysis.errors.RedeclarationError;
 
 import java.util.*;
@@ -343,6 +342,7 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         return resolver.resolvePath(id).unwrap();
     }
 
+
     @Override
     public Option<CXIdentifier> tryResolveIdentifier(CXIdentifier id) {
         return resolver.resolvePath(id);
@@ -425,9 +425,9 @@ public class VariableTypeTracker implements IVariableTypeTracker {
     }
 
 
-    public void addGlobalVariable(CXIdentifier name, CXType type) {
+    public CXIdentifier addGlobalVariable(CXIdentifier name, CXType type) {
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
-        addGlobalVariable(name, typeTrackerEntry);
+        return addGlobalVariable(name, typeTrackerEntry);
     }
 
 
@@ -489,25 +489,19 @@ public class VariableTypeTracker implements IVariableTypeTracker {
         }
     }
 
-    private void addGlobalVariable(CXIdentifier name, TypeTrackerEntry typeTrackerEntry) {
+    private CXIdentifier addGlobalVariable(CXIdentifier name, TypeTrackerEntry typeTrackerEntry) {
         CXIdentifier full = resolver.createIdentity(name);
         if(!globalVariableExists(full)) {
             globalVariableEntries.put(full, typeTrackerEntry);
         } else {
-            if(!functionExists(full)) {
-                TypeTrackerEntry oldEntry = getGlobalVariableEntry(full);
-                assert oldEntry != null;
-                if (oldEntry.getStatus() != EntryStatus.OLD) {
-                    throw new RedeclareError(full);
-                }
-            }
             globalVariableEntries.replace(full, typeTrackerEntry);
         }
+        return full;
     }
 
 
 
-    public void addFunction(CXIdentifier name, CXFunctionPointer type, boolean isDefinition) {
+    public CXIdentifier addFunction(CXIdentifier name, CXFunctionPointer type, boolean isDefinition) {
         CXIdentifier full = resolver.createIdentity(name);
         ICompilationSettings.debugLog.fine("Added function " + full);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type.getReturnType());
@@ -515,9 +509,10 @@ public class VariableTypeTracker implements IVariableTypeTracker {
             if(isDefinition) {
                 throw new RedeclareError(full);
             }
-           else return;
+           else return full;
         }
         functionEntries.put(full, typeTrackerEntry);
+        return full;
     }
 
     @Override

@@ -93,7 +93,7 @@ public class IdentifierResolver {
                 if (output.isNone()) {
                     output = Option.Some(id);
                 } else if(!id.toString().equals(output.unwrap().toString())){
-                    throw new AmbiguousIdentifierError(id.getBase(), Collections.singletonList(output.unwrap()));
+                    throw new AmbiguousIdentifierError(id.getBase(),Arrays.asList(id, output.unwrap()));
                 }
             }
         }
