@@ -11,7 +11,6 @@ import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.primitives.PointerType;
 
-import javax.imageio.plugins.tiff.ExifInteroperabilityTagSet;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -114,7 +113,7 @@ public class CXDeferredClassDefinition extends CXMappedType {
     private class IllegalUsingDeferredTypeWithoutDefinition extends AbstractCompilationError {
         public IllegalUsingDeferredTypeWithoutDefinition() {
             super("CXClass " + temp + " not defined, but attempting to access",
-                    identifier.getIdentifier(), "deferred here");
+                    identifier.getBase(), "deferred here");
         }
     }
     

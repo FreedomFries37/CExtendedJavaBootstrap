@@ -1,6 +1,8 @@
 package radin.core.semantics.types.wrapped;
 
+import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.primitives.AbstractCXPrimitiveType;
@@ -50,8 +52,12 @@ public class ConstantType extends CXType /*implements ICXWrapper*/ {
         return getSubtype();
     }
     */
-    
-    
+
+    @Override
+    public CXIdentifier getIdentifier() {
+        return CXIdentifier.from(toString());
+    }
+
     @Override
     public boolean is(CXType other, TypeEnvironment e, boolean strictPrimitiveEquality) {
         if(other instanceof ConstantType) {

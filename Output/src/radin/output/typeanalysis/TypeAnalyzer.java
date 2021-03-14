@@ -1,10 +1,12 @@
 package radin.output.typeanalysis;
 
+import radin.core.IdentifierResolver;
 import radin.core.chaining.IInPlaceCompilerAnalyzer;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
 import radin.core.errorhandling.RecoverableCompilationError;
 import radin.core.lexical.Token;
+import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.output.typeanalysis.errors.MissingClassReferenceError;
 import radin.core.semantics.TypeEnvironment;
@@ -113,14 +115,14 @@ public abstract class TypeAnalyzer extends ScopedTypeTracker implements IInPlace
         }
         
         if(getEnvironment() != null && getEnvironment().typedefExists("boolean")) {
-            trackerStack.push(new VariableTypeTracker(getEnvironment()));
+            trackerStack.push(new VariableTypeTracker(getEnvironment(), new IdentifierResolver()));
             CXType booleanType = getEnvironment().getTypeDefinition("boolean");
             
-            getCurrentTracker().addFixedFunction("true", new ConstantType(booleanType));
-            getCurrentTracker().addFixedFunction("false", new ConstantType(booleanType));
+            getCurrentTracker().addFixedFunction(CXIdentifier.from("true"), new ConstantType(booleanType));
+            getCurrentTracker().addFixedFunction(CXIdentifier.from("false"), new ConstantType(booleanType));
         } else {
             ICompilationSettings.debugLog.severe("Hopefully shouldn't reach here");
-            trackerStack.push(new VariableTypeTracker(new TypeEnvironment()));
+            trackerStack.push(new VariableTypeTracker(new TypeEnvironment(),  new IdentifierResolver()));
         }
     }
     

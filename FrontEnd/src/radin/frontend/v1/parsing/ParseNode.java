@@ -40,6 +40,14 @@ public abstract class ParseNode extends AbstractTree<ParseNode> {
         }
         return inherit.get(0);
     }
+
+    public AbstractSyntaxNode getInheritOrEmpty() {
+        if (inherit.isEmpty()) {
+            return AbstractSyntaxNode.EMPTY;
+        }
+        return inherit.get(0);
+    }
+
     public AbstractSyntaxNode getInherit(int index) {
         if(index >= inherit.size()) throw new InheritMissingError(this);
         return inherit.get(index);

@@ -1,6 +1,7 @@
 package radin.core.semantics.types.wrapped;
 
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 
@@ -54,5 +55,10 @@ public class CXDynamicTypeDefinition extends CXType implements ICXWrapper {
     @Override
     public String generateCDefinition() {
         return typename;
+    }
+
+    @Override
+    public CXIdentifier getIdentifier() {
+        return CXIdentifier.from(typename);
     }
 }

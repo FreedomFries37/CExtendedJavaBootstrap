@@ -272,7 +272,8 @@ public class Parser extends BasicParser {
             case t_struct:
             case t_union:
             case t_lpar:
-            case t_const: {
+            case t_const:
+            case t_id: {
                 Token corresponding = getCurrent();
                 if (!oneMustParse(child, this::parseFunctionDefinition, this::parseDeclaration)) {
                     return error("Could not parse declaration", corresponding);
@@ -367,17 +368,29 @@ public class Parser extends BasicParser {
     private boolean parseUsing(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Using");
         
-        if (!consume(t_using)) {
+        if (!consumeAndAddAsLeaf(t_using, child)) {
             return false;
         }
-        if (!parseNamespace(child)) return false;
-        String id = getInnerMost(child.getCategoryNode("Namespace"));
-        scopedTypedefStack.peek().add(id);
-        if (match(t_assign)) {
-            if (!parseAlias(child)) return false;
+        if(!parseNamespacedIdentifier(child)) return error("Using statement must use a proper identifier");
+        switch (getCurrentType()) {
+            case t_semic: {
+                getNext();
+                break;
+            }
+            case t_lcurl: {
+                //consumeAndAddAsLeaf(child);
+                getNext();
+                if(!parseTopLevelDecsList(child)) return false;
+                if(!consume(t_rcurl)) return error("Using that starts with { must end with }");
+                break;
+            }
+            default:
+                if (!parseTopLevelDeclaration(child)) return false;
+                break;
         }
-        if (!consume(t_semic)) return error("Missing semi-colon");
-        
+
+
+
         parent.addChild(child);
         return true;
     }
@@ -671,6 +684,7 @@ public class Parser extends BasicParser {
         */
         parent.addChild(child);
         return true;
+
     }
     
     private boolean parseDeclarationList(CategoryNode parent) {
@@ -749,7 +763,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false: {
+            case t_false:
+            case t_lbrac: {
                 if (!parseDoubleOr(child)) return false;
                 if (!parseDoubleOrTail(child)) return false;
                 if (!parseExpressionTail(child)) return false;
@@ -798,7 +813,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseDoubleAnd(child)) return false;
                 if (!parseDoubleAndTail(child)) return false;
                 break;
@@ -846,7 +862,8 @@ public class Parser extends BasicParser {
             case t_new:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac:{
                 if (!parseOr(child)) return false;
                 if (!parseOrTail(child)) return false;
                 break;
@@ -894,7 +911,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseNot(child)) return false;
                 if (!parseNotTail(child)) return false;
                 break;
@@ -942,7 +960,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseAnd(child)) return false;
                 if (!parseAndTail(child)) return false;
                 break;
@@ -990,7 +1009,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseEquation(child)) return false;
                 if (!parseEquationTail(child)) return false;
                 break;
@@ -1038,7 +1058,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseC(child)) return false;
                 if (!parseCTail(child)) return false;
                 break;
@@ -1091,7 +1112,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseG(child)) return false;
                 if (!parseGTail(child)) return false;
                 break;
@@ -1146,7 +1168,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseT(child)) return false;
                 if (!parseTTail(child)) return false;
                 break;
@@ -1199,7 +1222,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac: {
                 if (!parseFactor(child)) return false;
                 if (!parseFactorTail(child)) return false;
                 break;
@@ -1218,7 +1242,8 @@ public class Parser extends BasicParser {
         
         switch (getCurrentType()) {
             case t_add:
-            case t_minus: {
+            case t_minus:
+                {
                 consumeAndAddAsLeaf(child);
                 if (!parseT(child)) return false;
                 if (!parseTTail(child)) return false;
@@ -1286,6 +1311,14 @@ public class Parser extends BasicParser {
                 if (!parseAbstractTypeName(child)) return false;
                 break;
             }
+            case t_lbrac: {
+                consumeAndAddAsLeaf(child);
+                if (!parseArgsList(child)) {
+                    return false;
+                }
+                if (!consumeAndAddAsLeaf(t_rbrac, child)) return false;
+                break;
+            }
             default:
                 return error("unrecognized expression");
         }
@@ -1325,9 +1358,23 @@ public class Parser extends BasicParser {
         parent.addChild(child);
         return true;
     }
+
+    private boolean parseNamespacedIdentifier(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("NamespacedId");
+
+        if(!consumeAndAddAsLeaf(t_id, child)) return error("Must be an identifier");
+        if(consume(t_namespace)) {
+            if (!parseNamespacedIdentifier(child)) return false;
+        }
+
+        parent.addChild(child);
+        return true;
+    }
     
     private boolean parseAtom(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Atom");
+
+
         
         switch (getCurrentType()) {
             case t_lpar: {
@@ -1336,7 +1383,11 @@ public class Parser extends BasicParser {
                 if (!consume(TokenType.t_rpar)) return missingError("Missing matching )");
                 break;
             }
-            case t_id:
+            case t_id: {
+                if (!parseNamespacedIdentifier(child)) return false;
+                if (!parseFunctionCall(child)) return false;
+                break;
+            }
             case t_super: {
                 consumeAndAddAsLeaf(child);
                 if (!parseFunctionCall(child)) return false;
@@ -1436,7 +1487,8 @@ public class Parser extends BasicParser {
             case t_super:
             case t_typeid:
             case t_true:
-            case t_false:{
+            case t_false:
+            case t_lbrac:{
                 if (!parseExpression(output)) return false;
                 if (!parseArgsListTail(output)) return false;
                 break;

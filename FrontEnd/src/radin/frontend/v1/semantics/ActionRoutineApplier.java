@@ -299,6 +299,8 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
             case t_int:
             case t_char:
             case t_void:
+            case t_double:
+            case t_float:
                 node.setInherit(new AbstractSyntaxNode(ASTNodeType.specifier, token));
                 break;
             case t_const:
@@ -532,6 +534,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         } else if(node.firstIs(TokenType.t_false)) {
                             node.setSynthesized(new AbstractSyntaxNode(ASTNodeType._false));
                             return true;
+                        } else if (node.firstIs(TokenType.t_lbrac)) {
+                            AbstractSyntaxNode members = getCatNode("ArgsList").getSynthesized();
+                            node.setSynthesized(new AbstractSyntaxNode(ASTNodeType.inline_array, members));
+                            return true;
                         }
                         
                         node.printTreeForm();
@@ -563,7 +569,24 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Atom": {
-                        if (node.firstIs(t_id)) {
+                        if (node.hasChildCategory("NamespacedId")) {
+                            CategoryNode namespacedId = node.getCategoryNode("NamespacedId");
+                            namespacedId.setInherit(AbstractSyntaxNode.EMPTY);
+                            AbstractSyntaxNode name = namespacedId.getSynthesized();
+                            AbstractSyntaxNode interact;
+                            CategoryNode functionCall = getCatNode("FunctionCall");
+                            functionCall.setInherit(GLOBAL_NODE, 0);
+                            functionCall.setInherit(name, 1);
+                            if(functionCall.hasChildren()) {
+                                interact = functionCall.getSynthesized();
+                                //interact = new AbstractSyntaxNode(ASTNodeType.function_call, name, call);
+                            } else {
+                                interact = name;
+                            }
+
+                            node.setSynthesized(interact);
+                            return true;
+                        } else if (node.firstIs(t_id)) {
                             AbstractSyntaxNode name = node.getLeafNode(t_id).getSynthesized();
                             AbstractSyntaxNode interact;
                             CategoryNode functionCall = getCatNode("FunctionCall");
@@ -1508,6 +1531,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                     }
                     case "InIdentifier": {
                         Token id = node.getLeafNode(t_id).getToken();
+                        AbstractSyntaxNode idNode = node.getLeafNode(t_id).getSynthesized();
                         boolean push = false;
                         try{
                             node.setSynthesized(
@@ -1518,10 +1542,10 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         }
                         
                         if(push) environment.pushNamespace(id);
-                        
-                        node.setSynthesized(
-                                node.getChild(1).getSynthesized()
-                        );
+
+                        AbstractSyntaxNode newNode = new AbstractSyntaxNode(ASTNodeType.in_namespace, idNode, node.getChild(1).getSynthesized());
+
+                        node.setSynthesized(newNode);
                         
                         environment.popNamespace();
                         return true;
@@ -1609,18 +1633,31 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "Using": {
-                        AbstractSyntaxNode find = getCatNode("Namespace").getSynthesized();
-                        CXType type = null; // environment.getType(find);
-                        if(node.hasChildCategory("Alias")) {
-                            AbstractSyntaxNode alias = getCatNode("Alias").getSynthesized();
+                        AbstractSyntaxNode find = getCatNode("NamespacedId").getSynthesized();
+                        CXIdentifier namespace = new CXIdentifier(find);
+                        environment.useNamespace(namespace);
+                        if(node.getDirectChildren().size() > 2) {
+                            AbstractSyntaxNode inner;
+                            if(node.hasChildCategory("TopLevelDecsList")) {
+                                CategoryNode topLevelDecsList = getCatNode("TopLevelDecsList");
+                                if(!enactActionRoutine(topLevelDecsList)) return false;
+                                inner = topLevelDecsList.getSynthesized();
+                            }else {
+                                ParseNode other = node.getChild(2);
+                                if(!enactActionRoutine(other)) return false;
+                                inner = other.getSynthesized();
+                            }
+                            environment.stopUseNamespace(namespace);
                             node.setSynthesized(
-                                    new TypedAbstractSyntaxNode(ASTNodeType.using, type, find, alias)
+                                    new AbstractSyntaxNode(ASTNodeType.using, find, inner)
                             );
                         } else {
+
                             node.setSynthesized(
-                                    new TypedAbstractSyntaxNode(ASTNodeType.using, type, find)
+                                    new AbstractSyntaxNode(ASTNodeType.using, find)
                             );
                         }
+
                         return true;
                     }
                     case "Namespace": {
@@ -1635,6 +1672,33 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             );
                         }
                         
+                        return true;
+                    }
+                    case "NamespacedId": {
+                        AbstractSyntaxNode id = node.getLeafNode(t_id).getSynthesized();
+                        AbstractSyntaxNode parent = node.getInheritOrEmpty();
+
+                        if(node.hasChildCategory("NamespacedId")) {
+                            AbstractSyntaxNode newParent;
+                            if(parent == AbstractSyntaxNode.EMPTY) {
+                                newParent = new AbstractSyntaxNode(ASTNodeType.namespaced_id, id);
+                            } else {
+                                newParent = new AbstractSyntaxNode(ASTNodeType.namespaced_id, parent, id);
+                            }
+
+                            CategoryNode child = node.getCategoryNode("NamespacedId", 2);
+                            child.setInherit(newParent);
+                            node.setSynthesized(child.getSynthesized());
+                        } else {
+                            if(parent == AbstractSyntaxNode.EMPTY) {
+                                node.setSynthesized(id);
+                            } else {
+                                node.setSynthesized(
+                                        new AbstractSyntaxNode(ASTNodeType.namespaced_id, parent, id)
+                                );
+                            }
+                        }
+
                         return true;
                     }
                     case "Alias": {
@@ -1745,6 +1809,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 if(!enactActionRoutine(e.node)) return false;
             } catch (InheritMissingError | MissingCategoryNodeError e) {
                 e.printStackTrace();
+                for (CategoryNode categoryNode : catNodeStack) {
+                    System.out.println(categoryNode.getCategory());
+                }
                 error(e.getMessage());
                 if(e instanceof MissingCategoryNodeError) {
                     node.printTreeForm();

@@ -1,0 +1,57 @@
+#include <string.h>
+#include <stdio.h>
+#include <system/toolchain.h>
+
+in std {
+String format(std::String fmt, void** args);
+}
+int printf(char*, void**);
+
+int main(int argc, std::String argv[]) {
+
+	i32 x = 5;
+
+	println(format("hello %s * %d", ["world", &x]));
+
+	void* p = "hord";
+
+
+    return 0;
+}
+
+in std String format(String fmt, void** args) {
+    String ret = new String();
+    int arg = 0;
+	for(int i = 0; i < fmt->length(); i++) {
+		char c = fmt->getChar(i);
+		if (c == '%') {
+			if (i == fmt->length() - 1) {
+				PANIC(("Index out of bounds"));
+			};
+
+			i++;
+			char type = fmt->getChar(i);
+
+			if (type == 's') {
+				String s = (String) args[arg++];
+				ret = ret->concat(s);
+			} else if (type == '%') {
+				ret = ret->concat('%');
+			} else if (type == 'd') {
+
+				i32* d = (i32*) args[arg++];
+
+				ret = ret->concat_integer(*d);
+
+			} else if (type == 'l') {
+				i64* l = (i64*) args[arg++];
+				ret = ret->concat_integer(*l);
+            }
+
+		} else {
+			ret = ret->concat(c);
+		}
+	}
+
+    return ret;
+}

@@ -16,7 +16,6 @@ import radin.core.utility.Pair;
 
 import java.util.*;
 
-import static radin.core.lexical.TokenType.t_class;
 import static radin.core.lexical.TokenType.t_id;
 import static radin.core.semantics.ASTNodeType.*;
 
@@ -48,7 +47,8 @@ public class TypeEnvironment {
     private AnnotationManager<CXClassType> classTargetManger;
     private CXClassType defaultInheritance = null;
     private CXIdentifier currentNamespace = null;
-    private NamespaceTree namespaceTree = new NamespaceTree();
+    private List<CXIdentifier> usingNamespaces = new LinkedList<>();
+    private NamespaceTree<CXCompoundType> namespaceTree = new NamespaceTree<>();
     private int pointerSize = 8;
     private int charSize = 1;
     private int intSize = 4;
@@ -94,9 +94,10 @@ public class TypeEnvironment {
         classTargetManger = AnnotationManager.createTargeted(
                 new Pair<String, AnnotationManager.TargetCommandNoArgs<CXClassType>>("setAsDefaultInheritance", this::setDefaultInheritance)
         );
-        namespaceTree = new NamespaceTree();
+        namespaceTree = new NamespaceTree<>();
         defaultInheritance = null;
         currentNamespace = null;
+        usingNamespaces = new LinkedList<>();
         if(standardBooleanDefined) {
             addTypeDefinition(
                     UnsignedPrimitive.createUnsignedShort(), "boolean"
@@ -172,6 +173,16 @@ public class TypeEnvironment {
         this.currentNamespace = new CXIdentifier(this.currentNamespace, identifier);
         namespaceTree.addNamespace(this.currentNamespace);
     }
+
+    public void useNamespace(CXIdentifier namespace) {
+        usingNamespaces.add(namespace);
+    }
+
+    public void stopUseNamespace(CXIdentifier namespace) {
+        usingNamespaces.remove(namespace);
+    }
+
+
     
     public CXType addTemp(Token tok) {
         String identifier = tok.getImage();
@@ -190,7 +201,7 @@ public class TypeEnvironment {
             parent = namespaceTree.getNamespace(currentNamespace, identifier.getParentNamespace());
         else parent = currentNamespace;
         ICompilationSettings.debugLog.finest(environmentLogString("Getting temp type " + identifier));
-        CXIdentifier actual = new CXIdentifier(parent, identifier.getIdentifier());
+        CXIdentifier actual = new CXIdentifier(parent, identifier.getBase());
         ICompilationSettings.debugLog.finest(environmentLogString("Rectified to " + actual));
         
         return delayedTypeDefinitionHashMap.getOrDefault(actual, null);
@@ -307,15 +318,25 @@ public class TypeEnvironment {
      * @throws TypeDoesNotExist
      */
     public CXType getType(CXIdentifier namespacedTypename, Token corresponding) {
-        if(namespacedTypename.getParentNamespace() == null) return getType(namespacedTypename.getIdentifier(),
+        if(namespacedTypename.getParentNamespace() == null) return getType(namespacedTypename.getBase(),
                 corresponding);
         
         List<CXType> output = new LinkedList<>();
         
         for (CXIdentifier namespace : namespaceTree.getNamespaces(currentNamespace, namespacedTypename.getParentNamespace())) {
-            for (CXCompoundType cxCompoundType : namespaceTree.getTypesForNamespace(namespace)) {
-                if(cxCompoundType.getTypeNameIdentifier().getIdentifierString().equals(namespacedTypename.getIdentifierString())) {
+            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(namespace)) {
+                if(cxCompoundType.getTypeNameIdentifier().equals(namespacedTypename)) {
                     output.add(cxCompoundType);
+                }
+            }
+        }
+
+        for(CXIdentifier using : usingNamespaces) {
+            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(using)) {
+                if(cxCompoundType.getTypeNameIdentifier().equals(namespacedTypename)) {
+                    if(!output.contains(cxCompoundType)) {
+                        output.add(cxCompoundType);
+                    }
                 }
             }
         }
@@ -330,7 +351,9 @@ public class TypeEnvironment {
   
          */
         
-        if(output.size() > 1) throw new AmbiguousIdentifierError(corresponding, output);
+        if(output.size() > 1){
+            throw new AmbiguousIdentifierError(corresponding, output);
+        }
         else if(output.size() == 1) return new PointerType(output.get(0));
         
         throw new TypeDoesNotExist(namespacedTypename.toString());
@@ -347,17 +370,27 @@ public class TypeEnvironment {
             if(output != null) throw new AmbiguousIdentifierError(tok, Arrays.asList(temp, output));
             output = temp;
         }
-        List<CXCompoundType> typesForNamespace = new LinkedList<>(namespaceTree.getTypesForNamespace(currentNamespace));
+        List<CXCompoundType> typesForNamespace = new LinkedList<>(namespaceTree.getObjectsForNamespace(currentNamespace));
         if(currentNamespace != null) {
             typesForNamespace.addAll(namespaceTree.getBaseObjects());
         }
         if(typesForNamespace == null) {
             throw new TypeDoesNotExist(typenameImage.getImage());
         }
+        for (CXIdentifier usingNamespace : usingNamespaces) {
+            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(usingNamespace)) {
+                if(!typesForNamespace.contains(cxCompoundType)) {
+                    typesForNamespace.add(cxCompoundType);
+                }
+            }
+
+        }
+
+
         List<CXType> possibilities = new LinkedList<>();
         for (CXCompoundType cxCompoundType : typesForNamespace) {
             
-            if(cxCompoundType.getTypeNameIdentifier().getIdentifier().equals(typenameImage))
+            if(cxCompoundType.getTypeNameIdentifier().getBase().equals(typenameImage))
                 possibilities.add(cxCompoundType);
         }
         
@@ -709,7 +742,7 @@ public class TypeEnvironment {
                     + (cxClassType.getParent() != null ? " : " + cxClassType.getParent().getTypeNameIdentifier() : ""));
             
             
-            List<CXCompoundType> typesForNamespace = namespaceTree.getTypesForNamespace(namespace);
+            List<? super CXCompoundType> typesForNamespace = namespaceTree.getObjectsForNamespace(namespace);
             typesForNamespace.add(cxClassType);
             
             addNamedCompoundType(cxClassType);

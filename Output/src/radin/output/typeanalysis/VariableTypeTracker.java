@@ -1,20 +1,25 @@
 package radin.output.typeanalysis;
 
+import radin.core.IdentifierResolver;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.RedeclareError;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Visibility;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXCompoundType;
+import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.methods.ParameterTypeList;
+import radin.core.utility.ICompilationSettings;
+import radin.core.utility.Option;
+import radin.core.utility.Reference;
 import radin.output.typeanalysis.errors.ClassNotDefinedError;
-import radin.output.typeanalysis.errors.IdentifierDoesNotExistError;
 import radin.output.typeanalysis.errors.RedeclarationError;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VariableTypeTracker {
+public class VariableTypeTracker implements IVariableTypeTracker {
     
     public enum EntryStatus {
         OLD,
@@ -136,7 +141,10 @@ public class VariableTypeTracker {
             super(type, "", params);
         }
     }
-    
+
+
+    private IdentifierResolver resolver;
+
     /**
      * Keep track of available types
      */
@@ -144,10 +152,15 @@ public class VariableTypeTracker {
     // lexical variables
     // these should be demoted
     private HashMap<String, TypeTrackerEntry> variableEntries;
+    private HashMap<CXIdentifier, TypeTrackerEntry> globalVariableEntries;
+
+
+
     
     // global availability
     // these should copied
-    private HashMap<String, TypeTrackerEntry> functionEntries;
+    private HashMap<CXIdentifier, TypeTrackerEntry> functionEntries;
+    
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries;
     private HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicFieldEntries;
     private HashSet<ConstructorKey> publicConstructors;
@@ -172,9 +185,11 @@ public class VariableTypeTracker {
         classTrackers = new HashMap<>();
     }
     
-    public VariableTypeTracker(TypeEnvironment environment) {
+    public VariableTypeTracker(TypeEnvironment environment, IdentifierResolver resolver) {
         this.environment = environment;
+        this.resolver = resolver;
         variableEntries = new HashMap<>();
+        globalVariableEntries = new HashMap<>();
         functionEntries = new HashMap<>();
         
         publicMethodEntries = new HashMap<>();
@@ -194,8 +209,10 @@ public class VariableTypeTracker {
     
     private VariableTypeTracker(VariableTypeTracker old) {
         environment = old.environment;
+        resolver = old.resolver;
         trackingTypes = new HashSet<>(old.trackingTypes);
         variableEntries = new HashMap<>();
+        globalVariableEntries = old.globalVariableEntries;
         demoteEntries(variableEntries, old.variableEntries);
         
         functionEntries = old.functionEntries;
@@ -221,14 +238,17 @@ public class VariableTypeTracker {
     
     private VariableTypeTracker(VariableTypeTracker old, VariableTypeTracker old2) {
         environment = old.environment;
+        resolver = old.resolver;
         trackingTypes = new HashSet<>(old.trackingTypes);
         trackingTypes.addAll(old2.trackingTypes);
         variableEntries = new HashMap<>();
         demoteEntries(variableEntries, old.variableEntries);
         demoteEntries(variableEntries, old2.variableEntries);
+        globalVariableEntries = old.globalVariableEntries;
         
         functionEntries = old.functionEntries;
         functionEntries.putAll(old2.functionEntries);
+
         
         publicMethodEntries = old.publicMethodEntries;
         publicMethodEntries.putAll(old2.publicMethodEntries);
@@ -303,22 +323,73 @@ public class VariableTypeTracker {
     }
     
     public VariableTypeTracker createInnerTypeTrackerLoad(CXClassType owner) {
-        return new VariableTypeTracker(this, classTrackers.getOrDefault(owner, new VariableTypeTracker(environment)));
+        return new VariableTypeTracker(this, classTrackers.getOrDefault(owner, new VariableTypeTracker(environment, this.resolver)));
     }
-    
-    public boolean entryExists(String name) {
-        if(variableEntries.containsKey(name)) return true;
-        return functionExists(name);
+
+    @Override
+    public boolean localVariableExists(String id) {
+        return variableEntries.containsKey(id);
     }
-    
-    public boolean variableExists(String name) {
-        return variableEntries.containsKey(name);
+
+    @Override
+    public boolean globalVariableExists(CXIdentifier id) {
+        Option<CXIdentifier> resolved = tryResolveIdentifier(id);
+        if(resolved.isNone()) return false;
+        return globalVariableEntries.containsKey(resolved.unwrap());
     }
-    
-    public boolean functionExists(String name) {
-        return functionEntries.containsKey(name);
+
+    @Override
+    public CXIdentifier resolveIdentifier(CXIdentifier id) {
+        return resolver.resolvePath(id).unwrap();
     }
-    
+
+
+    @Override
+    public Option<CXIdentifier> tryResolveIdentifier(CXIdentifier id) {
+        return resolver.resolvePath(id);
+    }
+
+    @Override
+    public Option<CXIdentifier> tryResolveFromName(String name) {
+        return resolver.resolvePath(CXIdentifier.from(name));
+    }
+
+    @Override
+    public CXType getLocalVariableType(String name) {
+        TypeTrackerEntry variableEntry = getVariableEntry(name);
+        if (variableEntry == null) {
+            return null;
+        }
+        return variableEntry.getType();
+    }
+
+    @Override
+    public CXFunctionPointer getFunctionType(CXIdentifier id) {
+        TypeTrackerEntry variableEntry = getFunctionEntry(id);
+        if (variableEntry == null) {
+            return null;
+        }
+        return (CXFunctionPointer) variableEntry.getType();
+    }
+
+    @Override
+    public CXType getGlobalVariableType(CXIdentifier id) {
+        TypeTrackerEntry variableEntry = getGlobalVariableEntry(id);
+        if (variableEntry == null) {
+            return null;
+        }
+        return variableEntry.getType();
+    }
+
+
+
+    public boolean functionExists(CXIdentifier name) {
+        Option<CXIdentifier> full = resolver.resolvePath(name);
+        if(full.isNone()) return false;
+        return functionEntries.containsKey(full.unwrap());
+    }
+
+
     public boolean fieldVisible(CXCompoundType type, String name) {
         
         return isVisible(type, name, publicFieldEntries, internalFieldEntries, privateFieldEntries, null);
@@ -353,61 +424,119 @@ public class VariableTypeTracker {
         }
         return false;
     }
-    
-    public void addVariable(String name, CXType type) {
+
+
+    public CXIdentifier addGlobalVariable(CXIdentifier name, CXType type) {
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
-        addVariable(name, typeTrackerEntry);
+        return addGlobalVariable(name, typeTrackerEntry);
     }
-    
-    public void addVariableEntry(String name, CXType type) {
-        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.FIXED, type);
-        addVariable(name, typeTrackerEntry);
+
+
+
+    private TypeTrackerEntry getVariableEntry(String name) {
+        if(variableEntries.containsKey(name)) return variableEntries.get(name);
+        Reference<CXIdentifier> match = new Reference<>();
+        if(resolver.resolvePath(CXIdentifier.from(name)).match(match)) {
+            CXIdentifier full = match.getValue();
+            if(!idExists(full)) return null;
+            if(functionExists(full)) return functionEntries.get(full);
+            return null;
+        } else {
+            return null;
+        }
     }
-    
-    private TypeTrackerEntry getEntry(String name) {
-        if(!entryExists(name)) return null;
-        if(functionExists(name)) return functionEntries.get(name);
-        return variableEntries.get(name);
+
+    private TypeTrackerEntry getGlobalVariableEntry(CXIdentifier name) {
+        Reference<CXIdentifier> match = new Reference<>();
+        if(resolver.resolvePath(name).match(match)) {
+            CXIdentifier full = match.getValue();
+            if(!idExists(full)) return null;
+            //if(functionExists(full)) return functionEntries.get(full);
+            return globalVariableEntries.get(name);
+        } else {
+            return null;
+        }
     }
-    
-    private void addVariable(String name, TypeTrackerEntry typeTrackerEntry) {
-        if(!variableExists(name)) {
+
+
+    private TypeTrackerEntry getFunctionEntry(CXIdentifier name) {
+        Reference<CXIdentifier> match = new Reference<>();
+        if(resolver.resolvePath(name).match(match)) {
+            CXIdentifier full = match.getValue();
+            if(!idExists(full)) return null;
+            if(functionExists(full)) return functionEntries.get(full);
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+
+    public void addLocalVariable(String name, CXType type) {
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
+        addLocalVariable(name, typeTrackerEntry);
+    }
+
+    private void addLocalVariable(String name, TypeTrackerEntry typeTrackerEntry) {
+        if(!localVariableExists(name)) {
             variableEntries.put(name, typeTrackerEntry);
         } else {
-            if(!functionExists(name)) {
-                TypeTrackerEntry oldEntry = getEntry(name);
-    
-                if (oldEntry.getStatus() != EntryStatus.OLD) {
-                    throw new RedeclareError(name);
-                }
+            TypeTrackerEntry oldEntry = getVariableEntry(name);
+            assert oldEntry != null;
+            if (oldEntry.getStatus() != EntryStatus.OLD) {
+                throw new RedeclareError(name);
             }
             variableEntries.replace(name, typeTrackerEntry);
         }
     }
-    
-    public void addFunction(String name, CXType type, boolean isDefinition) {
-        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
-        if(functionExists(name)) {
-            if(isDefinition) {
-                throw new RedeclareError(name);
-            }
-           else return;
+
+    private CXIdentifier addGlobalVariable(CXIdentifier name, TypeTrackerEntry typeTrackerEntry) {
+        CXIdentifier full = resolver.createIdentity(name);
+        if(!globalVariableExists(full)) {
+            globalVariableEntries.put(full, typeTrackerEntry);
+        } else {
+            globalVariableEntries.replace(full, typeTrackerEntry);
         }
-        functionEntries.put(name, typeTrackerEntry);
+        return full;
     }
-    
-    public void addFixedFunction(String name, CXType type) {
+
+
+
+    public CXIdentifier addFunction(CXIdentifier name, CXFunctionPointer type, boolean isDefinition) {
+        CXIdentifier full = resolver.createIdentity(name);
+        ICompilationSettings.debugLog.fine("Added function " + full);
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type.getReturnType());
+        if(functionExists(full)) {
+            if(isDefinition) {
+                throw new RedeclareError(full);
+            }
+           else return full;
+        }
+        functionEntries.put(full, typeTrackerEntry);
+        return full;
+    }
+
+    @Override
+    public void addFunction(CXIdentifier name, CXType returnType, boolean isDefinition) {
+        CXIdentifier full = resolver.createIdentity(name);
+        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, returnType);
+        if(functionExists(full)) {
+            if(isDefinition) {
+                throw new RedeclareError(full);
+            }
+            else return;
+        }
+        functionEntries.put(full, typeTrackerEntry);
+    }
+
+    @Deprecated(forRemoval = true)
+    public void addFixedFunction(CXIdentifier name, CXType type) {
+        CXIdentifier full = resolver.createIdentity(name);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.FIXED, type);
-        if(functionExists(name)) throw new RedeclareError(name);
-        functionEntries.put(name, typeTrackerEntry);
+        if(functionExists(full)) throw new RedeclareError(full);
+        functionEntries.put(full, typeTrackerEntry);
     }
-    
-    
-    private void putVariable(String name, CXType type) {
-        TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
-        variableEntries.put(name, typeTrackerEntry);
-    }
-    
+
     public void addCompoundTypeField(CXCompoundType parent, String name, CXType type, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicFieldEntries, HashMap<CompoundDeclarationKey, TypeTrackerEntry> publicMethodEntries) {
         CompoundDeclarationKey key = new CompoundDeclarationKey(parent, name);
         TypeTrackerEntry typeTrackerEntry = new TypeTrackerEntry(EntryStatus.NEW, type);
@@ -563,12 +692,22 @@ public class VariableTypeTracker {
         }
         return null;
     }
-    
-    
-    
-    
-    
-    
+
+    public void enterNamespace(CXIdentifier namespace) {
+        resolver.pushNamespace(namespace);
+    }
+
+    public void exitNamespace() {
+        resolver.popNamespace();
+    }
+
+    public void useNamespace(CXIdentifier namespace) {
+        resolver.useNamespace(namespace);
+    }
+
+    public void stopUseNamespace(CXIdentifier namespace) {
+        resolver.stopUseNamespace(namespace);
+    }
     
     public static VariableTypeTracker getTracker(CXClassType cxClassType) {
         return classTrackers.get(cxClassType);
@@ -576,19 +715,5 @@ public class VariableTypeTracker {
     
     public static boolean trackerPresent(CXClassType cxClassType) {
         return classTrackers.containsKey(cxClassType);
-    }
-    
-    public CXType getType(String name) {
-        if(entryExists(name)) {
-            /*
-            if(functionExists(name)) {
-                return functionEntries.get(name).getType();
-            }
-            
-             */
-            return variableEntries.get(name).getType();
-        }
-        throw new IdentifierDoesNotExistError(name);
-        
     }
 }

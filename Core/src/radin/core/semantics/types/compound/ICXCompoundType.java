@@ -1,11 +1,12 @@
 package radin.core.semantics.types.compound;
 
+import radin.core.Namespaced;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 
 import java.util.List;
 
-public interface ICXCompoundType{
+public interface ICXCompoundType extends Namespaced {
     
     default boolean isPrimitive() {
         return false;
@@ -14,8 +15,15 @@ public interface ICXCompoundType{
     List<FieldDeclaration> getFields();
     
     String getTypeName();
-    
+
+    @Override
+    default CXIdentifier getIdentifier() {
+        return getTypeNameIdentifier();
+    }
+
     String getCTypeName();
+
+
     
     CXIdentifier getTypeNameIdentifier();
     

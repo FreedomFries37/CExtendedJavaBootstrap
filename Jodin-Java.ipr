@@ -13,7 +13,7 @@
       <entry name="!?*.java"/>
     </wildcardResourcePatterns>
     <annotationProcessing enabled="false" useClasspath="true"/>
-    <bytecodeTargetLevel target="11"/>
+    <bytecodeTargetLevel target="14"/>
   </component>
   <component name="CopyrightManager" default="">
     <module2copyright/>
@@ -48,10 +48,17 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/JodinGradleMove.iml" filepath="$PROJECT_DIR$/JodinGradleMove.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/Jodin-Java.iml" filepath="$PROJECT_DIR$/Jodin-Java.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/BackEnd/BackEnd.iml" filepath="$PROJECT_DIR$/BackEnd/BackEnd.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/Combo/Combo.iml" filepath="$PROJECT_DIR$/Combo/Combo.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/Core/Core.iml" filepath="$PROJECT_DIR$/Core/Core.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/FrontEnd/FrontEnd.iml" filepath="$PROJECT_DIR$/FrontEnd/FrontEnd.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/Input/Input.iml" filepath="$PROJECT_DIR$/Input/Input.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/MidAnalysis/MidAnalysis.iml" filepath="$PROJECT_DIR$/MidAnalysis/MidAnalysis.iml"/>
+      <module fileurl="file://$PROJECT_DIR$/Output/Output.iml" filepath="$PROJECT_DIR$/Output/Output.iml"/>
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" assert-keyword="true" jdk-15="true" project-jdk-type="JavaSDK" assert-jdk-15="true" project-jdk-name="11">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_14" assert-keyword="true" jdk-15="true" project-jdk-type="JavaSDK" assert-jdk-15="true" project-jdk-name="14">
     <output url="file://$PROJECT_DIR$/out"/>
   </component>
   <component name="SvnBranchConfigurationManager">

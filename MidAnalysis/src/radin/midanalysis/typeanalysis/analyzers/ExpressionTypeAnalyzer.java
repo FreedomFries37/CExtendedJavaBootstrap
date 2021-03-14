@@ -1,6 +1,7 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 
+import radin.core.IdentifierDoesNotExistError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
@@ -21,14 +22,13 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.tags.BasicCompilationTag;
-import radin.output.tags.ConstructorCallTag;
-import radin.output.tags.MethodCallTag;
-import radin.output.tags.SuperCallTag;
+import radin.output.tags.*;
+import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.TypeAnalyzer;
 import radin.output.typeanalysis.errors.IllegalAccessError;
 import radin.output.typeanalysis.errors.*;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class ExpressionTypeAnalyzer extends TypeAnalyzer {
@@ -43,6 +43,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.isTypedExpression()) return true;
         
         if(node.getASTNode().getTreeType() == ASTNodeType._super) {
+
             node.setType(getCurrentTracker().getType("super"));
             return true;
         }
@@ -78,18 +79,23 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.string) {
-            node.setType(new PointerType(CXPrimitiveType.CHAR));
+            CXType stringType = environment.getType(CXIdentifier.from("std", "String"), null);
+            node.setType(stringType);
             return true;
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.id) {
             String image = node.getToken().getImage();
-            if(!getCurrentTracker().variableExists(image)) {
+            if(!getCurrentTracker().idExists(image)) {
                 throw new IdentifierDoesNotExistError(image);
             }
             CXType type = getCurrentTracker().getType(image);
             if(type instanceof CXDynamicTypeDefinition) {
                 type = ((CXDynamicTypeDefinition) type).getOriginal();
+            }
+            if(getCurrentTracker().getVariableTypeForName(image) == IVariableTypeTracker.NameType.GLOBAL) {
+                CXIdentifier id = getCurrentTracker().tryResolveFromName(image).expect("Global Variables should always resolve");
+                node.addCompilationTag(new ResolvedPathTag(id));
             }
             node.setType(type);
             node.setLValue(true);
@@ -151,7 +157,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     child.getCXType(), child.findFirstToken());
             assert child.getCXType() instanceof PointerType;
             
-            if(strictIs(((PointerType) child.getCXType()).getSubType(), CXPrimitiveType.VOID)) throw new VoidDereferenceError();
+            if(strictIs(CXPrimitiveType.VOID, ((PointerType) child.getCXType()).getSubType())) throw new VoidDereferenceError();
             
             if(child.getASTType() == ASTNodeType.constructor_call) {
                 node.addCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE);
@@ -296,7 +302,30 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(sequenceTypeAnalyzer)) return false;
             
             assert node.getChild(0).getCXType() instanceof CXFunctionPointer;
+    
+            
+    
+    
             CXFunctionPointer cxType = (CXFunctionPointer) node.getChild(0).getCXType();
+            List<CXType> sequenceTypes = sequenceTypeAnalyzer.getCollectedTypes();
+            List<CXType> functionArgTypes = cxType.getParameterTypes();
+            
+            if(sequenceTypes.size() != functionArgTypes.size()) {
+                setIsFailurePoint(node.getASTChild(ASTNodeType.sequence));
+                throw new IncorrectNumberOfArgumentsError(node.getASTChild(ASTNodeType.sequence).findFirstToken(), functionArgTypes.size(),
+                        sequenceTypes.size());
+            }
+    
+            for (int i = 0; i < sequenceTypes.size(); i++) {
+                CXType seq = sequenceTypes.get(i);
+                CXType param = functionArgTypes.get(i);
+                if (!is(seq, param)) {
+                    TypeAugmentedSemanticNode child_arg = node.getASTChild(ASTNodeType.sequence).getChild(i);
+                    throw new IncorrectTypeError(param, seq, child_arg.findFirstToken());
+                }
+            }
+    
+    
             node.setType(cxType.getReturnType());
             node.setLValue(false);
             return true;
@@ -498,6 +527,56 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             node.addCompilationTag(new ConstructorCallTag(constructor));
             
             node.setType(new PointerType(constructedType));
+            return true;
+        }
+        
+        if(node.getASTType() == ASTNodeType.inline_array) {
+            TypeAugmentedSemanticNode sequence = node.getASTChild(ASTNodeType.sequence);
+            SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(sequence);
+            if(!determineTypes(sequenceTypeAnalyzer)) return false;
+            List<CXType> collectedTypes = sequenceTypeAnalyzer.getCollectedTypes();
+            node.addCompilationTag(
+                    new InlineArrayTag(collectedTypes.size())
+            );
+    
+            if (collectedTypes.size() == 0) {
+                node.setType(CXPrimitiveType.VOID.toPointer());
+                node.setLValue(false);
+    
+    
+                return true;
+            }
+            
+            CXType expected = collectedTypes.get(0);
+            for(int i = 1; i < collectedTypes.size(); i++) {
+                CXType found = collectedTypes.get(i);
+                if (!is(found, expected)) {
+                    if(found.canBeTreatedAsPointer() && expected.canBeTreatedAsPointer()) {
+                        expected = CXPrimitiveType.VOID.toPointer();
+                    } else {
+                        throw new IncorrectTypeError(expected, found, sequence.getChild(0).findFirstToken(), sequence.getChild(1).findFirstToken());
+                    }
+                }
+            }
+            
+            ArrayType type = new ArrayType(expected);
+           
+            node.setType(type);
+            node.setLValue(false);
+            
+            
+            return true;
+        }
+
+        if(node.getASTType() == ASTNodeType.namespaced_id) {
+            CXIdentifier id = new CXIdentifier(node.getASTNode());
+            if (!getCurrentTracker().idExists(id)) {
+                throw new IdentifierDoesNotExistError(id);
+            }
+            CXType type = getCurrentTracker().getGlobalVariableType(id);
+            CXIdentifier absolute = getCurrentTracker().resolveIdentifier(id);
+            node.addCompilationTag(new ResolvedPathTag(absolute));
+            node.setType(type);
             return true;
         }
         

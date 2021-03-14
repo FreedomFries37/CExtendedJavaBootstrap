@@ -34,7 +34,7 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
     
         typeTrackingClosure();
         
-        getCurrentTracker().addVariable("this", new PointerType(owner));
+        getCurrentTracker().addLocalVariable("this", new PointerType(owner));
         TypeAugmentedSemanticNode parameters = node.getASTChild(ASTNodeType.parameter_list);
         List<CXType> parametersTypes = new LinkedList<>();
         for (TypeAugmentedSemanticNode parameter : parameters.getAllChildren(ASTNodeType.declaration)) {
@@ -43,7 +43,7 @@ public class ConstructorTypeAnalyzer extends TypeAnalyzer {
             parametersTypes.add(type);
             String name = parameter.getASTChild(ASTNodeType.id).getToken().getImage();
         
-            getCurrentTracker().addVariable(name, type);
+            getCurrentTracker().addLocalVariable(name, type);
         }
     
         CXConstructor currentConstructor = owner.getConstructor(new ParameterTypeList(parametersTypes));
