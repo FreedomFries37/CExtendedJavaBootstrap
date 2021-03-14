@@ -1,22 +1,45 @@
+#include <stdint.h>
+
 using std;
 in namespace1 {
     String function() {
         return "Hello, World!";
     }
+
+    class hello {
+        public hello() { }
+        virtual String toString() {
+            return function();
+        }
+    };
 }
 
 in namespace2 {
     String function() {
         return "Goodbye, World!";
     }
+
+    class hello : namespace1::hello { void* v; public hello() { } };
 }
 
 
-using namespace1;
+using namespace2;
+
+in std {
+    in math i32 gcd(i32 a, i32 b) {
+        if(b == 0) return a;
+        return gcd(b, a % b);
+    }
+}
 
 int main(int argc, String args[]) {
 
+    namespace1::hello o = new hello();
+
+
     println(function());
+    ((Object) o)->println();
+    new Int(std::math::gcd((i32) 10, (i32) 8))->println();
 
     return 0;
 }

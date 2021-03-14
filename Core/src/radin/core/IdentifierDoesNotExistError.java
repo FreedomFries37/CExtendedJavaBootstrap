@@ -1,4 +1,4 @@
-package radin.output.typeanalysis.errors;
+package radin.core;
 
 import radin.core.semantics.types.CXIdentifier;
 

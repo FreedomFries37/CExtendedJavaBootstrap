@@ -325,7 +325,7 @@ public class TypeEnvironment {
         
         for (CXIdentifier namespace : namespaceTree.getNamespaces(currentNamespace, namespacedTypename.getParentNamespace())) {
             for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(namespace)) {
-                if(cxCompoundType.getTypeNameIdentifier().getIdentifierString().equals(namespacedTypename.getIdentifierString())) {
+                if(cxCompoundType.getTypeNameIdentifier().equals(namespacedTypename)) {
                     output.add(cxCompoundType);
                 }
             }
@@ -333,7 +333,7 @@ public class TypeEnvironment {
 
         for(CXIdentifier using : usingNamespaces) {
             for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(using)) {
-                if(cxCompoundType.getTypeNameIdentifier().getIdentifierString().equals(namespacedTypename.getIdentifierString())) {
+                if(cxCompoundType.getTypeNameIdentifier().equals(namespacedTypename)) {
                     if(!output.contains(cxCompoundType)) {
                         output.add(cxCompoundType);
                     }

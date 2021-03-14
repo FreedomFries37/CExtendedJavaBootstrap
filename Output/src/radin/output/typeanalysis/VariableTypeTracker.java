@@ -1,5 +1,6 @@
 package radin.output.typeanalysis;
 
+import radin.core.IdentifierResolver;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.RedeclareError;
 import radin.core.semantics.types.CXIdentifier;

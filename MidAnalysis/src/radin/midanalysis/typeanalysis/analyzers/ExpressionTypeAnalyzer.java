@@ -1,6 +1,7 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 
+import radin.core.IdentifierDoesNotExistError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;

@@ -1,11 +1,10 @@
-package radin.output.typeanalysis;
+package radin.core;
 
 import radin.core.lexical.Token;
 import radin.core.semantics.NamespaceTree;
 import radin.core.semantics.types.AmbiguousIdentifierError;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.utility.Option;
-import radin.output.typeanalysis.errors.IdentifierDoesNotExistError;
 
 import java.util.*;
 import java.util.function.Consumer;

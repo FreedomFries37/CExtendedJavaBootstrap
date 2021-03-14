@@ -4,7 +4,7 @@ import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.utility.Option;
-import radin.output.typeanalysis.errors.IdentifierDoesNotExistError;
+import radin.core.IdentifierDoesNotExistError;
 
 public interface IVariableTypeTracker {
     

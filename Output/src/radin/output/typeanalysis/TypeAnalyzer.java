@@ -1,5 +1,6 @@
 package radin.output.typeanalysis;
 
+import radin.core.IdentifierResolver;
 import radin.core.chaining.IInPlaceCompilerAnalyzer;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
