@@ -87,9 +87,10 @@ public enum TokenType {
     t_ast("ast"),
     t_is("is"),
     t_abstract("abstract"),
-    t_trait("trait");
+    t_trait("trait"),
+    t_enum("enum");
     
-    private String str;
+    private final String str;
     
     TokenType(String str) {
         this.str = str;

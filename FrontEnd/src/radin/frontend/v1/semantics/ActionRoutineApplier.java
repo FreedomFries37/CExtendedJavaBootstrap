@@ -1796,9 +1796,23 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "GenericInstanceTypeList": {
-                        
-                        
                         return false;
+                    }
+                    case "Enum": {
+                        node.printTreeForm();
+                        AbstractSyntaxNode identifier = node.getChild(0).getSynthesized();
+                        AbstractSyntaxNode idList = getCatNode("IdentifierList").getSynthesized();
+                        AbstractSyntaxNode abstractSyntaxNode = new AbstractSyntaxNode(
+                                ASTNodeType._enum,
+                                identifier,
+                                idList
+                        );
+                        CXType enumType = environment.getType(abstractSyntaxNode);
+                        node.setSynthesized(
+                                abstractSyntaxNode.addType(enumType)
+                        );
+                        return true;
+                        //throw new Error("Enums not yet implemented");
                     }
                     default:
                         error("No Action Routine for " + node.getCategory());
@@ -1824,6 +1838,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 cont = false;
             }catch (AbstractCompilationError e) {
                 errors.add(e);
+                ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
+                ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);
+                cont = false;
+            } catch (Error e) {
+                errors.add(new CompilationError(e, findFirstToken(node)));
                 ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
                 ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);
                 cont = false;

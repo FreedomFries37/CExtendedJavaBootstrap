@@ -231,21 +231,33 @@ public class Interpreter {
 
     }
     
-    public class SegmentationFault extends Error {
+    public class EnumInstance extends Instance<EnumType> {
         
-        public SegmentationFault() {
+        private String value;
+    
+        public EnumInstance(EnumType type, String value) {
+            super(type);
+            this.value = value;
         }
-        
-        public SegmentationFault(String message) {
-            super(message);
+    
+        @Override
+        void copyFrom(Instance<?> other) {
+            this.value = ((EnumInstance) other).value;
         }
-        
-        public SegmentationFault(String message, Throwable cause) {
-            super(message, cause);
+    
+        @Override
+        Instance<EnumType> copy() {
+            return new EnumInstance(this.getType(), value);
         }
-        
-        public SegmentationFault(Throwable cause) {
-            super(cause);
+    
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            throw new InvalidPrimitiveException();
+        }
+    
+        @Override
+        boolean isFalse() {
+            throw new IllegalStateException("Can't use an enum as a boolean");
         }
     }
     
@@ -768,6 +780,26 @@ public class Interpreter {
     }
     
     
+    public class SegmentationFault extends Error {
+        
+        public SegmentationFault() {
+        }
+        
+        public SegmentationFault(String message) {
+            super(message);
+        }
+        
+        public SegmentationFault(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+        public SegmentationFault(Throwable cause) {
+            super(cause);
+        }
+    }
+    
+    
+    
     public <R, T extends AbstractCXPrimitiveType> PrimitiveInstance<R, T> createNewInstance(T type, R backing) {
         PrimitiveInstance<R, T> instance = (PrimitiveInstance<R, T>) createNewInstance(type);
         instance.setBackingValue(backing);
@@ -785,6 +817,8 @@ public class Interpreter {
         } else if (type instanceof ArrayType) {
             // TODO: implement proper array sizing
             return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getBaseType(), 15);
+        } else if (type instanceof EnumType) {
+            return new EnumInstance((EnumType) type, ((EnumType) type).getMembers().get(0));
         } else if (type instanceof AbstractCXPrimitiveType) {
             boolean unsigned = false;
             AbstractCXPrimitiveType fixed = ((AbstractCXPrimitiveType) type);
@@ -2547,6 +2581,10 @@ public class Interpreter {
 
         if (type instanceof ArrayType) {
             return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getDereferenceType());
+        }
+        
+        if (type instanceof EnumType) {
+            return new EnumInstance(((EnumType) type), ((EnumType) type).getMembers().get(0));
         }
 
         if (type instanceof AbstractCXPrimitiveType) {

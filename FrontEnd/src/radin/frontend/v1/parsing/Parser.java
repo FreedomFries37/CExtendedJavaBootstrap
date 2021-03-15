@@ -273,7 +273,8 @@ public class Parser extends BasicParser {
             case t_union:
             case t_lpar:
             case t_const:
-            case t_id: {
+            case t_id:
+            case t_enum: {
                 Token corresponding = getCurrent();
                 if (!oneMustParse(child, this::parseFunctionDefinition, this::parseDeclaration)) {
                     return error("Could not parse declaration", corresponding);
@@ -1607,6 +1608,9 @@ public class Parser extends BasicParser {
                 if (!parseStructOrUnionSpecifier(output)) return false;
                 break;
             }
+            case t_enum:
+                if(!parseEnum(output)) return false;
+                break;
             case t_id:
             case t_typename: {
                 if(!parseNamespacedType(output)) return false;
@@ -2544,6 +2548,26 @@ public class Parser extends BasicParser {
             if (!parseCompilationTag(child)) return false;
             if (!parseCompilationTagList(child)) return false;
         }
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseEnum(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Enum");
+        
+        if(!consume(t_enum)) return false;
+        if(match(t_id)) {
+            Token t= getCurrent();
+            consumeAndAddAsLeaf(child);
+            scopedTypedefStack.peek().add(t.getImage());
+        } else {
+            if (!parseNamespacedType(child)) return false;
+        }
+        if(!consume(t_lcurl)) return false;
+        if(!parseIdentifierList(child)) return false;
+        if(!consume(t_rcurl)) return false;
         
         
         parent.addChild(child);

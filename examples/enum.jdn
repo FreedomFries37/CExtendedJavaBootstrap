@@ -1,0 +1,9 @@
+enum Option {
+	Some,
+	None
+};
+
+int main(int argc, std::String args[]) {
+
+	return 0;
+}
