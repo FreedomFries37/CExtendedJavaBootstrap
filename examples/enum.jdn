@@ -3,7 +3,38 @@ enum Option {
 	None
 };
 
+enum Day {
+	Sunday,
+	Monday,
+	Tuesday,
+	Wednesday,
+	Thursday,
+	Friday,
+	Saturday
+};
+
+in my_enums enum CoolBoolean {
+	Yes,
+	No
+};
+
+using my_enums;
+
 int main(int argc, std::String args[]) {
 	Option o = enum Option.Some;
+	if(o == enum Option.Some) {
+		println("Wow!");
+	}
+	if(o != enum Option.None) {
+		println("Wow, again!");
+	}
+	Day day = enum Day.Sunday;
+	if(day != o) {
+		println("Technically true");
+	}
+	my_enums::CoolBoolean b = enum my_enums::CoolBoolean.No;
+	if(b == enum CoolBoolean.Yes) {
+		println("That is wrong");
+	}
 	return 0;
 }

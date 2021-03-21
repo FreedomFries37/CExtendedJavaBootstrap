@@ -353,7 +353,12 @@ public class TypeEnvironment {
         if(output.size() > 1){
             throw new AmbiguousIdentifierError(corresponding, output);
         }
-        else if(output.size() == 1) return new PointerType(output.get(0));
+        else if(output.size() == 1){
+            if(output.get(0) instanceof EnumType) {
+                return output.get(0);
+            }
+            return new PointerType(output.get(0));
+        }
         
         throw new TypeDoesNotExist(namespacedTypename.toString());
     }

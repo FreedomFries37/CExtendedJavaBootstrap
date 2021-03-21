@@ -269,7 +269,10 @@ public class Interpreter {
             return value.getImage().equals(that.value.getImage());
         }
     
-        
+        @Override
+        public String toString() {
+            return "EnumInstance{" + getType() + "." + value.getImage() + "}";
+        }
     }
     
     interface SemiIndirection<R extends CXType, I extends Instance<R>> {
@@ -1641,11 +1644,29 @@ public class Interpreter {
                 Token op = input.getChild(0).getToken();
                 if (!invoke(input.getChild(1))) return false;
                 Instance<?> lhsNull = pop().unwrap();
+                if(lhsNull instanceof EnumInstance) {
+                    EnumInstance lhs = ((EnumInstance) lhsNull);
+                    if(!invoke(input.getChild(2))) return false;
+                    if(op.getType() != t_eq && op.getType() != t_neq) throw new Error("Can only use == and != with enums");
+                    EnumInstance rhs = ((EnumInstance) pop().unwrap());
+                    int eq_backing = op.getType() == t_eq ? 1 : 0;
+                    int neq_backing = op.getType() == t_eq ? 0 : 1;
+                    if(lhs.equals(rhs)) {
+                        push(new PrimitiveInstance<>(CXPrimitiveType.INTEGER, eq_backing, true));
+                    } else {
+                        push(new PrimitiveInstance<>(CXPrimitiveType.INTEGER, neq_backing, true));
+                    }
+                    
+    
+                    
+                    break;
+                }
+                
                 
                 
                 PrimitiveInstance<?, ?> lhs, rhs;
                 if (lhsNull instanceof NullableInstance) {
-                    lhs = (PrimitiveInstance<?, ?>) ((NullableInstance) lhsNull).getValue();
+                    lhs = (PrimitiveInstance<?, ?>) ((NullableInstance<?, ?>) lhsNull).getValue();
                 } else if (lhsNull instanceof ArrayInstance) {
                     // in binary operations, treat arrays as pointers
                     lhs = ((ArrayInstance<?, ?>) lhsNull).asPointer();
@@ -1657,7 +1678,7 @@ public class Interpreter {
                 if (op.getType() == t_dand) {
                     if (lhs.isFalse()) {
                         push(
-                                new PrimitiveInstance<>(lhs.getType(), 0, false)
+                                new PrimitiveInstance<>(((PrimitiveInstance<?, ?>) lhs).getType(), 0, false)
                         );
                         break;
                     }
@@ -1665,7 +1686,7 @@ public class Interpreter {
                 } else if (op.getType() == t_dor) {
                     if (lhs.isTrue()) {
                         push(
-                                new PrimitiveInstance<>(lhs.getType(), 1, false)
+                                new PrimitiveInstance<>(((PrimitiveInstance<?, ?>) lhs).getType(), 1, false)
                         );
                         break;
                     }
@@ -1675,10 +1696,10 @@ public class Interpreter {
                 Instance<?> rhsNull = pop().unwrap();
                 
                 if (rhsNull instanceof NullableInstance) {
-                    rhs = (PrimitiveInstance<?, ?>) ((NullableInstance) rhsNull).getValue();
+                    rhs = (PrimitiveInstance<?, ?>) ((NullableInstance<?, ?>) rhsNull).getValue();
                 } else if (rhsNull instanceof ArrayInstance) {
                     // in binary operations, treat arrays as pointers
-                    rhs = ((ArrayInstance) rhsNull).asPointer();
+                    rhs = ((ArrayInstance<?, ?>) rhsNull).asPointer();
                 } else {
                     rhs = (PrimitiveInstance<?, ?>) rhsNull;
                 }
