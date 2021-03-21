@@ -1505,7 +1505,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac:{
+            case t_lbrac:
+            case t_enum:{
                 if (!parseExpression(output)) return false;
                 if (!parseArgsListTail(output)) return false;
                 break;

@@ -20,6 +20,28 @@ in my_enums enum CoolBoolean {
 
 using my_enums;
 
+class DayClass {
+	private Day myDay;
+
+	public DayClass(Day myDay);
+	public Day getDay();
+
+	//virtual public std::String toString();
+};
+
+implement DayClass {
+	DayClass(Day myDay) {
+		this->myDay = myDay;
+	}
+
+/*
+	std::String toString() {
+		return "Day";
+	}
+*/
+
+}
+
 int main(int argc, std::String args[]) {
 	Option o = enum Option.Some;
 	if(o == enum Option.Some) {
@@ -36,5 +58,8 @@ int main(int argc, std::String args[]) {
 	if(b == enum CoolBoolean.Yes) {
 		println("That is wrong");
 	}
+
+	DayClass day_class = new DayClass(enum Day.Monday);
+	day_class->println();
 	return 0;
 }

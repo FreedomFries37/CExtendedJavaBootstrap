@@ -906,7 +906,7 @@ public class Interpreter {
     private Token nearestCurrentToken = null;
     private boolean log;
     private boolean main_started = false;
-    private boolean log_after_main = true;
+    private boolean log_after_main = false;
     
     
     public Interpreter(TypeEnvironment environment, SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols) {
@@ -1121,6 +1121,41 @@ public class Interpreter {
         logCurrentState();
         stackTrace.pop();
         thisStack.pop();
+        useThisStack.pop();
+        return true;
+    }
+    
+    public boolean callFunction(CXIdentifier id, Instance<?>... params) throws EarlyExit,
+            JodinNullPointerException {
+        for (Instance<?> param : params) {
+            arguments.push(param);
+        }
+        
+        
+        useThisStack.push(false);
+        
+        
+        createClosure();
+        
+        
+        
+        TypeAugmentedSemanticNode function = getSymbol(id);
+        if (function == null) {
+            throw new Error("Function " + id +  " not defined");
+        }
+        startStackTraceFor(id.getBase());
+        logCurrentState();
+        try {
+            if (!invoke(function)) return false;
+            endClosure();
+        } catch (FunctionReturned functionReturned) {
+            endClosure();
+            push(returnValue);
+            returnValue = null;
+        }
+        logCurrentState();
+        stackTrace.pop();
+        //thisStack.pop();
         useThisStack.pop();
         return true;
     }
@@ -2510,10 +2545,24 @@ public class Interpreter {
                 PointerInstance<CXClassType> classTypeInstance =
                         (PointerInstance<CXClassType>) createNewInstance(subType).toPointer();
                 
+                
+                
                 if (classTypeInstance.getPointer() == null) {
                     throw new Error("Creating a new instance of " + subType + " failed");
                 }
                 
+                if(globalAutoVariables.get(CXIdentifier.from("reflection_available")).isTrue()) {
+                    CompoundInstance<CXClassType> classObject = (CompoundInstance<CXClassType>) classTypeInstance.getPointer();
+                    int classId = environment.getTypeId(subType);
+                    if (!callFunction(
+                            CXIdentifier.from("std", "__get_class"),
+                            createNewInstance(CXPrimitiveType.INTEGER, classId)
+                    )) {
+                        return false;
+                    }
+                    Instance<?> classTypeDef = pop().unwrap();
+                    classObject.fields.put("info", classTypeDef);
+                }
                 
                 int memstackPrevious = memStack.size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
