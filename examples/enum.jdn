@@ -75,10 +75,13 @@ int main(int argc, std::String args[]) {
 	DayClass day_class = new DayClass(enum Day.Monday);
 	day_class->println();
 
-	EnumInStruct boop;
-	boop.day = enum Day.Monday;
+	EnumInStruct* boop = calloc(sizeof(EnumInStruct), 1);
+	boop->day = enum Day.Monday;
 
-	if(boop.day != day_class->getDay()) exit(-1);
+
+	if(boop->day != day_class->getDay()) exit(-1);
+	else println("waow");
+
 
 	return 0;
 }
