@@ -13,7 +13,6 @@ import radin.core.semantics.types.wrapped.*;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Pair;
 
-
 import java.util.*;
 
 import static radin.core.lexical.TokenType.t_id;
@@ -48,7 +47,7 @@ public class TypeEnvironment {
     private CXClassType defaultInheritance = null;
     private CXIdentifier currentNamespace = null;
     private List<CXIdentifier> usingNamespaces = new LinkedList<>();
-    private NamespaceTree<CXCompoundType> namespaceTree = new NamespaceTree<>();
+    private NamespaceTree<CXType> namespaceTree = new NamespaceTree<>();
     private int pointerSize = 8;
     private int charSize = 1;
     private int intSize = 4;
@@ -324,18 +323,18 @@ public class TypeEnvironment {
         List<CXType> output = new LinkedList<>();
         
         for (CXIdentifier namespace : namespaceTree.getNamespaces(currentNamespace, namespacedTypename.getParentNamespace())) {
-            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(namespace)) {
-                if(cxCompoundType.getTypeNameIdentifier().equals(namespacedTypename)) {
-                    output.add(cxCompoundType);
+            for (CXType cxType : namespaceTree.getObjectsForNamespace(namespace)) {
+                if(cxType.getIdentifier().equals(namespacedTypename)) {
+                    output.add(cxType);
                 }
             }
         }
 
         for(CXIdentifier using : usingNamespaces) {
-            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(using)) {
-                if(cxCompoundType.getTypeNameIdentifier().equals(namespacedTypename)) {
-                    if(!output.contains(cxCompoundType)) {
-                        output.add(cxCompoundType);
+            for (CXType cxType : namespaceTree.getObjectsForNamespace(using)) {
+                if(cxType.getIdentifier().equals(namespacedTypename)) {
+                    if(!output.contains(cxType)) {
+                        output.add(cxType);
                     }
                 }
             }
@@ -370,7 +369,7 @@ public class TypeEnvironment {
             if(output != null) throw new AmbiguousIdentifierError(tok, Arrays.asList(temp, output));
             output = temp;
         }
-        List<CXCompoundType> typesForNamespace = new LinkedList<>(namespaceTree.getObjectsForNamespace(currentNamespace));
+        List<CXType> typesForNamespace = new LinkedList<>(namespaceTree.getObjectsForNamespace(currentNamespace));
         if(currentNamespace != null) {
             typesForNamespace.addAll(namespaceTree.getBaseObjects());
         }
@@ -378,9 +377,9 @@ public class TypeEnvironment {
             throw new TypeDoesNotExist(typenameImage.getImage());
         }
         for (CXIdentifier usingNamespace : usingNamespaces) {
-            for (CXCompoundType cxCompoundType : namespaceTree.getObjectsForNamespace(usingNamespace)) {
-                if(!typesForNamespace.contains(cxCompoundType)) {
-                    typesForNamespace.add(cxCompoundType);
+            for (CXType cxType : namespaceTree.getObjectsForNamespace(usingNamespace)) {
+                if(!typesForNamespace.contains(cxType)) {
+                    typesForNamespace.add(cxType);
                 }
             }
 
@@ -388,9 +387,9 @@ public class TypeEnvironment {
 
 
         List<CXType> possibilities = new LinkedList<>();
-        for (CXCompoundType cxCompoundType : typesForNamespace) {
+        for (CXType cxCompoundType : typesForNamespace) {
             
-            if(cxCompoundType.getTypeNameIdentifier().getBase().equals(typenameImage))
+            if(cxCompoundType.getIdentifier().getBase().getImage().equals(typenameImage.getImage()))
                 possibilities.add(cxCompoundType);
         }
         
@@ -407,7 +406,11 @@ public class TypeEnvironment {
         } else if(possibilities.size() > 1) {
             throw new AmbiguousIdentifierError(tok, possibilities);
         } else if(possibilities.size() == 1) {
-            output = new PointerType(possibilities.get(0));
+            if(possibilities.get(0) instanceof EnumType) {
+                output = possibilities.get(0);
+            } else {
+                output = new PointerType(possibilities.get(0));
+            }
         }
         
         
@@ -602,6 +605,11 @@ public class TypeEnvironment {
             return getType(ast.getChild(0));
         }
         
+        if(ast.getTreeType() == ASTNodeType._enum) {
+            return createType(ast, currentNamespace);
+            
+        }
+        
         throw new UnsupportedOperationException(ast.getTreeType().toString());
     }
     
@@ -611,10 +619,25 @@ public class TypeEnvironment {
         return o1Specifier;
     }
     
-    private CXCompoundType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
+    private CXType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
         // ICompilationSettings.debugLog.finest("in " + namespace + " creating compound type from ");
         // ICompilationSettings.debugLog.finest("\n" + ast.toTreeForm());
+        if(ast.getTreeType() == _enum) {
+            AbstractSyntaxNode id = ast.getChild(ASTNodeType.id);
+            AbstractSyntaxNode idList = ast.getChild(id_list);
+            List<Token> members = new ArrayList<>(idList.getDirectChildren().size());
+            for (AbstractSyntaxNode directChild : idList.getDirectChildren()) {
+                members.add(directChild.getToken());
+            }
+            CXIdentifier identifier = new CXIdentifier(currentNamespace, id.getToken());
+            EnumType enumType = new EnumType(identifier, members);
+            namespaceTree.getObjectsForNamespace(identifier.getParentNamespace()).add(enumType);
+            
+            return enumType;
+        }
+        
         AbstractSyntaxNode nameAST = ast.getChild(ASTNodeType.id);
+        
         Token name = nameAST != null? nameAST.getToken() : null;
         boolean isAnonymous = name == null;
         CXCompoundType output;

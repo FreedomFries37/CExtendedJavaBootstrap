@@ -4,6 +4,6 @@ enum Option {
 };
 
 int main(int argc, std::String args[]) {
-
+	Option o = enum Option.Some;
 	return 0;
 }

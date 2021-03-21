@@ -2,26 +2,30 @@ package radin.core.semantics.types.primitives;
 
 import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class EnumType extends AbstractCXPrimitiveType{
     
-    private final List<String> members;
+    private final List<Token> members;
+    private final CXIdentifier name;
     
-    public EnumType(List<Token> tokens) {
-        members = tokens.stream().map(Token::getImage).collect(Collectors.toList());
+    public EnumType(CXIdentifier name, List<Token> tokens) {
+        this.name = name;
+        members = new ArrayList<>(tokens);
     }
     
     @Override
     public String generateCDefinition() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("enum { ");
-        stringBuilder.append(String.join(", ", members));
-        stringBuilder.append("m}");
+        stringBuilder.append(members.stream().map(Token::getImage).collect(Collectors.joining(", ")));
+        stringBuilder.append("}");
         return stringBuilder.toString();
     }
     
@@ -29,8 +33,8 @@ public class EnumType extends AbstractCXPrimitiveType{
     public String generateCDeclaration(String identifier) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(String.format("enum %s { ", identifier));
-        stringBuilder.append(String.join(", ", members));
-        stringBuilder.append("m}");
+        stringBuilder.append(members.stream().map(Token::getImage).collect(Collectors.joining(", ")));
+        stringBuilder.append("}");
         return stringBuilder.toString();
     }
     
@@ -55,7 +59,17 @@ public class EnumType extends AbstractCXPrimitiveType{
         return false;
     }
     
-    public List<String> getMembers() {
+    public List<Token> getMembers() {
         return members;
+    }
+    
+    @Override
+    public String toString() {
+        return "enum " + name;
+    }
+    
+    @Override
+    public CXIdentifier getIdentifier() {
+        return name;
     }
 }

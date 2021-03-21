@@ -580,6 +580,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             return true;
         }
         
+        if(node.getASTType() == ASTNodeType.enum_member) {
+            
+            node.setType(((TypedAbstractSyntaxNode) node.getASTNode()).getCxType());
+            return true;
+        }
+        
         return false;
     }
     

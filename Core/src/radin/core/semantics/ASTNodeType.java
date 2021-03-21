@@ -234,7 +234,8 @@ public enum ASTNodeType {
     inline_array("inline_array"),
     namespaced_id("namespaced_id"),
     in_namespace("in_namespace"),
-    _enum("enum")
+    _enum("enum"),
+    enum_member("enum_member")
     ;
     
     

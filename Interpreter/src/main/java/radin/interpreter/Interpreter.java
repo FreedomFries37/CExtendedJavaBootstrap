@@ -233,9 +233,9 @@ public class Interpreter {
     
     public class EnumInstance extends Instance<EnumType> {
         
-        private String value;
+        private Token value;
     
-        public EnumInstance(EnumType type, String value) {
+        public EnumInstance(EnumType type, Token value) {
             super(type);
             this.value = value;
         }
@@ -259,6 +259,17 @@ public class Interpreter {
         boolean isFalse() {
             throw new IllegalStateException("Can't use an enum as a boolean");
         }
+    
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            EnumInstance that = (EnumInstance) o;
+            if(!environment.is(((EnumInstance) o).getType(), this.getType())) return false;
+            return value.getImage().equals(that.value.getImage());
+        }
+    
+        
     }
     
     interface SemiIndirection<R extends CXType, I extends Instance<R>> {
@@ -2551,8 +2562,15 @@ public class Interpreter {
                 push(array);
                 break;
                 //throw new Error("Inline arrays not yet supported");
+            case enum_member:
+                EnumType type = ((EnumType) input.getCXType());
+                Token member = input.getASTChild(ASTNodeType.id).getToken();
+                EnumInstance instance = new EnumInstance(type, member);
+                push(instance);
+                break;
             case empty: // nop
                 break;
+                
             default:
                 return false;
         }
