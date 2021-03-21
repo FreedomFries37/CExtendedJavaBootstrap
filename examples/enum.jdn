@@ -26,7 +26,7 @@ class DayClass {
 	public DayClass(Day myDay);
 	public Day getDay();
 
-	//virtual public std::String toString();
+	virtual public std::String toString();
 };
 
 implement DayClass {
@@ -34,13 +34,26 @@ implement DayClass {
 		this->myDay = myDay;
 	}
 
-/*
+
 	std::String toString() {
-		return "Day";
+		Day day = this->myDay;
+		if(day == enum Day.Monday) {
+			return "Monday";
+		} else {
+			return "Some other day";
+		}
 	}
-*/
+
+	Day getDay() {
+		return this->myDay;
+	}
+
 
 }
+
+typedef struct {
+	Day day;
+} EnumInStruct;
 
 int main(int argc, std::String args[]) {
 	Option o = enum Option.Some;
@@ -61,5 +74,11 @@ int main(int argc, std::String args[]) {
 
 	DayClass day_class = new DayClass(enum Day.Monday);
 	day_class->println();
+
+	EnumInStruct boop;
+	boop.day = enum Day.Monday;
+
+	if(boop.day != day_class->getDay()) exit(-1);
+
 	return 0;
 }

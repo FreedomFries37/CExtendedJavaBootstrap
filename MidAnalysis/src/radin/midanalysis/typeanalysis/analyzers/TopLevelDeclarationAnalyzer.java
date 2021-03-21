@@ -9,7 +9,6 @@ import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.output.tags.ICompilationTag;
 import radin.output.tags.ResolvedPathTag;
 import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.output.typeanalysis.TypeAnalyzer;
@@ -103,7 +102,15 @@ public class TopLevelDeclarationAnalyzer extends TypeAnalyzer {
                 }
             }
         } else if(child.getASTType() == ASTNodeType.typedef) {
-            child.setType(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
+            CXType declarationType = ((TypedAbstractSyntaxNode) child.getASTNode()).getCxType();
+            if(declarationType instanceof CXCompoundType) {
+                CXCompoundType cxCompoundType = ((CXCompoundType) declarationType);
+                if(!getCurrentTracker().isTracking(cxCompoundType)) {
+                    getCurrentTracker().addBasicCompoundType(cxCompoundType);
+                    getCurrentTracker().addIsTracking(cxCompoundType);
+                }
+            }
+            child.setType(declarationType);
         } else if(child.getASTType() == ASTNodeType.top_level_decs) {
             ProgramTypeAnalyzer programTypeAnalyzer = new ProgramTypeAnalyzer(child, false);
             if(!determineTypes(programTypeAnalyzer)) {

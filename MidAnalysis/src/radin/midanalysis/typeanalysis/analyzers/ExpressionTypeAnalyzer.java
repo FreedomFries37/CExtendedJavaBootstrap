@@ -391,7 +391,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 ((CXMappedType) nextType).update();
             }
             
-            if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
+            if(nextType == null) {
+                throw new IllegalAccessError(node.getChild(0).findFirstToken());
+            }
             node.setType(nextType);
             ICompilationSettings.debugLog.fine("Found. Field Type = " + nextType);
             node.setLValue(objectInteraction.isLValue());
