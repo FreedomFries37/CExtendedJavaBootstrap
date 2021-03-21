@@ -273,7 +273,8 @@ public class Parser extends BasicParser {
             case t_union:
             case t_lpar:
             case t_const:
-            case t_id: {
+            case t_id:
+            case t_enum: {
                 Token corresponding = getCurrent();
                 if (!oneMustParse(child, this::parseFunctionDefinition, this::parseDeclaration)) {
                     return error("Could not parse declaration", corresponding);
@@ -764,7 +765,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseDoubleOr(child)) return false;
                 if (!parseDoubleOrTail(child)) return false;
                 if (!parseExpressionTail(child)) return false;
@@ -814,7 +816,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseDoubleAnd(child)) return false;
                 if (!parseDoubleAndTail(child)) return false;
                 break;
@@ -863,7 +866,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac:{
+            case t_lbrac:
+            case t_enum:{
                 if (!parseOr(child)) return false;
                 if (!parseOrTail(child)) return false;
                 break;
@@ -912,7 +916,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseNot(child)) return false;
                 if (!parseNotTail(child)) return false;
                 break;
@@ -961,7 +966,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseAnd(child)) return false;
                 if (!parseAndTail(child)) return false;
                 break;
@@ -1010,7 +1016,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseEquation(child)) return false;
                 if (!parseEquationTail(child)) return false;
                 break;
@@ -1059,7 +1066,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseC(child)) return false;
                 if (!parseCTail(child)) return false;
                 break;
@@ -1113,7 +1121,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseG(child)) return false;
                 if (!parseGTail(child)) return false;
                 break;
@@ -1169,7 +1178,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseT(child)) return false;
                 if (!parseTTail(child)) return false;
                 break;
@@ -1223,7 +1233,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac: {
+            case t_lbrac:
+            case t_enum:{
                 if (!parseFactor(child)) return false;
                 if (!parseFactorTail(child)) return false;
                 break;
@@ -1293,6 +1304,7 @@ public class Parser extends BasicParser {
             case t_id:
             case t_new:
             case t_super:
+            case t_typename:
             {
                 if (!parseAtom(child)) return false;
                 if (!parseAtomTail(child)) return false;
@@ -1317,6 +1329,10 @@ public class Parser extends BasicParser {
                     return false;
                 }
                 if (!consumeAndAddAsLeaf(t_rbrac, child)) return false;
+                break;
+            }
+            case t_enum: {
+                if(!parseEnumMember(child)) return false;
                 break;
             }
             default:
@@ -1366,6 +1382,7 @@ public class Parser extends BasicParser {
         if(consume(t_namespace)) {
             if (!parseNamespacedIdentifier(child)) return false;
         }
+        
 
         parent.addChild(child);
         return true;
@@ -1488,7 +1505,8 @@ public class Parser extends BasicParser {
             case t_typeid:
             case t_true:
             case t_false:
-            case t_lbrac:{
+            case t_lbrac:
+            case t_enum:{
                 if (!parseExpression(output)) return false;
                 if (!parseArgsListTail(output)) return false;
                 break;
@@ -1607,6 +1625,9 @@ public class Parser extends BasicParser {
                 if (!parseStructOrUnionSpecifier(output)) return false;
                 break;
             }
+            case t_enum:
+                if(!parseEnum(output)) return false;
+                break;
             case t_id:
             case t_typename: {
                 if(!parseNamespacedType(output)) return false;
@@ -2546,6 +2567,39 @@ public class Parser extends BasicParser {
         }
         
         
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseEnum(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("Enum");
+        
+        if(!consume(t_enum)) return false;
+        if(match(t_id)) {
+            Token t= getCurrent();
+            consumeAndAddAsLeaf(child);
+            scopedTypedefStack.peek().add(t.getImage());
+        } else {
+            if (!parseNamespacedType(child)) return false;
+        }
+        if(!consume(t_lcurl)) return false;
+        if(!parseIdentifierList(child)) return false;
+        if(!consume(t_rcurl)) return false;
+        
+        
+        parent.addChild(child);
+        return true;
+    }
+    
+    private boolean parseEnumMember(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("EnumMember");
+    
+        if(!consume(t_enum)) return false;
+        if(!parseNamespacedType(child)) return recoverableMissingError("Must be a valid enum", t_semic);
+        if(!consume(t_dot)) return recoverableMissingError("Must access a member", t_semic);
+        if(!consumeAndAddAsLeaf(t_id, child)) return false;
+    
+    
         parent.addChild(child);
         return true;
     }

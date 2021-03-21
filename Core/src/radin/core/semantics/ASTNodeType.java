@@ -3,8 +3,6 @@ package radin.core.semantics;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
 import radin.core.utility.ICompilationSettings;
 
-import java.util.HashMap;
-
 import static radin.core.semantics.AbstractSyntaxNode.cleanNameToType;
 
 public enum ASTNodeType {
@@ -235,7 +233,9 @@ public enum ASTNodeType {
     parameter_type("parameter_type"),
     inline_array("inline_array"),
     namespaced_id("namespaced_id"),
-    in_namespace("in_namespace")
+    in_namespace("in_namespace"),
+    _enum("enum"),
+    enum_member("enum_member")
     ;
     
     

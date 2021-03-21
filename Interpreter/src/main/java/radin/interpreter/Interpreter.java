@@ -231,21 +231,47 @@ public class Interpreter {
 
     }
     
-    public class SegmentationFault extends Error {
+    public class EnumInstance extends Instance<EnumType> {
         
-        public SegmentationFault() {
+        private Token value;
+    
+        public EnumInstance(EnumType type, Token value) {
+            super(type);
+            this.value = value;
         }
-        
-        public SegmentationFault(String message) {
-            super(message);
+    
+        @Override
+        void copyFrom(Instance<?> other) {
+            this.value = ((EnumInstance) other).value;
         }
-        
-        public SegmentationFault(String message, Throwable cause) {
-            super(message, cause);
+    
+        @Override
+        Instance<EnumType> copy() {
+            return new EnumInstance(this.getType(), value);
         }
-        
-        public SegmentationFault(Throwable cause) {
-            super(cause);
+    
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            throw new InvalidPrimitiveException();
+        }
+    
+        @Override
+        boolean isFalse() {
+            throw new IllegalStateException("Can't use an enum as a boolean");
+        }
+    
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            EnumInstance that = (EnumInstance) o;
+            if(!environment.is(((EnumInstance) o).getType(), this.getType())) return false;
+            return value.getImage().equals(that.value.getImage());
+        }
+    
+        @Override
+        public String toString() {
+            return "EnumInstance{" + getType() + "." + value.getImage() + "}";
         }
     }
     
@@ -768,6 +794,26 @@ public class Interpreter {
     }
     
     
+    public class SegmentationFault extends Error {
+        
+        public SegmentationFault() {
+        }
+        
+        public SegmentationFault(String message) {
+            super(message);
+        }
+        
+        public SegmentationFault(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+        public SegmentationFault(Throwable cause) {
+            super(cause);
+        }
+    }
+    
+    
+    
     public <R, T extends AbstractCXPrimitiveType> PrimitiveInstance<R, T> createNewInstance(T type, R backing) {
         PrimitiveInstance<R, T> instance = (PrimitiveInstance<R, T>) createNewInstance(type);
         instance.setBackingValue(backing);
@@ -785,6 +831,8 @@ public class Interpreter {
         } else if (type instanceof ArrayType) {
             // TODO: implement proper array sizing
             return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getBaseType(), 15);
+        } else if (type instanceof EnumType) {
+            return new EnumInstance((EnumType) type, ((EnumType) type).getMembers().get(0));
         } else if (type instanceof AbstractCXPrimitiveType) {
             boolean unsigned = false;
             AbstractCXPrimitiveType fixed = ((AbstractCXPrimitiveType) type);
@@ -858,7 +906,7 @@ public class Interpreter {
     private Token nearestCurrentToken = null;
     private boolean log;
     private boolean main_started = false;
-    private boolean log_after_main = true;
+    private boolean log_after_main = false;
     
     
     public Interpreter(TypeEnvironment environment, SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols) {
@@ -1073,6 +1121,41 @@ public class Interpreter {
         logCurrentState();
         stackTrace.pop();
         thisStack.pop();
+        useThisStack.pop();
+        return true;
+    }
+    
+    public boolean callFunction(CXIdentifier id, Instance<?>... params) throws EarlyExit,
+            JodinNullPointerException {
+        for (Instance<?> param : params) {
+            arguments.push(param);
+        }
+        
+        
+        useThisStack.push(false);
+        
+        
+        createClosure();
+        
+        
+        
+        TypeAugmentedSemanticNode function = getSymbol(id);
+        if (function == null) {
+            throw new Error("Function " + id +  " not defined");
+        }
+        startStackTraceFor(id.getBase());
+        logCurrentState();
+        try {
+            if (!invoke(function)) return false;
+            endClosure();
+        } catch (FunctionReturned functionReturned) {
+            endClosure();
+            push(returnValue);
+            returnValue = null;
+        }
+        logCurrentState();
+        stackTrace.pop();
+        //thisStack.pop();
         useThisStack.pop();
         return true;
     }
@@ -1596,11 +1679,29 @@ public class Interpreter {
                 Token op = input.getChild(0).getToken();
                 if (!invoke(input.getChild(1))) return false;
                 Instance<?> lhsNull = pop().unwrap();
+                if(lhsNull instanceof EnumInstance) {
+                    EnumInstance lhs = ((EnumInstance) lhsNull);
+                    if(!invoke(input.getChild(2))) return false;
+                    if(op.getType() != t_eq && op.getType() != t_neq) throw new Error("Can only use == and != with enums");
+                    EnumInstance rhs = ((EnumInstance) pop().unwrap());
+                    int eq_backing = op.getType() == t_eq ? 1 : 0;
+                    int neq_backing = op.getType() == t_eq ? 0 : 1;
+                    if(lhs.equals(rhs)) {
+                        push(new PrimitiveInstance<>(CXPrimitiveType.INTEGER, eq_backing, true));
+                    } else {
+                        push(new PrimitiveInstance<>(CXPrimitiveType.INTEGER, neq_backing, true));
+                    }
+                    
+    
+                    
+                    break;
+                }
+                
                 
                 
                 PrimitiveInstance<?, ?> lhs, rhs;
                 if (lhsNull instanceof NullableInstance) {
-                    lhs = (PrimitiveInstance<?, ?>) ((NullableInstance) lhsNull).getValue();
+                    lhs = (PrimitiveInstance<?, ?>) ((NullableInstance<?, ?>) lhsNull).getValue();
                 } else if (lhsNull instanceof ArrayInstance) {
                     // in binary operations, treat arrays as pointers
                     lhs = ((ArrayInstance<?, ?>) lhsNull).asPointer();
@@ -1612,7 +1713,7 @@ public class Interpreter {
                 if (op.getType() == t_dand) {
                     if (lhs.isFalse()) {
                         push(
-                                new PrimitiveInstance<>(lhs.getType(), 0, false)
+                                new PrimitiveInstance<>(((PrimitiveInstance<?, ?>) lhs).getType(), 0, false)
                         );
                         break;
                     }
@@ -1620,7 +1721,7 @@ public class Interpreter {
                 } else if (op.getType() == t_dor) {
                     if (lhs.isTrue()) {
                         push(
-                                new PrimitiveInstance<>(lhs.getType(), 1, false)
+                                new PrimitiveInstance<>(((PrimitiveInstance<?, ?>) lhs).getType(), 1, false)
                         );
                         break;
                     }
@@ -1630,10 +1731,10 @@ public class Interpreter {
                 Instance<?> rhsNull = pop().unwrap();
                 
                 if (rhsNull instanceof NullableInstance) {
-                    rhs = (PrimitiveInstance<?, ?>) ((NullableInstance) rhsNull).getValue();
+                    rhs = (PrimitiveInstance<?, ?>) ((NullableInstance<?, ?>) rhsNull).getValue();
                 } else if (rhsNull instanceof ArrayInstance) {
                     // in binary operations, treat arrays as pointers
-                    rhs = ((ArrayInstance) rhsNull).asPointer();
+                    rhs = ((ArrayInstance<?, ?>) rhsNull).asPointer();
                 } else {
                     rhs = (PrimitiveInstance<?, ?>) rhsNull;
                 }
@@ -2444,10 +2545,24 @@ public class Interpreter {
                 PointerInstance<CXClassType> classTypeInstance =
                         (PointerInstance<CXClassType>) createNewInstance(subType).toPointer();
                 
+                
+                
                 if (classTypeInstance.getPointer() == null) {
                     throw new Error("Creating a new instance of " + subType + " failed");
                 }
                 
+                if(globalAutoVariables.get(CXIdentifier.from("reflection_available")).isTrue()) {
+                    CompoundInstance<CXClassType> classObject = (CompoundInstance<CXClassType>) classTypeInstance.getPointer();
+                    int classId = environment.getTypeId(subType);
+                    if (!callFunction(
+                            CXIdentifier.from("std", "__get_class"),
+                            createNewInstance(CXPrimitiveType.INTEGER, classId)
+                    )) {
+                        return false;
+                    }
+                    Instance<?> classTypeDef = pop().unwrap();
+                    classObject.fields.put("info", classTypeDef);
+                }
                 
                 int memstackPrevious = memStack.size();
                 if (!invoke(input.getASTChild(ASTNodeType.sequence))) return false;
@@ -2517,8 +2632,15 @@ public class Interpreter {
                 push(array);
                 break;
                 //throw new Error("Inline arrays not yet supported");
+            case enum_member:
+                EnumType type = ((EnumType) input.getCXType());
+                Token member = input.getASTChild(ASTNodeType.id).getToken();
+                EnumInstance instance = new EnumInstance(type, member);
+                push(instance);
+                break;
             case empty: // nop
                 break;
+                
             default:
                 return false;
         }
@@ -2547,6 +2669,10 @@ public class Interpreter {
 
         if (type instanceof ArrayType) {
             return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getDereferenceType());
+        }
+        
+        if (type instanceof EnumType) {
+            return new EnumInstance(((EnumType) type), ((EnumType) type).getMembers().get(0));
         }
 
         if (type instanceof AbstractCXPrimitiveType) {

@@ -2,6 +2,7 @@ package radin.frontend.v1.semantics;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
+import radin.core.semantics.types.primitives.EnumType;
 import radin.frontend.directastparsing.ASTParser;
 import radin.frontend.v1.MissingCategoryNodeError;
 import radin.frontend.v1.parsing.CategoryNode;
@@ -484,6 +485,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         if(node.firstIs("Atom")) {
                             getCatNode("AtomTail").setInherit(getCatNode("Atom").getSynthesized());
                             node.setSynthesized(getCatNode("AtomTail").getSynthesized());
+                            return true;
+                        } else if(node.firstIs("EnumMember")) {
+                            node.setSynthesized(getCatNode("EnumMember").getSynthesized());
                             return true;
                         } if(node.firstIs(TokenType.t_string, TokenType.t_literal)) {
                             node.setSynthesized(node.getChild(0).getSynthesized());
@@ -1796,9 +1800,36 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "GenericInstanceTypeList": {
-                        
-                        
                         return false;
+                    }
+                    case "Enum": {
+                        node.printTreeForm();
+                        AbstractSyntaxNode identifier = node.getChild(0).getSynthesized();
+                        AbstractSyntaxNode idList = getCatNode("IdentifierList").getSynthesized();
+                        AbstractSyntaxNode abstractSyntaxNode = new AbstractSyntaxNode(
+                                ASTNodeType._enum,
+                                identifier,
+                                idList
+                        );
+                        CXType enumType = environment.getType(abstractSyntaxNode);
+                        
+                        node.setSynthesized(
+                                abstractSyntaxNode.addType(enumType)
+                        );
+                        return true;
+                        //throw new Error("Enums not yet implemented");
+                    }
+                    case "EnumMember": {
+                        node.printTreeForm();
+                        EnumType enumType = (EnumType) environment.getType(node.getChild(0).getSynthesized());
+                        node.setSynthesized(
+                            new TypedAbstractSyntaxNode(
+                                    ASTNodeType.enum_member,
+                                    enumType,
+                                    node.getLeafNode(t_id).getSynthesized()
+                            )
+                        );
+                        return true;
                     }
                     default:
                         error("No Action Routine for " + node.getCategory());
@@ -1824,6 +1855,11 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 cont = false;
             }catch (AbstractCompilationError e) {
                 errors.add(e);
+                ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
+                ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);
+                cont = false;
+            } catch (Error e) {
+                errors.add(new CompilationError(e, findFirstToken(node)));
                 ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
                 ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);
                 cont = false;

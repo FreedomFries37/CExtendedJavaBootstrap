@@ -391,7 +391,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 ((CXMappedType) nextType).update();
             }
             
-            if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
+            if(nextType == null) {
+                throw new IllegalAccessError(node.getChild(0).findFirstToken());
+            }
             node.setType(nextType);
             ICompilationSettings.debugLog.fine("Found. Field Type = " + nextType);
             node.setLValue(objectInteraction.isLValue());
@@ -577,6 +579,12 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             CXIdentifier absolute = getCurrentTracker().resolveIdentifier(id);
             node.addCompilationTag(new ResolvedPathTag(absolute));
             node.setType(type);
+            return true;
+        }
+        
+        if(node.getASTType() == ASTNodeType.enum_member) {
+            
+            node.setType(((TypedAbstractSyntaxNode) node.getASTNode()).getCxType());
             return true;
         }
         
