@@ -1,12 +1,12 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.core.semantics.types.CXIdentifier;
+import radin.midanalysis.typeanalysis.errors.RedeclarationError;
 import radin.output.tags.ArrayWithSizeTag;
 import radin.output.tags.BasicCompilationTag;
 import radin.output.tags.ResolvedPathTag;
 import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.midanalysis.typeanalysis.errors.IncorrectTypeError;
-import radin.output.typeanalysis.errors.RedeclarationError;
 import radin.midanalysis.typeanalysis.errors.TypeNotDefinedError;
 import radin.midanalysis.typeanalysis.errors.VoidTypeError;
 import radin.output.tags.MultiDimensionalArrayWithSizeTag;

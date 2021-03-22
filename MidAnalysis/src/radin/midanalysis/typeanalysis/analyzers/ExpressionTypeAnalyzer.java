@@ -25,10 +25,13 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
+import radin.midanalysis.typeanalysis.errors.*;
+import radin.midanalysis.typeanalysis.errors.IllegalAccessError;
+import radin.midanalysis.typeanalysis.errors.InstantiationError;
 import radin.output.tags.*;
 import radin.output.typeanalysis.IVariableTypeTracker;
-import radin.output.typeanalysis.TypeAnalyzer;
-import radin.output.typeanalysis.errors.IllegalAccessError;
+
 import radin.output.typeanalysis.errors.*;
 
 import java.util.ArrayList;
@@ -617,7 +620,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     Token id = genericItem.getASTChild(ASTNodeType.id).getToken();
                     ICompilationSettings.debugLog.fine("Calling generic function: " + id.getImage());
 
-                    GenericInstance<CXFunctionPointer> genericFunctionCallOn = getGenericModule().genericFunctionCallOn(new CXIdentifier(id, false), types);
+                    GenericInstance<CXFunctionPointer> genericFunctionCallOn = getGenericModule().genericFunctionCallOn(new CXIdentifier(id), types);
                     CXFunctionPointer type = genericFunctionCallOn.type;
 
                     TypeAugmentedSemanticNode sequence = genericItem.getASTChild(ASTNodeType.sequence);

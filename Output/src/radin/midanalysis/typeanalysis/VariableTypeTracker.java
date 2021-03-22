@@ -13,8 +13,9 @@ import radin.core.semantics.types.methods.ParameterTypeList;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Option;
 import radin.core.utility.Reference;
-import radin.output.typeanalysis.errors.ClassNotDefinedError;
-import radin.output.typeanalysis.errors.RedeclarationError;
+import radin.midanalysis.typeanalysis.errors.ClassNotDefinedError;
+import radin.midanalysis.typeanalysis.errors.RedeclarationError;
+import radin.output.typeanalysis.IVariableTypeTracker;
 
 import java.util.*;
 import java.util.stream.Collectors;

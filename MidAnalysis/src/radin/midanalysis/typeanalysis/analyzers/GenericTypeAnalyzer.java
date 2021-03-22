@@ -48,7 +48,7 @@ public class GenericTypeAnalyzer extends TypeAnalyzer {
     
                 Token id = functionDefinition.getASTChild(ASTNodeType.id).getToken();
                 getGenericModule().declareGenericFunction(
-                        new CXIdentifier(id, false),
+                        new CXIdentifier(id),
                         returnType,
                         parameterTypes,
                         argTypes,

@@ -9,9 +9,9 @@ import radin.core.semantics.types.compound.CXCompoundType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.semantics.types.primitives.PointerType;
 import radin.midanalysis.TypeAugmentedSemanticNode;
+import radin.midanalysis.typeanalysis.TypeAnalyzer;
 import radin.output.tags.ResolvedPathTag;
 import radin.output.typeanalysis.IVariableTypeTracker;
-import radin.output.typeanalysis.TypeAnalyzer;
 
 import java.util.LinkedList;
 import java.util.List;

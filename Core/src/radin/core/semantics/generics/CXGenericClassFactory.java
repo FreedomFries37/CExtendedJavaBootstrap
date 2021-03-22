@@ -81,7 +81,7 @@ public class CXGenericClassFactory implements ICXGenericFactory<AbstractCXClassT
     @Override
     public GenericInstance<AbstractCXClassType> createInstance(List<CXType> types) {
         if (!typesValid(types)) return null;
-        String alteredName = identifier.getIdentifier().getImage()
+        String alteredName = identifier.getIdentifier().toString()
                 + "_"
                 + types.stream().map(CXType::getSafeTypeString).collect(Collectors.joining("_"));
         if(originalRelevantTree != null) {
