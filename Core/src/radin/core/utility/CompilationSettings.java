@@ -24,6 +24,7 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     private boolean outputPostprocessingOutput = false;
     private boolean outputAST = false;
     private boolean outputTAST = false;
+    private boolean outputParseTree = false;
     
     private String directory = "";
     
@@ -305,7 +306,17 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
         debugLog.config("Set output TAST to " + outputTAST);
         this.outputTAST = outputTAST;
     }
-    
+
+    @Override
+    public boolean isOutputParseTree() {
+        return outputParseTree;
+    }
+
+    @Override
+    public void setOutputParseTree(boolean outputParseTree) {
+        this.outputParseTree = outputParseTree;
+    }
+
     @Override
     public String getDirectory() {
         return directory;

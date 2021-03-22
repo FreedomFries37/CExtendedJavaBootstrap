@@ -1647,7 +1647,7 @@ public class Parser extends BasicParser {
             case t_typename: {
                 if(!parseNamespacedType(output)) return false;
                 if(match(t_lt)) {
-                    if(!parseGenericInstanceParameters(output)) return false;
+                    if(!parseGenericInstanceInitParameters(output)) return false;
                 }
                 break;
             }
@@ -2299,9 +2299,12 @@ public class Parser extends BasicParser {
             if(!parseExpression(child)) return false;
         }
         */
+
         if (!oneMustParse(child, this::parseAssignment, this::parseExpression)) {
             return false;
         }
+
+
         
         
         parent.addChild(child);

@@ -173,7 +173,9 @@ public class StatementAnalyzer extends TypeAnalyzer {
             }
             
         } else if(node.getASTNode() == AbstractSyntaxNode.EMPTY) return true;
-        else throw new IllegalStatementError();
+        else {
+            throw new IllegalStatementError();
+        }
         
         return true;
     }

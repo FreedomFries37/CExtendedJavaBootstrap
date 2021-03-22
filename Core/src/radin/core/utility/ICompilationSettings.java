@@ -292,6 +292,10 @@ public interface ICompilationSettings<Front, Mid, Back> {
     boolean isOutputTAST();
     
     void setOutputTAST(boolean outputTAST);
+
+    boolean isOutputParseTree();
+
+    void setOutputParseTree(boolean outputParseTree);
     
     enum SupportedWordSize {
         arch64,

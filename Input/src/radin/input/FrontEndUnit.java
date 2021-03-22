@@ -5,7 +5,12 @@ import radin.core.IFrontEndUnit;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.utility.ICompilationSettings;
+import radin.core.utility.UniversalCompilerSettings;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -83,6 +88,8 @@ public class FrontEndUnit<T, P extends AbstractTree<? extends P>, S> implements 
             ICompilationSettings.debugLog.warning("Lexing resulted in errors");
             return null;
         }
+
+
         ICompilationSettings.debugLog.info("Running Parser");
         P parse = parser.parse();
         if(parse == null || parser.hasErrors()) {

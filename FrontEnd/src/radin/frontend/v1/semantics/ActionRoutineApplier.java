@@ -1827,12 +1827,15 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return true;
                     }
                     case "GenericInstanceTypeList": {
+                        node.printTreeForm();
                         return false;
                     }
                     case "GenericInstanceInitParameters": {
                         AbstractSyntaxNode next = new AbstractSyntaxNode(ASTNodeType.generic_init,
-                                getCatNode("AbstractTypeNameList").getSynthesized());
-                        next.addChild(node.getInherit());
+                                getCatNode("AbstractTypeNameList").getSynthesized()
+                        .getChild(0)
+                        .getDirectChildren()
+                        );
                         node.setSynthesized(
                                 next
                         );
@@ -1851,6 +1854,15 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                                 new AbstractSyntaxNode(ASTNodeType.parameterized_types, array)
                         );
                         return true;
+                    }
+                    case "GenericInstanceParameters": {
+                        node.printTreeForm();
+                        AbstractSyntaxNode varianceList = node.getCategoryNode("VarianceList").getSynthesized();
+                        varianceList.printTreeForm();
+                        return false;
+                    }
+                    case "VarianceList": {
+                        return false;
                     }
                     case "Enum": {
                         node.printTreeForm();

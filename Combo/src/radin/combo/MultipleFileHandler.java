@@ -309,6 +309,8 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
                             ICompilationSettings.debugLog.warning("Couldn't create pre-processing output file at " + file + ".ppo");
                         }
                     }
+
+
                     
                     if (astTree != null && UniversalCompilerSettings.getInstance().getSettings().isOutputAST()) {
                         File astOutput = ICompilationSettings.createBuildFile("ast/" + new File(file).getName() + ".ast");

@@ -42,7 +42,7 @@ for <T> void replace(T* l, T* r) {
 
 int main(int argc, std::String argv[]) {
 	std::Object o = new std::Object();
-	std::Object self = earlyTest<std::Object>(o);
+	//std::Object self = earlyTest<std::Object>(o);
 	int hash = getHash<std::Object>(o);
 	std::Int h = new std::Int(hash);
 	h->println();
