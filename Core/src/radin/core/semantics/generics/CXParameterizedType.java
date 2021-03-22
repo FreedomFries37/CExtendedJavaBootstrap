@@ -4,8 +4,6 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
-import radin.core.semantics.types.ICXWrapper;
-import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXStructType;
 import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
@@ -152,7 +150,7 @@ public class CXParameterizedType extends AbstractCXClassType {
     
     @Override
     public CXIdentifier getTypeNameIdentifier() {
-        return new CXIdentifier(name, false);
+        return new CXIdentifier(name);
     }
     
     @Override

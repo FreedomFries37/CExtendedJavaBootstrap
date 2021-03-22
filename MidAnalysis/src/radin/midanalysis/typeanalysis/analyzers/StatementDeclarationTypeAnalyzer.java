@@ -1,8 +1,12 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
+import radin.core.semantics.types.CXIdentifier;
 import radin.output.tags.ArrayWithSizeTag;
 import radin.output.tags.BasicCompilationTag;
+import radin.output.tags.ResolvedPathTag;
+import radin.output.typeanalysis.IVariableTypeTracker;
 import radin.midanalysis.typeanalysis.errors.IncorrectTypeError;
+import radin.output.typeanalysis.errors.RedeclarationError;
 import radin.midanalysis.typeanalysis.errors.TypeNotDefinedError;
 import radin.midanalysis.typeanalysis.errors.VoidTypeError;
 import radin.output.tags.MultiDimensionalArrayWithSizeTag;
@@ -23,9 +27,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
-    
-    public StatementDeclarationTypeAnalyzer(TypeAugmentedSemanticNode tree) {
+
+    private IVariableTypeTracker.NameType nameType;
+
+
+    public StatementDeclarationTypeAnalyzer(TypeAugmentedSemanticNode tree, IVariableTypeTracker.NameType type) {
         super(tree);
+        this.nameType = type;
+    }
+
+    public StatementDeclarationTypeAnalyzer(TypeAugmentedSemanticNode tree) {
+        this(tree, IVariableTypeTracker.NameType.LOCAL);
     }
     
     private static boolean constantDeterminer(TypeAugmentedSemanticNode node) {
@@ -39,7 +51,9 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
         
         for (TypeAugmentedSemanticNode declaration : node.getChildren()) {
             CXType declarationType;
-            String name;
+            CXIdentifier name;
+            TypeAugmentedSemanticNode identifierNode = null;
+
             
             if(declaration.getASTType() == ASTNodeType.declaration) {
                 assert declaration.getASTNode() instanceof TypedAbstractSyntaxNode;
@@ -101,7 +115,8 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 
                 
                 
-                name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
+                identifierNode = declaration.getASTChild(ASTNodeType.id);
                 
             } else if(declaration.getASTType() == ASTNodeType.initialized_declaration) {
                 
@@ -115,12 +130,18 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     throw new TypeNotDefinedError(subDeclaration.findFirstToken().getPrevious());
                 }
     
-                name = subDeclaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                name = new CXIdentifier(subDeclaration.getASTChild(ASTNodeType.id).getToken());
+
+                if(getCurrentTracker().globalVariableExists(name)) {
+                    throw new RedeclarationError(name.getIdentifierString());
+                }
+
+                identifierNode = subDeclaration.getASTChild(ASTNodeType.id);
                 
                 TypeAugmentedSemanticNode expression = declaration.getChild(1);
                 ExpressionTypeAnalyzer analyzer = new ExpressionTypeAnalyzer(expression);
                 if(!determineTypes(analyzer)) {
-                    getCurrentTracker().addVariable(name, declarationType);
+                    getCurrentTracker().addLocalVariable(name.getIdentifierString(), declarationType);
                     return false;
                 }
                 
@@ -141,10 +162,10 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                 declarationType =
                         ((TypedAbstractSyntaxNode) declaration.getASTNode()).getCxType().getTypeRedirection(getEnvironment());
     
-                name = declaration.getASTChild(ASTNodeType.id).getToken().getImage();
+                name = new CXIdentifier(declaration.getASTChild(ASTNodeType.id).getToken());
+                identifierNode = declaration.getASTChild(ASTNodeType.id);
                 
-                
-                getCurrentTracker().addFunction(name, declarationType, false);
+
     
                 TypeAugmentedSemanticNode astChild = declaration.getASTChild(ASTNodeType.parameter_list);
                 List<CXType> typeList = new LinkedList<>();
@@ -152,9 +173,13 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
                     typeList.add(((TypedAbstractSyntaxNode) child.getASTNode()).getCxType());
                 }
                 CXFunctionPointer pointer = new CXFunctionPointer(declarationType, typeList);
-                
-                getCurrentTracker().addVariable(name, pointer);
+                // getCurrentTracker().addFunction(name, pointer, false);
+                getCurrentTracker().addGlobalVariable(name, pointer);
                 declaration.getASTChild(ASTNodeType.id).setType(pointer);
+
+                CXIdentifier id = getCurrentTracker().resolveIdentifier(name);
+                declaration.getASTChild(ASTNodeType.id).addCompilationTag(new ResolvedPathTag(id));
+
                 return true;
             } else {
                 return false;
@@ -173,7 +198,18 @@ public class StatementDeclarationTypeAnalyzer extends TypeAnalyzer {
             if(isBaseTracker()) {
                 ICompilationSettings.debugLog.finer("Adding global variable " + name + " of type " + declarationType);
             }
-            getCurrentTracker().addVariable(name, declarationType);
+            switch (nameType) {
+
+                case LOCAL:
+                    getCurrentTracker().addLocalVariable(name.getIdentifierString(), declarationType);
+                    break;
+                case GLOBAL:
+
+                    CXIdentifier id = getCurrentTracker().addGlobalVariable(name, declarationType);
+                    identifierNode.addCompilationTag(new ResolvedPathTag(id));
+                    break;
+            }
+
             declaration.setType(declarationType);
         }
         

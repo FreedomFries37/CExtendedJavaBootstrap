@@ -5,6 +5,7 @@ import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.ASTMeaningfulNode;
 import radin.core.semantics.types.CXCompoundTypeNameIndirection;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
@@ -31,7 +32,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     private HashSet<ICompilationTag> compilationTags;
     
     public final static TypeAugmentedSemanticNode EMPTY = new TypeAugmentedSemanticNode(AbstractSyntaxNode.EMPTY);
-    
+    private CXIdentifier absolutePath;
     
     public TypeAugmentedSemanticNode(AbstractSyntaxNode base) {
         this.astNode = base;
@@ -261,6 +262,9 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
         }
         if(!compilationTags.isEmpty())
             output += "  compilation tags: " + compilationTags;
+        if(absolutePath != null) {
+            output += " ID: " + absolutePath;
+        }
         return output;
     }
     
@@ -275,7 +279,7 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
     }
     
     public void addCompilationTag(ICompilationTag tag) {
-        if(!tag.canAttachTo(this)) throw new IllegalArgumentException();
+        if(!tag.canAttachTo(this)) throw new IllegalArgumentException(tag.toString() + " can not attach to " + this.getASTType());
         compilationTags.add(tag);
     }
     
@@ -365,17 +369,25 @@ public class TypeAugmentedSemanticNode extends ASTMeaningfulNode<TypeAugmentedSe
             TypeAugmentedSemanticNode output = child.findFromASTNode(node);
             if(output != null) return output;
         }
-        
+
         return null;
     }
-    
+
     public TypeAugmentedSemanticNode findFromTag(AbstractCompilationTag tag) {
         if(this.containsCompilationTag(tag)) return this;
         for (TypeAugmentedSemanticNode child : children) {
             TypeAugmentedSemanticNode output = child.findFromTag(tag);
             if(output != null) return output;
         }
-        
+
         return null;
+    }
+
+    public CXIdentifier getAbsolutePath() {
+        return absolutePath;
+    }
+
+    public void setAbsolutePath(CXIdentifier absolutePath) {
+        this.absolutePath = absolutePath;
     }
 }

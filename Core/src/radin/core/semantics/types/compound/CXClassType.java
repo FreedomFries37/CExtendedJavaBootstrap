@@ -91,7 +91,7 @@ public class CXClassType extends AbstractCXClassType {
         for (CXMethod method : methods) {
             
             
-            Token identifier = method.getName().getIdentifier();
+            Token identifier = method.getName().getBase();
             method.setIdentifier(new CXIdentifier(typename, identifier));
             
             

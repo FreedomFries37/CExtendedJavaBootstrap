@@ -10,8 +10,6 @@ sourceSets {
     }
 }
 
-
-
 dependencies {
     implementation project(':Core')
     implementation project(':Input')
@@ -21,4 +19,15 @@ dependencies {
     implementation project(':MidAnalysis')
     implementation project(':Combo')
     implementation project(':Interpreter')
+    implementation project(':ToolchainRunner')
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'radin.ToolchainEntrancePoint'
+    }
+
+    archiveBaseName = "jodin"
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }

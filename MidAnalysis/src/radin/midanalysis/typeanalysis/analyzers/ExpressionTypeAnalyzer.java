@@ -1,6 +1,7 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 
+import radin.core.IdentifierDoesNotExistError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
@@ -24,11 +25,11 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
-import radin.midanalysis.typeanalysis.errors.InstantiationError;
 import radin.output.tags.*;
-import radin.midanalysis.typeanalysis.TypeAnalyzer;
-import radin.midanalysis.typeanalysis.errors.IllegalAccessError;
-import radin.midanalysis.typeanalysis.errors.*;
+import radin.output.typeanalysis.IVariableTypeTracker;
+import radin.output.typeanalysis.TypeAnalyzer;
+import radin.output.typeanalysis.errors.IllegalAccessError;
+import radin.output.typeanalysis.errors.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,6 +49,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         if(node.isTypedExpression()) return true;
         
         if(node.getASTNode().getTreeType() == ASTNodeType._super) {
+
             node.setType(getCurrentTracker().getType("super"));
             return true;
         }
@@ -61,7 +63,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             String image = node.getToken().getImage();
             Pattern floatingPoint = Pattern.compile("-?\\d+\\.\\d*|\\d*\\.\\d+");
             Pattern integer = Pattern.compile("\\d+|0b[01]+|0x[a-fA-F]+");
-            Pattern character = Pattern.compile("'(.|\\\\.)'");
+            Pattern character = Pattern.compile("'(.|\\\\.)'", Pattern.DOTALL);
             
             if(floatingPoint.matcher(image).matches()) {
                 node.setType(CXPrimitiveType.DOUBLE);
@@ -83,18 +85,23 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.string) {
-            node.setType(new PointerType(CXPrimitiveType.CHAR));
+            CXType stringType = environment.getType(CXIdentifier.from("std", "String"), null);
+            node.setType(stringType);
             return true;
         }
         
         if(node.getASTNode().getTreeType() == ASTNodeType.id) {
             String image = node.getToken().getImage();
-            if(!getCurrentTracker().variableExists(image)) {
+            if(!getCurrentTracker().idExists(image)) {
                 throw new IdentifierDoesNotExistError(image);
             }
             CXType type = getCurrentTracker().getType(image);
             if(type instanceof CXDynamicTypeDefinition) {
                 type = ((CXDynamicTypeDefinition) type).getOriginal();
+            }
+            if(getCurrentTracker().getVariableTypeForName(image) == IVariableTypeTracker.NameType.GLOBAL) {
+                CXIdentifier id = getCurrentTracker().tryResolveFromName(image).expect("Global Variables should always resolve");
+                node.addCompilationTag(new ResolvedPathTag(id));
             }
             node.setType(type);
             node.setLValue(true);
@@ -156,7 +163,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     child.getCXType(), child.findFirstToken());
             assert child.getCXType() instanceof PointerType;
             
-            if(strictIs(((PointerType) child.getCXType()).getSubType(), CXPrimitiveType.VOID)) throw new VoidDereferenceError();
+            if(strictIs(CXPrimitiveType.VOID, ((PointerType) child.getCXType()).getSubType())) throw new VoidDereferenceError();
             
             if(child.getASTType() == ASTNodeType.constructor_call) {
                 node.addCompilationTag(BasicCompilationTag.NEW_OBJECT_DEREFERENCE);
@@ -301,7 +308,30 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!determineTypes(sequenceTypeAnalyzer)) return false;
             
             assert node.getChild(0).getCXType() instanceof CXFunctionPointer;
+
+
+
+
             CXFunctionPointer cxType = (CXFunctionPointer) node.getChild(0).getCXType();
+            List<CXType> sequenceTypes = sequenceTypeAnalyzer.getCollectedTypes();
+            List<CXType> functionArgTypes = cxType.getParameterTypes();
+
+            if(sequenceTypes.size() != functionArgTypes.size()) {
+                setIsFailurePoint(node.getASTChild(ASTNodeType.sequence));
+                throw new IncorrectNumberOfArgumentsError(node.getASTChild(ASTNodeType.sequence).findFirstToken(), functionArgTypes.size(),
+                        sequenceTypes.size());
+            }
+
+            for (int i = 0; i < sequenceTypes.size(); i++) {
+                CXType seq = sequenceTypes.get(i);
+                CXType param = functionArgTypes.get(i);
+                if (!is(seq, param)) {
+                    TypeAugmentedSemanticNode child_arg = node.getASTChild(ASTNodeType.sequence).getChild(i);
+                    throw new IncorrectTypeError(param, seq, child_arg.findFirstToken());
+                }
+            }
+
+
             node.setType(cxType.getReturnType());
             node.setLValue(false);
             return true;
@@ -367,7 +397,9 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 ((CXMappedType) nextType).update();
             }
             
-            if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
+            if(nextType == null) {
+                throw new IllegalAccessError(node.getChild(0).findFirstToken());
+            }
             node.setType(nextType);
             ICompilationSettings.debugLog.fine("Found. Field Type = " + nextType);
             node.setLValue(objectInteraction.isLValue());
@@ -435,7 +467,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 throw new IllegalAccessError(cxClass, name.getImage(), typeList, node.getChild(0).findFirstToken(), name);
             }
             
-            
+
             CXType nextType = getCurrentTracker().getMethodType(((AbstractCXClassType) cxClass), name.getImage(), typeList);
             if(nextType == null) throw new IllegalAccessError(node.getChild(0).findFirstToken());
             
@@ -493,7 +525,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             if(!constructedType.canBeInstantiated()) {
                 throw new InstantiationError(node.findFirstToken().getNext(), constructedType);
             }
-            
+
             assert constructedType instanceof CXClassType;
             SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(node.getASTChild(ASTNodeType.sequence));
             
@@ -510,7 +542,63 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             node.setType(new PointerType(constructedType));
             return true;
         }
-        
+
+        if(node.getASTType() == ASTNodeType.inline_array) {
+            TypeAugmentedSemanticNode sequence = node.getASTChild(ASTNodeType.sequence);
+            SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(sequence);
+            if(!determineTypes(sequenceTypeAnalyzer)) return false;
+            List<CXType> collectedTypes = sequenceTypeAnalyzer.getCollectedTypes();
+            node.addCompilationTag(
+                    new InlineArrayTag(collectedTypes.size())
+            );
+
+            if (collectedTypes.size() == 0) {
+                node.setType(CXPrimitiveType.VOID.toPointer());
+                node.setLValue(false);
+
+
+                return true;
+            }
+
+            CXType expected = collectedTypes.get(0);
+            for(int i = 1; i < collectedTypes.size(); i++) {
+                CXType found = collectedTypes.get(i);
+                if (!is(found, expected)) {
+                    if(found.canBeTreatedAsPointer() && expected.canBeTreatedAsPointer()) {
+                        expected = CXPrimitiveType.VOID.toPointer();
+                    } else {
+                        throw new IncorrectTypeError(expected, found, sequence.getChild(0).findFirstToken(), sequence.getChild(1).findFirstToken());
+                    }
+                }
+            }
+
+            ArrayType type = new ArrayType(expected);
+
+            node.setType(type);
+            node.setLValue(false);
+
+
+            return true;
+        }
+
+        if(node.getASTType() == ASTNodeType.namespaced_id) {
+            CXIdentifier id = new CXIdentifier(node.getASTNode());
+            if (!getCurrentTracker().idExists(id)) {
+                throw new IdentifierDoesNotExistError(id);
+            }
+            CXType type = getCurrentTracker().getGlobalVariableType(id);
+            CXIdentifier absolute = getCurrentTracker().resolveIdentifier(id);
+            node.addCompilationTag(new ResolvedPathTag(absolute));
+            node.setType(type);
+            return true;
+        }
+
+        if(node.getASTType() == ASTNodeType.enum_member) {
+
+            node.setType(((TypedAbstractSyntaxNode) node.getASTNode()).getCxType());
+            return true;
+        }
+
         if(node.getASTType() == ASTNodeType.generic_init) {
             List<TypeAugmentedSemanticNode> parameterTypes = node.getASTChild(ASTNodeType.parameterized_types).getChildren();
             List<CXType> types = new ArrayList<>(parameterTypes.size());
@@ -521,39 +609,39 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                 }
                 types.add(originalType);
             }
-    
+
             TypeAugmentedSemanticNode genericItem = node.getChild(1);
             switch (genericItem.getASTType()) {
                 case function_call: {
-                    
+
                     Token id = genericItem.getASTChild(ASTNodeType.id).getToken();
                     ICompilationSettings.debugLog.fine("Calling generic function: " + id.getImage());
-    
+
                     GenericInstance<CXFunctionPointer> genericFunctionCallOn = getGenericModule().genericFunctionCallOn(new CXIdentifier(id, false), types);
                     CXFunctionPointer type = genericFunctionCallOn.type;
-    
+
                     TypeAugmentedSemanticNode sequence = genericItem.getASTChild(ASTNodeType.sequence);
                     SequenceTypeAnalyzer sequenceTypeAnalyzer = new SequenceTypeAnalyzer(
                             sequence
                     );
-                    
+
                     if(!determineTypes(sequenceTypeAnalyzer)) return false;
                     List<CXType> sequenceTypes = sequence.getChildren().stream().map(TypeAugmentedSemanticNode::getCXType).collect(Collectors.toList());
                     Iterator<CXType> iterator = sequenceTypes.iterator();
                     if(sequenceTypes.size() != sequence.getChildren().size()) {
                         throw new IncorrectParameterTypesError();
                     }
-    
+
                     int count = 0;
                     for (CXType parameterType : type.getParameterTypes()) {
                         CXType lookingFor = iterator.next();
-                        
+
                         if(!environment.is(lookingFor, parameterType)) {
                             throw new IncorrectTypeError(lookingFor, parameterType, sequence.getChild(count).findFirstToken());
                         }
                         ++count;
                     }
-    
+
                     genericItem.addCompilationTag(new GenericFunctionCallTag(genericFunctionCallOn));
                     node.setType(type.getReturnType());
                     return true;
@@ -562,7 +650,7 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
                     break;
             }
         }
-        
+
         throw new UndefinedError(node.findFirstToken(), "Undefined Expression Type: " + node.getASTType());
     }
     

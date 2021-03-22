@@ -2,6 +2,7 @@ package radin.core.semantics.types.wrapped;
 
 import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
 
@@ -85,5 +86,10 @@ public class CXNamespacedType extends CXType implements ICXWrapper {
     @Override
     public CXType getWrappedType() {
         return actual;
+    }
+
+    @Override
+    public CXIdentifier getIdentifier() {
+        return actual.getIdentifier();
     }
 }

@@ -1,33 +1,79 @@
 package radin.core.semantics.types;
 
+import radin.core.Namespaced;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.AbstractSyntaxNode;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-public class CXIdentifier implements CXEquivalent {
+public class CXIdentifier implements CXEquivalent, Namespaced {
     private CXIdentifier parentNamespace;
     private Token identifier;
     private Token corresponding;
-    private boolean useHashcode;
-    
-    
+
+
     public CXIdentifier(CXIdentifier parentNamespace, Token identifier) {
         this.parentNamespace = parentNamespace;
         this.identifier = identifier;
         corresponding = identifier;
-        useHashcode = true;
+    }
+
+    public CXIdentifier(CXIdentifier other) {
+        if (other.parentNamespace != null) {
+            this.parentNamespace = new CXIdentifier(other.parentNamespace);
+        }
+        this.identifier = other.identifier;
+        this.corresponding = other.corresponding;
+    }
+
+    public CXIdentifier(Token identifier) {
+        this.identifier = identifier;
+    }
+
+    public CXIdentifier(AbstractSyntaxNode typespacedId) {
+        if (typespacedId.hasChild(ASTNodeType.namespaced_id)) {
+            this.parentNamespace = new CXIdentifier(typespacedId.getChild(ASTNodeType.namespaced_id));
+        }
+        if (typespacedId.getTreeType() == ASTNodeType.id) {
+            this.identifier = typespacedId.getToken();
+        } else {
+            this.identifier = typespacedId.getChild(ASTNodeType.id).getToken();
+        }
+
+        corresponding = this.identifier;
+    }
+
+    public static CXIdentifier from(String first, String... rest) {
+        if (rest.length == 0) return new CXIdentifier(new Token(TokenType.t_id, first));
+        String last = rest[rest.length - 1];
+        String[] parents = Arrays.copyOf(rest, rest.length - 1);
+        CXIdentifier parent = CXIdentifier.from(first, parents);
+        return new CXIdentifier(parent, new Token(TokenType.t_id, last));
+    }
+
+    public static CXIdentifier from(CXIdentifier first, CXIdentifier... rest) {
+        if (rest.length == 0) return first;
+        CXIdentifier last = rest[rest.length - 1];
+        CXIdentifier[] parents = Arrays.copyOf(rest, rest.length - 1);
+        CXIdentifier parent = CXIdentifier.from(first, parents);
+        return CXIdentifier.concat(parent, last);
+    }
+
+    public static CXIdentifier concat(CXIdentifier parent, CXIdentifier child) {
+        CXIdentifier parentClone = new CXIdentifier(parent);
+        CXIdentifier childClone = new CXIdentifier(child);
+        childClone.parentNamespace = parentClone;
+        return childClone;
     }
     
     public Token getCorresponding() {
         if(corresponding == null) return new Token(TokenType.t_eof);
         return corresponding;
     }
-    
-    public CXIdentifier(Token identifier, boolean useHashcode) {
-        this.identifier = identifier;
-        this.useHashcode = false;
-    }
+
     
     public CXIdentifier getParentNamespace() {
         return parentNamespace;
@@ -37,12 +83,15 @@ public class CXIdentifier implements CXEquivalent {
         return identifier.getImage();
     }
     
-    public Token getIdentifier() {
+    public Token getBase() {
         return identifier;
     }
-    
-    
-    
+
+    @Override
+    public CXIdentifier getIdentifier() {
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -86,4 +135,5 @@ public class CXIdentifier implements CXEquivalent {
         if(parentNamespace == null) return identifier.toString();
         return parentNamespace.fullInfo() + " :: " + identifier.toString();
     }
+
 }

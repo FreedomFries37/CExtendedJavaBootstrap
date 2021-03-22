@@ -67,7 +67,7 @@ public class ErrorReader {
         for (AbstractCompilationError error : errors) {
             // System.out.println(error.getError());
             if(error == null) continue;
-            ICompilationSettings.debugLog.warning(error.getClass().getSimpleName() + ": " + error.getMessage());
+            ICompilationSettings.debugLog.severe(error.getClass().getSimpleName() + ": " + error.getMessage());
     
             List<AbstractCompilationError.ErrorInformation> infoMessages = new LinkedList<>();
             LineHolder lineHolderCurrent = null;
@@ -90,7 +90,7 @@ public class ErrorReader {
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
                     if (!lineInfo.fileName.equals(outputedFileName)) {
                         System.out.printf("In %s:\n", lineHolderCurrent.fileName);
-                        ICompilationSettings.debugLog.finer(String.format("In %s:", lineHolderCurrent.fileName));
+                        ICompilationSettings.debugLog.warning(String.format("In %s:", lineHolderCurrent.fileName));
                         outputedFileName = lineInfo.fileName;
                     }
                     
@@ -108,7 +108,7 @@ public class ErrorReader {
                         firstLine = false;
                     } else {
                         System.out.println(repeat + "|" );
-                        ICompilationSettings.debugLog.finer(repeat + "|" );
+                        ICompilationSettings.debugLog.warning(repeat + "|" );
                     }
                     repeat = printError(lineHolderCurrent, infoMessages);
                     infoMessages.clear();
@@ -123,7 +123,7 @@ public class ErrorReader {
             if(lineHolderCurrent != null) {
                 if (!lineHolderCurrent.fileName.equals(outputedFileName)) {
                     System.out.printf("In %s:\n", lineHolderCurrent.fileName);
-                    ICompilationSettings.debugLog.finer(String.format("In %s:", lineHolderCurrent.fileName));
+                    ICompilationSettings.debugLog.severe(String.format("In %s:", lineHolderCurrent.fileName));
                     outputedFileName = lineHolderCurrent.fileName;
                 }
                 if(!errorPrinted) {
@@ -138,7 +138,7 @@ public class ErrorReader {
                 }
                 if(!firstLine) {
                     System.out.println(repeat + "|" );
-                    ICompilationSettings.debugLog.finer(repeat + "|" );
+                    ICompilationSettings.debugLog.warning(repeat + "|" );
                 }
                 printError(lineHolderCurrent, infoMessages);
             }
@@ -164,10 +164,10 @@ public class ErrorReader {
         
         String repeat = " ".repeat(lineNumberDigits + 1);
         System.out.println(repeat + "|" );
-        ICompilationSettings.debugLog.finer(repeat + "|" );
+        ICompilationSettings.debugLog.warning(repeat + "|" );
         
         System.out.println(lineHolder.lineNumber + " | " + lineHolder.contents);
-        ICompilationSettings.debugLog.finer(lineHolder.lineNumber + " | " + lineHolder.contents);
+        ICompilationSettings.debugLog.warning(lineHolder.lineNumber + " | " + lineHolder.contents);
         
         List<Integer> columns = new LinkedList<>();
         for (AbstractCompilationError.ErrorInformation information : informations) {
@@ -181,11 +181,11 @@ public class ErrorReader {
             if(!first) {
                 var log = repeat + "|" + errorAt(-1, maxSize, null, columns, first);
                 System.out.println(log);
-                ICompilationSettings.debugLog.finer(log);
+                ICompilationSettings.debugLog.warning(log);
             }
             var log = repeat + "|" + errorAt(columns.get(i), maxSize, informations.get(i).getInfo(), columns
                     , first);
-            ICompilationSettings.debugLog.finer(log);
+            ICompilationSettings.debugLog.warning(log);
             System.out.println(log);
             columns.remove(i);
             if(first) first = false;

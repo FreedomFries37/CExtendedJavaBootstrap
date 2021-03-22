@@ -1,5 +1,6 @@
 package radin.core.semantics.types;
 
+import radin.core.Namespaced;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.TypeEnvironment;
@@ -12,7 +13,7 @@ import radin.core.semantics.types.primitives.PointerType;
  * Base type for any CXType. This needs to be inherited for a type to be properly tracked
  * Represents all C Types and Class Types
  */
-public abstract class CXType implements CXEquivalent {
+public abstract class CXType implements CXEquivalent, Namespaced {
     
     
     /**

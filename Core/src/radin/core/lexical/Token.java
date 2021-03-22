@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import static radin.core.lexical.TokenType.t_id;
 
-public class Token implements Comparable<Token> {
+public class Token implements Comparable<Token>, Cloneable {
     
     private TokenType type;
     private String image;

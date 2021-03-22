@@ -11,9 +11,9 @@ public class IncorrectTypeError extends AbstractCompilationError {
         super("expected type: " + expected + " gotten type: " + gotten, Arrays.asList(expectedToken, gottenToken),
                 expected.toString(), gotten.toString());
     }
-    
+
     public IncorrectTypeError(CXType expected, CXType gotten, Token gottenToken) {
-        super("Incorrect argument type", Arrays.asList(gottenToken),
-                "expected type: " + expected + " gotten type: " + gotten);
+        super("expected type: " + expected + " gotten type: " + gotten, gottenToken,
+                gotten.toString() + " is not " + expected.toString());
     }
 }

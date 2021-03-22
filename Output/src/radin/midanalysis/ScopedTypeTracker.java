@@ -1,6 +1,7 @@
 package radin.midanalysis;
 
 
+import radin.core.IdentifierResolver;
 import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.compound.CXClassType;
@@ -32,12 +33,12 @@ public abstract class ScopedTypeTracker implements IScopedTracker<VariableTypeTr
     public GenericModule getGenericModule() {
         return genericModule;
     }
-    
+
     @Override
     public void typeTrackingClosure() {
         VariableTypeTracker next;
         if(trackerStack.empty()) {
-            next = trackerStack.push(new VariableTypeTracker(environment));
+            next = trackerStack.push(new VariableTypeTracker(environment, new IdentifierResolver()));
         } else {
             next = trackerStack.peek().createInnerTypeTracker();
         }

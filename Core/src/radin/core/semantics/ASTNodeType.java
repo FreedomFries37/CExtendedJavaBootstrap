@@ -236,7 +236,12 @@ public enum ASTNodeType {
     invariance("invariance"),
     covariance("covariance"),
     contravariance("contravariance"),
-    generic_init("generic_init")
+    generic_init("generic_init"),
+    inline_array("inline_array"),
+    namespaced_id("namespaced_id"),
+    in_namespace("in_namespace"),
+    _enum("enum"),
+    enum_member("enum_member")
     ;
     
     

@@ -1,17 +1,37 @@
 #include <stdio.h>
+#include <string.h>
+
 
 int main(int argc, std::String argv[]) {
 
-	std::File file = access_file("output.txt");
-	if(!file->exists()) {
+	std::String file_name = new std::String("output.txt");
+	std::File file = access_file(file_name, new std::String("w"));
 
-		file->create();
-	}
+
 
 	std::FileWriter fw = new std::FileWriter(file);
-	fw->writeln(new std::String("Hello File!"));
+	fw->writeln("Hello File!");
 	fw->flush();
 	fw->close();
+
+	char* str1 = "What's up doc";
+	char* str2 = strdup(str1);
+	if (!strcmp(str1, str2)) {
+		println("WHat the Heck");
+	}
+
+/*
+	stdout->writeln("Whats your name?");
+	std::String name = stdin->readLine();
+	stdout->write("Hello ");
+	stdout->writeln(name);
+	*/
+
+	file = access_file(new std::String("output.txt"), new std::String("w"));
+*/
+
+	// stdout->writeln(fileLine);
+
 
 	return 0;
 }

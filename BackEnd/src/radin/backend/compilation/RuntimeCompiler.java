@@ -99,11 +99,12 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
             
              */
             println(identifier + " = new std::ClassInfo();");
-            println(identifier + "->name = new std::String(\"" + cxClassType.getTypeName() +"\");");
+            println(identifier + "->name = \"" + cxClassType.getTypeName() +"\";");
             println(identifier + "->classHash = " + cxClassType.hashCode() +";");
             if(cxClassType.getTypeName().equals("std::ClassInfo")) {
                 println(identifier + "->info = " + identifier +";");
             }
+            
         }
     
         for (CXClassType cxClassType :
@@ -117,6 +118,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
             }
         
         }
+        println("reflection_available = true;");
     
         setIndent(getIndent() - 1);
     

@@ -1,5 +1,6 @@
 package radin;
 
+
 import radin.backend.compilation.FileCompiler;
 import radin.backend.compilation.RuntimeCompiler;
 import radin.backend.microcompilers.FunctionCompiler;
@@ -51,24 +52,25 @@ public class ToolchainEntrancePoint {
     public static void main(String[] args) throws IOException {
         File toolchainDirectory = new File(".toolchain");
         if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
-            if (System.getenv("JODIN_HOME") == null) throw new IOException("Jodin Home not set");
-            toolchainDirectory = new File(System.getenv("JODIN_HOME") + "/toolchain");
+            if (getenv("JODIN_HOME") == null) throw new IOException("Jodin Home not set");
+            toolchainDirectory = new File(getenv("JODIN_HOME") + "/toolchain");
+
             if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
                 throw new IOException("No toolchain directory!");
             }
         }
         
-        File configFile = new File(toolchainDirectory, "config");
+        File configFile = new File( toolchainDirectory, "config");
         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, ?> settings = new CompilationSettings<>();
-        
-        
+
+
         List<String> argPassOff = new LinkedList<>();
         List<String> filenamesStrings = new LinkedList<>();
         Iterator<String> argsIterator = Arrays.stream(args).iterator();
         Integer arch = null;
         while (argsIterator.hasNext()) {
             String argument = argsIterator.next();
-            
+
             if (argument.startsWith("-") || argument.startsWith("--")) {
                 switch (argument) {
                     case "-E":
@@ -90,18 +92,19 @@ public class ToolchainEntrancePoint {
                         settings.setDirectory(dir);
                         break;
                     }
+                    case "--post-lexer":
                     case "-P": {
                         settings.setOutputPostprocessingOutput(true);
                         break;
                     }
                     case "--arch": {
                         if (!argsIterator.hasNext()) {
-                            System.err.println("Expected an argument");
+                            err.println("Expected an argument");
                             exit(-1);
                         }
                         int a = Integer.parseInt(argsIterator.next());
                         if(a != 32 && a != 64) {
-                            System.err.println("Must be either 32 or 64");
+                            err.println("Must be either 32 or 64");
                             exit(-1);
                         }
                         arch = a;
@@ -109,7 +112,7 @@ public class ToolchainEntrancePoint {
                     }
                     case "--debug-level": {
                         if (!argsIterator.hasNext()) {
-                            System.err.println("Expected an argument");
+                            err.println("Expected an argument");
                             exit(-1);
                         }
                         int level = Integer.parseInt(argsIterator.next());
@@ -134,7 +137,7 @@ public class ToolchainEntrancePoint {
                                 actual = Level.ALL;
                                 break;
                             default: {
-                                System.err.println("Expected level 0-5");
+                                err.println("Expected level 0-5");
                                 return;
                             }
                         }
@@ -158,10 +161,10 @@ public class ToolchainEntrancePoint {
                 
                  */
             }
-            
+
         }
-        
-        String property = System.getProperty("os.arch");
+
+        String property = getProperty("os.arch");
         if(arch == null) {
             if (property == null) {
                 arch = 32;
@@ -170,21 +173,21 @@ public class ToolchainEntrancePoint {
             }
         }
         UniversalCompilerSettings.getInstance().setSettings(settings);
-        
-        if(System.getenv("MSFT") != null) {
+
+        if(getenv("MSFT") != null) {
             UniversalCompilerSettings.getInstance().getSettings().setDirectivesMustStartAtColumn1(false);
         }
         
         BufferedReader fileReader = new BufferedReader(new FileReader(configFile));
         PreProcessingLexer lex = new PreProcessingLexer();
-        
+
         if(arch == 64) {
             ICompilationSettings.debugLog.config("Using 64-bit mode");
             lex.define("__64_bit__");
         } else {
             ICompilationSettings.debugLog.config("Using 32-bit mode");
         }
-        
+
         List<File> files = new LinkedList<>();
         for (String filenamesString : filenamesStrings) {
             File f = new File(filenamesString);
@@ -192,8 +195,8 @@ public class ToolchainEntrancePoint {
             files.add(f);
             ICompilationSettings.debugLog.info("Adding " + filenamesString + " for compilation");
         }
-        if(System.getenv("JODIN_HOME") != null) {
-            String jodinHome = System.getenv("JODIN_HOME");
+        if(getenv("JODIN_HOME") != null) {
+            String jodinHome = getenv("JODIN_HOME");
             Stream<Path> pathStream = Files.find(Paths.get(jodinHome, "core"), Integer.MAX_VALUE,
                     (p, bfa) -> bfa.isRegularFile());
             List<File> fileList = pathStream.map((p) -> new File(p.toUri())).collect(Collectors.toList());
@@ -201,33 +204,33 @@ public class ToolchainEntrancePoint {
             files.addAll(fileList);
         }
         
-        
+
         IParser<Token, ParseNode> parser = new Parser();
         TypeEnvironment environment = TypeEnvironment.getStandardEnvironment();
         TypeAnalyzer.setEnvironment(environment);
         ActionRoutineApplier applier = new ActionRoutineApplier(environment);
-        
+
         FrontEndUnit<Token, ParseNode, AbstractSyntaxNode> frontEndUnit = new FrontEndUnit<>(lex, parser, applier);
         
-        
-        
+
+
         ToolChainFactory.ToolChainBuilder<AbstractSyntaxNode, TypeAugmentedSemanticNode> function = ToolChainFactory.function(
                 (AbstractSyntaxNode o) -> TypeAugmentedSemanticTree.convertAST(o, environment)
         );
-        
+
         ProgramTypeAnalyzer analyzer = new ProgramTypeAnalyzer((TypeAugmentedSemanticNode) null);
         ToolChainFactory.ToolChainBuilder<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode> compilerAnalyzer = ToolChainFactory.compilerAnalyzer(
                 analyzer
         );
-        
+
         GenericTransformer genericTransformer = new GenericTransformer(analyzer.getGenericModule());
-        
+
         ToolChainFactory.ToolChainBuilder<TypeAugmentedSemanticNode, TypeAugmentedSemanticNode>
                 genericTransformerChain = ToolChainFactory.compilerFunction(genericTransformer);
-        
+
         var midChain = function.chain_to(compilerAnalyzer).chain_to(genericTransformerChain);
         
-        
+
         MultipleFileHandler<?> compiler = null;
         
         
@@ -265,7 +268,7 @@ public class ToolchainEntrancePoint {
                     } else if(argument.equals("compiler")) {
                         useInterpreter = false;
                         ICompilationSettings.debugLog.config("Using Compiler");
-                        
+
                         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean> newSettings =
                                 new CompilationSettings<>();
                         newSettings.copySettingsFrom(settings);
@@ -273,9 +276,9 @@ public class ToolchainEntrancePoint {
                         newSettings.setMidToolChain(midChain);
                         settings = newSettings;
                         UniversalCompilerSettings.getInstance().setSettings(settings);
-                        
+
                         compiler = new MultipleFileHandler<>(files, newSettings);
-                        
+
                         var backChain = new FileCompiler();
                         newSettings.setBackToolChain(backChain);
                         FunctionCompiler.environment = environment;
@@ -325,7 +328,7 @@ public class ToolchainEntrancePoint {
         }
         
         if(compiler == null) throw new IllegalArgumentException("No toolchain set");
-        
+
         compiler.addFiles(UniversalCompilerSettings.getInstance().getSettings().getAdditionalSources());
         
         
@@ -341,14 +344,14 @@ public class ToolchainEntrancePoint {
             if (!runtimeCompiler.compile()) {
                 err.println("Runtime Jodin Compilation failed");
             }
-            
+
             File runtimeFile = ICompilationSettings.getBuildFile("runtime.jdn");
             if(useInterpreter) {
                 ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, SymbolTable<CXIdentifier,
                         TypeAugmentedSemanticNode>> fixedSettings =
                         (ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode,
                                 SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>>) settings;
-                
+
                 MultipleFileHandler<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> fixedCompiler = (MultipleFileHandler<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>>) compiler;
                 List<SymbolTable<CXIdentifier, TypeAugmentedSemanticNode>> generatedOutputs =
                         fixedCompiler.getGeneratedOutputs();
@@ -362,7 +365,7 @@ public class ToolchainEntrancePoint {
                 generatedOutputs.addAll(fixedCompiler.getGeneratedOutputs());
                 SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbolTable = new SymbolTable<>(generatedOutputs);
                 Interpreter interpreter = new Interpreter(environment, symbolTable);
-                
+
                 ICompilationSettings.debugLog.info("Running interpreter");
                 exit(interpreter.run(argPassOff.toArray(new String[0])));
             } else {
@@ -370,16 +373,16 @@ public class ToolchainEntrancePoint {
                         (ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, Boolean>) settings;
                 MultipleFileHandler<Boolean> fixedCompiler = new MultipleFileHandler<>(Collections.singletonList(runtimeFile),
                         fixedSettings);
-                
+
                 if(!fixedCompiler.compileAll()) {
                     err.println("Runtime Compilation failed");
                 }
-                
-                System.out.println("Compilation Succeeded");
+
+                out.println("Compilation Succeeded");
             }
-            
+
         } else {
-            System.err.println("Compilation Failed");
+            err.println("Compilation Failed");
         }
         
     }

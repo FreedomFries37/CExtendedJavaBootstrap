@@ -164,7 +164,8 @@ public class CXPrimitiveType extends AbstractCXPrimitiveType {
             if (!(other instanceof AbstractCXPrimitiveType)) return false;
     
             return this == CXPrimitiveType.VOID && other == CXPrimitiveType.VOID ||
-                    this.isIntegral() && ((AbstractCXPrimitiveType) other).isIntegral() || this.isFloatingPoint() && ((AbstractCXPrimitiveType) other).isFloatingPoint();
+                    (this.isIntegral() && ((AbstractCXPrimitiveType) other).isIntegral()) ||
+                    (this.isFloatingPoint() && ((AbstractCXPrimitiveType) other).isFloatingPoint());
         }
         return other.isPrimitive();
         //return other instanceof CXPrimitiveType || other instanceof LongPrimitive || other instanceof

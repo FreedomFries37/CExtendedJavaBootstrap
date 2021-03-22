@@ -1,5 +1,6 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
+import radin.core.semantics.types.CXIdentifier;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.BasicCompilationTag;
@@ -24,6 +25,7 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
     
     private boolean hasOwnerType;
     private CXType owner;
+    private CXIdentifier name;
     
     public FunctionTypeAnalyzer(TypeAugmentedSemanticNode tree, CXType owner) {
         super(tree);
@@ -46,13 +48,13 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         typeTrackingClosure();
         ICompilationSettings.debugLog.finest("Compiling function " + node.getASTChild(ASTNodeType.id).getToken().getImage());
         if(hasOwnerType) {
-            getCurrentTracker().addVariable("this", new PointerType(owner));
+            getCurrentTracker().addLocalVariable("this", new PointerType(owner));
             if(owner instanceof CXClassType) {
                 CXClassType cxClassType = (CXClassType) owner;
                 if(cxClassType.getParent() != null) {
                     
                     
-                    getCurrentTracker().addVariable("super", new PointerType(owner));
+                    getCurrentTracker().addLocalVariable("super", new PointerType(owner));
                 }
             }
         }
@@ -65,30 +67,33 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
             parameterTypes.add(type);
             String name = parameter.getASTChild(ASTNodeType.id).getToken().getImage();
             ICompilationSettings.debugLog.finest("Adding " + type.generateCDeclaration(name) + " to parameters");
-            getCurrentTracker().addVariable(name, type);
+            getCurrentTracker().addLocalVariable(name, type);
         }
         
-        String functionName = node.getASTChild(ASTNodeType.id).getToken().getImage();
-    
-        
-        
-        if(UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction() && functionName.equals("main") && !hasOwnerType) {
-            if(!ScopedTypeTracker.environment.is(returnType, CXPrimitiveType.INTEGER) ||
-                    parameterTypes.size() != 2 ||
-                    !ScopedTypeTracker.environment.is(parameterTypes.get(0), CXPrimitiveType.INTEGER) ||
-                    !(parameterTypes.get(1) instanceof ArrayType) ||
-                    !(((ArrayType) parameterTypes.get(1)).getBaseType() instanceof PointerType) ||
-                    !(((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType() instanceof CXClassType) ||
-                    !((CXClassType) ((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType()).getTypeName().equals("std::String")) {
-                throw new IncorrectMainDefinition(node.getASTChild(ASTNodeType.id).getToken());
+        CXIdentifier functionName = new CXIdentifier(node.getASTChild(ASTNodeType.id).getToken());
+        name = functionName;
+
+
+        if(owner == null) {
+            CXIdentifier full = getCurrentTracker().resolveIdentifier(functionName);
+            if (UniversalCompilerSettings.getInstance().getSettings().isLookForMainFunction() && full.toString().equals("main") && !hasOwnerType) {
+                if (!ScopedTypeTracker.environment.is(returnType, CXPrimitiveType.INTEGER) ||
+                        parameterTypes.size() != 2 ||
+                        !ScopedTypeTracker.environment.is(parameterTypes.get(0), CXPrimitiveType.INTEGER) ||
+                        !(parameterTypes.get(1) instanceof ArrayType) ||
+                        !(((ArrayType) parameterTypes.get(1)).getBaseType() instanceof PointerType) ||
+                        !(((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType() instanceof CXClassType) ||
+                        !((CXClassType) ((PointerType) ((ArrayType) parameterTypes.get(1)).getBaseType()).getSubType()).getTypeName().equals("std::String")) {
+                    throw new IncorrectMainDefinition(node.getASTChild(ASTNodeType.id).getToken());
+                }
+
+                if (MultipleMainDefinitionsError.firstDefinition != null) {
+                    throw new MultipleMainDefinitionsError(node.getASTChild(ASTNodeType.id).getToken());
+                }
+                MultipleMainDefinitionsError.firstDefinition = node.getASTChild(ASTNodeType.id).getToken();
+                ICompilationSettings.debugLog.info("Main Function Found");
+                node.addCompilationTag(BasicCompilationTag.MAIN_FUNCTION);
             }
-        
-            if(MultipleMainDefinitionsError.firstDefinition != null) {
-                throw new MultipleMainDefinitionsError(node.getASTChild(ASTNodeType.id).getToken());
-            }
-            MultipleMainDefinitionsError.firstDefinition = node.getASTChild(ASTNodeType.id).getToken();
-            ICompilationSettings.debugLog.info("Main Function Found");
-            node.addCompilationTag(BasicCompilationTag.MAIN_FUNCTION);
         }
         
         TypeAugmentedSemanticNode compoundStatement = node.getASTChild(ASTNodeType.compound_statement);
@@ -108,5 +113,9 @@ public class FunctionTypeAnalyzer extends TypeAnalyzer {
         
         releaseTrackingClosure();
         return true;
+    }
+
+    public CXIdentifier getName() {
+        return name;
     }
 }

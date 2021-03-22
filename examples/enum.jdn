@@ -1,0 +1,87 @@
+enum Option {
+	Some,
+	None
+};
+
+enum Day {
+	Sunday,
+	Monday,
+	Tuesday,
+	Wednesday,
+	Thursday,
+	Friday,
+	Saturday
+};
+
+in my_enums enum CoolBoolean {
+	Yes,
+	No
+};
+
+using my_enums;
+
+class DayClass {
+	private Day myDay;
+
+	public DayClass(Day myDay);
+	public Day getDay();
+
+	virtual public std::String toString();
+};
+
+implement DayClass {
+	DayClass(Day myDay) {
+		this->myDay = myDay;
+	}
+
+
+	std::String toString() {
+		Day day = this->myDay;
+		if(day == enum Day.Monday) {
+			return "Monday";
+		} else {
+			return "Some other day";
+		}
+	}
+
+	Day getDay() {
+		return this->myDay;
+	}
+
+
+}
+
+typedef struct {
+	Day day;
+} EnumInStruct;
+
+int main(int argc, std::String args[]) {
+	Option o = enum Option.Some;
+	if(o == enum Option.Some) {
+		println("Wow!");
+	}
+	if(o != enum Option.None) {
+		println("Wow, again!");
+	}
+	Day day = enum Day.Sunday;
+	if(day != o) {
+		println("Technically true");
+	}
+	my_enums::CoolBoolean b = enum my_enums::CoolBoolean.No;
+	if(b == enum CoolBoolean.Yes) {
+		println("That is wrong");
+	}
+
+	DayClass day_class = new DayClass(enum Day.Monday);
+	day_class->println();
+
+	EnumInStruct* boop = calloc(sizeof(EnumInStruct), 1);
+	boop->day = enum Day.Monday;
+
+
+	if(boop->day != day_class->getDay()) exit(-1);
+	else println("waow");
+
+
+	return 0;
+}
