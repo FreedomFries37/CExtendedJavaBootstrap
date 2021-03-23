@@ -74,6 +74,8 @@ int main(int argc, std::String args[]) {
 
 	DayClass day_class = new DayClass(enum Day.Monday);
 	day_class->println();
+	std::ClassInfo info = day_class->getClass();
+	info->println();
 
 	EnumInStruct* boop = calloc(sizeof(EnumInStruct), 1);
 	boop->day = enum Day.Monday;

@@ -1058,6 +1058,10 @@ public class Interpreter {
                 System.err.println("\tat " + s);
             }
             e.printStackTrace();
+        } finally {
+            for (CXIdentifier key : globalAutoVariables.keySet()) {
+                System.out.printf("%s: %s\n", key, globalAutoVariables.get(key));
+            }
         }
         return -1;
     }
@@ -1495,6 +1499,9 @@ public class Interpreter {
                     if (instance instanceof PointerInstance && ((PointerInstance<?>) instance).getSubType() instanceof CXClassType) {
                         PointerInstance<CXClassType> value = (PointerInstance<CXClassType>) instance;
                         if (value.getPointer() == null) {
+                            continue;
+                        }
+                        if(globalAutoVariables.get(CXIdentifier.from("reflection_available")).isFalse()) {
                             continue;
                         }
                         try {
@@ -2565,6 +2572,8 @@ public class Interpreter {
                 if(globalAutoVariables.get(CXIdentifier.from("reflection_available")).isTrue()) {
                     CompoundInstance<CXClassType> classObject = (CompoundInstance<CXClassType>) classTypeInstance.getPointer();
                     int classId = environment.getTypeId(subType);
+                    boolean logPrevious = log;
+                    log = false;
                     if (!callFunction(
                             CXIdentifier.from("std", "__get_class"),
                             createNewInstance(CXPrimitiveType.INTEGER, classId)
@@ -2573,6 +2582,7 @@ public class Interpreter {
                     }
                     Instance<?> classTypeDef = pop().unwrap();
                     classObject.fields.put("info", classTypeDef);
+                    log = logPrevious;
                 }
 
                 int memstackPrevious = memStack.size();
