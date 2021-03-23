@@ -36,857 +36,7 @@ import static radin.core.utility.Option.Some;
 
 public class Interpreter {
     
-    private JodinLogger logger = ICompilationSettings.ilog;
-    private static final boolean LOG_STATE = true;
-
-    public abstract class Instance <T extends CXType> {
-        
-        private T type;
-        
-        public Instance(T type) {
-            this.type = type;
-        }
-        
-        public T getType() {
-            return type;
-        }
-        
-        public PointerInstance<T> toPointer() {
-            return new PointerInstance<>(getType(), this);
-        }
-        
-        @Override
-        public String toString() {
-            return "Instance{" +
-                    "type=" + type +
-                    '}';
-        }
-        
-        abstract void copyFrom(Instance<?> other);
-        
-        abstract Instance<T> copy();
-        
-        abstract Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException;
-        
-        boolean isTrue() {
-            return !isFalse();
-        }
-
-        abstract boolean isFalse();
-        
-        Instance<T> unwrap() {
-            return this;
-        }
-
-        public NullableInstance<T, ? extends Instance<T>> toNullable() {
-            return new NullableInstance<>(getType(), this);
-        }
-    }
-    
-    public class PrimitiveInstance <R, P extends AbstractCXPrimitiveType> extends Instance<P> {
-        
-        private R backingValue;
-        private boolean unsigned;
-        
-        public PrimitiveInstance(P type, R backingValue, boolean unsigned) {
-            super(type);
-            this.backingValue = backingValue;
-            // if (backingValue == null) if (log()) logger.warning("Shouldn't set backing value to null");
-            this.unsigned = unsigned;
-        }
-        
-        public R getBackingValue() {
-            return backingValue;
-        }
-        
-        public void setBackingValue(R backingValue) {
-            this.backingValue = backingValue;
-        }
-        
-        @Override
-        public String toString() {
-            return "(" + getType() + ") " + backingValue;
-        }
-        
-        @Override
-        void copyFrom(Instance<?> other) {
-            if (other instanceof NullableInstance) {
-                other = ((NullableInstance) other).getValue();
-            }
-            
-            if (other == null) {
-                this.backingValue = (R) Integer.valueOf(0);
-            } else {
-                this.backingValue = ((PrimitiveInstance<R, P>) other).backingValue;
-            }
-        }
-        
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            PrimitiveInstance<?, ?> that = (PrimitiveInstance<?, ?>) o;
-            return unsigned == that.unsigned &&
-                    Objects.equals(backingValue, that.backingValue);
-        }
-        
-        
-        @Override
-        boolean isFalse() {
-            if (backingValue instanceof Number) {
-                if (backingValue instanceof Double) {
-                    return ((Number) this.backingValue).doubleValue() == 0;
-                } else {
-                    return ((Number) this.backingValue).longValue() == 0;
-                }
-
-            }
-            if (backingValue instanceof Character) return ((Character) backingValue).charValue() == 0;
-            return true;
-        }
-        
-        @Override
-        public int hashCode() {
-            return Objects.hash(backingValue, unsigned);
-        }
-        
-        @Override
-        Instance<P> copy() {
-            return new PrimitiveInstance<R, P>(getType(), backingValue, unsigned);
-        }
-        
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            if (backingValue instanceof Number) {
-                if (castingTo.equals(CXPrimitiveType.INTEGER)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.INTEGER, (int) ((Number) backingValue).intValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.DOUBLE)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, (double) ((Number) backingValue).doubleValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.FLOAT)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, ((Number) backingValue).floatValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.CHAR)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.CHAR, (char) ((Number) backingValue).intValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.VOID)) {
-                    return null;
-                } else if (castingTo instanceof LongPrimitive) {
-                    return new PrimitiveInstance<>(LongPrimitive.create(), (long) ((Number) backingValue).longValue(), false);
-                } else if (castingTo instanceof ShortPrimitive) {
-                    return new PrimitiveInstance<>(new ShortPrimitive((CXPrimitiveType) getType()),
-                            (short) ((Number) backingValue).shortValue(),
-                            false);
-                } else if (castingTo instanceof UnsignedPrimitive) {
-                    UnsignedPrimitive to = (UnsignedPrimitive) castingTo;
-                    PrimitiveInstance<Number, AbstractCXPrimitiveType> primitiveInstance =
-                            (PrimitiveInstance<Number, AbstractCXPrimitiveType>) castTo(to.getPrimitiveCXType());
-                    return new PrimitiveInstance<>(primitiveInstance.getType(), backingValue, true);
-                } else if (castingTo instanceof PointerType &&
-                        ((Number) this.backingValue).intValue() == 0
-                ) {
-                    return new PointerInstance<>(((PointerType) castingTo).getSubType(),
-                            new ArrayList<>(Collections.singletonList(null)), 0);
-                }
-            } else if (backingValue instanceof Character) {
-                if (castingTo.equals(CXPrimitiveType.INTEGER)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.INTEGER,
-                            (int) ((Character) backingValue).charValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.DOUBLE)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, (double) ((Character) backingValue).charValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.FLOAT)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, (float) ((Character) backingValue).charValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.CHAR)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.CHAR, (char) ((Character) backingValue).charValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.CHAR)) {
-                    return new PrimitiveInstance<>(CXPrimitiveType.CHAR, (char) ((Character) backingValue).charValue(),
-                            false);
-                } else if (castingTo.equals(CXPrimitiveType.VOID)) {
-                    return null;
-                } else if (castingTo instanceof LongPrimitive) {
-                    return new PrimitiveInstance<>(LongPrimitive.create(), (long) ((Character) backingValue).charValue(), false);
-                } else if (castingTo instanceof ShortPrimitive) {
-                    return new PrimitiveInstance<>(new ShortPrimitive((CXPrimitiveType) getType()), (short) ((Character) backingValue).charValue(),
-                            false);
-                } else if (castingTo instanceof UnsignedPrimitive) {
-                    UnsignedPrimitive to = (UnsignedPrimitive) castingTo;
-                    PrimitiveInstance<Number, AbstractCXPrimitiveType> primitiveInstance =
-                            (PrimitiveInstance<Number, AbstractCXPrimitiveType>) castTo(to.getPrimitiveCXType());
-                    return new PrimitiveInstance<>(primitiveInstance.getType(), backingValue, true);
-                } else if (castingTo instanceof PointerType &&
-                        ((Number) this.backingValue).intValue() == 0
-                ) {
-                    return new PointerInstance<>(((PointerType) castingTo).getSubType(),
-                            new ArrayList<>(Collections.singletonList(null)), 0);
-                }
-            }
-            
-            throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
-        }
-
-    }
-
-    public class EnumInstance extends Instance<EnumType> {
-        
-        private Token value;
-
-        public EnumInstance(EnumType type, Token value) {
-            super(type);
-            this.value = value;
-        }
-
-        @Override
-        void copyFrom(Instance<?> other) {
-            this.value = ((EnumInstance) other).value;
-        }
-    
-        @Override
-        Instance<EnumType> copy() {
-            return new EnumInstance(this.getType(), value);
-        }
-
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            throw new InvalidPrimitiveException();
-        }
-
-        @Override
-        boolean isFalse() {
-            throw new IllegalStateException("Can't use an enum as a boolean");
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            EnumInstance that = (EnumInstance) o;
-            if(!environment.is(((EnumInstance) o).getType(), this.getType())) return false;
-            return value.getImage().equals(that.value.getImage());
-        }
-
-        @Override
-        public String toString() {
-            return "EnumInstance{" + getType() + "." + value.getImage() + "}";
-        }
-    }
-
-    interface SemiIndirection<R extends CXType, I extends Instance<R>> {
-        I getValue();
-        PointerInstance<R> asPointer();
-    }
-
-    public class NullableInstance <R extends CXType, I extends Instance<R>> extends Instance<R> implements SemiIndirection<R, I> {
-        
-        private I value;
-        
-        
-        public NullableInstance(R type) {
-            super(type);
-            value = null;
-        }
-        
-        public NullableInstance(R type, Instance<R> instance) {
-            super(type);
-            if (instance instanceof NullableInstance) {
-                value = ((NullableInstance<R, I>) instance).getValue();
-            } else {
-                value = (I) instance;
-            }
-        }
-        
-        @Override
-        boolean isFalse() {
-            if (value == null) return true;
-            return value.isFalse();
-        }
-        
-        @Override
-        void copyFrom(Instance<?> other) {
-            if (!environment.is(other.getType(), getType())) {
-                throw new IllegalStateException();
-            }
-            if (value == null) value = (I) other;
-            else value.copyFrom(other);
-        }
-        
-        @Override
-        Instance<R> copy() {
-            return new NullableInstance<>(getType(), value);
-        }
-        
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            if (value == null) return new NullableInstance<R, Instance<R>>((R) castingTo, value);
-            Instance<?> casted = value.castTo(castingTo);
-            return new NullableInstance<R, Instance<R>>((R) castingTo, (Instance<R>) casted);
-        }
-        
-        @Override
-        public String toString() {
-            if (value == null) return "null value";
-            return "Nullable<" + value + ">";
-        }
-        
-        public I getValue() {
-            if (value != null && value instanceof NullableInstance) return ((NullableInstance<R, I>) value).getValue();
-            return value;
-        }
-        
-        public void setValue(I value) {
-            if (value instanceof NullableInstance) {
-                this.value = ((NullableInstance<R, I>) value).value;
-            }
-            this.value = value;
-        }
-        
-        @Override
-        public NullableInstance<R, ? extends Instance<R>> toNullable() {
-            return this;
-        }
-
-        @Override
-        public PointerInstance<R> asPointer() {
-            PointerInstance<R> rPointerInstance = new PointerInstance<>(new PointerType(getType()));
-            rPointerInstance.deref().copyFrom(value);
-            return rPointerInstance;
-        }
-    }
-    
-    
-    /**
-     * @param <R> Type of subtype
-     * @param <T> Type of Array
-     */
-    public class ArrayInstance <R extends CXType, T extends ArrayType>
-            extends PrimitiveInstance<ArrayList<Instance<R>>, T> {
-        
-        protected int size;
-        private R subType;
-        
-        public ArrayInstance(T type, R subtype, int size) {
-            super(type, new ArrayList<>(size), true);
-            this.subType = subtype;
-            for (int i = 0; i < size; i++) {
-                getBackingValue().add(((Instance<R>) defaultValue(subtype)));
-            }
-            this.size = size;
-        }
-        
-        public ArrayInstance(T type, R subType, ArrayList<Instance<R>> other) {
-            super(type,
-                    other,
-                    true);
-            /*
-            for (int i = 0; i < other.size(); i++) {
-                NullableInstance<R, Instance<R>> nullableInstance = other.get(i);
-                if(nullableInstance == null) {
-                    getBackingValue().add(new NullableInstance<R, Instance<R>>(subType));
-                } else {
-                    getBackingValue().add(nullableInstance);
-                }
-                // getBackingValue().add(other.get(i) == null ? new NullableInstance<>(subType) : other.get(i));
-            }
-            
-             */
-            this.subType = subType;
-            this.size = other.size();
-        }
-
-        public ArrayInstance(T type, R subType) {
-            this(type, subType, new ArrayList<>());
-        }
-
-
-
-        public SemiIndirection<R, Instance<R>> getAt(int index) {
-            if (index >= getBackingValue().size()) throw new SegmentationFault("Index " + index + " out of bounds of " +
-                    "size " + getBackingValue().size());
-            PointerInstance<R> pointer = new PointerInstance<>(getSubType(), this.getBackingValue(), index);
-            return new Reference<>(getSubType(), pointer);
-        }
-
-        public Instance<R> getAtNoIndirection(int index) {
-            if (index >= getBackingValue().size()) throw new SegmentationFault("Index " + index + " out of bounds of " +
-                    "size " + getBackingValue().size());
-            return getBackingValue().get(index);
-        }
-        
-        public void setAt(int index, Instance<R> value) {
-            getBackingValue().set(index, value);
-        }
-        
-        public PointerInstance<R> asPointer() {
-            return new PointerInstance<>(subType, getBackingValue(), 0);
-        }
-        
-        @Override
-        boolean isFalse() {
-            return isNull();
-        }
-        
-        public int getSize() {
-            return size;
-        }
-        
-        public R getSubType() {
-            return subType;
-        }
-        
-        public int size() {
-            return size;
-        }
-        
-        @Override
-        public String toString() {
-            /*
-            if (subType == CXPrimitiveType.CHAR) {
-                StringBuilder output = new StringBuilder("\"");
-                
-                try {
-                    for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
-                        output.append(((PrimitiveInstance<Character, ?>) getAt(i).getValue()).backingValue);
-                    }
-                }catch (IndexOutOfBoundsException e) {
-                    throw new SegmentationFault(e);
-                }
-                
-                return output + "\" (true size = " + getSize() + ")";
-            }
-
-             */
-            return "ArrayInstance{" +
-                    "type=" + getType() +
-                    ", size=" + size +
-                    '}';
-        }
-        
-        /**
-         * If this is a Jodin C String, converts it to a Java string
-         *
-         * @return Some(String), or None
-         */
-        public Option<String> takeString() {
-            if (subType == CXPrimitiveType.CHAR) {
-                StringBuilder output = new StringBuilder();
-
-                try {
-                    for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
-
-                        char backingValue = ((PrimitiveInstance<Character, ?>) getAtNoIndirection(i)).backingValue;
-                        if (backingValue != '\0') {
-                            output.append(backingValue);
-                        }
-                    }
-                } catch (IndexOutOfBoundsException e) {
-                    throw new SegmentationFault(e);
-                }
-
-                return Some(output.toString());
-            } else {
-                return None();
-            }
-        }
-
-        @Override
-        void copyFrom(Instance<?> other) {
-            if (other instanceof ArrayInstance) {
-                this.setBackingValue(((ArrayInstance<R, T>) other).getBackingValue());
-                this.size = ((ArrayInstance<?, ?>) other).size;
-            } else {
-                assert other instanceof PrimitiveInstance;
-                if (((PrimitiveInstance<?, ?>) other).getBackingValue().toString().equals("0")) {
-                    this.setBackingValue(new ArrayList<>()); // should, in effect, set as a nullptr
-                } else {
-                    throw new IllegalStateException();
-                }
-            }
-            this.size = this.getBackingValue().size();
-        }
-        
-        
-        @Override
-        Instance<T> copy() {
-            /*
-            ArrayList<Instance<R>> backingValue = getBackingValue();
-            ArrayInstance<R, T> output = new ArrayInstance<>(getType(), getSubType(), backingValue.size());
-            for (int i = 0; i < backingValue.size(); i++) {
-                Instance<R> value = backingValue.get(i).copy();
-                output.setAt(i, value);
-            }
-
-             */
-            return (Instance<T>) this.asPointer();
-        }
-        
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o instanceof ArrayInstance
-            && ((ArrayInstance<R, ?>) o).getBackingValue() == this.getBackingValue()) {
-                return true;
-            }
-            return super.equals(o);
-        }
-
-        public Instance<R> getPointer() {
-            Instance<R> at = getAtNoIndirection(0);
-            if (at == null) return null;
-            if (at instanceof NullableInstance) {
-                return ((NullableInstance<R, ?>) at).getValue();
-            }
-            return at;
-        }
-
-        boolean isNull() {
-            if (getBackingValue().size() == 0) {
-                return true;
-            }
-            Instance<R> pointer = getPointer();
-            if (pointer == null) {
-                return true;
-            }
-            return pointer.isFalse();
-        }
-    }
-    
-    
-    public class PointerInstance <R extends CXType> extends ArrayInstance<R, PointerType> {
-        
-        private int index = 0;
-        
-        public PointerInstance(R type, Instance<R> pointer) {
-            super(type.toPointer(), type, new ArrayList<>(Collections.singletonList(new NullableInstance<>(type))));
-            setAt(0, pointer);
-        }
-        
-        public PointerInstance(R type,
-                               ArrayList<Instance<R>> backing,
-                               int offset) {
-            super(type.toPointer(), type, backing);
-            index = offset;
-        }
-        public PointerInstance(PointerType type) {
-            super(type, (R) type.getSubType());
-        }
-
-
-        public PointerInstance<R> getPointerOfOffset(int offset) {
-            return new PointerInstance<R>(getSubType(), getBackingValue(), index + offset);
-        }
-        
-
-        public Instance<R> getPointer() {
-            if (getBackingValue().size() == 0) return null;
-            Instance<R> at = getAtNoIndirection(index);
-            if (at == null) return null;
-            if (at instanceof NullableInstance) {
-                return ((NullableInstance<R, ?>) at).getValue();
-            }
-            return at;
-        }
-
-
-        public void setPointer(Instance<R> pointer) {
-            setAt(index, pointer);
-        }
-        
-        @Override
-        public PointerInstance<R> asPointer() {
-            return this;
-        }
-
-        public SemiIndirection<R, Instance<R>> getAt(int index) {
-            return super.getAt(index + this.index);
-        }
-
-        public void setAt(int index, Instance<R> value) {
-            super.setAt(index + this.index, value);
-        }
-
-        @Override
-        public String toString() {
-            /*
-            if (getSubType() == CXPrimitiveType.CHAR) {
-                String full = super.toString();
-                String output = full.substring(index + 1);
-                return "\"" + output + " (char*)";
-            }
-
-             */
-            if (isNull()) {
-                return "nullptr (type = " + getType() + ")";
-            }
-
-            if (getBackingValue().size() == 1) {
-                return getType().toString();
-            }
-
-            Stream<CharSequence> stringStream = getBackingValue().stream().skip(index).map((instance) -> instance.toString());
-            String elements = stringStream.collect(Collectors.joining(", "));
-
-
-            return String.format("%s [%s]", getType(), elements);
-        }
-        
-        @Override
-        Instance<PointerType> copy() {
-            return new PointerInstance<>(getSubType(), getBackingValue(), index);
-        }
-        
-        Reference<R> deref() {
-            return new Reference<>(getSubType(), this);
-        }
-
-        Instance<R> full_deref() {
-            return getPointer();
-        }
-
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            if (castingTo instanceof AbstractCXPrimitiveType && getPointer() == null) {
-                return new PrimitiveInstance<>(((AbstractCXPrimitiveType) castingTo), 0,
-                        castingTo instanceof UnsignedPrimitive);
-            }
-            if (!(castingTo instanceof PointerType))
-                throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
-            
-            return new PointerInstance<R>((R) castingTo, getPointer());
-        }
-
-        @Override
-        void copyFrom(Instance<?> other) {
-            if (other instanceof PointerInstance) {
-                this.setBackingValue(((PointerInstance<R>) other).getBackingValue());
-                this.index = ((PointerInstance<?>) other).index;
-                this.size = ((PointerInstance<?>) other).size;
-            } else {
-                super.copyFrom(other);
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o instanceof PointerInstance) {
-                if (isNull() && ((PointerInstance<?>) o).isNull()) {
-                    return true;
-                }
-                if(((ArrayInstance<R, ?>) o).getBackingValue() != this.getBackingValue()) {
-                    return false;
-                }
-                if(getBackingValue() != null) {
-                    return this.index == ((PointerInstance<?>) o).index;
-                }
-                return true;
-            }
-            return super.equals(o);
-        }
-    }
-
-    public class Reference <R extends CXType> extends Instance<R> implements SemiIndirection<R, Instance<R>>{
-
-        private final PointerInstance<R> location;
-
-        public Reference(R type, PointerInstance<R> location) {
-            super(type);
-            this.location = location;
-        }
-
-        @Override
-        public PointerInstance<R> toPointer() {
-            return location;
-        }
-
-        Instance<R> unwrap() {
-            return location.full_deref();
-        }
-
-        public Instance<R> getValue() {
-            return location.full_deref();
-        }
-
-
-        @Override
-        void copyFrom(Instance<?> other) {
-            location.getAtNoIndirection(location.index).copyFrom(other);
-        }
-
-        @Override
-        Instance<R> copy() {
-            return location.getAtNoIndirection(location.index).copy();
-        }
-
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            return copy().castTo(castingTo);
-        }
-
-        @Override
-        boolean isFalse() {
-            return copy().isFalse();
-        }
-
-        @Override
-        public String toString() {
-            if (location.isNull()) {
-                return location.toString();
-            }
-            return "Reference{" + copy().toString() + '}';
-        }
-
-        @Override
-        public PointerInstance<R> asPointer() {
-            return location;
-        }
-    }
-    
-    public class CompoundInstance <T extends CXCompoundType> extends Instance<T> {
-        
-        private HashMap<String, Instance<?>> fields;
-        
-        public CompoundInstance(T type) {
-            super(type);
-            this.fields = new HashMap<>();
-            for (ICXCompoundType.FieldDeclaration field : type.getAllFields()) {
-                fields.put(field.getName(), defaultValue(field.getType()));
-            }
-        }
-        
-        public <R extends CXType, I extends Instance<R>> I get(String key) {
-            return (I) fields.get(key);
-        }
-        
-        @Override
-        void copyFrom(Instance<?> other) {
-            assert other instanceof CompoundInstance;
-            
-            for (String s : fields.keySet()) {
-                this.fields.replace(s, ((CompoundInstance<CXCompoundType>) other).fields.get(s));
-            }
-        }
-        
-        @Override
-        boolean isFalse() {
-            return false;
-        }
-        
-        @Override
-        Instance<T> copy() {
-            CompoundInstance<T> tCompoundInstance = new CompoundInstance<>(getType());
-            for (Map.Entry<String, Instance<?>> stringInstanceEntry : fields.entrySet()) {
-                tCompoundInstance.fields.put(stringInstanceEntry.getKey(), stringInstanceEntry.getValue());
-            }
-            return tCompoundInstance;
-        }
-        
-        @Override
-        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
-            throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
-        }
-    }
-    
-
-    public class SegmentationFault extends Error {
-
-        public SegmentationFault() {
-        }
-
-        public SegmentationFault(String message) {
-            super(message);
-        }
-
-        public SegmentationFault(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public SegmentationFault(Throwable cause) {
-            super(cause);
-        }
-    }
-
-
-
-    public <R, T extends AbstractCXPrimitiveType> PrimitiveInstance<R, T> createNewInstance(T type, R backing) {
-        PrimitiveInstance<R, T> instance = (PrimitiveInstance<R, T>) createNewInstance(type);
-        instance.setBackingValue(backing);
-        return instance;
-    }
-    
-    public <T extends CXType> Instance<?> createNewInstance(T type) {
-        if (type instanceof ICXWrapper) return createNewInstance(((ICXWrapper) type).getWrappedType());
-        
-        if (type instanceof PointerType) {
-            
-            
-            return new PointerInstance<>(((PointerType) type));
-            
-        } else if (type instanceof ArrayType) {
-            // TODO: implement proper array sizing
-            return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getBaseType(), 15);
-        } else if (type instanceof EnumType) {
-            return new EnumInstance((EnumType) type, ((EnumType) type).getMembers().get(0));
-        } else if (type instanceof AbstractCXPrimitiveType) {
-            boolean unsigned = false;
-            AbstractCXPrimitiveType fixed = ((AbstractCXPrimitiveType) type);
-            if (fixed instanceof UnsignedPrimitive) {
-                unsigned = true;
-                fixed = ((UnsignedPrimitive) fixed).getPrimitiveCXType();
-            }
-            
-            try {
-                
-                if (unsigned) return new PrimitiveInstance<>(fixed, 0, true).castTo(type);
-                return new PrimitiveInstance<>(fixed, 0, false).castTo(type);
-            } catch (InvalidPrimitiveException e) {
-                return null;
-            }
-
-        } else if (type instanceof CXCompoundType) {
-            return new CompoundInstance<>(((CXCompoundType) type));
-        }
-        return null;
-    }
-    
-    
-    private class StackTraceInfo {
-
-        private Token function;
-        private Token currentToken;
-        private HashMap<String, Instance<?>> stackVariables;
-        
-        public StackTraceInfo(Token function) {
-            this.function = function;
-            this.currentToken = nearestCurrentToken;
-            stackVariables = new HashMap<>();
-        }
-        
-        public Token getFunction() {
-            return function;
-        }
-        
-        public HashMap<String, Instance<?>> getStackVariables() {
-            return stackVariables;
-        }
-        
-        public void setCurrentToken(Token currentToken) {
-            this.currentToken = currentToken;
-        }
-
-        @Override
-        public String toString() {
-            if (function.getFilename() != null)
-                return function.getImage() + "(" + currentToken.getFilename() + ":" + currentToken.getActualLineNumber() + ")";
-            return function.getImage();
-        }
-    }
+   
     
     private TypeEnvironment environment;
     private SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols;
@@ -907,6 +57,9 @@ public class Interpreter {
     private boolean log;
     private boolean main_started = false;
     private boolean log_after_main = false;
+    
+    private JodinLogger logger = ICompilationSettings.ilog;
+    private static final boolean LOG_STATE = true;
 
     
     public Interpreter(TypeEnvironment environment, SymbolTable<CXIdentifier, TypeAugmentedSemanticNode> symbols) {
@@ -2709,5 +1862,856 @@ public class Interpreter {
 
 
         throw new Error("Invalid type");
+    }
+    
+    
+    
+    public abstract class Instance <T extends CXType> {
+        
+        private T type;
+        
+        public Instance(T type) {
+            this.type = type;
+        }
+        
+        public T getType() {
+            return type;
+        }
+        
+        public PointerInstance<T> toPointer() {
+            return new PointerInstance<>(getType(), this);
+        }
+        
+        @Override
+        public String toString() {
+            return "Instance{" +
+                    "type=" + type +
+                    '}';
+        }
+        
+        abstract void copyFrom(Instance<?> other);
+        
+        abstract Instance<T> copy();
+        
+        abstract Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException;
+        
+        boolean isTrue() {
+            return !isFalse();
+        }
+        
+        abstract boolean isFalse();
+        
+        Instance<T> unwrap() {
+            return this;
+        }
+        
+        public NullableInstance<T, ? extends Instance<T>> toNullable() {
+            return new NullableInstance<>(getType(), this);
+        }
+    }
+    
+    public class PrimitiveInstance <R, P extends AbstractCXPrimitiveType> extends Instance<P> {
+        
+        private R backingValue;
+        private boolean unsigned;
+        
+        public PrimitiveInstance(P type, R backingValue, boolean unsigned) {
+            super(type);
+            this.backingValue = backingValue;
+            // if (backingValue == null) if (log()) logger.warning("Shouldn't set backing value to null");
+            this.unsigned = unsigned;
+        }
+        
+        public R getBackingValue() {
+            return backingValue;
+        }
+        
+        public void setBackingValue(R backingValue) {
+            this.backingValue = backingValue;
+        }
+        
+        @Override
+        public String toString() {
+            return "(" + getType() + ") " + backingValue;
+        }
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            if (other instanceof NullableInstance) {
+                other = ((NullableInstance) other).getValue();
+            }
+            
+            if (other == null) {
+                this.backingValue = (R) Integer.valueOf(0);
+            } else {
+                this.backingValue = ((PrimitiveInstance<R, P>) other).backingValue;
+            }
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PrimitiveInstance<?, ?> that = (PrimitiveInstance<?, ?>) o;
+            return unsigned == that.unsigned &&
+                    Objects.equals(backingValue, that.backingValue);
+        }
+        
+        
+        @Override
+        boolean isFalse() {
+            if (backingValue instanceof Number) {
+                if (backingValue instanceof Double) {
+                    return ((Number) this.backingValue).doubleValue() == 0;
+                } else {
+                    return ((Number) this.backingValue).longValue() == 0;
+                }
+                
+            }
+            if (backingValue instanceof Character) return ((Character) backingValue).charValue() == 0;
+            return true;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(backingValue, unsigned);
+        }
+        
+        @Override
+        Instance<P> copy() {
+            return new PrimitiveInstance<R, P>(getType(), backingValue, unsigned);
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            if (backingValue instanceof Number) {
+                if (castingTo.equals(CXPrimitiveType.INTEGER)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.INTEGER, (int) ((Number) backingValue).intValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.DOUBLE)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, (double) ((Number) backingValue).doubleValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.FLOAT)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, ((Number) backingValue).floatValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.CHAR)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.CHAR, (char) ((Number) backingValue).intValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.VOID)) {
+                    return null;
+                } else if (castingTo instanceof LongPrimitive) {
+                    return new PrimitiveInstance<>(LongPrimitive.create(), (long) ((Number) backingValue).longValue(), false);
+                } else if (castingTo instanceof ShortPrimitive) {
+                    return new PrimitiveInstance<>(new ShortPrimitive((CXPrimitiveType) getType()),
+                            (short) ((Number) backingValue).shortValue(),
+                            false);
+                } else if (castingTo instanceof UnsignedPrimitive) {
+                    UnsignedPrimitive to = (UnsignedPrimitive) castingTo;
+                    PrimitiveInstance<Number, AbstractCXPrimitiveType> primitiveInstance =
+                            (PrimitiveInstance<Number, AbstractCXPrimitiveType>) castTo(to.getPrimitiveCXType());
+                    return new PrimitiveInstance<>(primitiveInstance.getType(), backingValue, true);
+                } else if (castingTo instanceof PointerType &&
+                        ((Number) this.backingValue).intValue() == 0
+                ) {
+                    return new PointerInstance<>(((PointerType) castingTo).getSubType(),
+                            new ArrayList<>(Collections.singletonList(null)), 0);
+                }
+            } else if (backingValue instanceof Character) {
+                if (castingTo.equals(CXPrimitiveType.INTEGER)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.INTEGER,
+                            (int) ((Character) backingValue).charValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.DOUBLE)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, (double) ((Character) backingValue).charValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.FLOAT)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.DOUBLE, (float) ((Character) backingValue).charValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.CHAR)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.CHAR, (char) ((Character) backingValue).charValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.CHAR)) {
+                    return new PrimitiveInstance<>(CXPrimitiveType.CHAR, (char) ((Character) backingValue).charValue(),
+                            false);
+                } else if (castingTo.equals(CXPrimitiveType.VOID)) {
+                    return null;
+                } else if (castingTo instanceof LongPrimitive) {
+                    return new PrimitiveInstance<>(LongPrimitive.create(), (long) ((Character) backingValue).charValue(), false);
+                } else if (castingTo instanceof ShortPrimitive) {
+                    return new PrimitiveInstance<>(new ShortPrimitive((CXPrimitiveType) getType()), (short) ((Character) backingValue).charValue(),
+                            false);
+                } else if (castingTo instanceof UnsignedPrimitive) {
+                    UnsignedPrimitive to = (UnsignedPrimitive) castingTo;
+                    PrimitiveInstance<Number, AbstractCXPrimitiveType> primitiveInstance =
+                            (PrimitiveInstance<Number, AbstractCXPrimitiveType>) castTo(to.getPrimitiveCXType());
+                    return new PrimitiveInstance<>(primitiveInstance.getType(), backingValue, true);
+                } else if (castingTo instanceof PointerType &&
+                        ((Number) this.backingValue).intValue() == 0
+                ) {
+                    return new PointerInstance<>(((PointerType) castingTo).getSubType(),
+                            new ArrayList<>(Collections.singletonList(null)), 0);
+                }
+            }
+            
+            throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
+        }
+        
+    }
+    
+    public class EnumInstance extends Instance<EnumType> {
+        
+        private Token value;
+        
+        public EnumInstance(EnumType type, Token value) {
+            super(type);
+            this.value = value;
+        }
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            this.value = ((EnumInstance) other).value;
+        }
+        
+        @Override
+        Instance<EnumType> copy() {
+            return new EnumInstance(this.getType(), value);
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            throw new InvalidPrimitiveException();
+        }
+        
+        @Override
+        boolean isFalse() {
+            throw new IllegalStateException("Can't use an enum as a boolean");
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            EnumInstance that = (EnumInstance) o;
+            if(!environment.is(((EnumInstance) o).getType(), this.getType())) return false;
+            return value.getImage().equals(that.value.getImage());
+        }
+        
+        @Override
+        public String toString() {
+            return "EnumInstance{" + getType() + "." + value.getImage() + "}";
+        }
+    }
+    
+    interface SemiIndirection<R extends CXType, I extends Instance<R>> {
+        I getValue();
+        PointerInstance<R> asPointer();
+    }
+    
+    public class NullableInstance <R extends CXType, I extends Instance<R>> extends Instance<R> implements SemiIndirection<R, I> {
+        
+        private I value;
+        
+        
+        public NullableInstance(R type) {
+            super(type);
+            value = null;
+        }
+        
+        public NullableInstance(R type, Instance<R> instance) {
+            super(type);
+            if (instance instanceof NullableInstance) {
+                value = ((NullableInstance<R, I>) instance).getValue();
+            } else {
+                value = (I) instance;
+            }
+        }
+        
+        @Override
+        boolean isFalse() {
+            if (value == null) return true;
+            return value.isFalse();
+        }
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            if (!environment.is(other.getType(), getType())) {
+                throw new IllegalStateException();
+            }
+            if (value == null) value = (I) other;
+            else value.copyFrom(other);
+        }
+        
+        @Override
+        Instance<R> copy() {
+            return new NullableInstance<>(getType(), value);
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            if (value == null) return new NullableInstance<R, Instance<R>>((R) castingTo, value);
+            Instance<?> casted = value.castTo(castingTo);
+            return new NullableInstance<R, Instance<R>>((R) castingTo, (Instance<R>) casted);
+        }
+        
+        @Override
+        public String toString() {
+            if (value == null) return "null value";
+            return "Nullable<" + value + ">";
+        }
+        
+        public I getValue() {
+            if (value != null && value instanceof NullableInstance) return ((NullableInstance<R, I>) value).getValue();
+            return value;
+        }
+        
+        public void setValue(I value) {
+            if (value instanceof NullableInstance) {
+                this.value = ((NullableInstance<R, I>) value).value;
+            }
+            this.value = value;
+        }
+        
+        @Override
+        public NullableInstance<R, ? extends Instance<R>> toNullable() {
+            return this;
+        }
+        
+        @Override
+        public PointerInstance<R> asPointer() {
+            PointerInstance<R> rPointerInstance = new PointerInstance<>(new PointerType(getType()));
+            rPointerInstance.deref().copyFrom(value);
+            return rPointerInstance;
+        }
+    }
+    
+    
+    /**
+     * @param <R> Type of subtype
+     * @param <T> Type of Array
+     */
+    public class ArrayInstance <R extends CXType, T extends ArrayType>
+            extends PrimitiveInstance<ArrayList<Instance<R>>, T> {
+        
+        protected int size;
+        private R subType;
+        
+        public ArrayInstance(T type, R subtype, int size) {
+            super(type, new ArrayList<>(size), true);
+            this.subType = subtype;
+            for (int i = 0; i < size; i++) {
+                getBackingValue().add(((Instance<R>) defaultValue(subtype)));
+            }
+            this.size = size;
+        }
+        
+        public ArrayInstance(T type, R subType, ArrayList<Instance<R>> other) {
+            super(type,
+                    other,
+                    true);
+            /*
+            for (int i = 0; i < other.size(); i++) {
+                NullableInstance<R, Instance<R>> nullableInstance = other.get(i);
+                if(nullableInstance == null) {
+                    getBackingValue().add(new NullableInstance<R, Instance<R>>(subType));
+                } else {
+                    getBackingValue().add(nullableInstance);
+                }
+                // getBackingValue().add(other.get(i) == null ? new NullableInstance<>(subType) : other.get(i));
+            }
+            
+             */
+            this.subType = subType;
+            this.size = other.size();
+        }
+        
+        public ArrayInstance(T type, R subType) {
+            this(type, subType, new ArrayList<>());
+        }
+        
+        
+        
+        public SemiIndirection<R, Instance<R>> getAt(int index) {
+            if (index >= getBackingValue().size()) throw new SegmentationFault("Index " + index + " out of bounds of " +
+                    "size " + getBackingValue().size());
+            PointerInstance<R> pointer = new PointerInstance<>(getSubType(), this.getBackingValue(), index);
+            return new Reference<>(getSubType(), pointer);
+        }
+        
+        public Instance<R> getAtNoIndirection(int index) {
+            if (index >= getBackingValue().size()) throw new SegmentationFault("Index " + index + " out of bounds of " +
+                    "size " + getBackingValue().size());
+            return getBackingValue().get(index);
+        }
+        
+        public void setAt(int index, Instance<R> value) {
+            getBackingValue().set(index, value);
+        }
+        
+        public PointerInstance<R> asPointer() {
+            return new PointerInstance<>(subType, getBackingValue(), 0);
+        }
+        
+        @Override
+        boolean isFalse() {
+            return isNull();
+        }
+        
+        public int getSize() {
+            return size;
+        }
+        
+        public R getSubType() {
+            return subType;
+        }
+        
+        public int size() {
+            return size;
+        }
+        
+        @Override
+        public String toString() {
+            /*
+            if (subType == CXPrimitiveType.CHAR) {
+                StringBuilder output = new StringBuilder("\"");
+                
+                try {
+                    for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
+                        output.append(((PrimitiveInstance<Character, ?>) getAt(i).getValue()).backingValue);
+                    }
+                }catch (IndexOutOfBoundsException e) {
+                    throw new SegmentationFault(e);
+                }
+                
+                return output + "\" (true size = " + getSize() + ")";
+            }
+
+             */
+            return "ArrayInstance{" +
+                    "type=" + getType() +
+                    ", size=" + size +
+                    '}';
+        }
+        
+        /**
+         * If this is a Jodin C String, converts it to a Java string
+         *
+         * @return Some(String), or None
+         */
+        public Option<String> takeString() {
+            if (subType == CXPrimitiveType.CHAR) {
+                StringBuilder output = new StringBuilder();
+                
+                try {
+                    for (int i = 0; i < getSize() && getAt(i).getValue() != null; i++) {
+                        
+                        char backingValue = ((PrimitiveInstance<Character, ?>) getAtNoIndirection(i)).backingValue;
+                        if (backingValue != '\0') {
+                            output.append(backingValue);
+                        }
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    throw new SegmentationFault(e);
+                }
+                
+                return Some(output.toString());
+            } else {
+                return None();
+            }
+        }
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            if (other instanceof ArrayInstance) {
+                this.setBackingValue(((ArrayInstance<R, T>) other).getBackingValue());
+                this.size = ((ArrayInstance<?, ?>) other).size;
+            } else {
+                assert other instanceof PrimitiveInstance;
+                if (((PrimitiveInstance<?, ?>) other).getBackingValue().toString().equals("0")) {
+                    this.setBackingValue(new ArrayList<>()); // should, in effect, set as a nullptr
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+            this.size = this.getBackingValue().size();
+        }
+        
+        
+        @Override
+        Instance<T> copy() {
+            /*
+            ArrayList<Instance<R>> backingValue = getBackingValue();
+            ArrayInstance<R, T> output = new ArrayInstance<>(getType(), getSubType(), backingValue.size());
+            for (int i = 0; i < backingValue.size(); i++) {
+                Instance<R> value = backingValue.get(i).copy();
+                output.setAt(i, value);
+            }
+
+             */
+            return (Instance<T>) this.asPointer();
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof ArrayInstance
+                    && ((ArrayInstance<R, ?>) o).getBackingValue() == this.getBackingValue()) {
+                return true;
+            }
+            return super.equals(o);
+        }
+        
+        public Instance<R> getPointer() {
+            Instance<R> at = getAtNoIndirection(0);
+            if (at == null) return null;
+            if (at instanceof NullableInstance) {
+                return ((NullableInstance<R, ?>) at).getValue();
+            }
+            return at;
+        }
+        
+        boolean isNull() {
+            if (getBackingValue().size() == 0) {
+                return true;
+            }
+            Instance<R> pointer = getPointer();
+            if (pointer == null) {
+                return true;
+            }
+            return pointer.isFalse();
+        }
+    }
+    
+    
+    public class PointerInstance <R extends CXType> extends ArrayInstance<R, PointerType> {
+        
+        private int index = 0;
+        
+        public PointerInstance(R type, Instance<R> pointer) {
+            super(type.toPointer(), type, new ArrayList<>(Collections.singletonList(new NullableInstance<>(type))));
+            setAt(0, pointer);
+        }
+        
+        public PointerInstance(R type,
+                               ArrayList<Instance<R>> backing,
+                               int offset) {
+            super(type.toPointer(), type, backing);
+            index = offset;
+        }
+        public PointerInstance(PointerType type) {
+            super(type, (R) type.getSubType());
+        }
+        
+        
+        public PointerInstance<R> getPointerOfOffset(int offset) {
+            return new PointerInstance<R>(getSubType(), getBackingValue(), index + offset);
+        }
+        
+        
+        public Instance<R> getPointer() {
+            if (getBackingValue().size() == 0) return null;
+            Instance<R> at = getAtNoIndirection(index);
+            if (at == null) return null;
+            if (at instanceof NullableInstance) {
+                return ((NullableInstance<R, ?>) at).getValue();
+            }
+            return at;
+        }
+        
+        
+        public void setPointer(Instance<R> pointer) {
+            setAt(index, pointer);
+        }
+        
+        @Override
+        public PointerInstance<R> asPointer() {
+            return this;
+        }
+        
+        public SemiIndirection<R, Instance<R>> getAt(int index) {
+            return super.getAt(index + this.index);
+        }
+        
+        public void setAt(int index, Instance<R> value) {
+            super.setAt(index + this.index, value);
+        }
+        
+        @Override
+        public String toString() {
+            /*
+            if (getSubType() == CXPrimitiveType.CHAR) {
+                String full = super.toString();
+                String output = full.substring(index + 1);
+                return "\"" + output + " (char*)";
+            }
+
+             */
+            if (isNull()) {
+                return "nullptr (type = " + getType() + ")";
+            }
+            
+            if (getBackingValue().size() == 1) {
+                return getType().toString();
+            }
+            
+            Stream<CharSequence> stringStream = getBackingValue().stream().skip(index).map((instance) -> instance.toString());
+            String elements = stringStream.collect(Collectors.joining(", "));
+            
+            
+            return String.format("%s [%s]", getType(), elements);
+        }
+        
+        @Override
+        Instance<PointerType> copy() {
+            return new PointerInstance<>(getSubType(), getBackingValue(), index);
+        }
+        
+        Reference<R> deref() {
+            return new Reference<>(getSubType(), this);
+        }
+        
+        Instance<R> full_deref() {
+            return getPointer();
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            if (castingTo instanceof AbstractCXPrimitiveType && getPointer() == null) {
+                return new PrimitiveInstance<>(((AbstractCXPrimitiveType) castingTo), 0,
+                        castingTo instanceof UnsignedPrimitive);
+            }
+            if (!(castingTo instanceof PointerType))
+                throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
+            
+            return new PointerInstance<R>((R) castingTo, getPointer());
+        }
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            if (other instanceof PointerInstance) {
+                this.setBackingValue(((PointerInstance<R>) other).getBackingValue());
+                this.index = ((PointerInstance<?>) other).index;
+                this.size = ((PointerInstance<?>) other).size;
+            } else {
+                super.copyFrom(other);
+            }
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof PointerInstance) {
+                if (isNull() && ((PointerInstance<?>) o).isNull()) {
+                    return true;
+                }
+                if(((ArrayInstance<R, ?>) o).getBackingValue() != this.getBackingValue()) {
+                    return false;
+                }
+                if(getBackingValue() != null) {
+                    return this.index == ((PointerInstance<?>) o).index;
+                }
+                return true;
+            }
+            return super.equals(o);
+        }
+    }
+    
+    public class Reference <R extends CXType> extends Instance<R> implements SemiIndirection<R, Instance<R>>{
+        
+        private final PointerInstance<R> location;
+        
+        public Reference(R type, PointerInstance<R> location) {
+            super(type);
+            this.location = location;
+        }
+        
+        @Override
+        public PointerInstance<R> toPointer() {
+            return location;
+        }
+        
+        Instance<R> unwrap() {
+            return location.full_deref();
+        }
+        
+        public Instance<R> getValue() {
+            return location.full_deref();
+        }
+        
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            location.getAtNoIndirection(location.index).copyFrom(other);
+        }
+        
+        @Override
+        Instance<R> copy() {
+            return location.getAtNoIndirection(location.index).copy();
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            return copy().castTo(castingTo);
+        }
+        
+        @Override
+        boolean isFalse() {
+            return copy().isFalse();
+        }
+        
+        @Override
+        public String toString() {
+            if (location.isNull()) {
+                return location.toString();
+            }
+            return "Reference{" + copy().toString() + '}';
+        }
+        
+        @Override
+        public PointerInstance<R> asPointer() {
+            return location;
+        }
+    }
+    
+    public class CompoundInstance <T extends CXCompoundType> extends Instance<T> {
+        
+        private HashMap<String, Instance<?>> fields;
+        
+        public CompoundInstance(T type) {
+            super(type);
+            this.fields = new HashMap<>();
+            for (ICXCompoundType.FieldDeclaration field : type.getAllFields()) {
+                fields.put(field.getName(), defaultValue(field.getType()));
+            }
+        }
+        
+        public <R extends CXType, I extends Instance<R>> I get(String key) {
+            return (I) fields.get(key);
+        }
+        
+        @Override
+        void copyFrom(Instance<?> other) {
+            assert other instanceof CompoundInstance;
+            
+            for (String s : fields.keySet()) {
+                this.fields.replace(s, ((CompoundInstance<CXCompoundType>) other).fields.get(s));
+            }
+        }
+        
+        @Override
+        boolean isFalse() {
+            return false;
+        }
+        
+        @Override
+        Instance<T> copy() {
+            CompoundInstance<T> tCompoundInstance = new CompoundInstance<>(getType());
+            for (Map.Entry<String, Instance<?>> stringInstanceEntry : fields.entrySet()) {
+                tCompoundInstance.fields.put(stringInstanceEntry.getKey(), stringInstanceEntry.getValue());
+            }
+            return tCompoundInstance;
+        }
+        
+        @Override
+        Instance<?> castTo(CXType castingTo) throws InvalidPrimitiveException {
+            throw new IllegalStateException("Can't type cast " + getType() + " to " + castingTo);
+        }
+    }
+    
+    
+    public class SegmentationFault extends Error {
+        
+        public SegmentationFault() {
+        }
+        
+        public SegmentationFault(String message) {
+            super(message);
+        }
+        
+        public SegmentationFault(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+        public SegmentationFault(Throwable cause) {
+            super(cause);
+        }
+    }
+    
+    
+    
+    public <R, T extends AbstractCXPrimitiveType> PrimitiveInstance<R, T> createNewInstance(T type, R backing) {
+        PrimitiveInstance<R, T> instance = (PrimitiveInstance<R, T>) createNewInstance(type);
+        instance.setBackingValue(backing);
+        return instance;
+    }
+    
+    public <T extends CXType> Instance<?> createNewInstance(T type) {
+        if (type instanceof ICXWrapper) return createNewInstance(((ICXWrapper) type).getWrappedType());
+        
+        if (type instanceof PointerType) {
+            
+            
+            return new PointerInstance<>(((PointerType) type));
+            
+        } else if (type instanceof ArrayType) {
+            // TODO: implement proper array sizing
+            return new ArrayInstance<>(((ArrayType) type), ((ArrayType) type).getBaseType(), 15);
+        } else if (type instanceof EnumType) {
+            return new EnumInstance((EnumType) type, ((EnumType) type).getMembers().get(0));
+        } else if (type instanceof AbstractCXPrimitiveType) {
+            boolean unsigned = false;
+            AbstractCXPrimitiveType fixed = ((AbstractCXPrimitiveType) type);
+            if (fixed instanceof UnsignedPrimitive) {
+                unsigned = true;
+                fixed = ((UnsignedPrimitive) fixed).getPrimitiveCXType();
+            }
+            
+            try {
+                
+                if (unsigned) return new PrimitiveInstance<>(fixed, 0, true).castTo(type);
+                return new PrimitiveInstance<>(fixed, 0, false).castTo(type);
+            } catch (InvalidPrimitiveException e) {
+                return null;
+            }
+            
+        } else if (type instanceof CXCompoundType) {
+            return new CompoundInstance<>(((CXCompoundType) type));
+        }
+        return null;
+    }
+    
+    
+    private class StackTraceInfo {
+        
+        private Token function;
+        private Token currentToken;
+        private HashMap<String, Instance<?>> stackVariables;
+        
+        public StackTraceInfo(Token function) {
+            this.function = function;
+            this.currentToken = nearestCurrentToken;
+            stackVariables = new HashMap<>();
+        }
+        
+        public Token getFunction() {
+            return function;
+        }
+        
+        public HashMap<String, Instance<?>> getStackVariables() {
+            return stackVariables;
+        }
+        
+        public void setCurrentToken(Token currentToken) {
+            this.currentToken = currentToken;
+        }
+        
+        @Override
+        public String toString() {
+            if (function.getFilename() != null)
+                return function.getImage() + "(" + currentToken.getFilename() + ":" + currentToken.getActualLineNumber() + ")";
+            return function.getImage();
+        }
     }
 }
