@@ -1,13 +1,13 @@
 package radin.midanalysis.typeanalysis.analyzers;
 
 import radin.core.lexical.Token;
-import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.ASTNodeType;
+import radin.core.semantics.generics.CXParameterizedClassType;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
+import radin.core.utility.ICompilationSettings;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.midanalysis.typeanalysis.TypeAnalyzer;
-import radin.core.semantics.ASTNodeType;
-import radin.core.utility.ICompilationSettings;
 import radin.output.tags.GenericLocationTag;
 
 import java.util.LinkedList;
@@ -23,9 +23,9 @@ public class GenericTypeAnalyzer extends TypeAnalyzer {
     public boolean determineTypes(TypeAugmentedSemanticNode node) {
         ICompilationSettings.debugLog.info("Generic Declaration: " + node.toTreeForm());
     
-        List<CXParameterizedType> parameterTypes = new LinkedList<>();
+        List<CXParameterizedClassType> parameterTypes = new LinkedList<>();
         for (TypeAugmentedSemanticNode child : node.getASTChild(ASTNodeType.parameterized_types).getChildren()) {
-            parameterTypes.add(((CXParameterizedType) child.getCXType()));
+            parameterTypes.add(((CXParameterizedClassType) child.getCXType()));
         }
     
         TypeAugmentedSemanticNode genericItem = node.getChild(1);

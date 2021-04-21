@@ -2,15 +2,16 @@ package radin.midanalysis;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
-import radin.core.semantics.generics.*;
-import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
+import radin.core.semantics.generics.*;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 import radin.core.utility.Pair;
+import radin.midanalysis.typeanalysis.VariableTypeTracker;
 import radin.output.tags.GenericLocationTag;
 
 import java.util.*;
@@ -20,7 +21,7 @@ public class GenericModule implements IScopedTracker<Object>{
     // TODO: Add support for Generic Classes
     
     public static class GenericRedeclarationError extends AbstractCompilationError {
-        public GenericRedeclarationError(Token newDec, List<CXParameterizedType> attempt,
+        public GenericRedeclarationError(Token newDec, List<CXParameterizedClassType> attempt,
                                          CXGenericFunction original) {
             super("Attempted to declare a generic function with same type sigature of an existing funciton",
                     Arrays.asList(original.getDeclarationToken(), newDec),
@@ -41,7 +42,7 @@ public class GenericModule implements IScopedTracker<Object>{
     }
     
     public static class IllegalParameterTypesError extends AbstractCompilationError {
-        public IllegalParameterTypesError(List<CXType> found, List<CXParameterizedType> expected, Token caller) {
+        public IllegalParameterTypesError(List<CXType> found, List<CXParameterizedClassType> expected, Token caller) {
             super("Expected Parameter types: " + found, caller, "Found:" + found);
         }
     }
@@ -65,7 +66,7 @@ public class GenericModule implements IScopedTracker<Object>{
      */
     public void declareGenericFunction(CXIdentifier name,
                                        CXType returnType,
-                                       List<CXParameterizedType> parameterizedTypes,
+                                       List<CXParameterizedClassType> parameterizedTypes,
                                        List<CXType> argsTypes,
                                        AbstractSyntaxNode relevantBody,
                                        TypeEnvironment e,
@@ -92,7 +93,7 @@ public class GenericModule implements IScopedTracker<Object>{
         locationTagHashMap.put(genericFunction, tag);
     }
     
-    public void declareGenericClass(AbstractSyntaxNode classBody, List<CXParameterizedType> parameterizedTypes) {
+    public void declareGenericClass(AbstractSyntaxNode classBody, List<CXParameterizedClassType> parameterizedTypes) {
         //if(genericClassHashMap.containsKey())
     }
     
@@ -119,6 +120,10 @@ public class GenericModule implements IScopedTracker<Object>{
         }
         
         return genericFunction.createInstance(parameterTypes);
+    }
+    
+    public GenericInstance<AbstractCXClassType> createType(CXIdentifier type, List<CXType> parameterTypes) {
+    
     }
     
     @Override

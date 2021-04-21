@@ -2,7 +2,7 @@ package radin.core.semantics.types.primitives;
 
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
-import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.generics.CXParameterizedClassType;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.Dereference;
 import radin.core.semantics.types.ICXWrapper;
@@ -186,7 +186,7 @@ public class ArrayType extends AbstractCXPrimitiveType implements Dereference {
     }
     
     @Override
-    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+    public CXType propagateGenericReplacement(CXParameterizedClassType original, CXType replacement) {
         return new ArrayType(baseType.propagateGenericReplacement(original, replacement), size);
     }
     

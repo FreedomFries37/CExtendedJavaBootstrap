@@ -22,7 +22,7 @@ public class CXGenericClassFactory implements ICXGenericFactory<AbstractCXClassT
     
     private TypeEnvironment environment;
     private CXIdentifier identifier;
-    private ArrayList<CXParameterizedType> parameterizedTypes;
+    private ArrayList<CXParameterizedClassType> parameterizedTypes;
     private AbstractSyntaxNode originalRelevantTree;
     private Token declarationToken;
     private HashMap<List<CXType>, Pair<AbstractSyntaxNode, CXClassType>> createdTrees = new HashMap<>();
@@ -45,7 +45,7 @@ public class CXGenericClassFactory implements ICXGenericFactory<AbstractCXClassT
     
      */
     
-    public CXGenericClassFactory(TypeEnvironment environment, CXIdentifier identifier, ArrayList<CXParameterizedType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
+    public CXGenericClassFactory(TypeEnvironment environment, CXIdentifier identifier, ArrayList<CXParameterizedClassType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
         this.environment = environment;
         this.identifier = identifier;
         this.parameterizedTypes = parameterizedTypes;
@@ -74,7 +74,7 @@ public class CXGenericClassFactory implements ICXGenericFactory<AbstractCXClassT
     }
     
     @Override
-    public List<CXParameterizedType> getParameterizedTypes() {
+    public List<CXParameterizedClassType> getParameterizedTypes() {
         return parameterizedTypes;
     }
     

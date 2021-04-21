@@ -4,9 +4,9 @@ import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXStructType;
-import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
@@ -14,16 +14,15 @@ import radin.core.semantics.types.primitives.*;
 import radin.core.utility.Reference;
 
 import java.util.List;
-import java.util.Objects;
 
-public class CXParameterizedType extends AbstractCXClassType {
+public class CXParameterizedClassType extends AbstractCXClassType {
     
     private static long ptsCreated = 0;
     private AbstractCXClassType upperBound;
     private Token name;
     private long pt;
     
-    public CXParameterizedType(AbstractCXClassType upperBound, Token name, TypeEnvironment e) {
+    public CXParameterizedClassType(AbstractCXClassType upperBound, Token name, TypeEnvironment e) {
         super(upperBound.getFields());
         this.upperBound = upperBound;
         this.name = name;
@@ -270,7 +269,7 @@ public class CXParameterizedType extends AbstractCXClassType {
     }
     
     @Override
-    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+    public CXType propagateGenericReplacement(CXParameterizedClassType original, CXType replacement) {
         if(original == this) return replacement;
         return this;
     }

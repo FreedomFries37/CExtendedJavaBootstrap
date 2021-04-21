@@ -76,9 +76,15 @@ int main(int argc, std::String args[]) {
 	day_class->println();
 	std::ClassInfo info = day_class->getClass();
 	info->println();
+	std::ClassInfo object_info = new std::Object()->getClass();
+	if(object_info->is_object(day_class)) println("reflection can test if type is a parent type");
 
 	EnumInStruct* boop = calloc(sizeof(EnumInStruct), 1);
 	boop->day = enum Day.Monday;
+
+	for(int i =0; i < 1000000; i++) {
+
+	}
 
 
 	if(boop->day != day_class->getDay()) exit(-1);

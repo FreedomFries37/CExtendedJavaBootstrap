@@ -4,7 +4,7 @@ import radin.core.Namespaced;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.TypeEnvironment;
-import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.generics.CXParameterizedClassType;
 import radin.core.semantics.types.primitives.ArrayType;
 import radin.core.semantics.types.primitives.CXPrimitiveType;
 import radin.core.semantics.types.primitives.PointerType;
@@ -198,7 +198,7 @@ public abstract class CXType implements CXEquivalent, Namespaced {
         return toString();
     }
     
-    public CXType propagateGenericReplacement(CXParameterizedType original, CXType replacement) {
+    public CXType propagateGenericReplacement(CXParameterizedClassType original, CXType replacement) {
         return this;
     }
     

@@ -89,6 +89,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
     
         println("void __init_reflection() {");
         setIndent(getIndent() + 1);
+        String classInfoGlobalName = classInfo.getCTypeName() + "_info";
         for (CXClassType cxClassType :
                 cxClassTypes) {
             String identifier = cxClassType.getCTypeName() + "_info";
@@ -116,6 +117,7 @@ public class RuntimeCompiler extends AbstractIndentedOutputSingleOutputCompiler 
             } else {
                 println(identifier + "->parent = __get_class(" + environment.getTypeId(cxClassType.getParent()) + ");");
             }
+            println(identifier + "->info = " + classInfoGlobalName + ';');
         
         }
         println("reflection_available = true;");

@@ -2,11 +2,9 @@ package radin.core.semantics.generics;
 
 import radin.core.lexical.Token;
 import radin.core.semantics.TypeEnvironment;
-import radin.core.semantics.types.AmbiguousMethodCallError;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.AbstractCXClassType;
-import radin.core.semantics.types.compound.CXCallable;
 import radin.core.semantics.types.compound.ICXCompoundType;
 import radin.core.semantics.types.methods.CXMethod;
 import radin.core.semantics.types.methods.ParameterTypeList;
@@ -17,7 +15,7 @@ import java.util.List;
 
 public class CXGenericClassType extends CXGenericType<AbstractCXClassType> implements CXCheckedCallable, ICXCompoundType {
     
-    public CXGenericClassType(HashMap<CXParameterizedType, CXParameterizedTypeInstance<? extends CXType>> parameterMap, AbstractCXClassType baseType, TypeEnvironment environment) {
+    public CXGenericClassType(HashMap<CXParameterizedClassType, CXParameterizedTypeInstance<? extends CXType>> parameterMap, AbstractCXClassType baseType, TypeEnvironment environment) {
         super(parameterMap, baseType, environment);
     }
     
@@ -33,7 +31,7 @@ public class CXGenericClassType extends CXGenericType<AbstractCXClassType> imple
     
     
                 CXType returnType = allMethod.getReturnType();
-                if(returnType instanceof CXParameterizedType) {
+                if(returnType instanceof CXParameterizedClassType) {
                     if (getParameterMap().containsKey(returnType)) {
                         if (getParameterMap().get(returnType).getVariance() == CXParameterizedTypeInstance.Variance.CONTRAVARIANCE) {
                             // TODO: Fix this

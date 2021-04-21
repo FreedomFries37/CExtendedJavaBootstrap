@@ -51,7 +51,7 @@ public interface ICXGenericFactory <T> {
         return TypedAbstractSyntaxNode.createWithChangedChildren(node, newType, fixedChildren);
     }
     
-    List<CXParameterizedType> getParameterizedTypes();
+    List<CXParameterizedClassType> getParameterizedTypes();
     
     default boolean typesValid(List<CXType> input) {
         for (int i = 0; i < getParameterizedTypes().size(); i++) {

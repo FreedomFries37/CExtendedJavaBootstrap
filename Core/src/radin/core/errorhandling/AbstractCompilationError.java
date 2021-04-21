@@ -2,10 +2,7 @@ package radin.core.errorhandling;
 
 import radin.core.lexical.Token;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public abstract class AbstractCompilationError extends Error {
     
@@ -157,6 +154,14 @@ public abstract class AbstractCompilationError extends Error {
             output.sort(ErrorInformation::compareTo);
         }
         return output;
+    }
+    
+    public void addToken(Token... tokens) {
+        if(correspondingTokens.size() == 1 && correspondingTokens.get(0) == null) {
+            correspondingTokens = Arrays.asList(tokens);
+        } else {
+            correspondingTokens.addAll(Arrays.asList(tokens));
+        }
     }
     
 }

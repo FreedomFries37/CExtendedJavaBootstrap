@@ -2,12 +2,6 @@ package radin.frontend.v1.semantics;
 
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
-import radin.core.semantics.types.primitives.EnumType;
-import radin.frontend.directastparsing.ASTParser;
-import radin.frontend.v1.MissingCategoryNodeError;
-import radin.frontend.v1.parsing.CategoryNode;
-import radin.frontend.v1.parsing.LeafNode;
-import radin.frontend.v1.parsing.ParseNode;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
@@ -16,20 +10,26 @@ import radin.core.semantics.TokenStoringAbstractSyntaxNode;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.exceptions.InvalidPrimitiveException;
 import radin.core.semantics.exceptions.TypeDoesNotExist;
-import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.generics.CXParameterizedClassType;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.TypedAbstractSyntaxNode;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
-import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.primitives.ArrayType;
+import radin.core.semantics.types.primitives.EnumType;
 import radin.core.semantics.types.primitives.PointerType;
-import radin.input.ISemanticAnalyzer;
-import radin.frontend.v1.InheritMissingError;
 import radin.core.semantics.types.wrapped.CXDeferredClassDefinition;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.UniversalCompilerSettings;
+import radin.frontend.directastparsing.ASTParser;
+import radin.frontend.v1.InheritMissingError;
+import radin.frontend.v1.MissingCategoryNodeError;
+import radin.frontend.v1.parsing.CategoryNode;
+import radin.frontend.v1.parsing.LeafNode;
+import radin.frontend.v1.parsing.ParseNode;
+import radin.input.ISemanticAnalyzer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -209,11 +209,15 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             String.format("%-30s", node) +
                             (node.hasChildren()? "(CHILDREN = " + ((CategoryNode) node).getAllChildren() + ")" : "") +
                             (stringErrors.peek() == null ? "" : String.format("  %60s", "Error: " + stringErrors.peek())));
+                    
+                    
                     if(stringErrors.peek() == null) {
                         throw new ActionRoutineApplierFailure(node, "Failed to enact action routine for " + node);
                     } else {
                         throw new ActionRoutineApplierFailure(node, stringErrors.peek());
                     }
+                    
+                    
                 } else {
                     if(!successOrder.contains(node.getSynthesized())) successOrder.add(node.getSynthesized());
                 }
@@ -1740,7 +1744,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                             String image = id.getToken().getImage();
                             typedefs.add(image);
                             if(!node.getChild(1).hasSynthesized()) {
-                                CXParameterizedType parameterizedType = new CXParameterizedType((CXClassType) upperBound,
+                                CXParameterizedClassType parameterizedType = new CXParameterizedClassType((CXClassType) upperBound,
                                         id.getToken(), environment);
 
                                 CXType cxType = environment.addTypeDefinition(parameterizedType, image);
@@ -1749,6 +1753,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         }
                         
                         node.getChild(1).setInherit(AbstractSyntaxNode.EMPTY);
+                        node.getChild(1).setInherit(identifierList, 1);
 
 
                         AbstractSyntaxNode dec = node.getChild(1).getSynthesized();
@@ -1916,6 +1921,9 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                 error(e.getMessage());
                 cont = false;
             }catch (AbstractCompilationError e) {
+                if(e.getCorrespondingTokens().get(0) == null) {
+                    e.addToken(findFirstToken(currentCategoryNode()));
+                }
                 errors.add(e);
                 ICompilationSettings.debugLog.severe("Unexpected error in Action Routine Applier");
                 ICompilationSettings.debugLog.throwing(getClass().getSimpleName(), node.getCategory(), e);

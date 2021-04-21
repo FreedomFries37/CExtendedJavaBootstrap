@@ -6,6 +6,7 @@ import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.ICXWrapper;
+import radin.core.semantics.types.compound.AbstractCXClassType;
 import radin.core.semantics.types.compound.CXClassType;
 import radin.core.semantics.types.methods.CXConstructor;
 import radin.core.semantics.types.methods.CXMethod;
@@ -16,7 +17,7 @@ import java.util.Objects;
 
 public class CXDeferredClassDefinition extends CXMappedType {
     
-    private CXClassType temp;
+    private AbstractCXClassType temp;
     private CXIdentifier identifier;
     
     public CXDeferredClassDefinition(Token corresponding, TypeEnvironment environment, CXIdentifier identifier) {

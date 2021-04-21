@@ -1,5 +1,20 @@
 #include <stdint.h>
 
+/*
+declaration:
+for < generic_params > class <id> ...
+
+generic_params: (? : T | T : ? | T),+
+
+usage:
+Canonical type:
+<namespaced> (< canonical type list> )?
+
+Usage:
+<canonical type>
+
+*/
+
 for <T> class Wrapper {
 	private T value;
 
@@ -14,11 +29,13 @@ for <T> class Wrapper {
 		this->value = val;
 	}
 
+
 	public void swap(Wrapper<T> other) {
 		T value = other->getValue();
 		other->setValue(this->value);
 		this->value = value;
 	}
+
 };
 
 for <T> T earlyTest(T input) {
@@ -42,7 +59,9 @@ for <T> void replace(T* l, T* r) {
 
 int main(int argc, std::String argv[]) {
 	std::Object o = new std::Object();
-	//std::Object self = earlyTest<std::Object>(o);
+
+	Wrapper<std::Object> wrapped = new Wrapper<std::Object>();
+
 	int hash = getHash<std::Object>(o);
 	std::Int h = new std::Int(hash);
 	h->println();

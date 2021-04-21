@@ -9,20 +9,23 @@ import radin.core.semantics.types.CXIdentifier;
 import radin.core.semantics.types.CXType;
 import radin.core.semantics.types.compound.CXFunctionPointer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class CXGenericFunction extends CXFunctionPointer implements ICXGenericFactory<CXFunctionPointer> {
     
     private TypeEnvironment environment;
     private CXIdentifier name;
-    private ArrayList<CXParameterizedType> parameterizedTypes;
+    private ArrayList<CXParameterizedClassType> parameterizedTypes;
     private AbstractSyntaxNode originalRelevantTree;
     private Token declarationToken;
     
     private HashMap<List<CXType>, AbstractSyntaxNode> createdTrees = new HashMap<>();
     
-    public CXGenericFunction(CXIdentifier name, CXType returnType, List<CXType> parameterTypes, TypeEnvironment environment, List<CXParameterizedType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
+    public CXGenericFunction(CXIdentifier name, CXType returnType, List<CXType> parameterTypes, TypeEnvironment environment, List<CXParameterizedClassType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
         super(returnType, parameterTypes);
         this.name = name;
         this.environment = environment;
@@ -31,7 +34,7 @@ public class CXGenericFunction extends CXFunctionPointer implements ICXGenericFa
         this.declarationToken = declarationToken;
     }
     
-    public CXGenericFunction(CXType returnType, TypeEnvironment environment, CXIdentifier name, List<CXParameterizedType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
+    public CXGenericFunction(CXType returnType, TypeEnvironment environment, CXIdentifier name, List<CXParameterizedClassType> parameterizedTypes, AbstractSyntaxNode originalRelevantTree, Token declarationToken) {
         super(returnType);
         this.environment = environment;
         this.name = name;
@@ -40,7 +43,7 @@ public class CXGenericFunction extends CXFunctionPointer implements ICXGenericFa
         this.declarationToken = declarationToken;
     }
     
-    public CXGenericFunction(CXType returnType, List<CXType> parameterTypes, TypeEnvironment environment, CXIdentifier name, List<CXParameterizedType> parameterizedTypes, Token declarationToken) {
+    public CXGenericFunction(CXType returnType, List<CXType> parameterTypes, TypeEnvironment environment, CXIdentifier name, List<CXParameterizedClassType> parameterizedTypes, Token declarationToken) {
         super(returnType, parameterTypes);
         this.environment = environment;
         this.name = name;
@@ -48,7 +51,7 @@ public class CXGenericFunction extends CXFunctionPointer implements ICXGenericFa
         this.declarationToken = declarationToken;
     }
     
-    public CXGenericFunction(CXType returnType, TypeEnvironment environment, CXIdentifier name, List<CXParameterizedType> parameterizedTypes, Token declarationToken) {
+    public CXGenericFunction(CXType returnType, TypeEnvironment environment, CXIdentifier name, List<CXParameterizedClassType> parameterizedTypes, Token declarationToken) {
         super(returnType);
         this.environment = environment;
         this.name = name;
@@ -85,7 +88,7 @@ public class CXGenericFunction extends CXFunctionPointer implements ICXGenericFa
     }
     
     @Override
-    public ArrayList<CXParameterizedType> getParameterizedTypes() {
+    public ArrayList<CXParameterizedClassType> getParameterizedTypes() {
         return parameterizedTypes;
     }
     

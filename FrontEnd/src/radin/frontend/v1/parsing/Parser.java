@@ -1647,7 +1647,15 @@ public class Parser extends BasicParser {
             case t_typename: {
                 if(!parseNamespacedType(output)) return false;
                 if(match(t_lt)) {
-                    if(!parseGenericInstanceInitParameters(output)) return false;
+                    switch (attemptParse(this::parseGenericInstanceInitParameters, output)) {
+                        case PARSED:
+                            break;
+                        case ROLLBACK:
+                            break;
+                        case DESYNC:
+                            return false;
+                    }
+                    // if(parseGenericInstanceInitParameters(output)) return false;
                 }
                 break;
             }

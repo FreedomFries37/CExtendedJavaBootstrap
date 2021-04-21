@@ -3,7 +3,6 @@ package radin.core.semantics.generics;
 import radin.core.semantics.TypeEnvironment;
 import radin.core.semantics.types.CXType;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -14,9 +13,9 @@ public abstract class CXGenericType<T extends CXType> extends CXType {
     private List<CXParameterizedTypeInstance<? extends CXType>> parameters;
     private T baseType;
     private TypeEnvironment environment;
-    private HashMap<CXParameterizedType, CXParameterizedTypeInstance<? extends CXType>> parameterMap;
+    private HashMap<CXParameterizedClassType, CXParameterizedTypeInstance<? extends CXType>> parameterMap;
     
-    public CXGenericType(HashMap<CXParameterizedType, CXParameterizedTypeInstance<? extends CXType>> parameterMap, T baseType,
+    public CXGenericType(HashMap<CXParameterizedClassType, CXParameterizedTypeInstance<? extends CXType>> parameterMap, T baseType,
                          TypeEnvironment environment) {
         this.parameters = new LinkedList<>(parameterMap.values());
         this.parameterMap = parameterMap;
@@ -44,7 +43,7 @@ public abstract class CXGenericType<T extends CXType> extends CXType {
         return 0;
     }
     
-    public HashMap<CXParameterizedType, CXParameterizedTypeInstance<? extends CXType>> getParameterMap() {
+    public HashMap<CXParameterizedClassType, CXParameterizedTypeInstance<? extends CXType>> getParameterMap() {
         return parameterMap;
     }
     

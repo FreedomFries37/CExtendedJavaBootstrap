@@ -211,10 +211,6 @@ public class Interpreter {
                 System.err.println("\tat " + s);
             }
             e.printStackTrace();
-        } finally {
-            for (CXIdentifier key : globalAutoVariables.keySet()) {
-                System.out.printf("%s: %s\n", key, globalAutoVariables.get(key));
-            }
         }
         return -1;
     }
@@ -1573,6 +1569,22 @@ public class Interpreter {
             case for_cond: {
                 startLexicalScope();
                 if (!invoke(input.getChild(0))) return false;
+                
+                /*
+                TokenType condition = input.getChild(1).getChild(0).getToken().getType();
+                PrimitiveInstance<? extends Number, CXPrimitiveType> primitiveInstance;
+                if(input.getChild(1).getASTType() == ASTNodeType.binop){
+                    if(input.getChild(1).getChild(0).getToken().getType() == t_lt) {
+                        System.out.println("Can use < shortcut");
+                        condition = input.getChild(1).getChild(0).getToken().getType();
+                    }
+                    
+                }
+                
+                 */
+                
+                
+                
                 while (true) {
                     if (!invoke(input.getChild(1))) return false;
                     PrimitiveInstance<Number, ?> pop = (PrimitiveInstance<Number, ?>) pop().unwrap();

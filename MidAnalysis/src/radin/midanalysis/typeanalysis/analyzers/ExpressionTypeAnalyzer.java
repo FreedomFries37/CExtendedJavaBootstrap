@@ -6,7 +6,7 @@ import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.exceptions.IncorrectParameterTypesError;
-import radin.core.semantics.generics.CXParameterizedType;
+import radin.core.semantics.generics.CXParameterizedClassType;
 import radin.core.semantics.generics.GenericInstance;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.AbstractCXClassType;
@@ -26,13 +26,12 @@ import radin.core.utility.UniversalCompilerSettings;
 import radin.midanalysis.ScopedTypeTracker;
 import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.midanalysis.typeanalysis.TypeAnalyzer;
-import radin.midanalysis.typeanalysis.errors.*;
 import radin.midanalysis.typeanalysis.errors.IllegalAccessError;
 import radin.midanalysis.typeanalysis.errors.InstantiationError;
+import radin.midanalysis.typeanalysis.errors.*;
 import radin.output.tags.*;
 import radin.output.typeanalysis.IVariableTypeTracker;
-
-import radin.output.typeanalysis.errors.*;
+import radin.output.typeanalysis.errors.IncorrectNumberOfArgumentsError;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -443,8 +442,8 @@ public class ExpressionTypeAnalyzer extends TypeAnalyzer {
             CXType cxClass;
             if(objectInteraction.getCXType() instanceof CXCompoundType) {
                 cxClass = objectInteraction.getCXType();
-            } else if (objectInteraction.getCXType() instanceof CXParameterizedType) {
-                cxClass = ((CXParameterizedType) objectInteraction.getCXType()).getUpperBound();
+            } else if (objectInteraction.getCXType() instanceof CXParameterizedClassType) {
+                cxClass = ((CXParameterizedClassType) objectInteraction.getCXType()).getUpperBound();
             } else {
                 cxClass = ((ConstantType) objectInteraction.getCXType()).getSubtype().getTypeRedirection(ScopedTypeTracker.getEnvironment());
             }

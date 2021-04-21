@@ -3,6 +3,7 @@ package radin.core.semantics;
 import radin.core.annotations.AnnotationManager;
 import radin.core.lexical.Token;
 import radin.core.semantics.exceptions.*;
+import radin.core.semantics.generics.CXGenericClassType;
 import radin.core.semantics.types.*;
 import radin.core.semantics.types.compound.*;
 import radin.core.semantics.types.methods.CXConstructor;
@@ -363,6 +364,10 @@ public class TypeEnvironment {
         throw new TypeDoesNotExist(namespacedTypename.toString());
     }
     
+    public CXGenericClassType getGenericType(CXIdentifier id, List<CXType> parameters) {
+        return null;
+    }
+    
     public CXType getType(Token typenameImage, Token tok) {
         ICompilationSettings.debugLog.entering("TypeEnvironment", String.format("getType(%s, %s)", typenameImage, tok));
         CXType output = null;
@@ -481,6 +486,10 @@ public class TypeEnvironment {
             }
             if(ast.hasChild(typename) && ast.getChildList().size() == 1) {
                 return getType(ast.getChild(typename));
+            }
+            
+            if(ast.getChildList().size() == 2 && ast.getChildList().get(1).getTreeType() == generic_init) {
+                return getGenericType(ast);
             }
             
             List<AbstractSyntaxNode> specifiers = ast.getChildren(ASTNodeType.specifier);
@@ -622,6 +631,38 @@ public class TypeEnvironment {
         String o1Specifier = node.getToken().getImage();
         if(o1Specifier == null) o1Specifier = node.getToken().getType().toString();
         return o1Specifier;
+    }
+    
+    public <T extends CXType> void addGenericFactory(AbstractSyntaxNode genericDefinition, T original) {
+    
+    }
+    
+    private CXType getGenericType(AbstractSyntaxNode node) {
+        //CXGenericClassType output;
+        try {
+            CXType classType = getType(node.getChild(0));
+            if(classType instanceof CXDelayedTypeDefinition) {
+                CXIdentifier id = classType.getIdentifier();
+                Token tok = id.getBase();
+                List<CXType> parameters = new ArrayList<>();
+                for (AbstractSyntaxNode params : node.getChild(1).getChildList()) {
+                    parameters.add(getType(params));
+                }
+                CXDeferredGenericClassDefinition def =
+                        new CXDeferredGenericClassDefinition(
+                                tok,
+                                this,
+                                id,
+                                parameters
+                        );
+                return def;
+            }
+            System.out.println(classType);
+        } catch (InvalidPrimitiveException | ClassCastException e) {
+            throw new Error("This is not a valid type"); // TODO: create not a generic type error
+        }
+    
+        return null;
     }
     
     private CXType createType(AbstractSyntaxNode ast, CXIdentifier namespace) {
