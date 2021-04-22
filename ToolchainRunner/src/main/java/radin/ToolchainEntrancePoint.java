@@ -31,9 +31,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -186,13 +185,37 @@ public class ToolchainEntrancePoint {
             ICompilationSettings.debugLog.config("Using 32-bit mode");
         }
     
-        List<File> files = new LinkedList<>();
+        Set<File> filesSet = new HashSet<>();
         for (String filenamesString : filenamesStrings) {
-            File f = new File(filenamesString);
-            // f.setReadOnly();
-            files.add(f);
-            ICompilationSettings.debugLog.info("Adding " + filenamesString + " for compilation");
+            if (filenamesString.contains("*")) {
+                File dir = new File("");
+                String regex = filenamesString.replaceAll("\\*", ".*");
+                //FileFilter fileFilter = new RegexFileFilter(regex);
+                PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + filenamesString);
+                Files.walkFileTree(
+                        dir.toPath(),
+                        new SimpleFileVisitor<Path>() {
+                            @Override
+                            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                                File file = path.toFile();
+                                // out.print("Checking if " + path + " matches " + filenamesString);
+                                if (matcher.matches(path)) {
+                                    ICompilationSettings.debugLog.info("Adding " + filenamesString + " for compilation");
+                                    filesSet.add(file);
+                                    // out.println(" [TRUE]");
+                                } else {
+                                    // out.println(" [FALSE]");
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+                        }
+                );
+            } else {
+                File file = new File(filenamesString);
+                filesSet.add(file);
+            }
         }
+        List<File> files = new LinkedList<>(filesSet);
         if(getenv("JODIN_HOME") != null) {
             String jodinHome = getenv("JODIN_HOME");
             Stream<Path> pathStream = Files.find(Paths.get(jodinHome, "core"), Integer.MAX_VALUE,

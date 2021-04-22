@@ -1,0 +1,8 @@
+#include "jodin_type.h"
+
+
+in types
+void hello_world() {
+	println("Hello, World!");
+}
+

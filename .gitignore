@@ -1,5 +1,7 @@
 /out/
 .idea
+*.log*
+*.ick
 
 # Compiled class file
 *.class

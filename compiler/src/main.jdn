@@ -1,0 +1,8 @@
+#include "core/types/jodin_type.h"
+
+using std;
+
+int main(int argc, String args[]) {
+	types::hello_world();
+	return 0;
+}
