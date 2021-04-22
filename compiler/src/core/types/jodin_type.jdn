@@ -1,8 +1,15 @@
 #include "jodin_type.h"
 
 
-in types
+
+in core in types {
 void hello_world() {
 	println("Hello, World!");
 }
 
+
+
+
+
+
+}

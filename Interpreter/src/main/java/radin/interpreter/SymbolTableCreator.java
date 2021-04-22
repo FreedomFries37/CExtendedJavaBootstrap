@@ -5,15 +5,14 @@ import radin.core.chaining.IToolChain;
 import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
-import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.core.semantics.ASTNodeType;
 import radin.core.semantics.AbstractSyntaxNode;
 import radin.core.semantics.types.CXIdentifier;
+import radin.midanalysis.TypeAugmentedSemanticNode;
 import radin.output.tags.ImplementMethodTag;
 import radin.output.tags.ResolvedPathTag;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,7 +42,12 @@ public class SymbolTableCreator implements IToolChain<TypeAugmentedSemanticNode,
         for (TypeAugmentedSemanticNode functionDefinition : functionDefinitions) {
             if(!functionDefinition.containsCompilationTag(ImplementMethodTag.class)) {
                 if(functionDefinition.getChild(0).getASTType() != ASTNodeType._virtual) {
-                    CXIdentifier resolved = functionDefinition.getASTChild(ASTNodeType.id).getCompilationTag(ResolvedPathTag.class).getAbsolutePath();
+                    CXIdentifier resolved;
+                    if (true || functionDefinition.getASTChild(ASTNodeType.id).containsCompilationTag(ResolvedPathTag.class)) {
+                        resolved = functionDefinition.getASTChild(ASTNodeType.id).getCompilationTag(ResolvedPathTag.class).getAbsolutePath();
+                    } else {
+                        resolved = new CXIdentifier(functionDefinition.getASTChild(ASTNodeType.id).getASTNode());
+                    }
                     output.put(
                             output.new Key(resolved,
                                     file, functionDefinition.findFirstToken()),

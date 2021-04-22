@@ -2,10 +2,10 @@
 #define JODIN_HEADER
 
 
-in types
+in core in types {
 void hello_world();
 
 
-
+}
 
 #endif

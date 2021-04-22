@@ -3,6 +3,6 @@
 using std;
 
 int main(int argc, String args[]) {
-	types::hello_world();
+	core::types::hello_world();
 	return 0;
 }
