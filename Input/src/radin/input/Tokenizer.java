@@ -189,6 +189,7 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
      */
     @Override
     public int run() {
+        
         int count = 0;
         for (T token : this){
             if(token == null) break;

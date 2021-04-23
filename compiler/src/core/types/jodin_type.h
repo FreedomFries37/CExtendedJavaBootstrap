@@ -1,5 +1,5 @@
-#ifndef JODIN_HEADER
-#define JODIN_HEADER
+#ifndef JODIN_TYPE_HEADER
+#define JODIN_TYPE_HEADER
 
 
 in core in types {

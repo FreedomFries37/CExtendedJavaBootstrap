@@ -1,8 +1,14 @@
 #include "core/types/jodin_type.h"
+#include "core/collections/vector.h"
 
 using std;
+using core::collections;
 
 int main(int argc, String args[]) {
 	core::types::hello_world();
+
+	Vector v1 = new Vector(5);
+
+	println("Welcome to the Jodin Compiler v. 0.1.0");
 	return 0;
 }

@@ -1,0 +1,20 @@
+#include "vector.h"
+
+using core;
+using core::collections;
+using std;
+
+
+implement Vector {
+	Vector() {
+		this->len = 0;
+		this->capacity = 0;
+		this->backing = nullptr;
+	}
+
+	Vector(size_t capacity) {
+		this->len = 0;
+		this->capacity = capacity;
+		this->backing = calloc(sizeof(Object), capacity);
+	}
+}

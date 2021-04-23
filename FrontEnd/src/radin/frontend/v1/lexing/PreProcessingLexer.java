@@ -4,13 +4,15 @@ import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.errorhandling.CompilationError;
 import radin.core.lexical.Token;
 import radin.core.lexical.TokenType;
-
-import radin.input.Tokenizer;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
+import radin.input.Tokenizer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -259,7 +261,10 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     }
     
     protected void setLine(String filename, int lineNumber) {
+        if (filename != null && !filename.equals(currentFile))
+            System.out.println("In file " + filename);
         currentFile = filename;
+        
         if(!fileCurrentLineNumber.containsKey(filename)) {
             fileCurrentLineNumber.put(filename, new Reference<>(lineNumber));
         } else {
@@ -460,17 +465,25 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 if(isLocal) {
                     ICompilationSettings.debugLog.finer("Include is local");
                     try {
-                        File localDirectory = new File(this.filename).getCanonicalFile().getParentFile();
+                        File localDirectory = new File(this.currentFile).getParentFile();
+                        //File localDirectory = this.currentDirectory;
                         ICompilationSettings.debugLog.finer("Parent search directory is " + localDirectory);
+                        System.out.println("Parent search directory is " + localDirectory);
+                        System.out.println("Original file is " + this.currentFile);
                         if(localDirectory == null
                                 || !localDirectory.isDirectory()) {
-                            throw new CompilationError("File does not exist", closestToken);
+                            //
+                            //throw new CompilationError("File not present in " + localDirectory, closestToken);
+                            System.out.println("Error getting included file " + filename + " because " + localDirectory + " is not a directory");
+                            throw new CompilationError("Directory " + localDirectory + " not present", closestToken);
                         }
                         Path path = Paths.get(localDirectory.getPath(), filename).toRealPath();
                         file = new File(path.toUri());
+                        
                     } catch (IOException e) {
+                        System.out.println("Error getting included file " + filename);
                         ICompilationSettings.debugLog.severe("Local include searched failed");
-                        throw new CompilationError("File does not exist", closestToken);
+                        throw new CompilationError("File can't be found from " + this.currentFile, closestToken);
                     }
                 } else {
                     ICompilationSettings.debugLog.finer("Include is non-local");
@@ -498,7 +511,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 
                 
                 if(file == null || !file.exists()) {
-                    throw new CompilationError("File does not exist", closestToken);
+                    throw new CompilationError("File " + file + "does not exist", closestToken);
                 }
                 StringBuilder text = new StringBuilder();
                 try {

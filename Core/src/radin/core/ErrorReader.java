@@ -84,6 +84,7 @@ public class ErrorReader {
                 }
                 int i = errorInformation.getToken().getVirtualLineNumber() - 1;
                 if( i < 0) i = 0;
+                if (i >= lines.size()) break;
                 LineHolder lineInfo = lines.get(i);
                 
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
