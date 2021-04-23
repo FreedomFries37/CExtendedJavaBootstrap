@@ -47,6 +47,7 @@ public class ToolchainEntrancePoint {
      * @param args
      */
     public static void main(String[] args) throws IOException {
+
         File toolchainDirectory = new File(".toolchain");
         if (!toolchainDirectory.exists() || !toolchainDirectory.isDirectory()) {
             if (getenv("JODIN_HOME") == null) throw new IOException("Jodin Home not set");
@@ -56,7 +57,7 @@ public class ToolchainEntrancePoint {
                 throw new IOException("No toolchain directory!");
             }
         }
-        
+
         File configFile = new File( toolchainDirectory, "config");
         ICompilationSettings<AbstractSyntaxNode, TypeAugmentedSemanticNode, ?> settings = new CompilationSettings<>();
        

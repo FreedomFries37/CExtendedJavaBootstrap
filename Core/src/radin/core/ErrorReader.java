@@ -4,8 +4,10 @@ import radin.core.errorhandling.AbstractCompilationError;
 import radin.core.utility.ICompilationSettings;
 import radin.core.utility.UniversalCompilerSettings;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,11 +20,20 @@ public class ErrorReader {
         public final String fileName;
         public final int lineNumber;
         public final String contents;
+        public final List<String> parentFiles;
     
+        public LineHolder(String fileName, int lineNumber, String contents, List<String> parentFiles) {
+            this.fileName = fileName;
+            this.lineNumber = lineNumber;
+            this.contents = contents;
+            this.parentFiles = parentFiles;
+        }
+
         public LineHolder(String fileName, int lineNumber, String contents) {
             this.fileName = fileName;
             this.lineNumber = lineNumber;
             this.contents = contents;
+            this.parentFiles = new LinkedList<>();
         }
     
         @Override
@@ -45,17 +56,45 @@ public class ErrorReader {
         String reportingFileName = filename;
         String[] split = inputString.split("\n");
         Pattern lineFormat = Pattern.compile("^#line\\s+(?<ln>\\d+)\\s*(\\s\"(?<file>[^\"]*)\"\\s*)?$");
+        List<String> parentFiles = new LinkedList<>();
+        parentFiles.add(filename);
         for (String line : split) {
             Matcher m = lineFormat.matcher(line);
             if(m.find()) {
                 lineNumber = Integer.parseInt(m.group("ln"));
                 String file = m.group("file");
                 if(file != null) {
+
+                    if (parentFiles.size() >= 2
+                            && !file.equals(parentFiles.get(parentFiles.size() - 1))
+                            && !file.equals(filename)) {
+                        String up2 = parentFiles.get(parentFiles.size() - 2);
+                        if(up2.equals(file)) {
+                            parentFiles.remove(parentFiles.size() - 1);
+                        } else {
+                            parentFiles.add(file);
+                        }
+                    } else if (!file.equals(parentFiles.get(parentFiles.size() - 1)) && !file.equals(filename)){
+                        parentFiles.add(file);
+                    }
+                    /*
+                    if (parentFiles.size() >= 2 && !file.equals(parentFiles.peek())) {
+                        parentFiles.push(reportingFileName);
+                    } else if (!parentFiles.empty() && file.equals(parentFiles.peek())) {
+                        parentFiles.pop();
+                    }
+
+                     */
                     reportingFileName = file;
                 }
                 lines.add(null);
             } else {
-                LineHolder holder = new LineHolder(reportingFileName, lineNumber, line);
+
+                ArrayList<String> adjParentFiles = new ArrayList<>(parentFiles);
+                adjParentFiles.remove(adjParentFiles.size() - 1);
+                LineHolder holder = new LineHolder(reportingFileName, lineNumber, line, adjParentFiles);
+                parentFiles = new LinkedList<>();
+                parentFiles.add(filename);
                 lines.add(holder);
                 lineNumber++;
             }
@@ -88,9 +127,12 @@ public class ErrorReader {
                 LineHolder lineInfo = lines.get(i);
                 
                 if(lineHolderCurrent != null && lineInfo != lineHolderCurrent) {
+
                     if (!lineInfo.fileName.equals(outputedFileName)) {
+
                         System.out.printf("In %s:\n", lineHolderCurrent.fileName);
                         ICompilationSettings.debugLog.warning(String.format("In %s:", lineHolderCurrent.fileName));
+
                         outputedFileName = lineInfo.fileName;
                     }
                     
@@ -122,6 +164,9 @@ public class ErrorReader {
     
             if(lineHolderCurrent != null) {
                 if (!lineHolderCurrent.fileName.equals(outputedFileName)) {
+                    for (int k = lineHolderCurrent.parentFiles.size() - 1; k >= 0; k--) {
+                        System.out.printf("While compiling %s:\n", lineHolderCurrent.parentFiles.get(k));
+                    }
                     System.out.printf("In %s:\n", lineHolderCurrent.fileName);
                     ICompilationSettings.debugLog.severe(String.format("In %s:", lineHolderCurrent.fileName));
                     outputedFileName = lineHolderCurrent.fileName;

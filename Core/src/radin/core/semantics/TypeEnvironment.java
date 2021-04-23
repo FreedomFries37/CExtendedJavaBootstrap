@@ -405,6 +405,12 @@ public class TypeEnvironment {
                     return new PointerType(possibilities.get(0));
                 }
             }
+
+            if(output instanceof CXDeferredClassDefinition && possibilities.size() == 1 && possibilities.get(0) instanceof CXClassType) {
+                if((output).getIdentifier().equals(((CXClassType) possibilities.get(0)).getTypeNameIdentifier())) {
+                    return new PointerType(possibilities.get(0));
+                }
+            }
             
             possibilities.add(output);
             throw new AmbiguousIdentifierError(tok, possibilities);

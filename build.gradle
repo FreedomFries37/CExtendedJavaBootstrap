@@ -1,9 +1,11 @@
-apply plugin: 'idea'
-//and standard one
-apply plugin: 'java'
 
+plugins {
+    id 'java'
+    id 'idea'
+    id 'application'
+}
 
-
+mainClassName = "radin.ToolchainEntrancePoint"
 
 sourceSets {
     main {
@@ -12,6 +14,11 @@ sourceSets {
         }
     }
 }
+
+repositories {
+    mavenCentral()
+}
+
 
 
 dependencies {
@@ -35,3 +42,12 @@ task fatJar(type: Jar) {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
+
+jar {
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+}
+

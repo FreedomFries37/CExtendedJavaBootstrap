@@ -400,11 +400,11 @@ public class MultipleFileHandler <Output> implements ICompilationErrorCollector 
                 }
             } catch (AbstractCompilationError error) {
                 errors.add(error);
-                return CompilationResult.ErroredOut;
+                return CompilationResult.Failed;
             } catch (Error e) {
                 AbstractCompilationError error = new CompilationError(e, null);
                 errors.add(error);
-                return CompilationResult.ErroredOut;
+                return CompilationResult.Failed;
             }
         }
         

@@ -27,7 +27,7 @@ public class FileExpander {
         StringBuilder builder = new StringBuilder();
         File parent = file.getParentFile();
         Pattern local = Pattern.compile("#include\\s+\"(.*?)\"");
-        Pattern global = Pattern.compile("#include\\s+\"(.*?)\"") ;
+        Pattern global = Pattern.compile("#include\\s+<(.*?)>") ;
         
         int lineNumber = 1;
     
@@ -52,7 +52,7 @@ public class FileExpander {
             
                             Path path = Paths.get(dir.getPath(), filename);
                             foundFile = new File(path.toUri());
-                            if (file.exists()) {
+                            if (foundFile.exists()) {
                                 break;
                             } else {
                                 foundFile = null;

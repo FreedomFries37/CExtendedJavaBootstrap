@@ -9,9 +9,7 @@ import radin.core.utility.Reference;
 import radin.core.utility.UniversalCompilerSettings;
 import radin.input.Tokenizer;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,14 +20,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PreProcessingLexer extends Tokenizer<Token> {
-    
+
     private static class PreprocessorDirectiveError extends AbstractCompilationError {
         public PreprocessorDirectiveError(Token corr, String extraInfo) {
             super("Not a valid directive", corr, extraInfo);
         }
     }
-    
-    
+
+
     private class Define {
         private String identifier;
         public final boolean hasArgs;
@@ -37,11 +35,11 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         public final boolean isVararg;
         private List<String> args;
         private String replacementString;
-        
+
         public Define(String identifier) {
             this(identifier, "");
         }
-        
+
         public Define(String identifier, String replacementString) {
             this.identifier = identifier;
             this.replacementString = replacementString;
@@ -49,8 +47,8 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             isVararg = false;
             hasArgs = false;
         }
-        
-        
+
+
         public Define(String identifier, boolean isVararg, List<String> args, String replacementString) {
             this.identifier = identifier;
             numArgs =args.size();
@@ -59,24 +57,24 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             this.args = args;
             this.replacementString = replacementString;
         }
-        
+
         public String invoke() {
             if(numArgs != 0) throw new IllegalArgumentException();
             return replacementString;
         }
-        
+
         public String invoke(String[] args) {
             if(args.length < numArgs) throw new IllegalArgumentException(String.format("Macro %s has %d args, but %d args were given",
                     identifier, numArgs, args.length));
             if(!isVararg && args.length > numArgs) throw new IllegalArgumentException(String.format("Macro %s has %d args, but %d args were given " +
                             "(%s)",
-             identifier, numArgs, args.length, Arrays.deepToString(args)));
-            
+                    identifier, numArgs, args.length, Arrays.deepToString(args)));
+
             String output = replacementString;
             for (int i = 0; i < this.args.size(); i++) {
                 String thisArg = this.args.get(i);
                 String replace = args[i].trim().replaceAll("\\s+", " ");
-                
+
                 output = output.replaceAll("#" + thisArg + "(\\W|$)", "\"" + replace + "\"$2");
                 output = output.replaceAll("([^\\w#])" + thisArg + "(\\W)", "$1" + replace + "$2");
                 output = output.replaceAll("##" + thisArg + "\\W", replace + "$1");
@@ -99,39 +97,39 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             }
             return output;
         }
-        
+
     }
-    
+
     private class FunctionDefine extends Define {
-        
+
         private Function<String[], String> argsFunction;
         private Supplier<String> nonArgsFunction;
-        
+
         public FunctionDefine(String identifier, Supplier<String> nonArgsFunction) {
             super(identifier);
             this.nonArgsFunction = nonArgsFunction;
         }
-        
+
         public FunctionDefine(String identifier, boolean isVararg, List<String> args, Function<String[], String> argsFunction) {
             super(identifier, isVararg, args, null);
             this.argsFunction = argsFunction;
         }
-        
+
         @Override
         public String invoke() {
             if(numArgs != 0) throw new IllegalArgumentException();
             return nonArgsFunction.get();
         }
-        
+
         @Override
         public String invoke(String[] args) {
             if(args.length < numArgs) throw new IllegalArgumentException();
             if(!isVararg && args.length > numArgs) throw new IllegalArgumentException();
-            
+
             return argsFunction.apply(args);
         }
     }
-    
+
     private HashMap<String, Reference<Integer>> fileCurrentLineNumber;
     private String currentFile;
     private boolean inIfStatement;
@@ -139,7 +137,10 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     private HashMap<String, Define> defines;
     private List<AbstractCompilationError> compilationErrors;
     private int finishedIndex = -1;
-    
+    private int endsNeeded = 0;
+    private int failedIfIndex = -1;
+    private int failedIfLine = -1;
+
     public PreProcessingLexer(String filename, String inputString) {
         super(inputString, filename);
         defines = baseDefines();
@@ -147,21 +148,21 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         fileCurrentLineNumber = new HashMap<>();
         currentFile = filename;
     }
-    
+
     public PreProcessingLexer() {
         super("", "");
         defines = baseDefines();
         compilationErrors = new LinkedList<>();
         fileCurrentLineNumber = new HashMap<>();
     }
-    
-    
-    
+
+
+
     @Override
     public List<AbstractCompilationError> getErrors() {
         return compilationErrors;
     }
-    
+
     /**
      * Consumes the current character, making the current character the next available character
      *
@@ -175,7 +176,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         }
         return c;
     }
-    
+
     private String findAndReplaceMacros(String str) {
         String output = str;
         output = output.replaceAll("defined\\s+(\\w+)\\W", "defined($1)");
@@ -196,7 +197,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         ++index;
                     }
                     if(output.charAt(index) != '(') {
-                        
+
                         break;
                     } else {
                         collected += output.charAt(index++);
@@ -206,7 +207,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         while (!(output.charAt(index) == ')' && parens == 0)) {
                             char c = output.charAt(index++);
                             collected += c;
-                            
+
                             if (c == '(') {
                                 currentArgument += c;
                                 parens++;
@@ -219,12 +220,12 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                                 }
                                 currentArgument += c;
                             }
-                            
+
                         }
                         collected += output.charAt(index);
                         collectedArguments.add(currentArgument);
                         collectedArguments.removeIf(String::isBlank);
-                        
+
                         String invoke = d.invoke(collectedArguments.toArray(new String[0]));
                         output = output.replace(collected, invoke);
                     }
@@ -233,52 +234,54 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 }
             }
         }  while (!output.equals(prev));
-        
+
         return output;
     }
-    
+
     protected void incrementLine() {
         int line = fileCurrentLineNumber.containsKey(currentFile) ?
                 fileCurrentLineNumber.get(currentFile).getValue() + 1 : 1;
         setLine(currentFile, line);
     }
-    
+
     protected void decrementLine() {
         fileCurrentLineNumber.get(currentFile).setValue(fileCurrentLineNumber.get(currentFile).getValue() - 1);
     }
-    
+
     protected int getLine() {
         return fileCurrentLineNumber.get(currentFile).getValue();
     }
-    
-    
+
+
     protected void setLine(int lineNumber) {
         setLine(currentFile, lineNumber);
     }
-    
+
     protected void setLine(String filename) {
         setLine(filename, 1);
     }
-    
+
     protected void setLine(String filename, int lineNumber) {
+        /*
         if (filename != null && !filename.equals(currentFile))
             System.out.println("In file " + filename);
+            */
         currentFile = filename;
-        
+
         if(!fileCurrentLineNumber.containsKey(filename)) {
             fileCurrentLineNumber.put(filename, new Reference<>(lineNumber));
         } else {
             fileCurrentLineNumber.get(currentFile).setValue(lineNumber);
         }
     }
-    
-    
+
+
     @Override
     public void setFilename(String filename) {
         super.setFilename(filename);
         currentFile = filename;
     }
-    
+
     private void unconsume(String s) {
         char[] chars = s.toCharArray();
         for (int i = chars.length - 1; i >= 0; i--) {
@@ -293,25 +296,31 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 decrementLine();
                 //column = getColumn() + 1;
             }
-            
+
         }
         column = getColumn();
     }
-    
-    
-    
+
+
+
     private void insertString(String s) {
         inputString = getInputString().substring(0, currentIndex) + s + getInputString().substring(currentIndex);
     }
-    
+
     private void removeString(int length) {
+        if(length + currentIndex >= getInputString().length()) {
+            String str = getInputString().substring(failedIfIndex, getInputString().substring(failedIfIndex).indexOf('\n') + failedIfIndex);
+            Token closestToken = new Token(TokenType.t_reserved, str)
+                    .addColumnAndLineNumber(1, failedIfLine - 1);
+            throw new CompilationError("Unclosed in macro", closestToken);
+        }
         inputString = getInputString().substring(0, currentIndex) + getInputString().substring(currentIndex + length);
     }
-    
+
     private void removeChar() {
         removeString(1);
     }
-    
+
     private void replaceString(String original, String replace) {
         unconsume(original);
         if(match(original)) {
@@ -319,50 +328,59 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             insertString(replace);
         }
     }
-    
+
     private enum PreProcessorIfOutput {
         TRUE,
         FALSE,
         NONDETERMINED
     }
-    
+
     private PreProcessorIfOutput checkIf(String statement) {
         String fixedStatement = findAndReplaceMacros(statement);
         ICompilationSettings.debugLog.finer("Fixed PP If Statement Condition = " + fixedStatement);
         return PreProcessorIfOutput.NONDETERMINED;
     }
-    
+
     private void invokePreprocessorDirective(String directiveString, String originalString) {
         if(!directiveString.startsWith("#")) return;
         directiveString = directiveString.replaceAll("\\s+", " ");
-        
-        
+
+
         int endIndex = directiveString.indexOf(' ');
-        String directive = directiveString;
+        String directive = directiveString.trim();
         if(endIndex >= 0)
             directive = directiveString.substring(0, endIndex);
-        
+
         if(skipToIfFalse) {
-            if(!directive.equals("#else") && !directive.equals("#endif")) return;
+            if(!(directive.equals("#else")
+                    || directive.equals("#endif")
+                    || directive.equals("#if")
+                    || directive.equals("#ifdef")
+                    || directive.equals("#ifndef"))
+            ) {
+                // replaceString(originalString, "");
+                return;
+            }
         }
-        
+
         String arguments = directiveString.substring(directiveString.indexOf(directive) + directive.length()).trim();
         ICompilationSettings.debugLog.finest("PP DIRECTIVE = " + directive);
         if(!arguments.isBlank())
             ICompilationSettings.debugLog.finest("PP ARGUMENTS = " + arguments);
-        
+
         switch (directive) {
             case "#undef": {
                 ICompilationSettings.debugLog.fine("PP Undefined: " + arguments);
                 defines.remove(arguments);
+                if(skipToIfFalse) // replaceString(originalString, "");
                 return;
             }
             case "#define": {
-                
+                if(skipToIfFalse) removeString(originalString.length());
                 Pattern function = Pattern.compile("(?<id>[_a-zA-Z]\\w*)(?<isfunc>\\(\\s*(?<args>(([_a-zA-Z]\\w*\\s*" +
                         "(," +
                         "\\s*[_a-zA-Z]\\w*\\s*)*)(,\\s*\\.\\.\\.\\s*)?)|(\\s*\\.\\.\\.\\s*)?)\\))?");
-                
+
                 Matcher matcher = function.matcher(arguments);
                 if(matcher.find()) {
                     String rest = arguments.substring(matcher.end()).trim();
@@ -394,60 +412,116 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 return;
             }
             case "#ifndef": {
-                ICompilationSettings.debugLog.finest("Checking if " + arguments + " is not defined...");
-                inIfStatement = true;
-                if(defines.containsKey(arguments)) {
-                    ICompilationSettings.debugLog.finest("" + arguments + " is defined");
-                    skipToIfFalse = true;
-                    ICompilationSettings.debugLog.finer("Skipping until #else or #endif is found");
-                } else {
-                    ICompilationSettings.debugLog.finest("" + arguments + " is not defined");
+                if(skipToIfFalse) {
+                    ++endsNeeded;
+                }
+                if(!skipToIfFalse) {
+
+                    ICompilationSettings.debugLog.finest("Checking if " + arguments + " is not defined...");
+                    inIfStatement = true;
+
+                    if (defines.containsKey(arguments)) {
+                        ICompilationSettings.debugLog.finest("" + arguments + " is defined");
+                        skipToIfFalse = true;
+                        ++endsNeeded;
+                        failedIfIndex = currentIndex;
+                        failedIfLine = lineNumber;
+                        ICompilationSettings.debugLog.finer("Skipping until #else or #endif is found");
+                    } else {
+                        ICompilationSettings.debugLog.finest("" + arguments + " is not defined");
+                    }
+
+                }  else {
+                    // replaceString(originalString, "");
                 }
                 return;
             }
             case "#ifdef": {
-                ICompilationSettings.debugLog.finest("Checking if " + arguments + " is defined...");
-                inIfStatement = true;
-                if(!defines.containsKey(arguments)) {
-                    ICompilationSettings.debugLog.finest("" + arguments + " is not defined");
-                    skipToIfFalse = true;
-                    ICompilationSettings.debugLog.finer("Skipping until #else or #endif is found");
+                if(skipToIfFalse) {
+                    ++endsNeeded;
+                }
+                if(!skipToIfFalse) {
+
+                    ICompilationSettings.debugLog.finest("Checking if " + arguments + " is defined...");
+                    inIfStatement = true;
+                    if (!defines.containsKey(arguments)) {
+                        ICompilationSettings.debugLog.finest("" + arguments + " is not defined");
+                        skipToIfFalse = true;
+                        failedIfIndex = currentIndex;
+                        failedIfLine = lineNumber;
+                        ++endsNeeded;
+                        ICompilationSettings.debugLog.finer("Skipping until #else or #endif is found");
+                    } else {
+                        ICompilationSettings.debugLog.finest("" + arguments + " is defined");
+                    }
                 } else {
-                    ICompilationSettings.debugLog.finest("" + arguments + " is defined");
+                    // replaceString(originalString, "");
                 }
                 return;
             }
             case "#elif": {
                 if(!inIfStatement) return;
+                if(skipToIfFalse && endsNeeded == 1) skipToIfFalse = false;
+                //--elsesOrEndsNeeded;
             }
             // FALLS THROUGH
             case "#if": {
-                inIfStatement = true;
-                switch (checkIf(arguments)) {
-                    case TRUE:
-                        break;
-                    case FALSE:
-                        skipToIfFalse = true;
-                        break;
-                    case NONDETERMINED:
-                        break;
+                if(skipToIfFalse) {
+                    ++endsNeeded;
+                }
+                if(!skipToIfFalse) {
+
+                    inIfStatement = true;
+
+                    switch (checkIf(arguments)) {
+                        case TRUE:
+                            break;
+                        case FALSE:
+                            skipToIfFalse = true;
+                            failedIfIndex = currentIndex;
+                            failedIfLine = lineNumber;
+                            ++endsNeeded;
+                            break;
+                        case NONDETERMINED:
+                            break;
+                    }
+
+                } else {
+                    // replaceString(originalString, "");
                 }
                 return;
             }
             case "#else": {
-                
+
                 if(inIfStatement) {
+                    //if(skipToIfFalse) --elsesOrEndsNeeded;
                     ICompilationSettings.debugLog.finer("#else found, compilation continuing = " + !skipToIfFalse);
-                    skipToIfFalse = !skipToIfFalse;
+                    if(endsNeeded == 0) {
+                        skipToIfFalse = true;
+                        ++endsNeeded;
+                    }
+                    if(endsNeeded == 1) {
+                        skipToIfFalse = !skipToIfFalse;
+                    } else {
+                        // replaceString(originalString, "");
+                    }
                 }
                 return;
             }
             case "#endif": {
                 // if(!inIfStatement) throw new IllegalArgumentException();
                 if(inIfStatement) {
+                    if(skipToIfFalse) {
+                        --endsNeeded;
+                    }
                     if(skipToIfFalse) ICompilationSettings.debugLog.finer("#endif found, compilation continuing at " + lineNumber);
-                    skipToIfFalse = false;
-                    inIfStatement = false;
+
+                    if(endsNeeded == 0) {
+                        skipToIfFalse = false;
+                        inIfStatement = false;
+                    } else {
+                        // replaceString(originalString, "");
+                    }
                 }
                 return;
             }
@@ -455,9 +529,9 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 if(!((arguments.charAt(0) == arguments.charAt(arguments.length() - 1) && arguments.charAt(0) == '"') ||
                         (arguments.charAt(0) == '<' && arguments.charAt(arguments.length() - 1) == '>')))
                     throw new IllegalArgumentException();
-                
+
                 String filename = arguments.substring(1, arguments.length() - 1);
-                
+
                 boolean isLocal = arguments.charAt(0) == '"';
                 File file;
                 Token closestToken = new Token(TokenType.t_reserved, directiveString)
@@ -479,7 +553,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         }
                         Path path = Paths.get(localDirectory.getPath(), filename).toRealPath();
                         file = new File(path.toUri());
-                        
+
                     } catch (IOException e) {
                         System.out.println("Error getting included file " + filename);
                         ICompilationSettings.debugLog.severe("Local include searched failed");
@@ -487,14 +561,14 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
                 } else {
                     ICompilationSettings.debugLog.finer("Include is non-local");
-                    
+
                     File[] locations = UniversalCompilerSettings.getInstance().getSettings().includeDirectories();
-                    
-                    
+
+
                     file = null;
                     for (File dir : locations) {
-                        
-                        
+
+
                         Path path = Paths.get(dir.getPath(), filename);
                         file = new File(path.toUri());
                         if (file.exists()) {
@@ -502,48 +576,56 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         } else {
                             file = null;
                         }
-                        
-                        
+
+
                     }
                 }
-                
-                
-                
-                
+
+
+
+
                 if(file == null || !file.exists()) {
                     throw new CompilationError("File " + file + "does not exist", closestToken);
                 }
-                StringBuilder text = new StringBuilder();
-                try {
-                    ICompilationSettings.debugLog.info("Including file " + file);
-                    BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-                    
-                    String line;
-                    while((line = bufferedReader.readLine()) != null) {
-                        
-                        if(!line.endsWith("\\")) {
-                            text.append(line);
-                            text.append("\n");
-                        } else {
-                            text.append(line, 0, line.length() - 1);
-                            text.append(' ');
-                        }
-                    }
-                    
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-                
-                
+
+
+//                StringBuilder text = new StringBuilder();
+//                try {
+//                    ICompilationSettings.debugLog.info("Including file " + file);
+//                    BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+//
+//                    String line;
+//                    while((line = bufferedReader.readLine()) != null) {
+//
+//                        if(!line.endsWith("\\")) {
+//                            text.append(line);
+//                            text.append("\n");
+//                        } else {
+//                            text.append(line, 0, line.length() - 1);
+//                            text.append(' ');
+//                        }
+//                    }
+//
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    System.exit(-1);
+//                }
+//
+//
+
+                FileExpander fileExpander = new FileExpander();
+                String text = fileExpander.expandFile(file);
                 int restoreLineNumber = getLine();
-                String fullText = "#line " + 1 + " \""+ filename + "\"\n" + text.toString() +
+                String fullText = "#line " + 1 + " \""+ filename + "\"\n" + text +
                         "\n#line " + restoreLineNumber + " \""+ this.filename + "\"\n";
-                
+
                 fullText = fullText.replace("\t", " ".repeat(UniversalCompilerSettings.getInstance().getSettings().getTabSize()));
                 //fullText = fullText.replaceAll("//.*\n", "\n");
                 //fullText = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL).matcher(fullText).replaceAll("");
                 // fullText = fullText.replaceAll("/\\*.*\\*/", "");
+
+
+
                 replaceString(originalString, fullText);
                 return;
             }
@@ -556,30 +638,30 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 } else {
                     setLine(lineNumber);
                 }
-                
+
                 return;
             }
-            
+
             default:
                 return;
         }
     }
-    
+
     public void define(String name) {
         defines.put(name, new Define(name));
     }
-    
+
     public void define(String name, Object value) {
         Define define = new Define(name, value.toString());
         defines.put(name, define);
     }
-    
-    
+
+
     @Override
     protected Token singleLex() {
-        
-        
-        
+
+
+
         while(true) {
             String image = "";
     
@@ -619,7 +701,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                 
             }
             */
-            
+
             do {
                 if (match('#')) {
                     if(UniversalCompilerSettings.getInstance().getSettings().isDirectivesMustStartAtColumn1()) {
@@ -635,7 +717,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             // .getLineNumber());
                         }
                         if(!createdTokens.isEmpty() && getPrevious().getVirtualLineNumber() == lineNumber && getPrevious().getVirtualColumn() >= 1) {
-                            
+
                             Token token = new Token(TokenType.t_reserved, "#");
                             token.addColumnAndLineNumber(column, lineNumber);
                             throw new PreprocessorDirectiveError(token, "Preprocessor Directive must begin line");
@@ -645,11 +727,11 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     while (getChar() != '\n') {
                         preprocessorDirective += consumeChar();
                     }
-                    
+
                     String original = preprocessorDirective + consumeChar();
                     preprocessorDirective = preprocessorDirective.replaceAll("\\s+", " ");
                     invokePreprocessorDirective(preprocessorDirective, original);
-                    
+
                 } else if(skipToIfFalse) {
                     removeChar();
                 } else if (Character.isWhitespace(getChar())) consumeChar();
@@ -659,13 +741,13 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     while (!consume("*/")) consumeChar();
                 } else break;
             } while (true);
-            
+
             if (match('\0')) {
-                
+
                 return new Token(TokenType.t_eof);
             }
-            
-            
+
+
             if (match('"')) {
                 consumeChar();
                 boolean inString = true;
@@ -736,24 +818,24 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         image += nextChar;
                     }
                 }
-                
+
                 return new Token(TokenType.t_literal, image);
             } else if (Character.isLetter(getChar()) || match('_')) {
                 image += consumeChar();
                 while (Character.isLetter(getChar()) || match('_') || Character.isDigit(getChar())) {
                     image += consumeChar();
                 }
-                
+
                 if (defines.containsKey(image)) {
                     Define define = defines.get(image);
-                    
+
                     if (define.hasArgs) {
                         String collected = "";
                         while (Character.isWhitespace(getChar())) {
                             collected += consumeChar();
                         }
                         if(getChar() != '(') {
-                            
+
                             unconsume(collected);
                         } else {
                             collected += consumeChar();
@@ -763,7 +845,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             while (!(match(')') && parens == 0)) {
                                 char c = consumeChar();
                                 collected += c;
-                                
+
                                 if(c == '(') {
                                     currentArgument += c;
                                     parens++;
@@ -776,30 +858,30 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                                     }
                                     currentArgument += c;
                                 }
-                                
+
                             }
                             collected += consumeChar();
                             collectedArguments.add(currentArgument);
                             collectedArguments.removeIf(String::isBlank);
-                            
+
                             String invoke = define.invoke(collectedArguments.toArray(new String[collectedArguments.size()]));
                             String totalToReplace = image + collected;
                             replaceString(totalToReplace, invoke);
                             continue;
                         }
-                        
+
                     } else {
                         replaceString(image, define.invoke());
                         continue;
                     }
-                    
+
                 }
-                
-                
+
+
                 return getKeywordToken(image);
-                
+
             }
-            
+
             switch (consumeChar()) {
                 case '<': {
                     switch (getChar()) {
@@ -991,7 +1073,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                             }
                             return new Token(TokenType.t_literal, "'" + c + "'");
                         }
-                        
+
                         return null;
                     }
                     consumeNextChars(2);
@@ -1007,13 +1089,13 @@ public class PreProcessingLexer extends Tokenizer<Token> {
             }
         }
     }
-    
+
     public Token getNext() {
         if (++tokenIndex >= createdTokens.size()) {
             Token tok;
             try {
                 tok = singleLex();
-                
+
             } catch (AbstractCompilationError e) {
                 getErrors().add(e);
                 //finishedIndex = getTokenIndex();
@@ -1032,42 +1114,47 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         }
         return createdTokens.get(getTokenIndex());
     }
-    
+
     @Override
     public Iterator<Token> iterator() {
         return this;
     }
-    
+
     @Override
     public boolean hasNext() {
         if(finishedIndex >= 0 && getTokenIndex() >= finishedIndex) {
             return false;
         }
         if(getTokenIndex() < createdTokens.size() - 1) return true;
-        
+
         return currentIndex < getInputString().length();
     }
-    
+
     @Override
     public Token next() {
         return getNext();
     }
-    
+
     @Override
     public void reset() {
         super.reset();
         fileCurrentLineNumber = new HashMap<>();
         defines = baseDefines();
+        endsNeeded = 0;
+        failedIfIndex = -1;
+        failedIfLine = -1;
+        skipToIfFalse = false;
+        inIfStatement = false;
     }
-    
+
     private HashMap<String, Define> baseDefines() {
         HashMap<String, Define> output = new HashMap<>();
-        
+
         output.put("__LINE__", new FunctionDefine("__LINE__", () -> "" + getLine() ));
         output.put("__FILE__", new FunctionDefine("__FILE__", () -> "\"" + currentFile.replaceAll("\\\\", "/") + '"' ));
         output.put("defined", new FunctionDefine("defined", false, Collections.singletonList("X"),
                 (String[] args) -> defines.containsKey(args[0]) ? "1" : "0" ));
-        
+
         return output;
     }
 }

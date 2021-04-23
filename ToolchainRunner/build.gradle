@@ -1,15 +1,18 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
 version 'unspecified'
+
+mainClassName = "radin.ToolchainEntrancePoint"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
     implementation group: 'commons-io', name: 'commons-io', version: '2.6'
     implementation project(':Core')
     implementation project(':Input')
@@ -19,5 +22,15 @@ dependencies {
     implementation project(':MidAnalysis')
     implementation project(':Combo')
     implementation project(':Interpreter')
+
+}
+jar {
+    manifest {
+        attributes "Main-Class": "radin.ToolchainEntrancePoint"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 
 }
