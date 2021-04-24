@@ -21,7 +21,6 @@ public class ErrorReader {
         public final int lineNumber;
         public final String contents;
         public final List<String> parentFiles;
-    
         public LineHolder(String fileName, int lineNumber, String contents, List<String> parentFiles) {
             this.fileName = fileName;
             this.lineNumber = lineNumber;
@@ -186,6 +185,19 @@ public class ErrorReader {
                     ICompilationSettings.debugLog.warning(repeat + "|" );
                 }
                 printError(lineHolderCurrent, infoMessages);
+            }
+            if(UniversalCompilerSettings.getInstance().getSettings().isErrorMessageIncludeJavaBacktrace()) {
+                System.out.println("Java Backtrace:");
+                //error.printStackTrace();
+
+                StackTraceElement[] stackTrace = error.getStackTrace();
+                System.out.println(stackTrace[0]);
+                for (int i = 1; i < stackTrace.length; i++) {
+                    System.out.printf("\tat %s\n", stackTrace[i]);
+                }
+
+
+
             }
             /*
             for (AbstractCompilationError.ErrorInformation errorInformation : error.getInfo(true)) {

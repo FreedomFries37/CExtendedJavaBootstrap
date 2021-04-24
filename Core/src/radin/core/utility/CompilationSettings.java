@@ -47,6 +47,8 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     
     private ArrayList<File> includeDirectories = new ArrayList<>();
     private ArrayList<File> sourceFiles = new ArrayList<>();
+
+    private boolean errorMessageIncludeJavaBacktrace = false;
     
     {
         try {
@@ -313,5 +315,14 @@ public class CompilationSettings<Front, Mid, Back> implements ICompilationSettin
     public void setDirectory(String directory) {
         this.directory = directory;
     }
-    
+
+    @Override
+    public boolean isErrorMessageIncludeJavaBacktrace() {
+        return errorMessageIncludeJavaBacktrace;
+    }
+
+    @Override
+    public void setErrorMessageIncludeJavaBacktrace(boolean errorMessageIncludeJavaBacktrace) {
+        this.errorMessageIncludeJavaBacktrace = errorMessageIncludeJavaBacktrace;
+    }
 }

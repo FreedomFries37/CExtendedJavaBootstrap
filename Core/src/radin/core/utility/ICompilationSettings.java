@@ -90,6 +90,7 @@ public interface ICompilationSettings<Front, Mid, Back> {
         setInRuntimeCompilationMode(other.isInRuntimeCompilationMode());
         setOutputAST(other.isOutputAST());
         setOutputTAST(other.isOutputTAST());
+        setErrorMessageIncludeJavaBacktrace(other.isErrorMessageIncludeJavaBacktrace());
         debugLog.setLevel(level);
     }
     
@@ -292,7 +293,12 @@ public interface ICompilationSettings<Front, Mid, Back> {
     boolean isOutputTAST();
     
     void setOutputTAST(boolean outputTAST);
-    
+
+    boolean isErrorMessageIncludeJavaBacktrace();
+
+    void setErrorMessageIncludeJavaBacktrace(boolean errorMessageIncludeJavaBacktrace);
+
+
     enum SupportedWordSize {
         arch64,
         arch32

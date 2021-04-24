@@ -141,12 +141,16 @@ public class PreProcessingLexer extends Tokenizer<Token> {
     private int failedIfIndex = -1;
     private int failedIfLine = -1;
 
+    private Stack<Boolean> directiveIfStatements;
+
+
     public PreProcessingLexer(String filename, String inputString) {
         super(inputString, filename);
         defines = baseDefines();
         compilationErrors = new LinkedList<>();
         fileCurrentLineNumber = new HashMap<>();
         currentFile = filename;
+        directiveIfStatements = new Stack<>();
     }
 
     public PreProcessingLexer() {
@@ -154,6 +158,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         defines = baseDefines();
         compilationErrors = new LinkedList<>();
         fileCurrentLineNumber = new HashMap<>();
+        directiveIfStatements = new Stack<>();
     }
 
 
@@ -356,9 +361,10 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     || directive.equals("#endif")
                     || directive.equals("#if")
                     || directive.equals("#ifdef")
-                    || directive.equals("#ifndef"))
+                    || directive.equals("#ifndef")
+                    || directive.equals("#elif"))
             ) {
-                // replaceString(originalString, "");
+                replaceString(originalString, "//" + originalString);
                 return;
             }
         }
@@ -432,7 +438,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
 
                 }  else {
-                    // replaceString(originalString, "");
+                    replaceString(originalString, "//" + originalString);
                 }
                 return;
             }
@@ -455,7 +461,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         ICompilationSettings.debugLog.finest("" + arguments + " is defined");
                     }
                 } else {
-                    // replaceString(originalString, "");
+                    replaceString(originalString, "//" + originalString);
                 }
                 return;
             }
@@ -487,7 +493,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     }
 
                 } else {
-                    // replaceString(originalString, "");
+                    replaceString(originalString, "//" + originalString);
                 }
                 return;
             }
@@ -497,13 +503,12 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                     //if(skipToIfFalse) --elsesOrEndsNeeded;
                     ICompilationSettings.debugLog.finer("#else found, compilation continuing = " + !skipToIfFalse);
                     if(endsNeeded == 0) {
-                        skipToIfFalse = true;
-                        ++endsNeeded;
+                        throw new UnsupportedOperationException();
                     }
                     if(endsNeeded == 1) {
                         skipToIfFalse = !skipToIfFalse;
                     } else {
-                        // replaceString(originalString, "");
+                        replaceString(originalString, "//" + originalString);
                     }
                 }
                 return;
@@ -520,7 +525,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
                         skipToIfFalse = false;
                         inIfStatement = false;
                     } else {
-                        // replaceString(originalString, "");
+                        replaceString(originalString, "//" + originalString);
                     }
                 }
                 return;
@@ -1145,6 +1150,7 @@ public class PreProcessingLexer extends Tokenizer<Token> {
         failedIfLine = -1;
         skipToIfFalse = false;
         inIfStatement = false;
+        directiveIfStatements = new Stack<>();
     }
 
     private HashMap<String, Define> baseDefines() {

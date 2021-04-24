@@ -149,6 +149,13 @@ public class ToolchainEntrancePoint {
                         }
                         break;
                     }
+                    case "--java-stacktrace": {
+                        settings.setErrorMessageIncludeJavaBacktrace(true);
+                        break;
+                    }
+                    default:
+                        err.println(argument + " is not a valid flag");
+                        exit(-1);
                 }
             } else {
                 filenamesStrings.add(argument);
