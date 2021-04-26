@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 enum Option {
 	Some,
 	None
@@ -63,8 +65,8 @@ int main(int argc, std::String args[]) {
 	if(o != enum Option.None) {
 		println("Wow, again!");
 	}
-	// Day day = enum Day.Sunday;
-	let day: Day = enum Day.Sunday;
+	Day day = enum Day.Sunday;
+
 
 	if(day != o) {
 		println("Technically true");
@@ -83,6 +85,9 @@ int main(int argc, std::String args[]) {
 
 	if(boop->day != day_class->getDay()) exit(-1);
 	else println("waow");
+
+	println(std::format("Day = %o", [day_class]));
+	println(std::format("Day = %i", (void**) [new std::Int(123223112421)]));
 
 
 	return 0;

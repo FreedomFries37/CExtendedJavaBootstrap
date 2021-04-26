@@ -2215,6 +2215,31 @@ public class Parser extends BasicParser {
         return true;
     }
 
+    private boolean parseFieldMemberDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("LocalDeclaration");
+
+        if(!consumeAndAddAsLeaf(t_id, child)) return false;
+        if(!consume(t_colon)) return false;
+        if (!parseCanonicalType(child)) return false;
+        if(!match(t_semic)) {
+            if(!consumeAndAddAsLeaf(t_assign, child)) return false;
+            if(!parseExpression(child)) return false;
+        }
+        if (!consume(TokenType.t_semic)) {
+            /*
+            if (!recoverableMissingError("Missing semi-colon", t_semic, t_lcurl)) {
+                return false;
+            }
+
+             */
+            return error("Missing semi-colon");
+        }
+
+        parent.addChild(child);
+        return true;
+    }
+
+
     @Deprecated(forRemoval = true)
     private boolean parseDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Declaration");
@@ -2510,7 +2535,7 @@ public class Parser extends BasicParser {
         
          */
         
-        if (!oneMustParse(child, this::parseConstructorDefinition, this::parseDeclaration, this::parseFunctionDefinition)) {
+        if (!oneMustParse(child, this::parseConstructorDefinition, this::parseFieldMemberDeclaration, this::parseDeclaration, this::parseFunctionDefinition)) {
             return error("Could not parse class declaration");
         }
         

@@ -1160,7 +1160,7 @@ public class Interpreter {
                 // Token token = input.getASTChild(ASTNodeType.id).getToken();
                 CXIdentifier id = input.getChild(0).getCompilationTag(ResolvedPathTag.class).getAbsolutePath();
                 String funcCall = id.toString();
-                Token token = input.getASTChild(ASTNodeType.id).getToken();
+                // Token token = input.getASTChild(ASTNodeType.id).getToken();
 
                 /*
                 if(input.containsCompilationTag(GenericFunctionCallTag.class)) {
