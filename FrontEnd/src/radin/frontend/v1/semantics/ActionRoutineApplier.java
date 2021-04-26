@@ -1803,7 +1803,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         return false;
                     }
                     case "Enum": {
-                        node.printTreeForm();
+
                         AbstractSyntaxNode identifier = node.getChild(0).getSynthesized();
                         AbstractSyntaxNode idList = getCatNode("IdentifierList").getSynthesized();
                         AbstractSyntaxNode abstractSyntaxNode = new AbstractSyntaxNode(
@@ -1820,7 +1820,7 @@ public class ActionRoutineApplier implements ISemanticAnalyzer<ParseNode, Abstra
                         //throw new Error("Enums not yet implemented");
                     }
                     case "EnumMember": {
-                        node.printTreeForm();
+                        // node.printTreeForm();
                         EnumType enumType = (EnumType) environment.getType(node.getChild(0).getSynthesized());
                         node.setSynthesized(
                             new TypedAbstractSyntaxNode(

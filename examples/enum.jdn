@@ -63,7 +63,9 @@ int main(int argc, std::String args[]) {
 	if(o != enum Option.None) {
 		println("Wow, again!");
 	}
-	Day day = enum Day.Sunday;
+	// Day day = enum Day.Sunday;
+	let day: Day = enum Day.Sunday;
+
 	if(day != o) {
 		println("Technically true");
 	}

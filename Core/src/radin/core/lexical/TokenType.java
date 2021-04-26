@@ -88,7 +88,8 @@ public enum TokenType {
     t_is("is"),
     t_abstract("abstract"),
     t_trait("trait"),
-    t_enum("enum");
+    t_enum("enum"),
+    t_let("let");
     
     private final String str;
     

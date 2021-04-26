@@ -511,6 +511,9 @@ public class Parser extends BasicParser {
                 if (!oneMustParse(child, this::parseDeclaration, this::parseExpressionStatement)) return false;
                 break;
             }
+            case t_let:
+                if(!parseLocalDeclaration(child)) return false;
+                break;
             default:
                 if (!parseExpressionStatement(child)) return false;
                 break;
@@ -2185,14 +2188,37 @@ public class Parser extends BasicParser {
         parent.addChild(child);
         return true;
     }
-    
-    
-    
+
+    private boolean parseLocalDeclaration(CategoryNode parent) {
+        CategoryNode child = new CategoryNode("LocalDeclaration");
+
+
+        if(!consumeAndAddAsLeaf(t_let, child)) return false;
+        if(!consumeAndAddAsLeaf(t_id, child)) return false;
+        if(!consume(t_colon)) return false;
+        if (!parseCanonicalType(child)) return false;
+        if(!match(t_semic)) {
+            if(!consumeAndAddAsLeaf(t_assign, child)) return false;
+            if(!parseExpression(child)) return false;
+        }
+        if (!consume(TokenType.t_semic)) {
+            /*
+            if (!recoverableMissingError("Missing semi-colon", t_semic, t_lcurl)) {
+                return false;
+            }
+
+             */
+            return error("Missing semi-colon");
+        }
+
+        parent.addChild(child);
+        return true;
+    }
+
+    @Deprecated(forRemoval = true)
     private boolean parseDeclaration(CategoryNode parent) {
         CategoryNode child = new CategoryNode("Declaration");
-        
-        boolean isCompoundTypeDeclaration =
-                getCurrentType() == t_class || getCurrentType() == t_struct || getCurrentType() == t_union;
+
     
         if (!parseCanonicalType(child)) return false;
         if(!match(t_semic)) {
@@ -2417,7 +2443,9 @@ public class Parser extends BasicParser {
         if (!forced) {
             forceParse();
         }
-        if (!parseClassDeclarationList(child)) return false;
+        if (!match(t_rcurl)) {
+            if (!parseClassDeclarationList(child)) return false;
+        }
         
         if (!consume(TokenType.t_rcurl)) return missingError("Missing matching }");
         if (!consume(TokenType.t_semic)) return missingError("Missing semi-colon");

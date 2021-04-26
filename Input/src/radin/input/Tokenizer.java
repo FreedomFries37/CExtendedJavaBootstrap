@@ -158,7 +158,8 @@ public abstract class Tokenizer<T> implements ITokenizer<T> {
                 return new Token(TokenType.t_trait);
             case "enum":
                 return new Token(TokenType.t_enum);
-
+            case "let":
+                return new Token(TokenType.t_let);
             default:
                 break;
         }
